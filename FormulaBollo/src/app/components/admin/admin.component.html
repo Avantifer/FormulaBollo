@@ -1,0 +1,37 @@
+<div class="bg-slate-100 dark:bg-slate-800">
+	<main class="flex-1 bg-slate-100 dark:bg-slate-800">
+		<div class="my-container mx-auto px-2 py-8">
+			<div class="flex">
+				<p-button
+					class="block lg:hidden menuButton pr-3"
+					(click)="isAdminMenuOpen = !isAdminMenuOpen"
+					onkeydown="isAdminMenuOpen = !isAdminMenuOpen">
+					@if (isAdminMenuOpen) {
+						<i class="pi pi-chevron-left"></i>
+					} @else {
+						<i class="pi pi-bars"></i>
+					}
+				</p-button>
+				<h1 class="text-2xl md:text-3xl font-bold mb-8 mt-1">Panel de administración</h1>
+			</div>
+			<div class="flex">
+				<div class="max-w-[220px] lg:max-w-[320px] w-full h-full" [class]="isAdminMenuOpen ? 'block' : 'hidden'">
+					<p-menu [model]="items" class="flex justify-center border-2 border-gray-400 dark:border-gray-600 rounded-lg" styleClass="w-full">
+						<ng-template #item let-item>
+							<a
+								class="flex items-center w-full rounded-xl cursor-pointer transition-all duration-200 ease-out hover:bg-gray-100 dark:hover:bg-gray-500/50 text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:scale-102 group"
+								[class.menu-item-selected]="isActive(item.routerLink)"
+								[routerLink]="item.routerLink">
+								<span [class]="item.icon" class="transition-transform duration-200 group-hover:text-[18px]!"></span>
+								<span class="ml-2">{{ item.label }}</span>
+							</a>
+						</ng-template>
+					</p-menu>
+				</div>
+				<div class="flex-1" [class]="isAdminMenuOpen ? 'ml-4' : ''">
+					<router-outlet></router-outlet>
+				</div>
+			</div>
+		</div>
+	</main>
+</div>

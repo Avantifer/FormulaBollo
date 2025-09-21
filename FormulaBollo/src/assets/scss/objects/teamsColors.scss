@@ -1,0 +1,319 @@
+@use "../settings/colors";
+
+::ng-deep .bg-Red_Bull {
+  background-color: colors.$colorRedBull;
+}
+
+::ng-deep .bg-AlphaTauri {
+  background-color: colors.$colorAlphaTauri;
+}
+
+::ng-deep .bg-Ferrari {
+  background-color: colors.$colorFerrari;
+}
+
+::ng-deep .bg-Mercedes {
+  background-color: colors.$colorMercedes;
+}
+
+::ng-deep .bg-Aston_Martin {
+  background-color: colors.$colorAston;
+}
+
+::ng-deep .bg-Williams {
+  background-color: colors.$colorWilliams;
+}
+
+::ng-deep .bg-Haas {
+  background-color: colors.$colorHaas;
+}
+
+::ng-deep .bg-McLaren {
+  background-color: colors.$colorMcLaren;
+}
+
+::ng-deep .bg-Alfa_Romeo {
+  background-color: colors.$colorAlfa;
+}
+
+::ng-deep .bg-Alpine {
+  background-color: colors.$colorAlpine;
+}
+
+::ng-deep .bg-Kick_Sauber {
+  background-color: colors.$colorKickSauber;
+}
+
+::ng-deep .bg-RB {
+  background-color: colors.$colorRB;
+}
+
+::ng-deep .color-Red_Bull {
+  color: colors.$colorRedBull;
+}
+
+::ng-deep .color-AlphaTauri {
+  color: colors.$colorAlphaTauri;
+}
+
+::ng-deep .color-Ferrari {
+  color: colors.$colorFerrari;
+}
+
+::ng-deep .color-Mercedes {
+  color: colors.$colorMercedes;
+}
+
+::ng-deep .color-Aston_Martin {
+  color: colors.$colorAston;
+}
+
+::ng-deep .color-Williams {
+  color: colors.$colorWilliams;
+}
+
+::ng-deep .color-Haas {
+  color: colors.$colorHaas;
+}
+
+::ng-deep .color-McLaren {
+  color: colors.$colorMcLaren;
+}
+
+::ng-deep .color-Alfa_Romeo {
+  color: colors.$colorAlfa;
+}
+
+::ng-deep .color-Alpine {
+  color: colors.$colorAlpine;
+}
+
+::ng-deep .color-Kick_Sauber {
+  color: colors.$colorKickSauber;
+}
+
+::ng-deep .color-RB {
+  color: colors.$colorRB;
+}
+
+::ng-deep .bg-Fantasy-Red_Bull {
+  background: colors.$colorRedBull;
+}
+
+::ng-deep .bg-Fantasy-AlphaTauri {
+  background: colors.$colorAlphaTauri;
+}
+
+::ng-deep .bg-Fantasy-Ferrari {
+  background: colors.$colorFerrari;
+}
+
+::ng-deep .bg-Fantasy-Mercedes {
+  background: colors.$colorMercedes;
+}
+
+::ng-deep .bg-Fantasy-Aston_Martin {
+  background: colors.$colorAston;
+}
+
+::ng-deep .bg-Fantasy-Williams {
+  background: colors.$colorWilliams;
+}
+
+::ng-deep .bg-Fantasy-Haas {
+  background: colors.$colorHaas;
+}
+
+::ng-deep .bg-Fantasy-McLaren {
+  background: colors.$colorMcLaren;
+}
+
+::ng-deep .bg-Fantasy-Alfa_Romeo {
+  background: colors.$colorAlfa;
+}
+
+::ng-deep .bg-Fantasy-Alpine {
+  background: colors.$colorAlpine;
+}
+
+::ng-deep .bg-Fantasy-Kick_Sauber {
+  background: colors.$colorKickSauber;
+}
+
+::ng-deep .bg-Fantasy-RB {
+  background: colors.$colorRB;
+}
+
+::ng-deep .border-Red_Bull {
+  border-color: colors.$colorRedBull !important;
+}
+
+::ng-deep .border-AlphaTauri {
+  border-color: colors.$colorAlphaTauri !important;
+}
+
+::ng-deep .border-Ferrari {
+  border-color: colors.$colorFerrari !important;
+}
+
+::ng-deep .border-Mercedes {
+  border-color: colors.$colorMercedes !important;
+}
+
+::ng-deep .border-Aston_Martin {
+  border-color: colors.$colorAston !important;
+}
+
+::ng-deep .border-Williams {
+  border-color: colors.$colorWilliams !important;
+}
+
+::ng-deep .border-Haas {
+  border-color: colors.$colorHaas !important;
+}
+
+::ng-deep .border-McLaren {
+  border-color: colors.$colorMcLaren !important;
+}
+
+::ng-deep .border-Alfa_Romeo {
+  border-color: colors.$colorAlfa !important;
+}
+
+::ng-deep .border-Alpine {
+  border-color: colors.$colorAlpine !important;
+}
+
+::ng-deep .border-Kick_Sauber {
+  border-color: colors.$colorKickSauber !important;
+}
+
+::ng-deep .border-RB {
+  border-color: colors.$colorRB !important;
+}
+
+::ng-deep .progress-Red_Bull {
+  ::ng-deep .p-progressbar-value {
+    background-color: colors.$colorRedBull;
+  }
+}
+
+::ng-deep .progress-AlphaTauri {
+  ::ng-deep .p-progressbar-value {
+    background-color: colors.$colorAlphaTauri;
+  }
+}
+
+::ng-deep .progress-Ferrari {
+  ::ng-deep .p-progressbar-value {
+    background-color: colors.$colorFerrari;
+  }
+}
+
+::ng-deep .progress-Mercedes {
+  ::ng-deep .p-progressbar-value {
+    background-color: colors.$colorMercedes;
+  }
+}
+
+::ng-deep .progress-Aston_Martin {
+  ::ng-deep .p-progressbar-value {
+    background-color: colors.$colorAston;
+  }
+}
+
+::ng-deep .progress-Williams {
+  ::ng-deep .p-progressbar-value {
+    background-color: colors.$colorWilliams;
+  }
+}
+
+::ng-deep .progress-Haas {
+  ::ng-deep .p-progressbar-value {
+    background-color: colors.$colorHaas;
+  }
+}
+
+::ng-deep .progress-McLaren {
+  ::ng-deep .p-progressbar-value {
+    background-color: colors.$colorMcLaren;
+  }
+}
+
+::ng-deep .progress-Alfa_Romeo {
+  ::ng-deep .p-progressbar-value {
+    background-color: colors.$colorAlfa;
+  }
+}
+
+::ng-deep .progress-Alpine {
+  ::ng-deep .p-progressbar-value {
+    background-color: colors.$colorAlpine;
+  }
+}
+
+::ng-deep .progress-Kick_Sauber {
+  ::ng-deep .p-progressbar-value {
+    background-color: colors.$colorKickSauber;
+  }
+}
+
+::ng-deep .progress-RB {
+  ::ng-deep .p-progressbar-value {
+    background-color: colors.$colorRB;
+  }
+}
+
+
+
+
+
+
+
+::ng-deep .hover-bg-Red_Bull:hover {
+  background-color: colors.$colorRedBull;
+}
+
+::ng-deep .hover-bg-AlphaTauri:hover {
+  background-color: colors.$colorAlphaTauri;
+}
+
+::ng-deep .hover-bg-Ferrari:hover {
+  background-color: colors.$colorFerrari;
+}
+
+::ng-deep .hover-bg-Mercedes:hover {
+  background-color: colors.$colorMercedes;
+}
+
+::ng-deep .hover-bg-Aston_Martin:hover {
+  background-color: colors.$colorAston;
+}
+
+::ng-deep .hover-bg-Williams:hover {
+  background-color: colors.$colorWilliams;
+}
+
+::ng-deep .hover-bg-Haas:hover {
+  background-color: colors.$colorHaas;
+}
+
+::ng-deep .hover-bg-McLaren:hover {
+  background-color: colors.$colorMcLaren;
+}
+
+::ng-deep .hover-bg-Alfa_Romeo:hover {
+  background-color: colors.$colorAlfa;
+}
+
+::ng-deep .hover-bg-Alpine:hover {
+  background-color: colors.$colorAlpine;
+}
+
+::ng-deep .hover-bg-Kick_Sauber:hover {
+  background-color: colors.$colorKickSauber;
+}
+
+::ng-deep .hover-bg-RB:hover {
+  background-color: colors.$colorRB;
+}

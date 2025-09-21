@@ -1,0 +1,10 @@
+:host {
+  ::ng-deep .p-button {
+    background: var(--color-fantasy-principal) !important;
+    width: 100%;
+  }
+
+  ::ng-deep .p-button:hover {
+    background: var(--color-fantasy-principal-dark) !important;
+  }
+}

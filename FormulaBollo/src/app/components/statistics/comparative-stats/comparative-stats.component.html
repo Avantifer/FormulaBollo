@@ -1,0 +1,298 @@
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+	@if (typeSelected === 'Pilotos') {
+		@for (1 of [1, 2]; track $index) {
+			<div class="rounded-lg shadow-sm p-4 dark:bg-slate-700 bg-white dark:border dark:border-gray-700">
+				<div class="my-3">
+					<div>
+						<span class="block text-lg font-semibold mb-2">Piloto {{ $index + 1 }}</span>
+						<select-drivers (driverChanged)="onDriverChange($event, $index)" [position]="$index" [season]="seasonSelected"></select-drivers>
+					</div>
+				</div>
+			</div>
+		}
+	} @else {
+		@for (1 of [1, 2]; track $index) {
+			<div class="rounded-lg shadow-sm p-4 dark:bg-slate-700 bg-white dark:border dark:border-gray-700">
+				<div class="my-3">
+					<div>
+						<span class="block text-lg font-semibold mb-2">Escudería {{ $index + 1 }}</span>
+						<select-teams (teamChanged)="onTeamChange($event, $index)" [position]="$index" [season]="seasonSelected"></select-teams>
+					</div>
+				</div>
+			</div>
+		}
+	}
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+	<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white dark:border dark:border-gray-700">
+		<div class="flex items-center mb-4">
+			<i class="pi pi-chart-line text-red-600 dark:text-red-400 mr-2" style="font-size: 18px"></i>
+			<h2 class="text-xl font-bold text-black dark:text-white">Media de puntos por carrera</h2>
+		</div>
+		<div class="h-[400px]">
+			<p-chart type="bar" [data]="comparisonChartData" [options]="comparisonChartOptions" class="hidden lg:block"></p-chart>
+			<p-chart type="bar" [data]="comparisonChartData" [options]="comparisonChartOptionsMobile" class="block lg:hidden"></p-chart>
+		</div>
+	</div>
+	@if (driversInfo.length === 2 || teamsInfo.length === 2) {
+		<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white">
+			<div class="flex items-center mb-4">
+				<i class="pi pi-star text-red-600 dark:text-red-400 mr-2" style="font-size: 18px"></i>
+				<h2 class="text-xl font-bold">Detalles de la comparación</h2>
+			</div>
+			<div class="space-y-5">
+				<div class="flex justify-between items-center">
+					<span class="text-gray-600 dark:text-gray-200">Victorias</span>
+					<div class="flex items-center gap-4">
+						<div class="flex items-center gap-1">
+							<span
+								class="inline-block h-3 w-3 rounded-full"
+								[class]="
+									'bg-' +
+									(typeSelected === 'Pilotos'
+										? (driversInfo[0].driver.team!.name | SpaceToUnderscore)
+										: (teamsInfo[0].team!.name | SpaceToUnderscore))
+								"></span
+							><span class="font-semibold">{{ typeSelected === 'Pilotos' ? driversInfo[0].victories : teamsInfo[0].victories }}</span>
+						</div>
+						<div class="flex items-center gap-1">
+							<span
+								class="inline-block h-3 w-3 rounded-full"
+								[class]="
+									'bg-' +
+									(typeSelected === 'Pilotos'
+										? (driversInfo[1].driver.team!.name | SpaceToUnderscore)
+										: (teamsInfo[1].team!.name | SpaceToUnderscore))
+								"></span
+							><span class="font-semibold">{{ typeSelected === 'Pilotos' ? driversInfo[1].victories : teamsInfo[1].victories }}</span>
+						</div>
+					</div>
+				</div>
+				<div class="flex justify-between items-center">
+					<span class="text-gray-600 dark:text-gray-200">Podios</span>
+					<div class="flex items-center gap-4">
+						<div class="flex items-center gap-1">
+							<span
+								class="inline-block h-3 w-3 rounded-full"
+								[class]="
+									'bg-' +
+									(typeSelected === 'Pilotos'
+										? (driversInfo[0].driver.team!.name | SpaceToUnderscore)
+										: (teamsInfo[0].team!.name | SpaceToUnderscore))
+								"></span
+							><span class="font-semibold">{{ typeSelected === 'Pilotos' ? driversInfo[0].podiums : teamsInfo[0].podiums }}</span>
+						</div>
+						<div class="flex items-center gap-1">
+							<span
+								class="inline-block h-3 w-3 rounded-full"
+								[class]="
+									'bg-' +
+									(typeSelected === 'Pilotos'
+										? (driversInfo[1].driver.team!.name | SpaceToUnderscore | SpaceToUnderscore)
+										: (teamsInfo[1].team!.name | SpaceToUnderscore))
+								"></span
+							><span class="font-semibold">{{ typeSelected === 'Pilotos' ? driversInfo[1].podiums : teamsInfo[1].podiums }}</span>
+						</div>
+					</div>
+				</div>
+				<div class="flex justify-between items-center">
+					<span class="text-gray-600 dark:text-gray-200">Poles</span>
+					<div class="flex items-center gap-4">
+						<div class="flex items-center gap-1">
+							<span
+								class="inline-block h-3 w-3 rounded-full"
+								[class]="
+									'bg-' +
+									(typeSelected === 'Pilotos'
+										? (driversInfo[0].driver.team!.name | SpaceToUnderscore)
+										: (teamsInfo[0].team!.name | SpaceToUnderscore))
+								"></span
+							><span class="font-semibold">{{ typeSelected === 'Pilotos' ? driversInfo[0].poles : teamsInfo[0].poles }}</span>
+						</div>
+						<div class="flex items-center gap-1">
+							<span
+								class="inline-block h-3 w-3 rounded-full"
+								[class]="
+									'bg-' +
+									(typeSelected === 'Pilotos'
+										? (driversInfo[1].driver.team!.name | SpaceToUnderscore)
+										: (teamsInfo[1].team!.name | SpaceToUnderscore))
+								"></span
+							><span class="font-semibold">{{ typeSelected === 'Pilotos' ? driversInfo[1].poles : teamsInfo[1].poles }}</span>
+						</div>
+					</div>
+				</div>
+				<div class="flex justify-between items-center">
+					<span class="text-gray-600 dark:text-gray-200">Vueltas rápidas</span>
+					<div class="flex items-center gap-4">
+						<div class="flex items-center gap-1">
+							<span
+								class="inline-block h-3 w-3 rounded-full"
+								[class]="
+									'bg-' +
+									(typeSelected === 'Pilotos'
+										? (driversInfo[0].driver.team!.name | SpaceToUnderscore)
+										: (teamsInfo[0].team!.name | SpaceToUnderscore))
+								"></span
+							><span class="font-semibold">{{ typeSelected === 'Pilotos' ? driversInfo[0].fastlaps : teamsInfo[0].fastlaps }}</span>
+						</div>
+						<div class="flex items-center gap-1">
+							<span
+								class="inline-block h-3 w-3 rounded-full"
+								[class]="
+									'bg-' +
+									(typeSelected === 'Pilotos'
+										? (driversInfo[1].driver.team!.name | SpaceToUnderscore)
+										: (teamsInfo[1].team!.name | SpaceToUnderscore))
+								"></span
+							><span class="font-semibold">{{ typeSelected === 'Pilotos' ? driversInfo[1].fastlaps : teamsInfo[1].fastlaps }}</span>
+						</div>
+					</div>
+				</div>
+				<div class="flex justify-between items-center">
+					<span class="text-gray-600 dark:text-gray-200">Carreras terminadas</span>
+					<div class="flex items-center gap-4">
+						<div class="flex items-center gap-1">
+							<span
+								class="inline-block h-3 w-3 rounded-full"
+								[class]="
+									'bg-' +
+									(typeSelected === 'Pilotos'
+										? (driversInfo[0].driver.team!.name | SpaceToUnderscore)
+										: (teamsInfo[0].team!.name | SpaceToUnderscore))
+								"></span
+							><span class="font-semibold">{{
+								typeSelected === 'Pilotos' ? driversInfo[0].racesFinished : teamsInfo[0].racesFinished
+							}}</span>
+						</div>
+						<div class="flex items-center gap-1">
+							<span
+								class="inline-block h-3 w-3 rounded-full"
+								[class]="
+									'bg-' +
+									(typeSelected === 'Pilotos'
+										? (driversInfo[1].driver.team!.name | SpaceToUnderscore)
+										: (teamsInfo[1].team!.name | SpaceToUnderscore))
+								"></span
+							><span class="font-semibold">{{
+								typeSelected === 'Pilotos' ? driversInfo[1].racesFinished : teamsInfo[1].racesFinished
+							}}</span>
+						</div>
+					</div>
+				</div>
+				<div class="flex justify-between items-center">
+					<span class="text-gray-600 dark:text-gray-200">Penalizaciones</span>
+					<div class="flex items-center gap-4">
+						<div class="flex items-center gap-1">
+							<span
+								class="inline-block h-3 w-3 rounded-full"
+								[class]="
+									'bg-' +
+									(typeSelected === 'Pilotos'
+										? (driversInfo[0].driver.team!.name | SpaceToUnderscore)
+										: (teamsInfo[0].team!.name | SpaceToUnderscore))
+								"></span
+							><span class="font-semibold">{{ typeSelected === 'Pilotos' ? driversInfo[0].penalties : teamsInfo[0].penalties }}</span>
+						</div>
+						<div class="flex items-center gap-1">
+							<span
+								class="inline-block h-3 w-3 rounded-full"
+								[class]="
+									'bg-' +
+									(typeSelected === 'Pilotos'
+										? (driversInfo[1].driver.team!.name | SpaceToUnderscore)
+										: (teamsInfo[1].team!.name | SpaceToUnderscore))
+								"></span
+							><span class="font-semibold">{{ typeSelected === 'Pilotos' ? driversInfo[1].penalties : teamsInfo[1].penalties }}</span>
+						</div>
+					</div>
+				</div>
+				<div class="flex justify-between items-center">
+					<span class="text-gray-600 dark:text-gray-200">Mejor posición</span>
+					<div class="flex items-center gap-4">
+						<div class="flex items-center gap-1">
+							<span
+								class="inline-block h-3 w-3 rounded-full"
+								[class]="
+									'bg-' +
+									(typeSelected === 'Pilotos'
+										? (driversInfo[0].driver.team!.name | SpaceToUnderscore)
+										: (teamsInfo[0].team!.name | SpaceToUnderscore))
+								"></span
+							><span class="font-semibold">{{ typeSelected === 'Pilotos' ? driversInfo[0].bestPosition : teamsInfo[0].bestPosition }}</span>
+						</div>
+						<div class="flex items-center gap-1">
+							<span
+								class="inline-block h-3 w-3 rounded-full"
+								[class]="
+									'bg-' +
+									(typeSelected === 'Pilotos'
+										? (driversInfo[1].driver.team!.name | SpaceToUnderscore)
+										: (teamsInfo[1].team!.name | SpaceToUnderscore))
+								"></span
+							><span class="font-semibold">{{ typeSelected === 'Pilotos' ? driversInfo[1].bestPosition : teamsInfo[1].bestPosition }}</span>
+						</div>
+					</div>
+				</div>
+				<div class="flex justify-between items-center">
+					<span class="text-gray-600 dark:text-gray-200">Posición media</span>
+					<div class="flex items-center gap-4">
+						<div class="flex items-center gap-1">
+							<span
+								class="inline-block h-3 w-3 rounded-full"
+								[class]="
+									'bg-' +
+									(typeSelected === 'Pilotos'
+										? (driversInfo[0].driver.team!.name | SpaceToUnderscore)
+										: (teamsInfo[0].team!.name | SpaceToUnderscore))
+								"></span
+							><span class="font-semibold">{{
+								typeSelected === 'Pilotos' ? driversInfo[0].averagePosition.toFixed(2) : teamsInfo[0].averagePosition.toFixed(2)
+							}}</span>
+						</div>
+						<div class="flex items-center gap-1">
+							<span
+								class="inline-block h-3 w-3 rounded-full"
+								[class]="
+									'bg-' +
+									(typeSelected === 'Pilotos'
+										? (driversInfo[1].driver.team!.name | SpaceToUnderscore)
+										: (teamsInfo[1].team!.name | SpaceToUnderscore))
+								"></span
+							><span class="font-semibold">{{
+								typeSelected === 'Pilotos' ? driversInfo[1].averagePosition.toFixed(2) : teamsInfo[1].averagePosition.toFixed(2)
+							}}</span>
+						</div>
+					</div>
+				</div>
+				<div class="flex justify-between items-center">
+					<span class="text-gray-600 dark:text-gray-200">Puntos totales</span>
+					<div class="flex items-center gap-4">
+						<div class="flex items-center gap-1">
+							<span
+								class="inline-block h-3 w-3 rounded-full"
+								[class]="
+									'bg-' +
+									(typeSelected === 'Pilotos'
+										? (driversInfo[0].driver.team!.name | SpaceToUnderscore)
+										: (teamsInfo[0].team!.name | SpaceToUnderscore))
+								"></span
+							><span class="font-semibold">{{ typeSelected === 'Pilotos' ? driversInfo[0].totalPoints : teamsInfo[0].totalPoints }}</span>
+						</div>
+						<div class="flex items-center gap-1">
+							<span
+								class="inline-block h-3 w-3 rounded-full"
+								[class]="
+									'bg-' +
+									(typeSelected === 'Pilotos'
+										? (driversInfo[1].driver.team!.name | SpaceToUnderscore)
+										: (teamsInfo[1].team!.name | SpaceToUnderscore))
+								"></span
+							><span class="font-semibold">{{ typeSelected === 'Pilotos' ? driversInfo[1].totalPoints : teamsInfo[1].totalPoints }}</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+</div>

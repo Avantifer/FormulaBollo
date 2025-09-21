@@ -1,0 +1,606 @@
+<main class="flex-1 bg-slate-100 dark:bg-slate-900 p-4 relative">
+	<div class="container mx-auto">
+		<div class="rounded-lg shadow-2xs mt-2 mb-6 border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20">
+			<div class="p-4">
+				<div class="flex items-center gap-3">
+					<i class="pi pi-exclamation-triangle text-yellow-800 dark:text-yellow-200" style="font-size: 20px"></i>
+					<div>
+						<h3 class="font-semibold text-yellow-800 dark:text-yellow-200">Fantasy no habilitado para esta temporada</h3>
+						<p class="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+							El modo Fantasy no está disponible para la temporada actual. Mantente atento para futuras actualizaciones.
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="rounded-lg bg-white/80 dark:bg-black/80 shadow-2xs mb-6">
+			<div class="p-4">
+				<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+					<div class="flex items-center gap-4 min-w-[225px]">
+						<select-races class="w-full" (raceChanged)="onRaceChange($event)" [fantasyTeam]="true"></select-races>
+					</div>
+					@if (isLastRace) {
+						<div class="text-right">
+							<div class="text-sm text-gray-500 dark:text-gray-400">Presupuesto restante</div>
+							<div
+								class="text-xl font-bold flex items-center gap-1"
+								[class]="utilsService.isNegative(totalMoney) ? 'text-red-500' : 'text-green-500'">
+								<i class="pi pi-dollar"></i>
+								{{ totalMoney | pricePipe }}
+							</div>
+						</div>
+					}
+				</div>
+			</div>
+		</div>
+		<div class="grid grid-cols-1 gap-6 mb-2" [class]="isLastRace ? 'xl:grid-cols-2' : 'xl:grid-cols-1'">
+			<div class="rounded-lg bg-white/80 dark:bg-black/80 shadow-2xs">
+				<div class="p-3 md:p-6">
+					<div class="text-center mb-6">
+						<h2 class="text-2xl font-bold dark:text-white flex items-center justify-center gap-2">
+							<i class="pi pi-users" style="font-size: 25px"></i> Tu equipo Fantasy
+						</h2>
+						<p class="text-gray-500 dark:text-gray-400 mt-2">Selecciona 3 pilotos y 2 equipos para tu alineación</p>
+					</div>
+					<div class="mb-8">
+						<div class="flex">
+							<i class="pi pi-star mt-1" style="font-size: 18px"></i>
+							<h3 class="text-lg font-semibold mb-4 ml-2 dark:text-white flex items-center gap-2">
+								Pilotos ({{ selectedDriversCount() }}/3)
+							</h3>
+						</div>
+						<div class="flex justify-center gap-2 md:gap-4">
+							@for (i of [0, 1, 2]; track $index) {
+								@if (driversSelected[i] === undefined) {
+									<div class="relative group">
+										<div
+											class="w-20 h-30 xs:w-24 xs:h-32 sm:w-31 sm:h-38 rounded-xl border-2 transition-all duration-200 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 flex flex-col items-center justify-center">
+											<div class="flex flex-col text-center">
+												<i class="pi pi-plus text-gray-400 mb-4" style="font-size: 22px"></i>
+												<p class="text-xs text-gray-500 dark:text-gray-400 cursor-default">Piloto {{ i + 1 }}</p>
+											</div>
+										</div>
+									</div>
+								} @else {
+									<div
+										class="w-20 h-30 xs:w-24 xs:h-32 sm:w-31 sm:h-38 relative rounded-xl overflow-hidden border-2 border-gray-300 bg-gray-200 dark:border-gray-600 dark:bg-gray-700">
+										<div class="w-20 h-30 xs:w-24 xs:h-32 sm:w-31 sm:h-38">
+											<button (click)="deleteDriverFromSelection(i)" onkeydown="deleteDriverFromSelection(i)" class="absolute right-1.5">
+												<i
+													class="pi pi-times text-red-400 hover:bg-red-200 p-0.5 transition-all duration-200 ease-out rounded-[4px] cursor-pointer"
+													style="font-size: 8px"></i>
+											</button>
+
+											<div class="h-2/3 bg-gray-100 dark:bg-gray-600 flex items-center justify-center p-1 md:p-2">
+												<div class="size-14 md:size-20 rounded-full bg-gray-300 dark:bg-gray-600 overflow-hidden">
+													<img
+														[alt]="driversSelected[i].name"
+														class="w-full h-full object-cover bg-gray-300 dark:bg-gray-400"
+														[src]="imageService.getImageUrl(driversSelected[i].driverImage | SpaceToUnderscore)" />
+												</div>
+											</div>
+											<div class="h-1/3 p-1 md:p-2 flex flex-col justify-center bg-gray-200 dark:bg-gray-700">
+												<h4 class="dark:text-white text-black font-bold text-xs md:text-sm text-center truncate max-w-[70px] xs:max-w-none">
+													{{ driversSelected[i].name }}
+												</h4>
+												<p class="text-xs text-gray-600 dark:text-gray-300 text-center truncate">{{ driversSelected[i].team.name }}</p>
+											</div>
+										</div>
+									</div>
+								}
+							}
+						</div>
+					</div>
+					<div class="mb-12">
+						<div class="flex">
+							<i class="pi pi-trophy mt-1" style="font-size: 18px"></i>
+							<h3 class="text-lg font-semibold mb-4 ml-2 dark:text-white flex items-center gap-2">
+								Equipos ({{ selectedTeamsCount() }}/2)
+							</h3>
+						</div>
+						<div class="flex justify-center gap-4">
+							@for (i of [0, 1]; track $index) {
+								@if (teamsSelected[i] === undefined) {
+									<div class="relative group">
+										<div
+											class="w-30 h-20 xs:w-36 xs:h-24 sm:w-44 sm:h-28 rounded-xl border-2 transition-all duration-200 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
+											<div class="flex flex-col text-center">
+												<i class="pi pi-plus text-gray-400 mb-4" style="font-size: 22px"></i>
+												<p class="text-xs text-gray-500 dark:text-gray-400 cursor-default">Equipo {{ i + 1 }}</p>
+											</div>
+										</div>
+									</div>
+								} @else {
+									<div
+										class="relative w-30 h-20 xs:w-36 xs:h-24 sm:w-44 sm:h-28 rounded-xl border-2 transition-all duration-200 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 rounded-xl overflow-hidden">
+										<div class="w-30 h-20 xs:w-36 xs:h-24 sm:w-44 sm:h-28">
+											<button (click)="deleteTeamFromSelection(i)" onkeydown="deleteTeamFromSelection(i)" class="absolute right-1.5">
+												<i
+													class="pi pi-times text-red-400 hover:bg-red-200 p-0.5 transition-all duration-200 ease-out rounded-[4px] cursor-pointer"
+													style="font-size: 8px"></i>
+											</button>
+
+											<div class="h-2/3 bg-gray-100 dark:bg-gray-600 flex items-center justify-center p-1 md:p-2">
+												<div class="relative w-34 h-12 rounded-lg overflow-hidden">
+													<img
+														[alt]="teamsSelected[i].name"
+														class="w-27 xs:w-36 absolute max-w-none -left-1 top-3 xs:top-1"
+														[src]="imageService.getImageUrl(teamsSelected[i].carImage | SpaceToUnderscore)" />
+												</div>
+											</div>
+											<div class="h-1/3 p-1 md:p-2 flex flex-col justify-center items-center bg-gray-200 dark:bg-gray-700">
+												<h4 class="dark:text-white text-black font-bold text-xs md:text-sm text-center truncate max-w-[70px] xs:max-w-none">
+													{{ teamsSelected[i].name }}
+												</h4>
+											</div>
+										</div>
+									</div>
+								}
+							}
+						</div>
+					</div>
+					<div class="flex justify-center w-full">
+						<div class="w-9/10 xs:w-1/2 md:w-1/3">
+							@if (isLastRace) {
+								<p-button
+									label="Guardar equipo"
+									class="saveElection text-white font-bold"
+									(click)="saveFantasyElecion()"
+									onkeydown="saveFantasyElecion()"></p-button>
+							}
+						</div>
+					</div>
+				</div>
+			</div>
+			@if (isLastRace) {
+				<div class="rounded-lg shadow-2xs bg-white/80 dark:bg-black/80 p-3 md:p-6">
+					<p-selectbutton
+						[options]="listOptions"
+						[(ngModel)]="optionSelected"
+						(ngModelChange)="changeOptions()"
+						class="fantasyOptions shadow-md w-full mb-3 md:mb-6"
+						allowEmpty="false">
+						<ng-template #item let-item>
+							<i [class]="item.icon" style="font-size: 1rem"></i>
+							<p>{{ item.value }}</p>
+						</ng-template>
+					</p-selectbutton>
+
+					<p-iconfield class="mb-6">
+						<p-inputicon class="pi pi-search" />
+						<input
+							type="text"
+							pInputText
+							[(ngModel)]="filtroString"
+							(ngModelChange)="filterItems($event)"
+							[placeholder]="'Busca un ' + this.optionSelected.toLowerCase().slice(0, -1) + '...'"
+							class="pl-10 h-10 w-full text-black border-1 border-gray-300 dark:border-none dark:text-white dark:bg-gray-600 rounded-lg" />
+					</p-iconfield>
+
+					<div class="flex justify-center items-center gap-2 mb-6 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-auto">
+						<span class="text-sm font-bold dark:text-white mr-2">Ordenar:</span>
+						@for (order of orders; track $index) {
+							<button (click)="changeOrder(order)" onkeydown="changeOrder(order)">
+								<div
+									class="rounded-md p-1.5 flex items-center cursor-pointer"
+									[class]="
+										orderSelected.name === order.name
+											? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-600'
+											: 'hover:bg-gray-200 dark:hover:bg-gray-700'
+									">
+									<i class="text-xs mr-1" [class]="order.icon" style="font-size: 10px"></i>
+									<p class="m-0 text-xs">{{ order.name }}</p>
+									@if (orderSelected.name === order.name) {
+										@if (order.value === 'ASC') {
+											<i class="pi pi-angle-up text-xs ml-1" style="font-size: 10px"></i>
+										} @else if (order.value === 'DESC') {
+											<i class="pi pi-angle-down text-xs ml-1" style="font-size: 10px"></i>
+										}
+									}
+								</div>
+							</button>
+						}
+					</div>
+					<div class="space-y-2 xs:space-y-3 max-h-64 xs:max-h-80 sm:max-h-96 overflow-y-auto pr-3">
+						@if (optionSelected === 'Pilotos') {
+							@for (fantasyPricesDriver of fantasyPricesDriversFiltered; track $index) {
+								<div
+									class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 transition-all overflow-hidden">
+									<div class="p-2 xs:p-3">
+										<div class="flex items-center justify-between">
+											<div class="flex items-center gap-2 xs:gap-3">
+												<div
+													class="w-8 h-8 xs:w-10 xs:h-10 sm:w-12 sm:h-12 rounded-full bg-gray-300 dark:bg-gray-600 overflow-hidden border-1"
+													[class]="'border-' + (fantasyPricesDriver.driver.team.name | SpaceToUnderscore)">
+													<img
+														[alt]="fantasyPricesDriver.driver.name"
+														class="w-full h-full object-cover"
+														[src]="imageService.getImageUrl(fantasyPricesDriver.driver.driverImage | SpaceToUnderscore)" />
+												</div>
+												<div class="flex-1 min-w-0">
+													<div class="flex items-center gap-1 xs:gap-2">
+														<h4 class="font-bold text-xs xs:text-base dark:text-white truncate max-w-[75px] md:max-w-none">
+															{{ fantasyPricesDriver.driver.name }}
+														</h4>
+														<p
+															class="hidden sm:block text-xs xs:text-sm text-gray-600 dark:text-gray-300 font-medium px-2 py-0.5 rounded border-l-4 bg-gray-50 dark:bg-gray-700"
+															[class]="'border-' + (fantasyPricesDriver.driver.team.name | SpaceToUnderscore)">
+															{{ fantasyPricesDriver.driver.team.name }}
+														</p>
+													</div>
+
+													<div class="text-xs xs:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+														{{ fantasyPricesDriver.fantasyInfo.totalPoints }} puntos
+													</div>
+												</div>
+											</div>
+											<div class="flex items-center gap-1 xs:gap-2 flex-shrink-0">
+												<div class="text-right">
+													<div class="text-xs xs:text-base font-bold text-blue-600 dark:text-blue-400">
+														${{ fantasyPricesDriver.price | pricePipe }}
+													</div>
+													<div class="text-xs flex justify-end gap-1">
+														@if (fantasyPricesDriver.fantasyInfo.differencePrice > 0) {
+															<span class="text-green-500">
+																<i class="pi pi-arrow-up-right" style="font-size: 8px"></i>
+																{{ fantasyPricesDriver.fantasyInfo.differencePrice.toFixed(2) }} %</span
+															>
+														} @else if (fantasyPricesDriver.fantasyInfo.differencePrice < 0) {
+															<span class="text-red-500"
+																><i class="pi pi-arrow-down-right" style="font-size: 8px"></i>
+																{{ fantasyPricesDriver.fantasyInfo.differencePrice.toFixed(2) }} %</span
+															>
+														} @else {
+															<span class="text-gray-500"
+																><i class="pi pi-arrow-right" style="font-size: 8px"></i>
+																{{ fantasyPricesDriver.fantasyInfo.differencePrice.toFixed(2) }} %</span
+															>
+														}
+													</div>
+												</div>
+												<div class="flex flex-col gap-2">
+													<button
+														class="h-3.5 flex mt-1.5"
+														(click)="generateEvolutionPointDriverChart(fantasyPricesDriver)"
+														onkeydown="generateEvolutionPointDriverChart(fantasyPricesDriver)">
+														<i
+															class="pi pi-chart-bar cursor-pointer hover:text-blue-500"
+															style="font-size: 12px"
+															pTooltip="Gráfico de puntos"></i>
+													</button>
+
+													<button
+														class="h-3.5 flex"
+														(click)="generateEvolutionDriverPriceChart(fantasyPricesDriver)"
+														onkeydown="generateEvolutionDriverPriceChart(fantasyPricesDriver)">
+														<i
+															class="pi pi-chart-line cursor-pointer hover:text-blue-500"
+															style="font-size: 12px"
+															pTooltip="Gráfico de precios"></i>
+													</button>
+												</div>
+												<p-button
+													icon="pi pi-plus"
+													class="addDriver text-white"
+													(click)="addDriverToSelection(fantasyPricesDriver)"
+													onkeydown="addDriverToSelection(fantasyPricesDriver)"
+													[disabled]="isDriverSelected(fantasyPricesDriver.driver) || selectedDriversCount() === 3"></p-button>
+											</div>
+										</div>
+									</div>
+								</div>
+							}
+						} @else {
+							@for (fantasyPricesTeam of fantasyPricesTeamsFiltered; track $index) {
+								<div
+									class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 transition-all overflow-hidden">
+									<div class="p-2 xs:p-3">
+										<div class="flex items-center justify-between">
+											<div class="flex items-center gap-2 xs:gap-3">
+												<div
+													class="relative w-11 h-8 xs:w-14 xs:h-10 sm:w-14 sm:h-12 bg-gray-300 dark:bg-gray-600 overflow-hidden border-1"
+													[class]="'border-' + (fantasyPricesTeam.team.name | SpaceToUnderscore)">
+													<img
+														[alt]="fantasyPricesTeam.team.name"
+														class="w-27 xs:w-32 absolute max-w-none -left-16 xs:top-1"
+														[src]="imageService.getImageUrl(fantasyPricesTeam.team.carImage | SpaceToUnderscore)" />
+												</div>
+												<div class="flex-1 min-w-0">
+													<div class="flex items-center gap-1 xs:gap-2">
+														<h4 class="font-bold text-xs xs:text-base dark:text-white truncate max-w-[75px] md:max-w-none">
+															{{ fantasyPricesTeam.team.name }}
+														</h4>
+														<div
+															class="hidden sm:block rounded border-l-4 bg-gray-50 dark:bg-gray-700 py-0.5 px-2"
+															[class]="'border-' + (fantasyPricesTeam.team.name | SpaceToUnderscore)">
+															<img
+																[alt]="'Logo ' + fantasyPricesTeam.team.name"
+																class="w-4"
+																[class.reverse-color]="
+																	fantasyPricesTeam.team.name === 'Alpine' ||
+																	fantasyPricesTeam.team.name === 'AlphaTauri' ||
+																	fantasyPricesTeam.team.name === 'Aston Martin'
+																"
+																[src]="imageService.getImageUrl(fantasyPricesTeam.team.logoImage | SpaceToUnderscore)" />
+														</div>
+													</div>
+													<div class="text-xs xs:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+														{{ fantasyPricesTeam.fantasyInfo.totalPoints }} puntos
+													</div>
+												</div>
+											</div>
+											<div class="flex items-center gap-1 xs:gap-2">
+												<div class="text-right min-w-18">
+													<div class="text-xs xs:text-base font-bold text-orange-600 dark:text-orange-400">
+														${{ fantasyPricesTeam.price | pricePipe }}
+													</div>
+													<div class="text-xs flex justify-end gap-1">
+														@if (fantasyPricesTeam.fantasyInfo.differencePrice > 0) {
+															<span class="text-green-500">
+																<i class="pi pi-arrow-up-right" style="font-size: 8px"></i>
+																{{ fantasyPricesTeam.fantasyInfo.differencePrice.toFixed(2) }} %</span
+															>
+														} @else if (fantasyPricesTeam.fantasyInfo.differencePrice < 0) {
+															<span class="text-red-500"
+																><i class="pi pi-arrow-down-right" style="font-size: 8px"></i>
+																{{ fantasyPricesTeam.fantasyInfo.differencePrice.toFixed(2) }} %</span
+															>
+														} @else {
+															<span class="text-gray-500"
+																><i class="pi pi-arrow-right" style="font-size: 8px"></i>
+																{{ fantasyPricesTeam.fantasyInfo.differencePrice.toFixed(2) }} %</span
+															>
+														}
+													</div>
+												</div>
+												<div class="flex flex-col gap-2">
+													<button
+														class="h-3.5 flex mt-1.5"
+														(click)="generateEvolutionPointTeamChart(fantasyPricesTeam)"
+														onkeydown="generateEvolutionPointTeamChart(fantasyPricesTeam)">
+														<i
+															class="pi pi-chart-bar cursor-pointer hover:text-orange-500"
+															style="font-size: 12px"
+															pTooltip="Gráfico de puntos"></i>
+													</button>
+
+													<button
+														class="h-3.5 flex"
+														(click)="generateEvolutionTeamPriceChart(fantasyPricesTeam)"
+														onkeydown="generateEvolutionPointTeamChart(fantasyPricesTeam)">
+														<i
+															class="pi pi-chart-line cursor-pointer hover:text-orange-500"
+															style="font-size: 12px"
+															pTooltip="Gráfico de precios"></i>
+													</button>
+												</div>
+												<p-button
+													icon="pi pi-plus"
+													class="addTeam text-white"
+													(click)="addTeamToSelection(fantasyPricesTeam)"
+													onkeydown="addTeamToSelection(fantasyPricesTeam)"
+													[disabled]="isTeamSelected(fantasyPricesTeam.team) || selectedTeamsCount() === 2"></p-button>
+											</div>
+										</div>
+									</div>
+								</div>
+							}
+						}
+					</div>
+				</div>
+			}
+		</div>
+	</div>
+
+	@if (showDriverPricesData) {
+		<p-dialog [(visible)]="showDriverPricesData" [modal]="true" [dismissableMask]="true" [closable]="false" [style]="{ width: '60rem' }">
+			<ng-template #header>
+				<h2 class="text-xl font-bold text-gray-900 dark:text-white flex-1">Evolución de Precio - {{ driverPriceData.driver.name }}</h2>
+				<p-button
+					icon="pi pi-times"
+					(click)="showDriverPricesData = false"
+					onkeydown="showDriverPricesData = false"
+					class="closeDialog"></p-button>
+			</ng-template>
+			<div class="mb-2 xs:mb-3 sm:mb-4">
+				<div class="flex items-center gap-3">
+					<div
+						class="relative w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden flex-shrink-0 bg-gray-400 border-1"
+						[class]="'border-' + (driverPriceData.driver.team.name | SpaceToUnderscore)">
+						<img
+							[alt]="driverPriceData.driver.name"
+							class="w-full h-full object-cover"
+							[src]="imageService.getImageUrl(driverPriceData.driver.driverImage | SpaceToUnderscore)" />
+					</div>
+					<div class="flex flex-col">
+						<div class="font-semibold text-sm xs:text-base sm:text-lg dark:text-white">{{ driverPriceData.driver.name }}</div>
+						<p
+							class="hidden sm:block text-xs xs:text-sm text-gray-600 dark:text-gray-300 font-medium px-2 py-0.5 rounded border-l-4 bg-gray-50 dark:bg-gray-700"
+							[class]="'border-' + (driverPriceData.driver.team.name | SpaceToUnderscore)">
+							{{ driverPriceData.driver.team.name }}
+						</p>
+					</div>
+				</div>
+				<div class="text-base xs:text-lg sm:text-xl font-bold text-blue-600 dark:text-blue-400">
+					Precio actual: $ {{ driverPriceData.price | pricePipe }}
+				</div>
+			</div>
+			<div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 xs:p-3 sm:p-4">
+				<p-chart type="line" [data]="dataDriversEvolutionPrice" [options]="lineChartOptions" style="width: 100%; height: 100%"></p-chart>
+				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
+					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
+						<div class="text-gray-500 dark:text-gray-400">Precio inicial</div>
+						<div class="font-bold dark:text-white">${{ showDriverStartPriceData | pricePipe }}</div>
+					</div>
+					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
+						<div class="text-gray-500 dark:text-gray-400">Precio máximo</div>
+						<div class="font-bold dark:text-white">${{ showDriverMaxPriceData | pricePipe }}</div>
+					</div>
+				</div>
+			</div>
+		</p-dialog>
+	}
+
+	@if (showTeamPricesData) {
+		<p-dialog [(visible)]="showTeamPricesData" [modal]="true" [dismissableMask]="true" [closable]="false" [style]="{ width: '60rem' }">
+			<ng-template #header>
+				<h2 class="text-xl font-bold text-gray-900 dark:text-white flex-1">Evolución de Precio - {{ teamPriceData.team.name }}</h2>
+				<p-button
+					icon="pi pi-times"
+					(click)="showTeamPricesData = false"
+					onkeydown="showTeamPricesData = false"
+					class="closeDialog"></p-button>
+			</ng-template>
+			<div class="mb-2 xs:mb-3 sm:mb-4">
+				<div class="flex items-center gap-3">
+					<div
+						class="relative w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden flex-shrink-0 bg-gray-400 border-1"
+						[class]="'border-' + (teamPriceData.team.name | SpaceToUnderscore)">
+						<img
+							[alt]="teamPriceData.team.name"
+							class="w-full h-full object-cover"
+							[src]="imageService.getImageUrl(teamPriceData.team.carImage | SpaceToUnderscore)" />
+					</div>
+					<div class="flex flex-col">
+						<div class="font-semibold text-sm xs:text-base sm:text-lg dark:text-white">{{ teamPriceData.team.name }}</div>
+						<div
+							class="flex justify-center rounded border-l-4 bg-gray-50 dark:bg-gray-700 py-0.5 px-2"
+							[class]="'border-' + (teamPriceData.team.name | SpaceToUnderscore)">
+							<img
+								[alt]="'Logo ' + teamPriceData.team.name"
+								class="w-4.5"
+								[class.reverse-color]="
+									teamPriceData.team.name === 'Alpine' ||
+									teamPriceData.team.name === 'AlphaTauri' ||
+									teamPriceData.team.name === 'Aston Martin'
+								"
+								[src]="imageService.getImageUrl(teamPriceData.team.logoImage | SpaceToUnderscore)" />
+						</div>
+					</div>
+				</div>
+				<div class="text-base xs:text-lg sm:text-xl font-bold text-blue-600 dark:text-blue-400">
+					Precio actual: $ {{ teamPriceData.price | pricePipe }}
+				</div>
+			</div>
+			<div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 xs:p-3 sm:p-4">
+				<p-chart type="line" [data]="dataTeamsEvolutionPrice" [options]="lineChartOptions" style="width: 100%; height: 100%"></p-chart>
+				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
+					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
+						<div class="text-gray-500 dark:text-gray-400">Precio inicial</div>
+						<div class="font-bold dark:text-white">${{ showTeamStartPriceData | pricePipe }}</div>
+					</div>
+					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
+						<div class="text-gray-500 dark:text-gray-400">Precio máximo</div>
+						<div class="font-bold dark:text-white">${{ showTeamMaxPriceData | pricePipe }}</div>
+					</div>
+				</div>
+			</div>
+		</p-dialog>
+	}
+
+	@if (showDriverPointsData) {
+		<p-dialog [(visible)]="showDriverPointsData" [modal]="true" [dismissableMask]="true" [closable]="false" [style]="{ width: '60rem' }">
+			<ng-template #header>
+				<h2 class="text-xl font-bold text-gray-900 dark:text-white flex-1">Evolución de Puntos - {{ driverPointData.driver.name }}</h2>
+				<p-button
+					icon="pi pi-times"
+					(click)="showDriverPointsData = false"
+					onkeydown="showDriverPointsData = false"
+					class="closeDialog"></p-button>
+			</ng-template>
+			<div class="mb-2 xs:mb-3 sm:mb-4">
+				<div class="flex items-center gap-3">
+					<div
+						class="relative w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden flex-shrink-0 bg-gray-400 border-1"
+						[class]="'border-' + (driverPointData.driver.team.name | SpaceToUnderscore)">
+						<img
+							[alt]="driverPointData.driver.name"
+							class="w-full h-full object-cover"
+							[src]="imageService.getImageUrl(driverPointData.driver.driverImage | SpaceToUnderscore)" />
+					</div>
+					<div class="flex flex-col">
+						<div class="font-semibold text-sm xs:text-base sm:text-lg dark:text-white">{{ driverPointData.driver.name }}</div>
+						<p
+							class="hidden sm:block text-xs xs:text-sm text-gray-600 dark:text-gray-300 font-medium px-2 py-0.5 rounded border-l-4 bg-gray-50 dark:bg-gray-700"
+							[class]="'border-' + (driverPointData.driver.team.name | SpaceToUnderscore)">
+							{{ driverPointData.driver.team.name }}
+						</p>
+					</div>
+				</div>
+				<div class="text-base xs:text-lg sm:text-xl font-bold text-green-600 dark:text-green-400">
+					Puntos actuales: {{ driverPointData.fantasyInfo.totalPoints }}
+				</div>
+			</div>
+			<div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 xs:p-3 sm:p-4">
+				<p-chart type="line" [data]="dataDriversEvolutionPoints" [options]="lineChartOptions" style="width: 100%; height: 100%"></p-chart>
+				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
+					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
+						<div class="text-gray-500 dark:text-gray-400">Puntos por carrera</div>
+						<div class="font-bold dark:text-white">{{ showDriverMedianPointsData.toFixed(1) }}</div>
+					</div>
+					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
+						<div class="text-gray-500 dark:text-gray-400">Mejor resultado</div>
+						<div class="font-bold dark:text-white">{{ showDriverBestPointsData }}</div>
+					</div>
+				</div>
+			</div>
+		</p-dialog>
+	}
+
+	@if (showTeamPointsData) {
+		<p-dialog [(visible)]="showTeamPointsData" [modal]="true" [dismissableMask]="true" [closable]="false" [style]="{ width: '60rem' }">
+			<ng-template #header>
+				<h2 class="text-xl font-bold text-gray-900 dark:text-white flex-1">Evolución de Puntos - {{ teamPointData.team.name }}</h2>
+				<p-button
+					icon="pi pi-times"
+					(click)="showTeamPointsData = false"
+					onkeydown="showTeamPointsData = false"
+					class="closeDialog"></p-button>
+			</ng-template>
+			<div class="mb-2 xs:mb-3 sm:mb-4">
+				<div class="flex items-center gap-3">
+					<div
+						class="relative w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden flex-shrink-0 bg-gray-400 border-1"
+						[class]="'border-' + (teamPointData.team.name | SpaceToUnderscore)">
+						<img
+							[alt]="teamPointData.team.name"
+							class="w-full h-full object-cover"
+							[src]="imageService.getImageUrl(teamPointData.team.carImage | SpaceToUnderscore)" />
+					</div>
+					<div class="flex flex-col">
+						<div class="font-semibold text-sm xs:text-base sm:text-lg dark:text-white">{{ teamPointData.team.name }}</div>
+						<div
+							class="flex justify-center rounded border-l-4 bg-gray-50 dark:bg-gray-700 py-0.5 px-2"
+							[class]="'border-' + (teamPointData.team.name | SpaceToUnderscore)">
+							<img
+								[alt]="'Logo ' + teamPointData.team.name"
+								class="w-4.5"
+								[class.reverse-color]="
+									teamPointData.team.name === 'Alpine' ||
+									teamPointData.team.name === 'AlphaTauri' ||
+									teamPointData.team.name === 'Aston Martin'
+								"
+								[src]="imageService.getImageUrl(teamPointData.team.logoImage | SpaceToUnderscore)" />
+						</div>
+					</div>
+				</div>
+				<div class="text-base xs:text-lg sm:text-xl font-bold text-green-600 dark:text-green-400">
+					Puntos actuales: {{ teamPointData.fantasyInfo.totalPoints }}
+				</div>
+			</div>
+			<div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 xs:p-3 sm:p-4">
+				<p-chart type="line" [data]="dataTeamsEvolutionPoints" [options]="lineChartOptions" style="width: 100%; height: 100%"></p-chart>
+				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
+					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
+						<div class="text-gray-500 dark:text-gray-400">Puntos por carrera</div>
+						<div class="font-bold dark:text-white">{{ showTeamMedianPointsData.toFixed(1) }}</div>
+					</div>
+					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
+						<div class="text-gray-500 dark:text-gray-400">Mejor resultado</div>
+						<div class="font-bold dark:text-white">{{ showTeamBestPointsData }}</div>
+					</div>
+				</div>
+			</div>
+		</p-dialog>
+	}
+</main>

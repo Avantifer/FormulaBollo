@@ -1,0 +1,19 @@
+<form [formGroup]="penaltySeveritiesForm">
+	<p-select
+		formControlName="penaltySeverity"
+		[options]="penaltySeverities"
+		optionLabel="severity"
+		dataKey="id"
+		class="rounded-lg text-sm bg-slate-100! dark:bg-slate-600! w-full min-w-[184px] border-0! shadow-md!">
+		<ng-template pTemplate="item" let-penaltySeverity>
+			<div class="flex items-center gap-2">
+				@if (penaltySeverity.severity === penaltySeveritiesForm.get('penaltySeverity')?.value?.severity) {
+					<i class="pi pi-check" style="font-size: 14px"></i>
+				} @else {
+					<div class="w-[14px]"></div>
+				}
+				<div>{{ penaltySeverity.severity }}</div>
+			</div>
+		</ng-template>
+	</p-select>
+</form>

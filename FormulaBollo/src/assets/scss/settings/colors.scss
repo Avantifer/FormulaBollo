@@ -1,0 +1,29 @@
+$colorMercedes: rgb(108, 211, 191);
+$colorRedBull: rgb(54, 113, 198);
+$colorFerrari: rgb(249, 21, 54);
+$colorMcLaren: rgb(245, 128, 32);
+$colorAlpine: rgb(34, 147, 209);
+$colorAlphaTauri: rgb(94, 143, 170);
+$colorAston: rgb(53, 140, 117);
+$colorAlfa: rgb(201, 45, 75);
+$colorHaas: rgb(182, 186, 189);
+$colorWilliams: rgb(55, 190, 221);
+$colorKickSauber: rgb(82, 226, 82);
+$colorRB: rgb(102, 146, 255);
+
+$colorPrincipal: rgb(220 38 38);
+$colorPrincipalDark: rgb(185, 28, 28);
+$colorPrincipalDarkest: rgb(153, 27, 27);
+
+$colorFantasyPrincipal: rgb(37, 99, 235);
+$colorFantasyPrincipalDark: rgb(29, 78, 216);
+$colorFantasyPrincipalDarkest: rgb(30, 64, 175);
+
+:root {
+  --color-principal: #{$colorPrincipal};
+  --color-principal-dark: #{$colorPrincipalDark};
+  --color-principal-darkest: #{$colorPrincipalDarkest};
+  --color-fantasy-principal: #{$colorFantasyPrincipal};
+  --color-fantasy-principal-dark: #{$colorFantasyPrincipalDark};
+  --color-fantasy-principal-darkest: #{$colorFantasyPrincipalDarkest};
+}

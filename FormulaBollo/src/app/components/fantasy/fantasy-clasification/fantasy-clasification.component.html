@@ -1,0 +1,238 @@
+<main class="bg-slate-100 dark:bg-slate-900">
+	<div class="container mx-auto px-4 py-8">
+		<div class="mb-8">
+			<h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">Clasificación Fantasy</h1>
+			<p class="text-lg text-gray-600 dark:text-gray-300">Consulta las clasificaciones por temporada y circuito</p>
+		</div>
+		<div class="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6 mb-8">
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<div>
+					<p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Temporada</p>
+					<select-seasons (seasonChanged)="onSeasonChange($event)" [fantasy]="true"></select-seasons>
+				</div>
+				<div>
+					<p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Circuito</p>
+					<select-races (raceChanged)="onRaceChange($event)" [season]="seasonSelected()!" [fantasy]="true"></select-races>
+				</div>
+			</div>
+		</div>
+		<div class="bg-white dark:bg-slate-800 rounded-lg shadow-md">
+			<div class="p-6">
+				<h2 class="text-xl font-semibold text-gray-900 dark:text-white">Clasificación General</h2>
+				<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Selecciona temporada y circuito para ver resultados específicos</p>
+			</div>
+			<p-table [value]="fantasyPointsUsers()" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }" class="mb-4">
+				<ng-template #header>
+					<tr>
+						<th
+							class="dark:bg-slate-800! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+							scope="col">
+							Posición
+						</th>
+						<th
+							class="dark:bg-slate-800! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+							scope="col">
+							Nombre de usuario
+						</th>
+						<th
+							class="dark:bg-slate-800! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+							scope="col">
+							Equipo
+						</th>
+						<th
+							class="dark:bg-slate-800! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+							scope="col">
+							Puntos totales
+						</th>
+					</tr>
+				</ng-template>
+				<ng-template #body let-fantasyPointUser let-index="rowIndex">
+					<tr class="border-b border-solid overflow-hidden">
+						<td
+							class="dark:bg-slate-800 text-sm border-l-4! dark:border-gray-500!"
+							[class]="index + 1 === fantasyPointsUsers().length ? 'rounded-bl-lg' : ''">
+							<div class="flex items-center justify-center size-8 mr-1 dark:bg-slate-800">
+								{{ index + 1 }}
+							</div>
+						</td>
+						<td class="dark:bg-slate-800 text-sm dark:border-gray-500!">
+							<p>{{ fantasyPointUser.account.username }}</p>
+						</td>
+						<td class="dark:bg-slate-800 text-sm dark:border-gray-500!">
+							<p-button
+								label="Ver Equipo"
+								class="text-white"
+								(click)="openDialog(fantasyPointUser)"
+								onkeydown="openDialog(fantasyPointUser)"></p-button>
+						</td>
+						<td
+							class="dark:bg-slate-800 text-sm dark:border-gray-500!"
+							[class]="index + 1 === fantasyPointsUsers().length ? 'rounded-br-lg' : ''">
+							{{ fantasyPointUser.totalPoints }}
+						</td>
+					</tr>
+				</ng-template>
+			</p-table>
+		</div>
+	</div>
+	<p-dialog [(visible)]="showDialog" [modal]="true" [dismissableMask]="true" [closable]="false" [style]="{ width: '60rem' }">
+		@if (fantasyPointsUserSelected && !!fantasyPointsUserSelected) {
+			<ng-template #header>
+				<div class="flex items-center justify-between w-full">
+					<div class="flex items-center gap-3">
+						<div class="size-12 bg-white/30 rounded-full flex items-center justify-center">
+							<i class="pi pi-user text-white"></i>
+						</div>
+						<div>
+							<h3 class="text-xl font-bold text-white">Equipo de {{ fantasyPointsUserSelected.account.username }}</h3>
+							<p class="text-blue-100 text-sm">{{ fantasyPointsUserSelected.fantasyElection.race!.name }}</p>
+						</div>
+					</div>
+					<div class="flex items-center gap-4">
+						<div class="text-center">
+							<div class="text-2xl font-bold text-white">{{ showAllPoints() }}</div>
+							<div class="text-xs text-blue-100">Puntos Totales</div>
+						</div>
+						<p-button icon="pi pi-times" (click)="showDialog = false" onkeydown="showDialog = false" class="closeDialog"></p-button>
+					</div>
+				</div>
+			</ng-template>
+			<div class="p-6">
+				<div class="mb-8">
+					<div class="flex items-center gap-2 mb-4">
+						<div class="size-6 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+							<i class="pi pi-trophy text-blue-600 dark:text-blue-400" style="font-size: 14px"></i>
+						</div>
+						<h4 class="text-lg font-semibold text-gray-900 dark:text-white">Pilotos Seleccionados</h4>
+						<p class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-full text-xs font-medium">3/3</p>
+					</div>
+					<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+						<div
+							class="relative bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600 hover:shadow-lg transition-all duration-200">
+							<div class="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full tracking-wider">#1</div>
+							<div class="flex flex-col items-center text-center">
+								<div
+									class="size-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center overflow-hidden mb-3 ring-4 ring-blue-200 dark:ring-blue-900">
+									<img
+										[alt]="fantasyPointsUserSelected.fantasyElection.driverOne!.name"
+										[src]="
+											imageService.getImageUrl(fantasyPointsUserSelected.fantasyElection.driverOne!.driverImage | SpaceToUnderscore)
+										" />
+								</div>
+								<h5 class="font-bold text-gray-900 dark:text-white text-sm mb-1">
+									{{ fantasyPointsUserSelected.fantasyElection.driverOne!.name }}
+								</h5>
+								<p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+									{{ fantasyPointsUserSelected.fantasyElection.driverOne!.team.name }}
+								</p>
+								<div class="bg-white dark:bg-gray-900 rounded-lg px-3 py-2 w-full">
+									<div class="text-lg font-bold text-blue-600 dark:text-blue-400">{{ pointsDriverArray[0] }}</div>
+									<div class="text-xs text-gray-500 dark:text-gray-400">puntos</div>
+								</div>
+							</div>
+						</div>
+						<div
+							class="relative bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600 hover:shadow-lg transition-all duration-200">
+							<div class="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full tracking-wider">#2</div>
+							<div class="flex flex-col items-center text-center">
+								<div
+									class="size-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center overflow-hidden mb-3 ring-4 ring-blue-200 dark:ring-blue-900">
+									<img
+										[alt]="fantasyPointsUserSelected.fantasyElection.driverTwo!.name"
+										[src]="
+											imageService.getImageUrl(fantasyPointsUserSelected.fantasyElection.driverTwo!.driverImage | SpaceToUnderscore)
+										" />
+								</div>
+								<h5 class="font-bold text-gray-900 dark:text-white text-sm mb-1">
+									{{ fantasyPointsUserSelected.fantasyElection.driverTwo!.name }}
+								</h5>
+								<p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+									{{ fantasyPointsUserSelected.fantasyElection.driverTwo!.team.name }}
+								</p>
+								<div class="bg-white dark:bg-gray-900 rounded-lg px-3 py-2 w-full">
+									<div class="text-lg font-bold text-blue-600 dark:text-blue-400">{{ pointsDriverArray[1] }}</div>
+									<div class="text-xs text-gray-500 dark:text-gray-400">puntos</div>
+								</div>
+							</div>
+						</div>
+						<div
+							class="relative bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600 hover:shadow-lg transition-all duration-200">
+							<div class="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full tracking-wider">#3</div>
+							<div class="flex flex-col items-center text-center">
+								<div
+									class="size-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center overflow-hidden mb-3 ring-4 ring-blue-200 dark:ring-blue-900">
+									<img
+										[alt]="fantasyPointsUserSelected.fantasyElection.driverThree!.name"
+										[src]="
+											imageService.getImageUrl(fantasyPointsUserSelected.fantasyElection.driverThree!.driverImage | SpaceToUnderscore)
+										" />
+								</div>
+								<h5 class="font-bold text-gray-900 dark:text-white text-sm mb-1">
+									{{ fantasyPointsUserSelected.fantasyElection.driverThree!.name }}
+								</h5>
+								<p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+									{{ fantasyPointsUserSelected.fantasyElection.driverThree!.team.name }}
+								</p>
+								<div class="bg-white dark:bg-gray-900 rounded-lg px-3 py-2 w-full">
+									<div class="text-lg font-bold text-blue-600 dark:text-blue-400">{{ pointsDriverArray[2] }}</div>
+									<div class="text-xs text-gray-500 dark:text-gray-400">puntos</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div>
+					<div class="flex items-center gap-2 mb-4">
+						<div class="size-6 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center">
+							<i class="pi pi-trophy text-orange-600 dark:text-orange-400" style="font-size: 14px"></i>
+						</div>
+						<h4 class="text-lg font-semibold text-gray-900 dark:text-white">Equipos Seleccionados</h4>
+						<p class="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-2 py-1 rounded-full text-xs font-medium">
+							2/2
+						</p>
+					</div>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+						<div
+							class="relative bg-gradient-to-br from-orange-50 to-orange-100 dark:from-gray-700 dark:to-gray-800 rounded-xl p-6 border border-orange-200 dark:border-gray-600 hover:shadow-lg transition-all duration-200">
+							<div class="absolute top-3 right-3 bg-orange-600 text-white text-xs font-bold px-2 py-1 rounded-full tracking-wider">#1</div>
+							<div class="flex flex-col items-center text-center">
+								<div
+									class="w-32 h-20 bg-gradient-to-br from-orange-600 to-orange-800 rounded-xl flex items-center justify-center overflow-hidden mb-4 ring-4 ring-orange-200 dark:ring-orange-900 shadow-sm">
+									<img
+										[alt]="fantasyPointsUserSelected.fantasyElection.teamOne!.name"
+										[src]="imageService.getImageUrl(fantasyPointsUserSelected.fantasyElection.teamOne!.carImage | SpaceToUnderscore)" />
+								</div>
+								<h5 class="font-bold text-gray-900 dark:text-white text-sm mb-3 leading-tight">
+									{{ fantasyPointsUserSelected.fantasyElection.teamOne!.name }}
+								</h5>
+								<div class="bg-white dark:bg-gray-900 rounded-lg px-4 py-3 w-full shadow-sm">
+									<div class="text-xl font-bold text-orange-600 dark:text-orange-400">{{ pointsTeamArray[0] }}</div>
+									<div class="text-xs text-gray-500 dark:text-gray-400">puntos de equipo</div>
+								</div>
+							</div>
+						</div>
+						<div
+							class="relative bg-gradient-to-br from-orange-50 to-orange-100 dark:from-gray-700 dark:to-gray-800 rounded-xl p-6 border border-orange-200 dark:border-gray-600 hover:shadow-lg transition-all duration-200">
+							<div class="absolute top-3 right-3 bg-orange-600 text-white text-xs font-bold px-2 py-1 rounded-full tracking-wider">#2</div>
+							<div class="flex flex-col items-center text-center">
+								<div
+									class="w-32 h-20 bg-gradient-to-br from-orange-600 to-orange-800 rounded-xl flex items-center justify-center overflow-hidden mb-4 ring-4 ring-orange-200 dark:ring-orange-900 shadow-sm">
+									<img
+										[alt]="fantasyPointsUserSelected.fantasyElection.teamTwo!.name"
+										[src]="imageService.getImageUrl(fantasyPointsUserSelected.fantasyElection.teamTwo!.carImage | SpaceToUnderscore)" />
+								</div>
+								<h5 class="font-bold text-gray-900 dark:text-white text-sm mb-3 leading-tight">
+									{{ fantasyPointsUserSelected.fantasyElection.teamTwo!.name }}
+								</h5>
+								<div class="bg-white dark:bg-gray-900 rounded-lg px-4 py-3 w-full shadow-sm">
+									<div class="text-xl font-bold text-orange-600 dark:text-orange-400">{{ pointsTeamArray[1] }}</div>
+									<div class="text-xs text-gray-500 dark:text-gray-400">puntos de equipo</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		}
+	</p-dialog>
+</main>

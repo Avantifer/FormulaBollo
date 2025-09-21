@@ -1,0 +1,26 @@
+<div class="drivers-top10 mt-8">
+  @for (driverPoint of displayTop10; track $index) {
+    <div
+      class="drivers-top10-container mx-0 my-1 xl:mx-16 py-3 px-3 xs:px-4 animation-cubic-03 shadow-md rounded-xl flex items-center justify-between bg-gray-50 hover:bg-gray-200 dark:bg-slate-950 dark:hover:bg-slate-800 cursor-pointer dark:text-white"
+      (click)="router.navigate(['/drivers/' + utilsService.spaceToUnderScore(driverPoint.driver.name)])"
+      (keydown.enter)="router.navigate(['/drivers/' + utilsService.spaceToUnderScore(driverPoint.driver.name)])"
+    >
+      <div class="drivers-top10-start flex items-center">
+        <h4 class="my-0 font-bold">{{ $index + 1 }}</h4>
+        <div class="drivers-top10-line mx-2 h-4 w-1" [class]="'bg-' + (driverPoint.driver.team.name | SpaceToUnderscore)"></div>
+        <h4 class="text-sm xs:text-base my-0 font-bold">{{ driverPoint.driver.name }}</h4>
+        <p class="my-0 ml-4 hidden md:block">{{ driverPoint.driver.team.name }}</p>
+      </div>
+      <div class="drivers-top10-end flex items-center">
+        <p-chip class="text-sm badge mx-1 xs:me-3 w-[100px] p-1! xs:p-2! rounded-pill font-bold text-white! bg-gray-600! justify-center!" [label]="driverPoint.totalPoints + ' Puntos'"></p-chip>
+        <i class="pi pi-chevron-right ml-1 pt-1 text-red-500/80" style="font-size: 0.85rem"></i>
+      </div>
+    </div>
+  }
+</div>
+<div class="mt-8 pb-8 text-center">
+  <a [routerLink]="['/drivers']" class="inline-flex items-center text-red-500 hover:text-red-400 transition">
+    Ver clasificación completa
+    <i class="pi pi-chevron-right ml-1 pt-1" style="font-size: 0.65rem"></i>
+  </a>
+</div>

@@ -1,0 +1,35 @@
+<div class="bg-gray-100 dark:bg-gray-900">
+  <div class="my-container teams position-relative">
+    <div class="ml-0 md:ml-7">
+      <h2 class="AudioWide uppercase text-2xl xs:text-3xl font-bold mb-8 pt-8 text-center text-red-600 dark:text-white">Escuderías</h2>
+    </div>
+    <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 content-center gap-4 px-6">
+      @for (team of teams(); track $index) {
+        <div
+          class="shadow-md flex h-36 rounded-2xl cursor-pointer animation-cubic-03 bg-white dark:bg-gray-800"
+          [class]="'hover-bg-' + (team.name | SpaceToUnderscore)"
+          (click)="router.navigate(['/teams/' + teamNameSpaceToUnderScore(team.name)])"
+          (keydown.enter)="router.navigate(['/teams/' + teamNameSpaceToUnderScore(team.name)])"
+          >
+          <img 
+            [src]="imageService.getImageUrl(team.logoImage)" 
+            [alt]="team.name"
+            [class.reverse-color]="team.name === 'Alpine' || team.name === 'AlphaTauri' || team.name === 'Aston Martin'"
+            class="teams-schema-container-image m-auto w-24"
+            >
+        </div>
+      }
+      <ng-container *ngIf="!cacheService.isVersionRetrieved || !teams().length">
+        @for (item of 10 | skeletonItems; track $index) {
+          <p-skeleton height="9rem" styleClass="rounded-4 border-round-2xl"></p-skeleton>
+        }
+      </ng-container>
+    </div>
+    <div class="mt-8 pb-8 text-center">
+      <a [routerLink]="['/teams']" class="inline-flex items-center text-red-500 hover:text-red-400 transition">
+        Ver todas las escuderías
+        <i class="pi pi-chevron-right ml-1 pt-1" style="font-size: 0.65rem"></i>
+      </a>
+    </div>
+  </div>
+</div>

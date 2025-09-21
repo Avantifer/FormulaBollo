@@ -1,0 +1,87 @@
+
+<div class="my-container mx-auto py-12 px-4">
+  <h2 class="AudioWide uppercase text-2xl xs:text-3xl font-bold mb-8 text-center text-red-600 dark:text-white">Configuraciones</h2>
+  <div class="bg-gray-200/30 dark:bg-gray-900 rounded-xl overflow-hidden shadow-xl p-6" *ngIf="cacheService.isVersionRetrieved && configurations().length">
+    <div class="grid xl:grid-cols-3 gap-8">
+      <div class="border-b border-gray-200 dark:border-gray-800 pb-4">
+        <h3 class="text-xl font-semibold mb-4 flex items-center">
+          <i class="pi pi-cog bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-2 rounded-full mr-2" style="font-size: 1.25rem"></i>
+          Configuración de Carrera
+        </h3>
+        <div class="grid grid-cols-2 gap-4">
+          @for (conf of configurations(); track $index) {
+            @if ($index < 6) {
+              <div>
+                <p class="text-gray-500 dark:text-gray-400">{{ conf.setting }}:</p>
+                <p class="font-medium">{{ conf.settingValue }}</p>
+              </div>
+            }
+          }
+        </div>
+      </div>
+      <div class="border-b border-gray-200 dark:border-gray-800 pb-4">
+        <h3 class="text-xl font-semibold mb-4 flex items-center">
+          <i class="pi pi-exclamation-triangle bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-2 rounded-full mr-2" style="font-size: 1.25rem"></i>
+          Configuración de Daños
+        </h3>
+        <div class="grid grid-cols-2 gap-4">
+          @for (conf of configurations(); track $index) {
+            @if ($index > 5 && $index < 12) {
+              <div>
+                <p class="text-gray-500 dark:text-gray-400">{{ conf.setting }}:</p>
+                <p class="font-medium">{{ conf.settingValue }}</p>
+              </div>
+            }
+          }
+        </div>
+      </div>
+      <div class="border-b border-gray-200 dark:border-gray-800 pb-4">
+        <h3 class="text-xl font-semibold mb-4 flex items-center">
+          <i class="pi pi-sliders-h bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-2 rounded-full mr-2" style="font-size: 1.25rem"></i>
+          Configuración de Asistencias
+        </h3>
+        <div class="grid grid-cols-2 gap-4">
+          @for (conf of configurations(); track $index) {
+            @if ($index > 11) {
+              <div [class]="$index === 16 ? 'col-span-2' : ''">
+                <p class="text-gray-500 dark:text-gray-400">{{ conf.setting }}:</p>
+                <p class="font-medium">{{ conf.settingValue }}</p>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+    <div class="mt-6 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div class="flex items-start">
+        <i class="pi pi-info-circle bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-2 rounded-full mr-2" style="font-size: 1.25rem"></i>
+        <div>
+          <h4 class="font-semibold text-lg">Información importante</h4>
+          <p class="text-gray-600 dark:text-gray-300 mt-1">Estas configuraciones se aplican a todas las carreras de la temporada actual. Los administradores pueden modificar estos ajustes antes de cada Gran Premio.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  @if (!cacheService.isVersionRetrieved) {
+    <div class="rounded border border-surface-600 p-6">
+      <div class="grid xl:grid-cols-3 gap-8">
+        @for (1 of [1, 2, 3]; track $index) {
+          <div class="border-b border-gray-200 dark:border-gray-800 pb-4">
+            <h3 class="mb-4 flex items-center">
+              <p-skeleton shape="circle" size="2.25rem" styleClass="mr-2" />
+              <p-skeleton height="1.25rem" width="15rem"></p-skeleton>
+            </h3>
+            <div class="grid grid-cols-2 gap-8">
+              <div *ngFor="let item of 6 | skeletonItems">
+                <p-skeleton height="1rem" width="8rem" styleClass="mb-2"></p-skeleton>
+                <p-skeleton height="1rem" width="4rem"></p-skeleton>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+      <p-skeleton width="100%" height="6rem"></p-skeleton>
+    </div>
+  }    
+</div>
+

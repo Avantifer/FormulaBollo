@@ -1,0 +1,29 @@
+:host {
+  ::ng-deep .saveResults .p-button {
+    background: var(--color-principal) !important;
+  }
+
+  ::ng-deep .saveResults .p-button:hover {
+    background: var(--color-principal-dark) !important;
+  }
+
+  ::ng-deep .p-divider-content {
+    background: transparent !important;
+  }
+
+  ::ng-deep .p-divider-horizontal {
+    margin: 2rem 0;
+  }
+
+  ::ng-deep .deleteResults .p-button {
+    background: var(--color-black) !important;
+    color: var(--color-red-400);
+    border: 1px var(--color-red-400) solid; 
+  }
+
+  ::ng-deep .deleteResults .p-button:hover {
+    background: var(--color-principal) !important;
+    color: var(--color-white);
+    border: 1px var(--color-red-400) solid; 
+  }
+}

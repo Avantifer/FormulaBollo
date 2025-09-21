@@ -1,0 +1,324 @@
+@if (type === 'Pilotos') {
+	@if (listValue === 'grid') {
+		<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-2 md:p-6" *ngIf="driverPoints().length">
+			<ng-container *ngFor="let driverPoint of driverPoints(); let i = index">
+				<app-driver-card *ngIf="showDriverByTeamFilter(driverPoint.driver)" [driverPoint]="driverPoint" [index]="i"> </app-driver-card>
+			</ng-container>
+		</div>
+		<div *ngIf="isLoading" class="grid md:grid-cols-2 xl:grid-cols-3 p-2 md:p-6">
+			<div *ngFor="let item of 9 | skeletonItems" class="mb-6">
+				<p-skeleton width="95%" height="26.5rem"></p-skeleton>
+			</div>
+		</div>
+
+		<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-2 md:p-6" *ngIf="!driverPoints().length">
+			<ng-container *ngFor="let driver of drivers(); let i = index">
+				<app-driver-card *ngIf="showDriverByTeamFilter(driver)" [driverPoint]="driver" [index]="i"> </app-driver-card>
+			</ng-container>
+		</div>
+		<div *ngIf="isLoading" class="grid md:grid-cols-2 xl:grid-cols-3 p-2 md:p-6">
+			<div *ngFor="let item of 9 | skeletonItems" class="mb-6">
+				<p-skeleton width="95%" height="26.5rem"></p-skeleton>
+			</div>
+		</div>
+	} @else {
+		<div class="p-2 md:p-6" *ngIf="driverPoints().length">
+			<p-table [value]="driverPoints()" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }">
+				<ng-template #header>
+					<tr class="border-b border-solid">
+						<th
+							class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+							scope="col">
+							POS
+						</th>
+						<th
+							class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+							scope="col">
+							Piloto
+						</th>
+						<th
+							class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+							scope="col">
+							Equipo
+						</th>
+						<th
+							class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+							scope="col">
+							Nº
+						</th>
+						<th
+							class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+							scope="col">
+							Puntos
+						</th>
+						<th
+							class="dark:bg-slate-700! text-xs uppercase text-end! font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+							scope="col">
+							Acciones
+						</th>
+					</tr>
+				</ng-template>
+				<ng-template #body let-driverPoints let-index="rowIndex">
+					<tr *ngIf="showDriverByTeamFilter(driverPoints.driver)" class="border-b border-solid">
+						<td class="dark:bg-slate-700 text-sm border-l-4! dark:border-gray-500!">
+							<div
+								class="size-8 font-bold text-slate-700 dark:text-white mr-2 xs:mr-4 rounded-full flex justify-center items-center shadow"
+								[class]="'bg-' + (driverPoints.driver.team.name | SpaceToUnderscore)">
+								{{ index + 1 }}
+							</div>
+						</td>
+						<td class="dark:bg-slate-700 text-sm dark:border-gray-500!">
+							<div class="flex items-center">
+								<img
+									[src]="imageService.getImageUrl(utilsService.spaceToUnderScore(driverPoints.driver.driverImage | SpaceToUnderscore))"
+									alt="Logo equipo"
+									class="size-8 bg-gray-400 rounded-full border-1 shadow-lg"
+									[class]="'border-' + (driverPoints.driver.team.name | SpaceToUnderscore)" />
+								<span class="text-sm font-medium text-gray-900 dark:text-white ml-2">{{ driverPoints.driver.name }}</span>
+								<div class="flex items-center">
+									<i
+										style="font-size: 0.55rem"
+										class="pi mt-1 ml-2"
+										[ngClass]="{
+											'pi-arrow-up text-green-500': driverPoints.positionChange === 'ADVANCED',
+											'pi-arrow-down text-red-500': driverPoints.positionChange === 'DROPPED'
+										}"></i>
+									<p
+										class="text-xs mt-1 ml-0.5"
+										[ngClass]="{
+											'text-green-500': driverPoints.positionChange === 'ADVANCED',
+											'text-red-500': driverPoints.positionChange === 'DROPPED'
+										}">
+										{{ driverPoints.positionChangeAmount != 0 ? driverPoints.positionChangeAmount : undefined }}
+									</p>
+								</div>
+							</div>
+						</td>
+						<td class="dark:bg-slate-700 text-sm dark:border-gray-500!">
+							<div class="flex items-center">
+								<div class="h-2 w-2 mr-1 rounded-full" [class]="'bg-' + (driverPoints.driver.team.name | SpaceToUnderscore)"></div>
+								<p>{{ driverPoints.driver.team.name }}</p>
+							</div>
+						</td>
+						<td class="dark:bg-slate-700 text-sm dark:border-gray-500! italic">
+							{{ driverPoints.driver.number }}
+						</td>
+						<td class="dark:bg-slate-700 text-sm dark:border-gray-500! font-bold">
+							{{ driverPoints.totalPoints }}
+						</td>
+						<td class="dark:bg-slate-700 text-sm dark:border-gray-500! font-bold text-end!">
+							<p-button
+								label="Ver perfil"
+								icon="pi pi-angle-right"
+								iconPos="right"
+								(click)="router.navigate(['/drivers/' + utilsService.spaceToUnderScore(driverPoints.driver.name)])"
+								(keydown.enter)="router.navigate(['/drivers/' + utilsService.spaceToUnderScore(driverPoints.driver.name)])" />
+						</td>
+					</tr>
+				</ng-template>
+			</p-table>
+			<p-skeleton width="100%" height="50rem" *ngIf="isLoading"></p-skeleton>
+		</div>
+		<div class="p-2 md:p-6" *ngIf="!driverPoints().length">
+			<p-table [value]="drivers()" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }">
+				<ng-template #header>
+					<tr class="border-b border-solid">
+						<th
+							class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+							scope="col">
+							POS
+						</th>
+						<th
+							class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+							scope="col">
+							Piloto
+						</th>
+						<th
+							class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+							scope="col">
+							Equipo
+						</th>
+						<th
+							class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+							scope="col">
+							Nº
+						</th>
+						<th
+							class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+							scope="col">
+							Puntos
+						</th>
+						<th
+							class="dark:bg-slate-700! text-xs uppercase text-end! font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+							scope="col">
+							Acciones
+						</th>
+					</tr>
+				</ng-template>
+				<ng-template #body let-driver let-index="rowIndex">
+					<tr *ngIf="showDriverByTeamFilter(driver)" class="border-b border-solid">
+						<td class="dark:bg-slate-700 text-sm border-l-4! dark:border-gray-500!">
+							<div
+								class="size-8 font-bold text-slate-700 dark:text-white mr-2 xs:mr-4 rounded-full flex justify-center items-center shadow"
+								[class]="'bg-' + (driver.team.name | SpaceToUnderscore)">
+								{{ index + 1 }}
+							</div>
+						</td>
+						<td class="dark:bg-slate-700 text-sm dark:border-gray-500!">
+							<div class="flex items-center">
+								<img
+									[src]="imageService.getImageUrl(utilsService.spaceToUnderScore(driver.driverImage | SpaceToUnderscore))"
+									alt="Logo equipo"
+									class="size-8 bg-gray-400 rounded-full border-1 shadow-lg"
+									[class]="'border-' + (driver.team.name | SpaceToUnderscore)" />
+								<span class="text-sm font-medium text-gray-900 dark:text-white ml-2">{{ driver.name }}</span>
+							</div>
+						</td>
+						<td class="dark:bg-slate-700 text-sm dark:border-gray-500!">
+							<div class="flex items-center">
+								<div class="h-2 w-2 mr-1 rounded-full" [class]="'bg-' + (driver.team.name | SpaceToUnderscore)"></div>
+								<p>{{ driver.team.name }}</p>
+							</div>
+						</td>
+						<td class="dark:bg-slate-700 text-sm dark:border-gray-500! italic">
+							{{ driver.number }}
+						</td>
+						<td class="dark:bg-slate-700 text-sm dark:border-gray-500! font-bold">0</td>
+						<td class="dark:bg-slate-700 text-sm dark:border-gray-500! font-bold text-end!">
+							<p-button
+								label="Ver perfil"
+								icon="pi pi-angle-right"
+								iconPos="right"
+								(click)="router.navigate(['/drivers/' + utilsService.spaceToUnderScore(driver.name)])"
+								(keydown.enter)="router.navigate(['/drivers/' + utilsService.spaceToUnderScore(driver.name)])" />
+						</td>
+					</tr>
+				</ng-template>
+			</p-table>
+			<p-skeleton width="100%" height="50rem" *ngIf="isLoading"></p-skeleton>
+		</div>
+	}
+} @else {
+	@if (listValue === 'grid') {
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-2 md:p-6 min-h-screen">
+			<ng-container *ngFor="let teamPoint of teamPoints(); let i = index">
+				<app-team-card [teamPoints]="teamPoint" [index]="i" *ngIf="showTeamsByTeamFilter(teamPoint.team)"> </app-team-card>
+			</ng-container>
+		</div>
+
+		<div *ngIf="isLoading" class="grid md:grid-cols-2 p-2 md:p-6">
+			<div *ngFor="let item of 9 | skeletonItems" class="mb-6">
+				<p-skeleton width="95%" height="26.5rem"></p-skeleton>
+			</div>
+		</div>
+	} @else {
+		<div class="p-2 md:p-6">
+			<p-table [value]="teamPoints()" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }">
+				<ng-template #header>
+					<tr class="border-b border-solid">
+						<th
+							class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+							scope="col">
+							POS
+						</th>
+						<th
+							class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+							scope="col">
+							Escudería
+						</th>
+						<th
+							class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+							scope="col">
+							Pilotos
+						</th>
+						<th
+							class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+							scope="col">
+							Puntos
+						</th>
+						<th
+							class="dark:bg-slate-700! text-xs uppercase text-end! font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+							scope="col">
+							Acciones
+						</th>
+					</tr>
+				</ng-template>
+				<ng-template #body let-teamPoints let-index="rowIndex">
+					<tr *ngIf="showTeamsByTeamFilter(teamPoints.team)" class="border-b border-solid">
+						<td class="dark:bg-slate-700 text-sm border-l-4! dark:border-gray-500!">
+							<div
+								class="w-8 h-8 font-bold text-slate-700 dark:text-white mr-2 xs:mr-4 rounded-full flex justify-center items-center shadow"
+								[class]="'bg-' + utilsService.spaceToUnderScore(teamPoints.team.name)">
+								{{ index + 1 }}
+							</div>
+						</td>
+						<td class="dark:bg-slate-700 text-sm dark:border-gray-500!">
+							<div class="flex items-center">
+								<img
+									[src]="imageService.getImageUrl(teamPoints.team.logoImage)"
+									alt="Logo equipo"
+									class="size-8 mr-2"
+									[class.reverse-color]="
+										teamPoints.team.name === 'Alpine' || teamPoints.team.name === 'AlphaTauri' || teamPoints.team.name === 'Aston Martin'
+									" />
+								<div class="flex items-center">
+									<h3 class="text-slate-800 dark:text-white">
+										{{ teamPoints.team.name }}
+									</h3>
+									<i
+										style="font-size: 0.55rem"
+										class="pi mt-1 ml-2"
+										[ngClass]="{
+											'pi-arrow-up text-green-500': teamPoints.positionChange === 'ADVANCED',
+											'pi-arrow-down text-red-500': teamPoints.positionChange === 'DROPPED'
+										}"></i>
+									<p
+										class="text-xs mt-1 ml-0.5"
+										[ngClass]="{
+											'text-green-500': teamPoints.positionChange === 'ADVANCED',
+											'text-red-500': teamPoints.positionChange === 'DROPPED'
+										}">
+										{{ teamPoints.positionChangeAmount != 0 ? teamPoints.positionChangeAmount : undefined }}
+									</p>
+								</div>
+							</div>
+						</td>
+						<td class="dark:bg-slate-700 text-sm dark:border-gray-500!">
+							<div class="relative">
+								<img
+									[src]="
+										imageService.getImageUrl(utilsService.spaceToUnderScore(teamPoints.driver1.driver.driverImage | SpaceToUnderscore))
+									"
+									[alt]="teamPoints.driver1.driver.name"
+									class="size-8 absolute top-[-6px] bg-gray-200 dark:bg-gray-400 rounded-full border-1 shadow-lg"
+									[class]="'border-' + (teamPoints.team.name | SpaceToUnderscore)" />
+								<img
+									[src]="
+										imageService.getImageUrl(utilsService.spaceToUnderScore(teamPoints.driver2.driver.driverImage | SpaceToUnderscore))
+									"
+									[alt]="teamPoints.driver2.driver.name"
+									class="size-8 absolute top-[-6px] left-[25px] bg-gray-200 dark:bg-gray-400 rounded-full border-1 shadow-lg"
+									[class]="'border-' + (teamPoints.team.name | SpaceToUnderscore)" />
+							</div>
+							<div class="flex items-center ml-17">
+								<p>{{ teamPoints.driver1.driver.name }} / {{ teamPoints.driver2.driver.name }}</p>
+							</div>
+						</td>
+						<td class="dark:bg-slate-700 text-sm dark:border-gray-500! font-bold">
+							{{ teamPoints.totalPoints }}
+						</td>
+						<td class="dark:bg-slate-700 text-sm dark:border-gray-500! font-bold text-end!">
+							<p-button
+								label="Ver escudería"
+								icon="pi pi-angle-right"
+								iconPos="right"
+								(click)="router.navigate(['/teams/' + utilsService.spaceToUnderScore(teamPoints.team.name)])"
+								(keydown.enter)="router.navigate(['/teams/' + utilsService.spaceToUnderScore(teamPoints.team.name)])" />
+						</td>
+					</tr>
+				</ng-template>
+			</p-table>
+			<p-skeleton width="100%" height="50rem" *ngIf="isLoading"></p-skeleton>
+		</div>
+	}
+}

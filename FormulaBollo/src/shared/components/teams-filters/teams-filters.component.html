@@ -1,0 +1,31 @@
+<div class="bg-gray-200 dark:bg-slate-600 flex gap-2 mt-4 p-4 overflow-x-auto whitespace-nowrap" *ngIf="showFilters()">
+	<p-chip
+		class="px-2.5! py-0.5! border-1 border-red-500 cursor-pointer select-none"
+		(click)="toggleSelection('Todos los equipos')"
+		onkeypress="toggleSelection('Todos los equipos')"
+		[ngClass]="{
+			'bg-red-500!': isSelected('Todos los equipos')
+		}">
+		<div class="h-2 w-2 rounded-full bg-red-500" [ngClass]="{ 'bg-white!': isSelected('Todos los equipos') }"></div>
+		<span class="text-xs font-bold">Todos los equipos </span>
+	</p-chip>
+	@for (teamName of teamsName(); track $index) {
+		<p-chip
+			class="px-2.5! py-0.5! border-1 cursor-pointer select-none"
+			[class]="'border-' + (teamName | SpaceToUnderscore)"
+			(click)="toggleSelection(teamName)"
+			onkeypress="toggleSelection(teamName)"
+			[ngClass]="getTeamClass(teamName)">
+			<div
+				class="h-2 w-2 rounded-full"
+				[class]="'bg-' + (teamName | SpaceToUnderscore)"
+				[ngClass]="{ 'bg-white!': isSelected(teamName) }"></div>
+			<span class="text-xs font-bold"> {{ teamName }} </span>
+			<button
+				*ngIf="isSelected(teamName)"
+				class="pi pi-times-circle cursor-pointer"
+				(click)="removeSelection($event, teamName)"
+				style="font-size: 0.75rem"></button>
+		</p-chip>
+	}
+</div>

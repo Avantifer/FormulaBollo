@@ -1,0 +1,22 @@
+<div
+	class="bg-gradient-to-r from-red-600 to-[#ff4d4d] text-white p-4 rounded-lg shadow-sm mb-8"
+	*ngIf="raceActual() && raceActual()?.id != null">
+	<div class="flex flex-col md:flex-row justify-between items-center">
+		<div class="flex items-center gap-3 w-full">
+			<div class="flex bg-white rounded-full p-1 md:p-2">
+				<i class="pi pi-calendar text-red-500" style="font-size: 1.25rem"></i>
+			</div>
+			<div>
+				<p class="text-base font-bold">Próxima carrera: GP de {{ raceActual()?.name }}</p>
+				<p class="text-xs">
+					<i class="pi pi-clock" style="font-size: 0.75rem"></i>
+					{{ countdownText }}
+				</p>
+			</div>
+		</div>
+		<div class="text-center mt-2 md:mt-0">
+			<div class="text-xs uppercase tracking-wider">Ronda</div>
+			<div class="text-2xl font-bold">{{ raceActual()!.id + 1 - races()[0].id }}/{{ races().length }}</div>
+		</div>
+	</div>
+</div>

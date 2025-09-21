@@ -1,0 +1,32 @@
+<div class="bg-slate-100 dark:bg-slate-800">
+	<main class="flex-1 bg-slate-100 dark:bg-slate-800">
+		<div class="my-container mx-auto px-2 py-8">
+			<race-details></race-details>
+			<div class="bg-white dark:bg-slate-700 rounded-md shadow-lg relative">
+				<div class="flex justify-between flex-col md:flex-row items-center px-2 pt-2 md:px-6 md:pt-6">
+					<h1 class="Geist_Bold text-xl md:text-2xl font-bold text-slate-800 dark:text-white mb-2 ml-2 xs:mb-2">
+						Clasificación de escuderías
+					</h1>
+					<div class="flex flex-col xs:flex-row w-auto xs:w-full md:w-auto">
+						<select-seasons (seasonChanged)="onSeasonChange($event)" class="flex-1"></select-seasons>
+						<div class="flex flex-row mt-2 xs:mt-0">
+							<p-selectbutton [options]="listOptions" [(ngModel)]="listValue" class="shadow-md h-9 mr-2 xs:mx-1 md:mx-2" allowEmpty="false">
+								<ng-template #item let-item>
+									<i [class]="item.icon" style="font-size: 1rem"></i>
+								</ng-template>
+							</p-selectbutton>
+							<p-button label="Filtros" icon="pi pi-filter" class="rounded-md shadow-md" (onClick)="showFilters = !showFilters" />
+						</div>
+					</div>
+				</div>
+				<teams-filters [season]="season" [showFilters]="showFilters" (selectedTeamsChanged)="selectedTeams = $event"></teams-filters>
+				<p-divider [class]="showFilters ? 'mt-0!' : ''" />
+				<drivers-teams-grid-table
+					[listValue]="listValue"
+					[season]="season"
+					[selectedTeams]="selectedTeams"
+					[type]="'Equipos'"></drivers-teams-grid-table>
+			</div>
+		</div>
+	</main>
+</div>
