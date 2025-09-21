@@ -1,0 +1,121 @@
+:host {
+  ::ng-deep .fantasyHeader .p-iconwrapper {
+    color: white;
+  }
+  
+  ::ng-deep .bolloHeader .p-iconwrapper {
+    color: white;
+  }
+}
+
+::ng-deep .p-menubar {
+  border: 0 !important;
+  border-radius: 0 !important;
+  height: 4rem;
+}
+
+::ng-deep .p-menubar-item:not(.p-disabled) > .p-menubar-item-content:hover {
+  background: transparent !important;
+}
+
+::ng-deep .p-menubar p-menubarsub {
+  display: flex;
+  margin: auto;
+}
+
+::ng-deep .p-menubar p-menubarsub ul {
+  justify-content: center;
+}
+
+::ng-deep .p-menubar li.p-focus .p-menubar-item-content {
+  background: transparent !important;
+}
+
+::ng-deep .p-menubar-item.p-focus {
+  background: transparent !important;
+}
+
+::ng-deep .p-menubar-root-list {
+  gap: 0.75rem !important;
+}
+
+::ng-deep .p-menubar-mobile .p-menubar-root-list {
+  border: none;
+}
+
+::ng-deep .p-menubar-end {
+  margin: 0;
+}
+
+::ng-deep .header-button button.p-ripple.p-button.p-component.p-button-icon-only {
+  width: 2.40rem;
+  padding: 0.70rem 0;
+}
+
+::ng-deep .fantasyHeaderButton .p-button {
+  background: var(--color-fantasy-principal) !important;
+}
+
+::ng-deep .fantasyHeaderButton .p-button:hover {
+  background: var(--color-fantasy-principal-dark) !important;
+}
+
+::ng-deep .bolloHeaderButton .p-button {
+  background: var(--color-principal) !important;
+}
+
+::ng-deep .bolloHeaderButton .p-button:hover {
+  background: var(--color-principal-dark) !important;
+}
+::ng-deep .fantasyHeader .p-menubar {
+  background-image: linear-gradient(to right, var(--color-fantasy-principal), var(--color-fantasy-principal-dark));
+}
+
+::ng-deep .bolloHeader .p-menubar {
+  background-image: linear-gradient(to right, var(--color-principal), var(--color-principal-dark));
+}
+
+.fantasyHeader .p-menubar-active {
+  background-color: var(--color-fantasy-principal-darkest);
+}
+
+.bolloHeader .p-menubar-active {
+  background-color: var(--color-principal-darkest);
+}
+
+.p-menubar-active {
+  border-radius: 0.5rem;
+}
+
+::ng-deep .fantasyHeader .p-menubar-mobile .p-menubar-root-list {
+  background-image: linear-gradient(to right, var(--color-fantasy-principal), var(--color-fantasy-principal-dark));
+}
+
+::ng-deep .bolloHeader .p-menubar-mobile .p-menubar-root-list {
+  background-image: linear-gradient(to right, var(--color-principal), var(--color-principal-dark));
+}
+
+::ng-deep .fantasyHeader .p-menubar-button:hover {
+  background: var(--color-fantasy-principal-darkest);
+}
+
+::ng-deep .bolloHeader .p-menubar-button:hover {
+  background: var(--color-principal-darkest);
+}
+
+::ng-deep .dark .header-button .p-button  {
+	background: var(--color-slate-900) !important;
+}
+
+::ng-deep .header-button .p-button  {
+	min-width: auto;
+}
+
+::ng-deep .fantasyHeader .p-menubar-item-link:hover {
+  background: color-mix(in oklab, var(--color-blue-500)50%, transparent);
+}
+
+::ng-deep .bolloHeader .p-menubar-item-link:hover {
+  background: color-mix(in oklab, var(--color-red-500)50%, transparent);
+}
+

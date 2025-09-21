@@ -1,0 +1,205 @@
+@if (typeSelected === 'Pilotos') {
+	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+		<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white text-white dark:border dark:border-gray-700">
+			<div class="flex items-center mb-4">
+				<i class="pi pi-trophy dark:text-red-400 text-red-600 mr-2" style="font-size: 18px"></i>
+				<h2 class="text-xl font-bold text-black dark:text-white">Victorias</h2>
+			</div>
+			<div class="h-[350px]">
+				<p-chart type="bar" [data]="dataDriversVictoriesBar" [options]="barChartOptions" class="hidden md:block"></p-chart>
+				<p-chart type="bar" [data]="dataDriversVictoriesBar" [options]="barMobileChartOptions" class="block md:hidden"></p-chart>
+			</div>
+		</div>
+		<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white text-white dark:border dark:border-gray-700">
+			<div class="flex items-center mb-4">
+				<i class="pi pi-chart-pie dark:text-red-400 text-red-600 mr-2" style="font-size: 18px"></i>
+				<h2 class="text-xl font-bold text-black dark:text-white">Distribución de victorias</h2>
+			</div>
+			<div class="h-[350px]">
+				<p-chart type="pie" [data]="dataDriversVictoriesPie" [options]="pieChartOptions"></p-chart>
+			</div>
+		</div>
+	</div>
+	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+		<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white text-white dark:border dark:border-gray-700">
+			<div class="flex items-center mb-4">
+				<i class="pi pi-flag dark:text-red-400 text-red-600 mr-2" style="font-size: 18px"></i>
+				<h2 class="text-xl font-bold text-black dark:text-white">Poles</h2>
+			</div>
+			<div class="h-[350px]">
+				<p-chart type="bar" [data]="dataDriversPoles" [options]="barChartOptions" class="hidden md:block"></p-chart>
+				<p-chart type="bar" [data]="dataDriversPoles" [options]="barMobileChartOptions" class="block md:hidden"></p-chart>
+			</div>
+		</div>
+		<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white text-white dark:border dark:border-gray-700">
+			<div class="flex items-center mb-4">
+				<i class="pi pi-clock dark:text-red-400 text-red-600 mr-2" style="font-size: 18px"></i>
+				<h2 class="text-xl font-bold text-black dark:text-white">Vueltas rápidas</h2>
+			</div>
+			<div class="h-[350px]">
+				<p-chart type="bar" [data]="dataDriversFastLaps" [options]="barChartOptions" class="hidden md:block"></p-chart>
+				<p-chart type="bar" [data]="dataDriversFastLaps" [options]="barMobileChartOptions" class="block md:hidden"></p-chart>
+			</div>
+		</div>
+	</div>
+	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+		<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white text-white dark:border dark:border-gray-700">
+			<div class="flex items-center mb-4">
+				<i class="pi pi-car dark:text-red-400 text-red-600 mr-2" style="font-size: 18px"></i>
+				<h2 class="text-xl font-bold text-black dark:text-white">Podios</h2>
+			</div>
+			<div class="h-[350px]">
+				<p-chart type="bar" [data]="dataDriversPodiums" [options]="barChartOptions" class="hidden md:block"></p-chart>
+				<p-chart type="bar" [data]="dataDriversPodiums" [options]="barMobileChartOptions" class="block md:hidden"></p-chart>
+			</div>
+		</div>
+		<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white text-white dark:border dark:border-gray-700">
+			<div class="flex items-center mb-4">
+				<i class="pi pi-exclamation-triangle dark:text-red-400 text-red-600 mr-2" style="font-size: 18px"></i>
+				<h2 class="text-xl font-bold text-black dark:text-white">Penalizaciones</h2>
+			</div>
+			<div class="h-[350px]">
+				<p-chart type="bar" [data]="dataDriversPenalties" [options]="barChartOptions" class="hidden md:block"></p-chart>
+				<p-chart type="bar" [data]="dataDriversPenalties" [options]="barMobileChartOptions" class="block md:hidden"></p-chart>
+			</div>
+		</div>
+	</div>
+	<div class="grid grid-cols-1 mb-6">
+		<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white text-white dark:border dark:border-gray-700">
+			<div class="flex items-center mb-4">
+				<i class="pi pi-hourglass dark:text-red-400 text-red-600 mr-2" style="font-size: 18px"></i>
+				<h2 class="text-xl font-bold text-black dark:text-white">Puntos totales</h2>
+			</div>
+			<div class="h-[350px]">
+				<p-chart type="bar" [data]="dataDriversTotalPoints" [options]="barChartOptions" class="hidden md:block"></p-chart>
+				<p-chart type="bar" [data]="dataDriversTotalPoints" [options]="barMobileChartOptions" class="block md:hidden"></p-chart>
+			</div>
+		</div>
+	</div>
+	<div class="grid grid-cols-1 mb-6">
+		<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white text-white dark:border dark:border-gray-700">
+			<div class="flex items-center mb-4">
+				<i class="pi pi-chart-line dark:text-red-400 text-red-600 mr-2" style="font-size: 18px"></i>
+				<h2 class="text-xl font-bold text-black dark:text-white">Media de puntos por carrera</h2>
+			</div>
+			<div class="h-[350px]">
+				<p-chart type="bar" [data]="dataDriversAveragePoints" [options]="barChartOptions" class="hidden md:block"></p-chart>
+				<p-chart type="bar" [data]="dataDriversAveragePoints" [options]="barMobileChartOptions" class="block md:hidden"></p-chart>
+			</div>
+		</div>
+	</div>
+	<div class="grid grid-cols-1 mb-6">
+		<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white text-white dark:border dark:border-gray-700">
+			<div class="flex items-center mb-4">
+				<i class="pi pi-check-circle dark:text-red-400 text-red-600 mr-2" style="font-size: 18px"></i>
+				<h2 class="text-xl font-bold text-black dark:text-white">Carreras terminadas</h2>
+			</div>
+			<div class="h-[350px]">
+				<p-chart type="bar" [data]="dataDriversRacesFinished" [options]="barChartOptions" class="hidden md:block"></p-chart>
+				<p-chart type="bar" [data]="dataDriversRacesFinished" [options]="barMobileChartOptions" class="block md:hidden"></p-chart>
+			</div>
+		</div>
+	</div>
+} @else {
+	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+		<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white text-white dark:border dark:border-gray-700">
+			<div class="flex items-center mb-4">
+				<i class="pi pi-trophy dark:text-red-400 text-red-600 mr-2" style="font-size: 18px"></i>
+				<h2 class="text-xl font-bold text-black dark:text-white">Victorias</h2>
+			</div>
+			<div class="h-[350px]">
+				<p-chart type="bar" [data]="dataTeamsVictoriesBar" [options]="barChartOptions" class="hidden md:block"></p-chart>
+				<p-chart type="bar" [data]="dataTeamsVictoriesBar" [options]="barMobileChartOptions" class="block md:hidden"></p-chart>
+			</div>
+		</div>
+		<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white text-white dark:border dark:border-gray-700">
+			<div class="flex items-center mb-4">
+				<i class="pi pi-chart-pie dark:text-red-400 text-red-600 mr-2" style="font-size: 18px"></i>
+				<h2 class="text-xl font-bold text-black dark:text-white">Distribución de victorias</h2>
+			</div>
+			<div class="h-[350px]">
+				<p-chart type="pie" [data]="dataTeamsVictoriesPie" [options]="pieChartOptions"></p-chart>
+			</div>
+		</div>
+	</div>
+	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+		<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white text-white dark:border dark:border-gray-700">
+			<div class="flex items-center mb-4">
+				<i class="pi pi-flag dark:text-red-400 text-red-600 mr-2" style="font-size: 18px"></i>
+				<h2 class="text-xl font-bold text-black dark:text-white">Poles</h2>
+			</div>
+			<div class="h-[350px]">
+				<p-chart type="bar" [data]="dataTeamsPoles" [options]="barChartOptions" class="hidden md:block"></p-chart>
+				<p-chart type="bar" [data]="dataTeamsPoles" [options]="barMobileChartOptions" class="block md:hidden"></p-chart>
+			</div>
+		</div>
+		<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white text-white dark:border dark:border-gray-700">
+			<div class="flex items-center mb-4">
+				<i class="pi pi-clock dark:text-red-400 text-red-600 mr-2" style="font-size: 18px"></i>
+				<h2 class="text-xl font-bold text-black dark:text-white">Vueltas rápidas</h2>
+			</div>
+			<div class="h-[350px]">
+				<p-chart type="bar" [data]="dataTeamsFastLaps" [options]="barChartOptions" class="hidden md:block"></p-chart>
+				<p-chart type="bar" [data]="dataTeamsFastLaps" [options]="barMobileChartOptions" class="block md:hidden"></p-chart>
+			</div>
+		</div>
+	</div>
+	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+		<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white text-white dark:border dark:border-gray-700">
+			<div class="flex items-center mb-4">
+				<i class="pi pi-car dark:text-red-400 text-red-600 mr-2" style="font-size: 18px"></i>
+				<h2 class="text-xl font-bold text-black dark:text-white">Podios</h2>
+			</div>
+			<div class="h-[350px]">
+				<p-chart type="bar" [data]="dataTeamsPodiums" [options]="barChartOptions" class="hidden md:block"></p-chart>
+				<p-chart type="bar" [data]="dataTeamsPodiums" [options]="barMobileChartOptions" class="block md:hidden"></p-chart>
+			</div>
+		</div>
+		<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white text-white dark:border dark:border-gray-700">
+			<div class="flex items-center mb-4">
+				<i class="pi pi-exclamation-triangle dark:text-red-400 text-red-600 mr-2" style="font-size: 18px"></i>
+				<h2 class="text-xl font-bold text-black dark:text-white">Penalizaciones</h2>
+			</div>
+			<div class="h-[350px]">
+				<p-chart type="bar" [data]="dataTeamsPenalties" [options]="barChartOptions" class="hidden md:block"></p-chart>
+				<p-chart type="bar" [data]="dataTeamsPenalties" [options]="barMobileChartOptions" class="block md:hidden"></p-chart>
+			</div>
+		</div>
+	</div>
+	<div class="grid grid-cols-1 mb-6">
+		<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white text-white dark:border dark:border-gray-700">
+			<div class="flex items-center mb-4">
+				<i class="pi pi-hourglass dark:text-red-400 text-red-600 mr-2" style="font-size: 18px"></i>
+				<h2 class="text-xl font-bold text-black dark:text-white">Puntos totales</h2>
+			</div>
+			<div class="h-[350px]">
+				<p-chart type="bar" [data]="dataTeamsTotalPoints" [options]="barChartOptions" class="hidden md:block"></p-chart>
+				<p-chart type="bar" [data]="dataTeamsTotalPoints" [options]="barMobileChartOptions" class="block md:hidden"></p-chart>
+			</div>
+		</div>
+	</div>
+	<div class="grid grid-cols-1 mb-6">
+		<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white text-white dark:border dark:border-gray-700">
+			<div class="flex items-center mb-4">
+				<i class="pi pi-chart-line dark:text-red-400 text-red-600 mr-2" style="font-size: 18px"></i>
+				<h2 class="text-xl font-bold text-black dark:text-white">Media de puntos por carrera</h2>
+			</div>
+			<div class="h-[350px]">
+				<p-chart type="bar" [data]="dataTeamsAveragePoints" [options]="barChartOptions" class="hidden md:block"></p-chart>
+				<p-chart type="bar" [data]="dataTeamsAveragePoints" [options]="barMobileChartOptions" class="block md:hidden"></p-chart>
+			</div>
+		</div>
+	</div>
+	<div class="grid grid-cols-1 mb-6">
+		<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white text-white dark:border dark:border-gray-700">
+			<div class="flex items-center mb-4">
+				<i class="pi pi-check-circle dark:text-red-400 text-red-600 mr-2" style="font-size: 18px"></i>
+				<h2 class="text-xl font-bold text-black dark:text-white">Carreras terminadas</h2>
+			</div>
+			<div class="h-[350px]">
+				<p-chart type="bar" [data]="dataTeamsRacesFinished" [options]="barChartOptions" class="hidden md:block"></p-chart>
+				<p-chart type="bar" [data]="dataTeamsRacesFinished" [options]="barMobileChartOptions" class="block md:hidden"></p-chart>
+			</div>
+		</div>
+	</div>
+}

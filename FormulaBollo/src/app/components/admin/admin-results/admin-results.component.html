@@ -1,0 +1,151 @@
+<main class="flex-1 bg-white dark:bg-slate-700 border-2 border-gray-400 dark:border-gray-600 rounded-lg p-4">
+	<h1 class="text-2xl md:text-3xl font-bold mb-8">Gestión de {{ isSprint ? 'Sprints' : 'Resultados' }}</h1>
+	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
+		<div>
+			<p class="text-sm font-medium mb-2">Circuito</p>
+			<select-races [season]="actualSeason" class="w-full" (raceChanged)="onRaceChange($event)"></select-races>
+		</div>
+		<div>
+			<p class="text-sm font-medium mb-2">Fecha y Hora de la carrera</p>
+			<p-datepicker [(ngModel)]="raceDate" [showTime]="true" showIcon class="w-full" />
+		</div>
+		@if (!isSprint) {
+			<div>
+				<p class="text-sm font-medium mb-2">Piloto con Vuelta Rápida</p>
+				<select-drivers
+					(driverChanged)="onDriverChangeFastLap($event)"
+					[season]="actualSeason"
+					[driverId]="fastlapDriver?.id"></select-drivers>
+			</div>
+			<div>
+				<p class="text-sm font-medium mb-2">Piloto con la Pole</p>
+				<select-drivers (driverChanged)="onDriverChangePole($event)" [season]="actualSeason" [driverId]="poleDriver?.id"></select-drivers>
+			</div>
+		}
+	</div>
+
+	<h3 class="text-xl font-bold mb-4">Parrilla de posiciones</h3>
+	@if (!isSprint && results.length) {
+		<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+			@for (result of results; track $index) {
+				@if (result.position) {
+					<div class="flex items-center gap-2">
+						<p class="text-sm w-8 text-right font-semibold">P{{ result.position.positionNumber }}</p>
+						<select-drivers
+							(driverChanged)="onDriverChangeResult($event, $index)"
+							[season]="actualSeason"
+							[driverId]="result.driver.id"
+							class="flex-1"></select-drivers>
+					</div>
+				}
+			}
+		</div>
+		<p-divider align="center">
+			<div class="flex items-center text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-700 font-medium text-sm px-4">
+				<i class="pi pi-exclamation-triangle pb-0.5 pr-2" style="font-size: 14px"></i>
+				<p>Pilotos que no terminaron</p>
+			</div>
+		</p-divider>
+		<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+			@for (result of results; track $index) {
+				@if (!result.position) {
+					<div class="flex items-center gap-2">
+						<p class="text-sm w-8 text-right font-semibold">P{{ $index + 1 }}</p>
+						<select-drivers
+							(driverChanged)="onDriverChangeResult($event, $index)"
+							[season]="actualSeason"
+							[driverId]="result.driver.id"
+							class="flex-1"></select-drivers>
+					</div>
+				}
+			}
+		</div>
+	} @else if (!isSprint && !results.length) {
+		<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+			@for (i of emptyResults; track $index) {
+				<div class="flex items-center gap-2">
+					<p class="text-sm w-8 text-right font-semibold">P{{ $index + 1 }}</p>
+					<select-drivers (driverChanged)="onDriverChangeResult($event, $index)" [season]="actualSeason" class="flex-1"></select-drivers>
+				</div>
+			}
+		</div>
+	}
+	@if (isSprint && sprints.length) {
+		<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+			@for (sprint of sprints; track $index) {
+				@if (sprint.position) {
+					<div class="flex items-center gap-2">
+						<p class="text-sm w-8 text-right font-semibold">P{{ sprint.position.positionNumber }}</p>
+						<select-drivers
+							(driverChanged)="onDriverChangeResult($event, $index)"
+							[season]="actualSeason"
+							[driverId]="sprint.driver.id"
+							class="flex-1"></select-drivers>
+					</div>
+				}
+			}
+		</div>
+		<p-divider align="center">
+			<div class="flex items-center text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-700 font-medium text-sm px-4">
+				<i class="pi pi-exclamation-triangle pb-0.5 pr-2" style="font-size: 14px"></i>
+				<p>Pilotos que no terminaron</p>
+			</div>
+		</p-divider>
+		<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+			@for (sprint of sprints; track $index) {
+				@if (!sprint.position) {
+					<div class="flex items-center gap-2">
+						<p class="text-sm w-8 text-right font-semibold">P{{ $index + 1 }}</p>
+						<select-drivers
+							(driverChanged)="onDriverChangeResult($event, $index)"
+							[season]="actualSeason"
+							[driverId]="sprint.driver.id"
+							class="flex-1"></select-drivers>
+					</div>
+				}
+			}
+		</div>
+	} @else if (isSprint && !sprints.length) {
+		<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+			@for (i of emptyResults; track $index) {
+				<div class="flex items-center gap-2">
+					<p class="text-sm w-8 text-right font-semibold">P{{ $index + 1 }}</p>
+					<select-drivers (driverChanged)="onDriverChangeResult($event, $index)" [season]="actualSeason" class="flex-1"></select-drivers>
+				</div>
+			}
+		</div>
+	}
+	<div class="flex justify-between mt-8">
+		<div>
+			@if (this.results.length > 0 || this.sprints.length > 0) {
+				<p-button
+					[label]="'Borrar ' + (isSprint ? 'Sprints' : 'Resultados')"
+					icon="pi pi-trash"
+					(click)="visible = true"
+					onkeydown="visible = true"
+					class="deleteResults text-white" />
+			}
+		</div>
+		<p-button [label]="'Guardar ' + (isSprint ? 'Sprints' : 'Resultados')" (onClick)="saveResults()" class="saveResults text-white" />
+	</div>
+
+	<p-dialog [(visible)]="visible" [modal]="true" [dismissableMask]="true" [closable]="false" [style]="{ width: '30rem' }">
+		<ng-template #header>
+			<div class="flex items-center gap-3 mb-4">
+				<div class="size-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+					<i class="pi pi-exclamation-triangle text-red-600 dark:text-red-400" style="font-size: 22px"></i>
+				</div>
+				<div>
+					<h3 class="text-lg font-semibold dark:text-white">Confirmar Borrado</h3>
+					<p class="text-sm text-gray-400">Esta acción no se puede deshacer</p>
+				</div>
+			</div>
+		</ng-template>
+		<span class="text-surface-500 dark:text-surface-400 block mb-8">¿Estás seguro de que quieres borrar todos los resultados?</span>
+		<p-divider></p-divider>
+		<ng-template #footer>
+			<p-button label="Cancelar" (click)="visible = false" onkeydown="visible = flase" class="w-50" />
+			<p-button label="Borrar todo" icon="pi pi-trash" (click)="deleteResults()" onkeydown="deleteResults()" class="deleteResults w-50" />
+		</ng-template>
+	</p-dialog>
+</main>

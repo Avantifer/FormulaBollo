@@ -1,0 +1,24 @@
+<form [formGroup]="driversForm">
+	<p-select
+		formControlName="driver"
+		[options]="drivers"
+		optionLabel="name"
+		dataKey="id"
+		class="rounded-lg text-sm bg-slate-100! dark:bg-slate-600! w-full lg:max-w-auto md:w-min-[184px] lg:w-full border-0! shadow-md!">
+		<ng-template #selectedItem let-driver>
+			<div class="flex items-center gap-2">
+				<div class="size-2 rounded-full" [class]="'bg-' + driver.team.name | SpaceToUnderscore"></div>
+				<div>{{ driver.name }}</div>
+			</div>
+		</ng-template>
+		<ng-template #item let-driver>
+			<div class="w-[18px] flex justify-center mr-1">
+				<i *ngIf="driversForm.get('driver')?.value?.id === driver.id" class="pi pi-check" style="font-size: 12px"></i>
+			</div>
+			<div class="flex items-center gap-1">
+				<div class="size-2 rounded-full" [class]="'bg-' + driver.team.name | SpaceToUnderscore"></div>
+				<div>{{ driver.name }}</div>
+			</div>
+		</ng-template>
+	</p-select>
+</form>

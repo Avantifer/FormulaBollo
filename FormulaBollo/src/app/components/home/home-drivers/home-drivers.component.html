@@ -1,0 +1,20 @@
+<h2 class="AudioWide uppercase text-2xl xs:text-3xl font-bold mb-22 pt-8 text-center text-red-600 dark:text-white">
+	Clasificación de pilotos
+</h2>
+<div class="relative my-container flex flex-col justify-start m-auto md:block z-20">
+	@if (driverPoints().length === 0 && drivers().length === 0) {
+		<div class="w-full flex justify-evenly">
+			<p-skeleton height="13rem" class="mb-2 w-full sm:w-36 md:w-52 lg:w-72 hidden sm:block"></p-skeleton>
+			<p-skeleton height="13rem" class="mb-2 w-full sm:w-36 md:w-52 lg:w-72"></p-skeleton>
+			<p-skeleton height="13rem" class="mb-2 w-full sm:w-36 md:w-52 lg:w-72 hidden sm:block"></p-skeleton>
+		</div>
+		<div class="mt-3">
+			@for (item of 10 | skeletonItems; track $index) {
+				<p-skeleton width="w-full" height="4.25rem" styleClass="mt-3"></p-skeleton>
+			}
+		</div>
+	}
+
+	<app-top3-drivers [top3]="driverPoints().length ? top3DriverPoints : top3Drivers"></app-top3-drivers>
+	<app-top10-drivers [top10]="driverPoints().length ? driverPoints() : drivers()"></app-top10-drivers>
+</div>

@@ -1,0 +1,15 @@
+::ng-deep .dark .p-divider-solid.p-divider-horizontal:before {
+  border-block-start: 1px solid var(--color-gray-600);
+}
+
+::ng-deep .p-divider-solid.p-divider-horizontal:before {
+  border-block-start: 1px solid var(--color-gray-300);
+}
+
+::ng-deep .dark .p-divider-solid.p-divider-vertical:before {
+  border-inline-start: 1px solid var(--color-gray-600);
+}
+
+::ng-deep .p-divider-solid.p-divider-vertical:before {
+  border-inline-start: 1px solid var(--color-gray-300);
+}

@@ -1,0 +1,38 @@
+<p-menubar [model]="items" class="m-0" [class]="!isFantasy ? 'bolloHeader' : 'fantasyHeader'">
+	<ng-template #start>
+		<img
+			src="assets/images/logo/logo.png"
+			alt="Logo FormulaBollo"
+			class="h-11 cursor-pointer ml-2"
+			[routerLink]="isFantasy ? '/fantasy' : '/home'" />
+	</ng-template>
+
+	<ng-template #item let-item let-root="root">
+		<a
+			pRipple
+			class="flex items-center p-menubar-item-link hover:bg-red-500/50 hover:rounded-lg text-sm text-white/90! hover:text-white! font-medium"
+			[routerLink]="item.routerLink"
+			[class.p-menubar-active]="isActive(item.routerLink)">
+			<span [class]="item.icon"></span>
+			<span>{{ item.label }}</span>
+		</a>
+	</ng-template>
+
+	<ng-template pTemplate="end">
+		<div class="flex items-center">
+			<p-button
+				[icon]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'"
+				class="header-button text-primary-950 dark:text-slate-50 rounded-md p-1.5"
+				iconPos="right"
+				(click)="toggleDarkMode()"
+				onkeypress="toggleDarkMode()">
+			</p-button>
+			<p-button
+				[label]="!isFantasy ? 'Fantasy' : 'F1Bollo'"
+				class="text-white"
+				[class]="!isFantasy ? 'fantasyHeaderButton' : 'bolloHeaderButton'"
+				(click)="!isFantasy ? router.navigate(['/fantasy']) : router.navigate(['/'])"
+				onkeydown="!isFantasy ? router.navigate(['/fantasy']) : router.navigate(['/'])"></p-button>
+		</div>
+	</ng-template>
+</p-menubar>

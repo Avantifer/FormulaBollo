@@ -1,0 +1,218 @@
+<div class="p-3 sm:p-8 bg-slate-100 dark:bg-slate-800">
+	<div class="my-container">
+		<div class="mb-6 flex justify-between items-center p-4 rounded-lg bg-white dark:bg-slate-700 shadow-sm">
+			<a class="inline-flex items-center text-red-400 hover:text-red-300 transition cursor-pointer" [routerLink]="['/teams']">
+				<i class="pi pi-chevron-left ml-1 pt-0.5" style="font-size: 0.65rem"></i>Volver a la clasificación</a
+			>
+			<select-seasons (seasonChanged)="onSeasonChange($event)" [teamName]="teamName"></select-seasons>
+		</div>
+		<div class="rounded-lg mt-8" *ngIf="teamInfo()">
+			<div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+				<div class="rounded-lg border-0 overflow-hidden col-span-1 bg-white dark:bg-slate-700 text-white">
+					<div class="p-6">
+						<div class="flex flex-col items-center">
+							<div class="relative mb-5 max-w-3xs">
+								<div
+									class="w-full rounded-lg overflow-hidden border-4 relative bg-center bg-fixed bg-cover"
+									[class]="'border-' + (teamInfo()!.team.name | SpaceToUnderscore)"
+									[ngStyle]="{
+										'background-image': 'url(' + imageService.getImageUrl('extras/driverInfoBackground.webp') + ')'
+									}">
+									<img [src]="imageService.getImageUrl(teamInfo()!.team!.carImage)" class="rounded-lg" alt="Coche" />
+								</div>
+							</div>
+							<div class="inline-flex">
+								<img
+									[src]="imageService.getImageUrl(teamInfo()!.team.logoImage)"
+									alt="Logo Equipo"
+									class="size-8 mr-2"
+									[class.reverse-color]="
+										teamInfo()!.team.name === 'Alpine' || teamInfo()!.team.name === 'AlphaTauri' || teamInfo()!.team.name === 'Aston Martin'
+									" />
+								<h2 class="text-3xl font-bold text-center text-black dark:text-white">{{ teamInfo()!.team.name }}</h2>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="rounded-lg border-0 shadow-lg col-span-1 lg:col-span-3 bg-white dark:bg-slate-700 text-white">
+					<div class="p-6">
+						<div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+							@for (stat of teamStatsArray(); track $index) {
+								<div
+									class="rounded-lg p-4 flex flex-col items-center justify-center bg-slate-200 dark:bg-slate-600 transition-all duration-300 hover:bg-slate-100 hover:dark:bg-slate-500">
+									<div class="text-sm mb-1 flex items-center text-gray-700 dark:text-gray-300">
+										<span>
+											<i [class]="stat.icon + ' ' + stat.color" style="font-size: 0.75rem" class=""></i>
+											{{ stat.key }}
+										</span>
+									</div>
+									<p class="text-3xl font-bold text-black dark:text-white">{{ stat.value }}</p>
+								</div>
+							}
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="rounded-lg border-0 shadow-lg col-span-1 lg:col-span-3 bg-white dark:bg-slate-700 text-white">
+				<div class="p-6">
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						@for (driverPoint of drivers(); track $index) {
+							<div
+								class="rounded-lg p-4 flex items-center bg-slate-200 dark:bg-slate-600 transition-all duration-300 hover:bg-slate-100 hover:dark:bg-slate-500 border-l-3 cursor-pointer"
+								[class]="'border-' + (teamInfo()!.team!.name | SpaceToUnderscore)"
+								[routerLink]="['/drivers/' + (driverPoint.driver.name | SpaceToUnderscore)]">
+								<div class="mr-4">
+									<div class="relative">
+										<img
+											class="size-16 rounded-full object-cover bg-center bg-fixed bg-cover border-2"
+											[class]="'border-' + (teamInfo()!.team!.name | SpaceToUnderscore)"
+											[src]="imageService.getImageUrl(driverPoint.driver.driverImage | SpaceToUnderscore)"
+											[alt]="driverPoint.driver.name"
+											[ngStyle]="{
+												'background-image': 'url(' + imageService.getImageUrl('extras/driverInfoBackground.webp') + ')'
+											}" />
+										<div
+											class="absolute -bottom-1 -right-1 size-6 rounded-full flex items-center justify-center text-xs font-bold bg-slate-700">
+											{{ driverPoint.driver.number }}
+										</div>
+									</div>
+								</div>
+								<div>
+									<p class="text-black dark:text-white font-bold">{{ driverPoint.driver.name }}</p>
+									<p class="text-sm text-gray-500 dark:text-gray-300">{{ driverPoint.totalPoints }} pts</p>
+								</div>
+							</div>
+						}
+					</div>
+				</div>
+			</div>
+			<div class="mt-8 p-6 bg-white dark:bg-slate-700 text-white rounded-lg">
+				<h3 class="text-black dark:text-white text-xl font-bold mb-1">Últimas 5 carreras</h3>
+				<div class="flex items-center mb-5 text-gray-500 dark:text-gray-400">
+					<div class="text-xs flex items-center">
+						<i class="pi pi-info-circle mr-1" style="font-size: 0.65rem"></i>
+						Solo se muestran carreras principales, no incluye carreras sprint
+					</div>
+				</div>
+				@if (teamInfo()!.last5Results.length) {
+					<p-table [value]="teamInfo()!.last5Results" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }">
+						<ng-template #header>
+							<tr class="border-b border-solid">
+								<th
+									class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+									scope="col"
+									style="width: 17%">
+									Circuito
+								</th>
+								<th
+									class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+									scope="col"
+									style="width: 12%">
+									Vuelta Rápida
+								</th>
+								<th
+									class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+									scope="col"
+									style="width: 12%">
+									Pole
+								</th>
+								<th
+									class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+									scope="col"
+									style="width: 12%">
+									Posición
+								</th>
+								<th
+									class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+									scope="col"
+									style="width: 15%">
+									Puntos
+								</th>
+								<th
+									class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+									scope="col"
+									style="width: 16%">
+									Fecha
+								</th>
+								<th
+									class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
+									scope="col"
+									style="width: 10%">
+									Acciones
+								</th>
+							</tr>
+						</ng-template>
+						<ng-template #body let-resultTeam let-index="rowIndex">
+							<tr class="border-b border-solid">
+								<td class="dark:bg-slate-700 text-sm border-l-4! dark:border-gray-500!">
+									<div class="inline-flex font-medium text-slate-700 dark:text-white">
+										<img [src]="imageService.getImageUrl(resultTeam.race.flagImage)" alt="Bandera País" class="w-8 mr-2" />
+										{{ resultTeam.race.name }}
+									</div>
+								</td>
+								<td
+									class="dark:bg-slate-700 text-sm dark:border-gray-500!"
+									[ngClass]="{
+										'text-gray-400 dark:text-gray-500': resultTeam.hasFastLap === 0,
+										'text-green-500 dark:text-green-400 font-medium': resultTeam.hasFastLap === 1
+									}">
+									{{ resultTeam.hasFastLap === 0 ? 'No' : 'Si' }}
+								</td>
+								<td
+									class="dark:bg-slate-700 text-sm dark:border-gray-500! font-semibold"
+									[ngClass]="{
+										'text-gray-400 dark:text-gray-500': resultTeam.hasPole === 0,
+										'text-green-500 dark:text-green-400 font-medium': resultTeam.hasPole === 1
+									}">
+									{{ resultTeam.hasPole === 0 ? 'No' : 'Si' }}
+								</td>
+								<td class="dark:bg-slate-700 text-sm dark:border-gray-500! font-semibold">
+									<span
+										class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium text-white"
+										[ngClass]="{
+											'bg-yellow-500':
+												utilsService.whichPositionIsBetter(resultTeam.results[0].position, resultTeam.results[1].position)
+													.positionNumber === 1,
+											'bg-gray-400':
+												utilsService.whichPositionIsBetter(resultTeam.results[0].position, resultTeam.results[1].position)
+													.positionNumber === 2,
+											'bg-amber-700':
+												utilsService.whichPositionIsBetter(resultTeam.results[0].position, resultTeam.results[1].position)
+													.positionNumber === 3,
+											'bg-gray-600':
+												utilsService.whichPositionIsBetter(resultTeam.results[0].position, resultTeam.results[1].position)
+													.positionNumber !== 1 &&
+												utilsService.whichPositionIsBetter(resultTeam.results[0].position, resultTeam.results[1].position)
+													.positionNumber !== 2 &&
+												utilsService.whichPositionIsBetter(resultTeam.results[0].position, resultTeam.results[1].position)
+													.positionNumber !== 3
+										}"
+										>{{
+											utilsService.whichPositionIsBetter(resultTeam.results[0].position, resultTeam.results[1].position).positionNumber
+										}}</span
+									>
+								</td>
+								<td class="dark:bg-slate-700 text-sm dark:border-gray-500! font-semibold text-green-500 dark:text-green-400">
+									+{{ utilsService.sumPoints(resultTeam.results[0].position, resultTeam.results[1].position) }}
+								</td>
+								<td class="dark:bg-slate-700 text-sm dark:border-gray-500! text-gray-700 dark:text-gray-400">
+									{{ resultTeam.race.dateStart | date: 'dd/MM/yyyy' }}
+								</td>
+								<td class="dark:bg-slate-700 text-sm dark:border-gray-500! font-bold">
+									<p-button
+										label="Resultados"
+										icon="pi pi-angle-right"
+										iconPos="right"
+										[routerLink]="['/results/' + (resultTeam.race.name | SpaceToUnderscore) + '/' + resultTeam.race.season.number]"
+										class="text-nowrap" />
+								</td>
+							</tr>
+						</ng-template>
+					</p-table>
+				} @else {
+					<p class="text-center text-2xl mt-8">No hay resultados disponibles</p>
+				}
+			</div>
+		</div>
+	</div>
+</div>

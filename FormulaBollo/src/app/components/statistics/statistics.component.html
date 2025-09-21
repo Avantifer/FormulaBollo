@@ -1,0 +1,56 @@
+<div class="bg-slate-100 dark:bg-slate-800">
+	<main class="flex-1 bg-slate-100 dark:bg-slate-800">
+		<div class="my-container mx-auto px-2 py-8">
+			<div class="rounded-lg shadow-sm p-4 mb-6 bg-white dark:bg-slate-700">
+				<div class="mb-4">
+					<div class="flex flex-nowrap overflow-x-auto md:justify-center gap-2 md:p-2">
+						@for (tab of tabs; track $index) {
+							<p-button
+								[label]="tab.label"
+								[icon]="tab.icon"
+								(onClick)="selectedTab = tab.value"
+								[ngClass]="{
+									buttonStatisticsSelected: selectedTab === tab.value,
+									buttonStatistics: selectedTab !== tab.value
+								}"
+								class="text-sm rounded-md cursor-pointer justify-center">
+							</p-button>
+						}
+					</div>
+				</div>
+				<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+					<div class="w-full md:w-auto">
+						@if (selectedTab != 'records') {
+							<p-selectbutton [options]="listOptions" [(ngModel)]="typeSelected" class="shadow-md h-9" allowEmpty="false">
+								<ng-template #item let-item>
+									<i [class]="item.icon" style="font-size: 1rem"></i>
+									<span class="text-sm font-medium">{{ item.value }}</span>
+								</ng-template>
+							</p-selectbutton>
+						}
+					</div>
+					<div class="flex flex-wrap gap-4">
+						<div class="w-full md:w-auto">
+							@if (selectedTab != 'records') {
+								<select-seasons
+									*ngIf="selectedTab"
+									(seasonChanged)="onSeasonChange($event)"
+									[statistics]="selectedTab"
+									class="w-50 md:w-auto"></select-seasons>
+							}
+						</div>
+					</div>
+				</div>
+			</div>
+			@if (selectedTab === 'records') {
+				<app-records></app-records>
+			} @else if (selectedTab === 'general') {
+				<app-general-stats [seasonSelected]="seasonSelected" [typeSelected]="typeSelected"></app-general-stats>
+			} @else if (selectedTab === 'evolucion') {
+				<app-evolution-stats [seasonSelected]="seasonEvolucionSelected" [typeSelected]="typeSelected"></app-evolution-stats>
+			} @else if (selectedTab === 'comparative') {
+				<app-comparative-stats [seasonSelected]="seasonEvolucionSelected" [typeSelected]="typeSelected"></app-comparative-stats>
+			}
+		</div>
+	</main>
+</div>

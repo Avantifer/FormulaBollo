@@ -1,0 +1,16 @@
+@use "primeicons/primeicons.css";
+@use "assets/scss/customSCSS.scss";
+
+@plugin 'tailwindcss-primeui';
+@layer tailwind, primeng;
+
+@layer tailwind {
+  @import "tailwindcss";
+}
+
+@theme {
+  --breakpoint-xs: 23.438rem;
+}
+
+@custom-variant dark (&:where(.dark, .dark *)); 
+

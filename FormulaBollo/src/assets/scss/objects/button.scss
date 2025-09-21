@@ -1,0 +1,25 @@
+::ng-deep .p-button {
+	border: none;
+	background: var(--color-gray-100);
+	color: inherit;
+}
+
+::ng-deep .p-button:hover {
+	background: var(--color-gray-200);
+}
+
+::ng-deep .dark .p-button {
+	background: var(--color-slate-600) !important;
+}
+
+::ng-deep .dark .p-button:hover {
+	background: var(--color-slate-500) !important;
+}
+
+::ng-deep .p-button-label {
+	font-size: 0.875rem;
+}
+
+::ng-deep .p-button-icon {
+	font-size: 0.875rem;
+}

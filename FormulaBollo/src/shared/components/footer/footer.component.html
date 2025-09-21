@@ -1,0 +1,63 @@
+<div class="text-white" [class]="isFantasy ? 'fantasyFooter' : 'bolloFooter'">
+	<div class="container mx-auto max-w-screen-xl p-4 lg:p-8">
+		<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+			<div>
+				<div class="flex items-center mb-4">
+					<img src="/assets/images/logo/logo.png" alt="Logo" class="w-10 mr-2" />
+					<h2 class="text-2xl font-bold">FORMULA BOLLO</h2>
+				</div>
+				<p class="text-gray-200 text-sm">{{ textMainFooter }}</p>
+			</div>
+
+			<div class="flex flex-col">
+				<h3 class="text-lg font-semibold border-b pb-2 mb-4" [class]="isFantasy ? 'border-blue-500/50' : 'border-red-500/50'">
+					Navegación
+				</h3>
+				@for (navigation of navigationRouters; track $index) {
+					@if (navigation.visible) {
+						<a [routerLink]="[navigation.routerLink]" (click)="scrollToTop()" class="my-1 hover:text-gray-200 focus-visible:outline-none">
+							{{ navigation.label }}
+						</a>
+					}
+				}
+			</div>
+
+			<div class="flex flex-col">
+				<h3 class="text-lg font-semibold border-b pb-2 mb-2" [class]="isFantasy ? 'border-blue-500/50' : 'border-red-500/50'">
+					Información
+				</h3>
+				@for (navigation of informationRouters; track $index) {
+					@if (isFantasy) {
+						<a (click)="scrollToTop()" class="my-1 hover:text-gray-200 focus-visible:outline-none">
+							{{ navigation.label }}
+						</a>
+					} @else {
+						<a [routerLink]="[navigation.routerLink]" (click)="scrollToTop()" class="my-1 hover:text-gray-200 focus-visible:outline-none">
+							{{ navigation.label }}
+						</a>
+					}
+				}
+			</div>
+			<div>
+				<h3 class="text-lg font-semibold border-b pb-2 mb-3" [class]="isFantasy ? 'border-blue-500/50' : 'border-red-500/50'">Contacto</h3>
+				@for (navigation of contactRouters; track $index) {
+					<p class="flex items-center my-1">
+						<i class="text-xl mr-2" [class]="navigation.icon"></i>
+						<a [href]="navigation.routerLink" target="_blank" rel="noopener noreferrer">
+							{{ navigation.label }}
+						</a>
+					</p>
+				}
+			</div>
+		</div>
+		<div
+			class="border-t py-6 mt-6 flex flex-col lg:flex-row justify-between items-center text-sm"
+			[class]="isFantasy ? 'border-blue-500/50' : 'border-red-500/50'">
+			<p class="w-full lg:w-auto">© 2025 Formula Bollo. Todos los derechos reservados.</p>
+			<span class="flex items-center gap-2">
+				<i class="pi pi-code text-xl"></i>
+				Desarrollado por Fernando Ruiz (Avantifer)
+			</span>
+		</div>
+	</div>
+</div>

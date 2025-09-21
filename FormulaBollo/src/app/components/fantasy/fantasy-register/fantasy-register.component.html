@@ -1,0 +1,111 @@
+<div class="w-full bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 dark:from-slate-700 dark:via-slate-800 dark:to-slate-900">
+	<div class="flex items-center justify-center container h-[calc(100vh-10rem)] mx-auto">
+		<div
+			class="w-full max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm rounded-2xl p-8 shadow-2xl dark:border dark:border-slate-500 dark:border-slate-700 space-y-6">
+			<h1 class="text-2xl font-bold italic uppercase mb-2 text-center mb-8">Registro</h1>
+			<form [formGroup]="registerForm" class="space-y-6">
+				<div class="space-y-2">
+					<p class="text-gray-700 dark:text-white text-sm font-medium">Usuario</p>
+					<p-iconfield>
+						<p-inputicon class="pi pi-user text-gray-600! dark:text-gray-400!" />
+						<input type="text" pInputText formControlName="username" placeholder="Usuario" class="h-10 w-full text-white" />
+					</p-iconfield>
+					@if (registerForm.get('username')?.invalid && registerForm.get('username')?.dirty) {
+						<span class="text-xs sm:text-sm text-red-600 dark:text-red-400">Necesitas poner el nombre de usuario</span>
+					}
+				</div>
+				<div class="space-y-2">
+					<p class="text-gray-700 dark:text-white text-sm font-medium">Correo electrónico</p>
+					<p-iconfield>
+						<p-inputicon class="pi pi-envelope text-gray-600! dark:text-gray-400!" />
+						<input type="text" pInputText formControlName="mail" placeholder="Correo electrónico" class="h-10 w-full text-white" />
+					</p-iconfield>
+					@if (registerForm.get('mail')?.invalid && registerForm.get('mail')?.dirty) {
+						<span class="text-xs sm:text-sm text-red-600 dark:text-red-400">Necesitas poner un correo correcto.</span>
+					}
+				</div>
+				<div class="space-y-2">
+					<p class="text-gray-700 dark:text-white text-sm font-medium">Contraseña</p>
+					<p-iconfield>
+						<p-inputicon class="pi pi-lock text-gray-400" />
+						<input
+							[type]="showPassword ? 'text' : 'password'"
+							pInputText
+							formControlName="password"
+							placeholder="Contraseña"
+							class="h-10 w-full text-white" />
+						@if (showPassword) {
+							<p-inputicon
+								class="pi pi-eye-slash text-gray-400 cursor-pointer"
+								(click)="showPassword = !showPassword"
+								onkeydown="showPassword = !showPassword" />
+						} @else {
+							<p-inputicon
+								class="pi pi-eye text-gray-400 cursor-pointer"
+								(click)="showPassword = !showPassword"
+								onkeydown="showPassword = !showPassword" />
+						}
+					</p-iconfield>
+					@if (registerForm.get('password')?.invalid && registerForm.get('password')?.dirty) {
+						<span class="text-xs sm:text-sm text-red-600 dark:text-red-400">Necesitas poner la contraseña</span>
+					}
+				</div>
+				<div class="space-y-2">
+					<p class="text-gray-700 dark:text-white text-sm font-medium">Repite la Contraseña</p>
+					<p-iconfield>
+						<p-inputicon class="pi pi-lock text-gray-400" />
+						<input
+							[type]="showPasswordRepeated ? 'text' : 'password'"
+							pInputText
+							formControlName="passwordRepeated"
+							placeholder="Repita la Contraseña"
+							class="h-10 w-full text-white" />
+						@if (showPasswordRepeated) {
+							<p-inputicon
+								class="pi pi-eye-slash text-gray-400 cursor-pointer"
+								(click)="showPasswordRepeated = !showPasswordRepeated"
+								onkeydown="showPasswordRepeated = !showPasswordRepeated" />
+						} @else {
+							<p-inputicon
+								class="pi pi-eye text-gray-400 cursor-pointer"
+								(click)="showPasswordRepeated = !showPasswordRepeated"
+								onkeydown="showPasswordRepeated = !showPasswordRepeated" />
+						}
+					</p-iconfield>
+					@if (
+						registerForm.get('passwordRepeated')?.invalid &&
+						registerForm.get('passwordRepeated')?.dirty &&
+						registerForm.get('password')?.value === registerForm.get('passwordRepeated')?.value
+					) {
+						<span class="text-xs sm:text-sm text-red-600 dark:text-red-400">Necesitas poner la contraseña</span>
+					}
+					@if (
+						registerForm.get('passwordRepeated')?.invalid &&
+						registerForm.get('passwordRepeated')?.dirty &&
+						registerForm.get('passwordRepeated')?.value != registerForm.get('password')?.value
+					) {
+						<span class="text-xs sm:text-sm text-red-600 dark:text-red-400">La contraseña debe ser igual a la anterior</span>
+					}
+				</div>
+			</form>
+			<div class="flex w-full">
+				<p-button
+					label="Registrarme"
+					[disabled]="registerForm.invalid"
+					class="text-white mt-6 w-full!"
+					(click)="register()"
+					onkeydown="register()"></p-button>
+			</div>
+			<div class="text-center mt-6">
+				<p class="text-gray-600 dark:text-slate-300 text-sm">
+					¿Tienes cuenta?
+					<a
+						class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors cursor-pointer"
+						[routerLink]="['/fantasy/login']"
+						>Inicia sesión.</a
+					>
+				</p>
+			</div>
+		</div>
+	</div>
+</div>

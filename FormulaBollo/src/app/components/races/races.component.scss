@@ -1,0 +1,66 @@
+::ng-deep .carousel .buttonRace .p-button {
+  width: 100%;
+  background: var(--color-principal) !important;
+}
+
+::ng-deep .carousel .buttonRace .p-button:hover {
+	background: var(--color-principal-dark) !important;
+}
+
+::ng-deep .p-carousel-indicator-active .p-carousel-indicator-button {
+  background: var(--color-principal) !important;
+}
+
+::ng-deep .dark .carousel .p-carousel-next-button .p-button:hover {
+  background: var(--color-slate-700) !important;
+}
+
+::ng-deep .carousel .p-carousel-next-button .p-button:hover {
+  background: var(--color-slate-400) !important;
+}
+
+::ng-deep .dark .carousel .p-carousel-next-button .p-button {
+  background: var(--color-slate-600) !important;
+}
+
+::ng-deep .carousel .p-carousel-next-button .p-button {
+  background: var(--color-slate-300) !important;
+}
+
+::ng-deep .carousel .p-carousel-next-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+::ng-deep .carousel .p-carousel-prev-button {
+  position: absolute;
+  top: 0;
+  right: 3rem;
+}
+
+::ng-deep .dark .carousel .p-carousel-prev-button .p-button:hover {
+  background: var(--color-slate-700) !important;
+}
+
+::ng-deep .carousel .p-carousel-prev-button .p-button:hover {
+  background: var(--color-slate-400) !important;
+}
+
+::ng-deep .dark .carousel .p-carousel-prev-button .p-button {
+  background: var(--color-slate-600) !important;
+}
+
+::ng-deep .carousel .p-carousel-prev-button .p-button {
+  background: var(--color-slate-300) !important;
+}
+
+::ng-deep .carousel .p-icon {
+  width: var(--p-icon-size);
+  height: var(--p-icon-size);
+  color: var(--color-slate-700);
+}
+
+::ng-deep .dark .carousel .p-icon {
+  color: var(--color-white);
+}

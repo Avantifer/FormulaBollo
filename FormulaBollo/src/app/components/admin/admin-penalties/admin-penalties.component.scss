@@ -1,0 +1,21 @@
+:host {
+  ::ng-deep .savePenalties .p-button {
+    background: var(--color-principal) !important;
+  }
+
+  ::ng-deep .savePenalties .p-button:hover {
+    background: var(--color-principal-dark) !important;
+  }
+
+  ::ng-deep .p-button {
+    color: var(--color-white);
+  }
+
+  ::ng-deep .p-button:hover {
+    background: var(--color-blue-600) !important;
+  }
+
+  ::ng-deep .p-dialog .p-button {
+    background: var(--color-blue-500) !important;
+  }
+}

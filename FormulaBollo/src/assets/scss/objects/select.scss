@@ -1,0 +1,33 @@
+::ng-deep .p-select-dropdown .p-icon {
+  opacity: 0.5;
+  width: 0.875rem;
+  color: var(--color-gray-600);
+}
+
+::ng-deep .p-select:not(.p-disabled).p-focus {
+  border-color: var(--color-gray-200);
+}
+
+::ng-deep .dark .p-select-dropdown .p-icon {
+  color: var(--color-gray-100);
+}
+
+::ng-deep .p-select-option-selected {
+  background: transparent;
+}
+
+::ng-deep .p-select-option {
+  color: black;
+}
+
+::ng-deep .dark .p-select-option {
+  color: white;
+}
+
+::ng-deep .p-focus {
+  background: var(--p-select-option-focus-background) !important;
+}
+
+::ng-deep .dark .p-select-overlay {
+  background: black !important;
+}

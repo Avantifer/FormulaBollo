@@ -1,0 +1,24 @@
+<form [formGroup]="teamsForm">
+	<p-select
+		formControlName="team"
+		[options]="teams"
+		optionLabel="name"
+		dataKey="id"
+		class="rounded-lg text-sm bg-slate-100! dark:bg-slate-600! w-full lg:max-w-auto md:w-[184px] lg:w-full border-0! shadow-md!">
+		<ng-template #selectedItem let-team>
+			<div class="flex items-center gap-2">
+				<div class="size-2 rounded-full" [class]="'bg-' + team.name | SpaceToUnderscore"></div>
+				<div>{{ team.name }}</div>
+			</div>
+		</ng-template>
+		<ng-template #item let-team>
+			<div class="w-[18px] flex justify-center mr-1">
+				<i *ngIf="teamsForm.get('team')?.value?.id === team.id" class="pi pi-check" style="font-size: 12px"></i>
+			</div>
+			<div class="flex items-center gap-1">
+				<div class="size-2 rounded-full" [class]="'bg-' + team.name | SpaceToUnderscore"></div>
+				<div>{{ team.name }}</div>
+			</div>
+		</ng-template>
+	</p-select>
+</form>

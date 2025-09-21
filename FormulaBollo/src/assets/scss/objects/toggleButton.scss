@@ -1,0 +1,8 @@
+::ng-deep .dark .p-togglebutton {
+  background: var(--color-slate-600) !important;
+  border: none;
+}
+
+::ng-deep .dark .p-togglebutton-checked .p-togglebutton-content {
+  background: var(--color-slate-500) !important;
+}

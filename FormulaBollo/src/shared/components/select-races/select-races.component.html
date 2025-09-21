@@ -1,0 +1,19 @@
+<form [formGroup]="racesForm">
+	<p-select
+		formControlName="race"
+		[options]="races"
+		optionLabel="name"
+		dataKey="name"
+		class="rounded-lg text-sm bg-slate-100! dark:bg-slate-600! w-full min-w-[184px] border-0! shadow-md!">
+		<ng-template pTemplate="item" let-race>
+			<div class="flex items-center gap-2">
+				@if (race.name === racesForm.get('race')?.value.name) {
+					<i class="pi pi-check" style="font-size: 14px"></i>
+				} @else {
+					<div class="w-[14px]"></div>
+				}
+				<div>{{ race.name }}</div>
+			</div>
+		</ng-template>
+	</p-select>
+</form>

@@ -1,0 +1,22 @@
+::ng-deep .p-popover {
+  background: var(--p-slate-100);
+  border-color: var(--p-slate-500);
+  transform: translate(-12%, 0) !important;
+}
+
+::ng-deep .p-popover:before {
+  border-bottom-color: var(--p-slate-500);
+}
+
+::ng-deep .p-popover:after {
+
+  border-bottom-color: var(--p-slate-100);
+}
+
+::ng-deep .dark .p-popover {
+  background: var(--p-slate-900);
+}
+
+::ng-deep .dark .p-popover:after {
+  border-bottom-color: var(--p-slate-900);
+}

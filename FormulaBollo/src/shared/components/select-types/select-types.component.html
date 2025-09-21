@@ -1,0 +1,18 @@
+<form [formGroup]="typesForm" class="pr-2">
+  <p-select
+    formControlName="type"
+    [options]="types"
+    class="rounded-lg text-sm bg-slate-100! dark:bg-slate-600! w-[184px] border-1 border-gray-200 dark:border-slate-900! shadow-md!"
+  >
+  <ng-template pTemplate="item" let-type>
+    <div class="flex items-center gap-2">
+      @if (type === typesForm.get('type')?.value) {
+        <i class="pi pi-check" style="font-size: 14px"></i>
+      } @else {
+        <div class="w-[14px]"></div>
+      }
+      <div>{{ type }}</div>
+    </div>
+  </ng-template>
+  </p-select>
+</form>

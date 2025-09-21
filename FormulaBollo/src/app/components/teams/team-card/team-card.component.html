@@ -1,0 +1,104 @@
+<div
+	class="group overflow-hidden rounded-lg border-t-8 border-b-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer transition-all duration-500 hover:bg-slate-500"
+	[class]="'border-' + (teamPoints.team.name | SpaceToUnderscore)"
+	(click)="router.navigate(['/teams/' + utilsService.spaceToUnderScore(teamPoints.team.name)])"
+	(keydown.enter)="router.navigate(['/teams/' + utilsService.spaceToUnderScore(teamPoints.team.name)])">
+	<div class="flex flex-col h-full">
+		<div class="flex items-center p-3 xs:p-4 bg-white dark:bg-gray-900">
+			<div
+				class="size-10 font-bold text-slate-700 dark:text-white mr-2 xs:mr-4 rounded-full flex justify-center items-center shadow"
+				[class]="'bg-' + (teamPoints.team.name | SpaceToUnderscore)">
+				{{ index + 1 }}
+			</div>
+			<div class="flex-1">
+				<div class="flex items-center">
+					<img
+						[src]="imageService.getImageUrl(teamPoints.team.logoImage | SpaceToUnderscore)"
+						[alt]="teamPoints.team.name"
+						class="size-10 object-cover object-center mr-2"
+						[class.reverse-color]="
+							teamPoints.team.name === 'Alpine' || teamPoints.team.name === 'AlphaTauri' || teamPoints.team.name === 'Aston Martin'
+						" />
+					<div class="flex flex-col" [class]="teamPoints.positionChangeAmount === 0 ? 'justify-center' : ''">
+						<h3 class="font-bold text-slate-800 dark:text-white">{{ teamPoints.team.name }}</h3>
+						<div class="flex items-center" *ngIf="teamPoints.positionChangeAmount != 0">
+							<i
+								style="font-size: 0.55rem"
+								class="pi"
+								[ngClass]="{
+									'pi-arrow-up text-green-500': teamPoints.positionChange === 'ADVANCED',
+									'pi-arrow-down text-red-500': teamPoints.positionChange === 'DROPPED'
+								}"></i>
+							<p
+								class="text-xs ml-0.5"
+								[ngClass]="{
+									'text-green-500': teamPoints.positionChange === 'ADVANCED',
+									'text-red-500': teamPoints.positionChange === 'DROPPED'
+								}">
+								{{ teamPoints.positionChangeAmount }}
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="flex flex-col items-end">
+				<div class="font-bold text-slate-800 dark:text-white">{{ teamPoints.totalPoints }}</div>
+				<div class="text-xs text-slate-500 dark:text-slate-300">PTS</div>
+			</div>
+		</div>
+
+		<div class="bg-slate-100 dark:bg-slate-800 flex flex-col lg:flex-row p-3">
+			<div class="flex items-center space-x-2 w-full lg:w-1/2 pr-2">
+				<div class="flex-shrink-0">
+					<img
+						[src]="imageService.getImageUrl(teamPoints.driver1.driver.driverImage | SpaceToUnderscore)"
+						[alt]="teamPoints.driver1.driver.name"
+						class="size-8 bg-gray-300 dark:bg-gray-600 rounded-full shadow-lg"
+						loading="lazy" />
+				</div>
+				<div class="min-w-0 flex-1">
+					<span class="text-xs font-medium truncate block">{{ teamPoints.driver1.driver.name }}</span>
+					<div class="flex items-center mt-0.5">
+						<p-progressbar
+							[value]="progressPercentage(teamPoints.driver1.totalPoints)"
+							class="w-95 lg:w-35"
+							showValue="false"
+							[class]="'progress-' + (teamPoints.team.name | SpaceToUnderscore)" />
+						<span class="ml-1.5 text-xs font-medium">{{ teamPoints.driver1.totalPoints }}</span>
+					</div>
+				</div>
+			</div>
+
+			<p-divider [styleClass]="'hidden! lg:block!'" layout="vertical"> </p-divider>
+			<p-divider [styleClass]="'lg:hidden!'" layout="horizontal"> </p-divider>
+
+			<div class="flex items-center space-x-2 w-full lg:w-1/2 pr-2">
+				<div class="flex-shrink-0">
+					<img
+						[src]="imageService.getImageUrl(teamPoints.driver2.driver.driverImage | SpaceToUnderscore)"
+						[alt]="teamPoints.driver2.driver.name"
+						class="size-8 bg-gray-300 dark:bg-gray-600 rounded-full shadow-lg"
+						loading="lazy" />
+				</div>
+				<div class="min-w-0 flex-1">
+					<span class="text-xs font-medium truncate block">{{ teamPoints.driver2.driver.name }}</span>
+					<div class="flex items-center mt-0.5">
+						<p-progressbar
+							[value]="progressPercentage(teamPoints.driver2.totalPoints)"
+							class="w-95 lg:w-35"
+							showValue="false"
+							[class]="'progress-' + (teamPoints.team.name | SpaceToUnderscore)" />
+						<span class="ml-1.5 text-xs font-medium">{{ teamPoints.driver2.totalPoints }}</span>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div
+			class="flex-1 bg-slate-200 group-hover:bg-slate-300 dark:bg-slate-600 group-hover:dark:bg-slate-500 transition-all duration-300 pt-4 flex items-end justify-between">
+			<div class="w-full flex justify-center">
+				<img [src]="imageService.getImageUrl(teamPoints.team.carImage)" [alt]="teamPoints.team.name" />
+			</div>
+		</div>
+	</div>
+</div>

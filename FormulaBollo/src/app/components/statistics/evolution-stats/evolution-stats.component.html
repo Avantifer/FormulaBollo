@@ -1,0 +1,32 @@
+<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white dark:border dark:border-gray-700 my-6">
+	@if (typeSelected === 'Pilotos') {
+		<h3 class="text-lg font-semibold">Seleccionar pilotos para mostrar en la evolución:</h3>
+		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 my-3">
+			@for (1 of [1, 2, 3, 4]; track $index) {
+				<div>
+					<span class="block text-sm font-medium mb-2">Piloto {{ $index + 1 }}</span>
+					<select-drivers (driverChanged)="onDriverChange($event, $index)" [position]="$index" [season]="seasonSelected"></select-drivers>
+				</div>
+			}
+		</div>
+	} @else {
+		<h3 class="text-lg font-semibold">Seleccionar escuderías para mostrar en la evolución:</h3>
+		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 my-3">
+			@for (1 of [1, 2, 3, 4]; track $index) {
+				<div>
+					<span class="block text-sm font-medium mb-2">Escudería {{ $index + 1 }}</span>
+					<select-teams (teamChanged)="onTeamChange($event, $index)" [position]="$index" [season]="seasonSelected"></select-teams>
+				</div>
+			}
+		</div>
+	}
+</div>
+<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white dark:border dark:border-gray-700">
+	<div class="flex items-center mb-4">
+		<i class="pi pi-chart-line text-red-600 dark:text-red-400 mr-2" style="font-size: 18px"></i>
+		<h2 class="text-xl font-bold text-black dark:text-white">Media de puntos por carrera</h2>
+	</div>
+	<div class="h-[500px]">
+		<p-chart type="line" [data]="dataDriversEvolutionPoints" [options]="lineChartOptions" style="width: 100%; height: 100%"> </p-chart>
+	</div>
+</div>
