@@ -393,7 +393,12 @@
 	</div>
 
 	@if (showDriverPricesData) {
-		<p-dialog [(visible)]="showDriverPricesData" [modal]="true" [dismissableMask]="true" [closable]="false" [style]="{ width: '60rem' }">
+		<p-dialog
+			[(visible)]="showDriverPricesData"
+			[modal]="true"
+			[dismissableMask]="true"
+			[closable]="false"
+			[style]="{ width: '60rem', 'max-width': '95vw' }">
 			<ng-template #header>
 				<h2 class="text-xl font-bold text-gray-900 dark:text-white flex-1">Evolución de Precio - {{ driverPriceData.driver.name }}</h2>
 				<p-button
@@ -442,7 +447,12 @@
 	}
 
 	@if (showTeamPricesData) {
-		<p-dialog [(visible)]="showTeamPricesData" [modal]="true" [dismissableMask]="true" [closable]="false" [style]="{ width: '60rem' }">
+		<p-dialog
+			[(visible)]="showTeamPricesData"
+			[modal]="true"
+			[dismissableMask]="true"
+			[closable]="false"
+			[style]="{ width: '60rem', 'max-width': '95vw' }">
 			<ng-template #header>
 				<h2 class="text-xl font-bold text-gray-900 dark:text-white flex-1">Evolución de Precio - {{ teamPriceData.team.name }}</h2>
 				<p-button
@@ -499,7 +509,12 @@
 	}
 
 	@if (showDriverPointsData) {
-		<p-dialog [(visible)]="showDriverPointsData" [modal]="true" [dismissableMask]="true" [closable]="false" [style]="{ width: '60rem' }">
+		<p-dialog
+			[(visible)]="showDriverPointsData"
+			[modal]="true"
+			[dismissableMask]="true"
+			[closable]="false"
+			[style]="{ width: '60rem', 'max-width': '95vw' }">
 			<ng-template #header>
 				<h2 class="text-xl font-bold text-gray-900 dark:text-white flex-1">Evolución de Puntos - {{ driverPointData.driver.name }}</h2>
 				<p-button
@@ -548,7 +563,12 @@
 	}
 
 	@if (showTeamPointsData) {
-		<p-dialog [(visible)]="showTeamPointsData" [modal]="true" [dismissableMask]="true" [closable]="false" [style]="{ width: '60rem' }">
+		<p-dialog
+			[(visible)]="showTeamPointsData"
+			[modal]="true"
+			[dismissableMask]="true"
+			[closable]="false"
+			[style]="{ width: '60rem', 'max-width': '95vw' }">
 			<ng-template #header>
 				<h2 class="text-xl font-bold text-gray-900 dark:text-white flex-1">Evolución de Puntos - {{ teamPointData.team.name }}</h2>
 				<p-button
