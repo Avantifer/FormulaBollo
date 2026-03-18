@@ -1,28 +1,25 @@
-:host {
-  .p-button {
-    background: var(--color-fantasy-principal) !important;
-    width: 100%;
-  }
-
-  .p-button:hover {
-    background: var(--color-fantasy-principal-dark) !important;
-  }
+::ng-deep .loginFantasyButton .p-button {
+  background: var(--color-fantasy-principal) !important;
+  width: 100%;
 }
 
-.p-dialog .closeDialog .p-button {
+::ng-deep .loginFantasyButton .p-button:hover {
+  background: var(--color-fantasy-principal-dark) !important;
+}
+::ng-deep .p-dialog .closeDialog .p-button {
   background: transparent !important;
   padding: 0.35rem;
   border-radius: 50%;
 }
 
-.p-dialog .closeDialog .p-button:focus-visible {
+::ng-deep .p-dialog .closeDialog .p-button:focus-visible {
   outline: transparent;
 }
 
-.p-dialog .closeDialog .p-button:hover {
+::ng-deep .p-dialog .closeDialog .p-button:hover {
   background: var(--color-slate-100) !important;
 }
 
-.dark .p-dialog .closeDialog .p-button:hover {
+::ng-deep .dark .p-dialog .closeDialog .p-button:hover {
   background: var(--color-slate-900) !important;
 }

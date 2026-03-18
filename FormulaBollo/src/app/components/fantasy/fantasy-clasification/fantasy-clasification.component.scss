@@ -1,28 +1,26 @@
-:host {
-  .p-button {
-    background: var(--color-fantasy-principal) !important;
-  }
+::ng-deep .fantasyClasificationButton .p-button {
+  background: var(--color-fantasy-principal) !important;
+}
 
-  .p-button:hover {
-    background: var(--color-fantasy-principal-dark) !important;
-  }
+::ng-deep .fantasyClasificationButton .p-button:hover {
+  background: var(--color-fantasy-principal-dark) !important;
+}
 
-  .p-dialog {
-    overflow: hidden;
-    border: none;
-  }
+::ng-deep .p-dialog {
+  overflow: hidden;
+  border: none;
+}
 
-  .p-dialog-header {
-    background: var(--color-fantasy-principal);
-  }
+::ng-deep .p-dialog-header {
+  background: var(--color-fantasy-principal);
+}
 
-  .p-dialog-header .p-button {
-    color: var(--color-white);
-  }
+::ng-deep .p-dialog-header .p-button {
+  color: var(--color-white);
+}
 
-  .p-dialog-header .closeDialog .p-button:hover {
-    background: var(--color-blue-400) !important;
-  }
+::ng-deep .p-dialog-header .closeDialog .p-button:hover {
+  background: var(--color-blue-400) !important;
 }
 
 .p-datatable-thead > tr > th {
@@ -37,16 +35,16 @@
   background-color: red !important;
 }
 
-.p-dialog .closeDialog .p-button {
+::ng-deep .p-dialog .closeDialog .p-button {
   background: transparent !important;
-  padding: 0.35rem;
+  padding: 0.1rem 0.45rem;
   border-radius: 50%;
 }
 
-.p-dialog .closeDialog .p-button:hover {
+::ng-deep .p-dialog .closeDialog .p-button:hover {
   background: var(--color-slate-100) !important;
 }
 
-.dark .p-dialog .closeDialog .p-button:hover {
+::ng-deep .dark .p-dialog .closeDialog .p-button:hover {
   background: var(--color-slate-900) !important;
 }

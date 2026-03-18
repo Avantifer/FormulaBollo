@@ -1,66 +1,66 @@
-.carousel .buttonRace .p-button {
+::ng-deep .carousel .buttonRace .p-button {
   width: 100%;
   background: var(--color-principal) !important;
 }
 
-.carousel .buttonRace .p-button:hover {
+::ng-deep .carousel .buttonRace .p-button:hover {
 	background: var(--color-principal-dark) !important;
 }
 
-.p-carousel-indicator-active .p-carousel-indicator-button {
+::ng-deep .p-carousel-indicator-active .p-carousel-indicator-button {
   background: var(--color-principal) !important;
 }
 
-.dark .carousel .p-carousel-next-button .p-button:hover {
+::ng-deep .dark .carousel .p-carousel-next-button .p-button:hover {
   background: var(--color-slate-700) !important;
 }
 
-.carousel .p-carousel-next-button .p-button:hover {
+::ng-deep .carousel .p-carousel-next-button .p-button:hover {
   background: var(--color-slate-400) !important;
 }
 
-.dark .carousel .p-carousel-next-button .p-button {
+::ng-deep .dark .carousel .p-carousel-next-button .p-button {
   background: var(--color-slate-600) !important;
 }
 
-.carousel .p-carousel-next-button .p-button {
+::ng-deep .carousel .p-carousel-next-button .p-button {
   background: var(--color-slate-300) !important;
 }
 
-.carousel .p-carousel-next-button {
+::ng-deep .carousel .p-carousel-next-button {
   position: absolute;
   top: 0;
   right: 0;
 }
 
-.carousel .p-carousel-prev-button {
+::ng-deep .carousel .p-carousel-prev-button {
   position: absolute;
   top: 0;
   right: 3rem;
 }
 
-.dark .carousel .p-carousel-prev-button .p-button:hover {
+::ng-deep .dark .carousel .p-carousel-prev-button .p-button:hover {
   background: var(--color-slate-700) !important;
 }
 
-.carousel .p-carousel-prev-button .p-button:hover {
+::ng-deep .carousel .p-carousel-prev-button .p-button:hover {
   background: var(--color-slate-400) !important;
 }
 
-.dark .carousel .p-carousel-prev-button .p-button {
+::ng-deep .dark .carousel .p-carousel-prev-button .p-button {
   background: var(--color-slate-600) !important;
 }
 
-.carousel .p-carousel-prev-button .p-button {
+::ng-deep .carousel .p-carousel-prev-button .p-button {
   background: var(--color-slate-300) !important;
 }
 
-.carousel .p-icon {
+::ng-deep .carousel .p-icon {
   width: var(--p-icon-size);
   height: var(--p-icon-size);
   color: var(--color-slate-700);
 }
 
-.dark .carousel .p-icon {
+::ng-deep .dark .carousel .p-icon {
   color: var(--color-white);
 }
