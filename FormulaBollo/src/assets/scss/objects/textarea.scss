@@ -1,13 +1,13 @@
-::ng-deep .p-textarea:enabled:focus {
+.p-textarea:enabled:focus {
   border: none;
 }
 
-::ng-deep .dark .p-textarea {
+.dark .p-textarea {
   border: none;
   background: var(--color-slate-600);
 }
 
-::ng-deep .p-textarea {
+.p-textarea {
   border: none;
   background: var(--color-slate-200);
 }
