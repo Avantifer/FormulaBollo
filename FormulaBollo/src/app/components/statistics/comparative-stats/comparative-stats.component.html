@@ -29,9 +29,9 @@
 			<i class="pi pi-chart-line text-red-600 dark:text-red-400 mr-2" style="font-size: 18px"></i>
 			<h2 class="text-xl font-bold text-black dark:text-white">Media de puntos por carrera</h2>
 		</div>
-		<div class="h-[400px]">
-			<p-chart type="bar" [data]="comparisonChartData" [options]="comparisonChartOptions" class="hidden lg:block"></p-chart>
-			<p-chart type="bar" [data]="comparisonChartData" [options]="comparisonChartOptionsMobile" class="block lg:hidden"></p-chart>
+		<div class="h-[600px] lg:h-[400px]">
+			<p-chart type="bar" [data]="comparisonChartData" [options]="comparisonChartOptions" class="hidden! lg:block!"></p-chart>
+			<p-chart type="bar" [data]="comparisonChartData" [options]="comparisonChartOptionsMobile" class="block! lg:hidden!"></p-chart>
 		</div>
 	</div>
 	@if (driversInfo.length === 2 || teamsInfo.length === 2) {

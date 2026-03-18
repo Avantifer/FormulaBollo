@@ -1,4 +1,4 @@
-::ng-deep .p-dialog .p-card {
+.p-dialog .p-card {
   margin: 1rem 0;
   background-color: var(--color-white);
   border: 1px var(--color-gray-400);
@@ -6,11 +6,11 @@
   color: var(--color-gray-200);
 }
 
-::ng-deep .dark .p-card {
+.dark .p-card {
   border: 1px var(--color-gray-600) solid;
   background-color: rgb(75 85 99 / 0.5) !important;
 }
 
-::ng-deep .p-dialog .p-card-body {
+.p-dialog .p-card-body {
   padding: 0.75rem;
 }

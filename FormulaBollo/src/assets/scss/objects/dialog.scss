@@ -1,20 +1,20 @@
-::ng-deep .dark .p-dialog {
+.dark .p-dialog {
   background: var(--color-gray-800) !important;
 }
 
-::ng-deep .p-dialog {
+.p-dialog {
   background: var(--color-white) !important;
 }
 
-::ng-deep .p-dialog .p-divider {
+.p-dialog .p-divider {
   margin-top: 1rem;
   margin-bottom: 0;
 }
 
-::ng-deep .p-dialog-footer {
+.p-dialog-footer {
   justify-content: space-between;
 }
 
-::ng-deep .p-dialog .p-button {
+.p-dialog .p-button {
   width: 100%;
 }

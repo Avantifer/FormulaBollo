@@ -1,47 +1,47 @@
-::ng-deep .dark .menuButton .p-button {
+.dark .menuButton .p-button {
   background: var(--color-slate-600) !important;
 }
 
-::ng-deep .dark .menuButton .p-button:hover {
+.dark .menuButton .p-button:hover {
     background: var(--color-slate-500) !important;
   }
   
-::ng-deep .menuButton .p-button {
+.menuButton .p-button {
   padding: 1rem;
   background: var(--color-slate-300);
 }
 
-::ng-deep .menuButton .p-button:hover {
+.menuButton .p-button:hover {
   background: var(--color-slate-400) ;
 }
 
-::ng-deep .p-menu {
+.p-menu {
   background: var(--color-white);
   border: none;
   padding: 1rem;
 }
 
-::ng-deep .dark .p-menu {
+.dark .p-menu {
   background: var(--color-slate-700);
 }
 
-::ng-deep .p-menu-list {
+.p-menu-list {
   padding: 0;
 }
 
-::ng-deep .p-menu a {
+.p-menu a {
   padding: 0.75rem;
   margin: 0.25rem 0;
 }
 
-::ng-deep .p-menu-item-content {
+.p-menu-item-content {
   background: transparent;
 }
 
-::ng-deep .p-menu li.p-focus {
+.p-menu li.p-focus {
   background: transparent !important;
 }
 
-::ng-deep li.p-menu-submenu-label {
+li.p-menu-submenu-label {
   padding: 0;
 }
