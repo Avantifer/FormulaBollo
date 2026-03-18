@@ -1,56 +1,57 @@
 :host {
-  .addDriver .p-button, .addTeam .p-button, .saveElection .p-button {
-    width: 100%;
-  }
-
-  .addDriver .p-button, .addTeam .p-button {
-    width: 1.75rem;
-    height: 1.75rem;
-  }
-
-  .addDriver .p-button-icon, .addTeam .p-button-icon {
-    font-size: 0.65rem;
-    font-weight: bold;
-  }
-
-  .p-button-label {
-    font-size: 16px !important;
-  }
-
-  .addDriver .p-button:hover, .saveElection .p-button:hover {
-    background: var(--color-fantasy-principal-dark) !important;
-  }
-
-  .addDriver .p-button, .saveElection .p-button {
-    background: var(--color-fantasy-principal) !important;
-  }
-
-  .addTeam .p-button:hover {
-    background: var(--color-orange-400) !important;
-  }
-
-  .addTeam .p-button {
-    background: var(--color-orange-600) !important;
-  }
-
+  
   canvas {
     min-height: 300px;
   }
-
-  .p-togglebutton {
-    width: 50%;
-  }
-
-  .p-togglebutton-content {
-    padding: 0.7rem 0.7rem;
-  }
+  
 }
 
-.dark .fantasyOptions .p-togglebutton {
+::ng-deep .addDriver .p-button, ::ng-deep .addTeam .p-button, ::ng-deep .saveElection .p-button {
+  width: 100%;
+}
+
+::ng-deep .addDriver .p-button, ::ng-deep .addTeam .p-button {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+::ng-deep .addDriver .p-button-icon, ::ng-deep .addTeam .p-button-icon {
+  font-size: 0.65rem;
+  font-weight: bold;
+}
+
+::ng-deep .p-button-label {
+  font-size: 16px !important;
+}
+
+::ng-deep .addDriver .p-button:hover, ::ng-deep .saveElection .p-button:hover {
+  background: var(--color-fantasy-principal-dark) !important;
+}
+
+::ng-deep .addDriver .p-button, ::ng-deep .saveElection .p-button {
+  background: var(--color-fantasy-principal) !important;
+}
+
+::ng-deep .addTeam .p-button:hover {
+  background: var(--color-orange-400) !important;
+}
+
+::ng-deep .addTeam .p-button {
+  background: var(--color-orange-600) !important;
+}
+::ng-deep .p-togglebutton {
+  width: 50%;
+}
+
+::ng-deep .p-togglebutton-content {
+  padding: 0.7rem 0.7rem;
+}
+
+::ng-deep .dark .fantasyOptions .p-togglebutton {
   background: var(--color-slate-800) !important;
 }
 
-.dark   .p-togglebutton-checked .p-togglebutton-content{
+::ng-deep .dark .p-togglebutton-checked .p-togglebutton-content{
   background: var(--color-slate-700) !important;
 }
 

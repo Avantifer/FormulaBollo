@@ -1,10 +1,8 @@
-:host {
-  .p-button {
-    background: var(--color-fantasy-principal) !important;
-    width: 100%;
-  }
+::ng-deep .registerFantasyButton .p-button {
+  background: var(--color-fantasy-principal) !important;
+  width: 100%;
+}
 
-  .p-button:hover {
-    background: var(--color-fantasy-principal-dark) !important;
-  }
+::ng-deep .registerFantasyButton .p-button:hover {
+  background: var(--color-fantasy-principal-dark) !important;
 }

@@ -39,9 +39,9 @@
   margin: 0;
 }
 
-.header-button button.p-ripple.p-button.p-component.p-button-icon-only {
+::ng-deep .header-button .p-button {
   width: 2.40rem;
-  padding: 0.70rem 0;
+  padding: 0.42rem 0;
 }
 
 .fantasyHeaderButton .p-button {

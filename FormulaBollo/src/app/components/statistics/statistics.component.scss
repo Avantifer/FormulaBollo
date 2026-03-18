@@ -1,3 +1,7 @@
-.buttonStatisticsSelected .p-button {
+::ng-deep .buttonStatisticsSelected .p-button {
   background: var(--color-principal) !important;
+}
+
+::ng-deep .buttonStatisticsSelected .p-button:hover {
+  background: var(--color-principal-dark) !important;
 }

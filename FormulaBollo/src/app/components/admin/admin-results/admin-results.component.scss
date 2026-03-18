@@ -7,10 +7,6 @@
     background: var(--color-principal-dark) !important;
   }
 
-  .p-divider-content {
-    background: transparent !important;
-  }
-
   .p-divider-horizontal {
     margin: 2rem 0;
   }
@@ -26,4 +22,8 @@
     color: var(--color-white);
     border: 1px var(--color-red-400) solid; 
   }
+}
+
+::ng-deep.p-divider-content {
+  background: transparent !important;
 }

@@ -1,9 +1,9 @@
-.penaltiesButton .p-button {
+::ng-deep  .penaltiesButton .p-button {
   width: 100%;
   background: var(--color-principal) !important;
 }
 
-.penaltiesButton .p-button:hover {
+::ng-deep .penaltiesButton .p-button:hover {
 	background: var(--color-principal-dark) !important;
 }
 
