@@ -1,9 +1,9 @@
-::ng-deep .dark {
+.dark {
   .reverse-color {
     filter: invert(100%) brightness(1) grayscale(1);
   }
 }
 
-::ng-deep .p-progressbar {
+.p-progressbar {
   height: 0.375rem !important;
 }
