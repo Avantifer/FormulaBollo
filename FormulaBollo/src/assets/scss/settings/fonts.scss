@@ -3,7 +3,7 @@
   src: url("./../../fonts/ethnocentric_rg.otf");
 }
 
-::ng-deep .Ethnocentric_Regular {
+.Ethnocentric_Regular {
   font-family: "Ethnocentric_Regular", sans-serif;
 }
 
@@ -12,7 +12,7 @@
   src: url("./../../fonts/ethnocentric_it.otf");
 }
 
-::ng-deep .Ethnocentric_Italic {
+.Ethnocentric_Italic {
   font-family: "Ethnocentric_Italic", sans-serif;
 }
 
@@ -21,11 +21,11 @@
   src: url("./../../fonts/Formula1-Wide.otf");
 }
 
-::ng-deep .F1_Wide {
+.F1_Wide {
   font-family: "F1-Wide", sans-serif;
 }
 
-::ng-deep .AudioWide {
+.AudioWide {
   font-family: 'Audiowide', sans-serif;
 }
 
@@ -34,7 +34,7 @@
   src: url("./../../fonts/Geist-Bold.otf");
 }
 
-::ng-deep .Geist_Bold {
+.Geist_Bold {
   font-family: "Geist-Bold", sans-serif;
 }
 
@@ -43,6 +43,6 @@
   src: url("./../../fonts/Geist-Regular.otf");
 }
 
-::ng-deep .Geist {
+.Geist {
   font-family: "Geist-Regular", sans-serif;
 }

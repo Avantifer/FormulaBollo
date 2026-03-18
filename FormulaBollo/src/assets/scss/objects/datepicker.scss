@@ -1,46 +1,46 @@
 
-::ng-deep .p-datepicker {
+.p-datepicker {
   width: 100%;
   background: transparent !important;
   --tw-shadow: 0 4px 6px -1px var(--tw-shadow-color, #0000001a), 0 2px 4px -2px var(--tw-shadow-color, #0000001a);
   box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
 }
 
-::ng-deep .p-datepicker .p-inputtext {
+.p-datepicker .p-inputtext {
   background: var(--color-slate-100) !important;
 }
 
-::ng-deep .p-datepicker .p-datepicker-day-selected {
+.p-datepicker .p-datepicker-day-selected {
   background: var(--color-principal) !important;
 }
 
-::ng-deep .p-datepicker .p-datepicker-month-selected {
+.p-datepicker .p-datepicker-month-selected {
   background: var(--color-principal) !important;
 }
 
-::ng-deep .p-datepicker .p-datepicker-year-selected {
+.p-datepicker .p-datepicker-year-selected {
   background: var(--color-principal) !important;
 }
 
-::ng-deep .dark .p-datepicker .p-inputtext {
+.dark .p-datepicker .p-inputtext {
   background: var(--color-slate-600) !important;
 }
 
-::ng-deep .p-datepicker input {
+.p-datepicker input {
   border: none;
   font-size: 14px;
 }
 
-::ng-deep .p-datepicker button {
+.p-datepicker button {
   border: none;
   background: var(--color-slate-100) !important;
 }
 
-::ng-deep .dark .p-datepicker button {
+.dark .p-datepicker button {
   border: none;
   background: var(--color-slate-600) !important;
 }
 
-::ng-deep .p-datepicker .p-iconwrapper {
+.p-datepicker .p-iconwrapper {
   color: var(--p-datepicker-dropdown-color);
 }

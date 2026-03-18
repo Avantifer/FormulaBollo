@@ -1,29 +1,29 @@
-::ng-deep .penaltiesButton .p-button {
+.penaltiesButton .p-button {
   width: 100%;
   background: var(--color-principal) !important;
 }
 
-::ng-deep .penaltiesButton .p-button:hover {
+.penaltiesButton .p-button:hover {
 	background: var(--color-principal-dark) !important;
 }
 
-::ng-deep .p-datatable-tbody > tr:hover > td {
+.p-datatable-tbody > tr:hover > td {
   background: rgba(203, 213, 225, 0.45) !important;
 }
 
-::ng-deep .dark .p-datatable-tbody > tr:hover > td {
+.dark .p-datatable-tbody > tr:hover > td {
   background: rgba(148, 163, 184, 0.9) !important;
 }
 
-::ng-deep .dark .p-divider-content {
+.dark .p-divider-content {
   background-color: var(--color-slate-700);
 }
 
-::ng-deep .p-divider-content {
+.p-divider-content {
   background-color: var(--color-white);
 }
 
-::ng-deep .noPenaltiesButton .p-button-icon {
+.noPenaltiesButton .p-button-icon {
   font-size: 0.65rem !important;
   margin-top: 0.1rem;
 }
