@@ -389,7 +389,7 @@ public class FantasyService {
         } else if (price >= minPrice && points < 1) {
             price = adjustPriceForReduction(price);
         } else {
-            price += (points / 5.0) * minPrice;
+            price += (int) ((points / 5.0) * minPrice);
         }
 
         // Si el nuevo precio es menor que 1, el precio es 1; si es mayor que 30, el
