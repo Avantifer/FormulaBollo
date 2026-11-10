@@ -2,9 +2,11 @@ package formula.bollo.controller;
 
 import org.springframework.cache.annotation.Cacheable;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -88,7 +90,12 @@ public class FantasyController {
     @Operation(summary = "Save fantasy Election", tags = Constants.TAG_FANTASY)
     @SecurityRequirement(name = "Bearer Authentication")
     @PostMapping(path = "/saveFantasyElection", produces = MediaType.TEXT_PLAIN_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> saveFantasyElection(@RequestBody FantasyElectionDTO fantasyElectionDTO) {
+    public ResponseEntity<String> saveFantasyElection(@RequestBody FantasyElectionDTO fantasyElectionDTO,
+            Principal principal) {
+        if (principal == null || fantasyElectionDTO.getAccount() == null
+                || !principal.getName().equals(fantasyElectionDTO.getAccount().getUsername())) {
+            return new ResponseEntity<>("Solo puedes guardar tu propia elección", HttpStatusCode.valueOf(403));
+        }
         log.info("Guardo la eleccion del fantasy de " + fantasyElectionDTO.getAccount().getUsername());
         return this.fantasyService.saveFantasyElection(fantasyElectionDTO);
     }

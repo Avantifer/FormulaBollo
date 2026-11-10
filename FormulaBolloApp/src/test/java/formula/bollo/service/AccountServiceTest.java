@@ -1,8 +1,12 @@
 package formula.bollo.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
@@ -61,6 +65,18 @@ class AccountServiceTest {
         ResponseEntity<String> response = accountService.login(accountDTO);
 
         assertEquals("Las credenciales no son válidas", response.getBody());
+        assertEquals(401, response.getStatusCode().value());
+    }
+
+    @Test
+    void loginUnknownUserIsUnauthorized() {
+        accountDTO = new AccountDTO(null, "NoExiste", "123", 0, null);
+
+        when(accountRepository.findByUsername(anyString())).thenReturn(Collections.emptyList());
+
+        ResponseEntity<String> response = accountService.login(accountDTO);
+
+        assertEquals(401, response.getStatusCode().value());
     }
 
     @Test
@@ -121,6 +137,21 @@ class AccountServiceTest {
     }
 
     @Test
+    void registerIgnoresIdAndAdminSentByTheClient() {
+        // Un id ajeno sobrescribiría otra cuenta y admin=1 daría permisos de administrador.
+        accountDTO = new AccountDTO(35L, "Atacante", "123", 1, "atacante@mail.com");
+
+        when(accountRepository.findByUsername(anyString())).thenReturn(Collections.emptyList());
+        when(accountRepository.findByEmail(anyString())).thenReturn(Collections.emptyList());
+
+        accountService.register(accountDTO);
+
+        assertNull(accountDTO.getId());
+        assertEquals(0, accountDTO.getAdmin());
+        verify(accountImpl).accountDTOToAccount(accountDTO);
+    }
+
+    @Test
     void changePasswordUserNotFound() {
         when(accountRepository.findByUsername(anyString())).thenReturn(Arrays.asList());
 
@@ -146,7 +177,9 @@ class AccountServiceTest {
 
         ResponseEntity<String> response = accountService.recoverPassword("email@mail");
 
-        assertEquals("El usuario no existe", response.getBody());
+        // No revela si el correo existe: misma respuesta, pero sin enviar nada.
+        assertEquals(200, response.getStatusCode().value());
+        verifyNoInteractions(emailService);
     }
 
     @Test
@@ -160,5 +193,7 @@ class AccountServiceTest {
         ResponseEntity<String> response = accountService.recoverPassword("email@mail");
 
         assertEquals(200, response.getStatusCode().value());
+        // El enlace del correo caduca a los 30 minutos (no a los 30 días de una sesión).
+        verify(jwtConfig).generateToken(any(), eq(JwtConfig.RECOVERY_TOKEN_VALIDITY));
     }
 }

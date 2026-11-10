@@ -22,6 +22,7 @@ import io.jsonwebtoken.security.Keys;
 public class JwtConfig implements Serializable {
     private static final long serialVersionUID = -2550185165626007488L;
     public static final int JWT_TOKEN_VALIDITY = 60 * 24 * 30; // 30 days expiration
+    public static final int RECOVERY_TOKEN_VALIDITY = 30; // minutes: el enlace del correo caduca pronto
 
     @Value("${jwt.secret}")
     private String secret;
@@ -33,8 +34,19 @@ public class JwtConfig implements Serializable {
      * @return JWT token generated for the account
      */
     public String generateToken(AccountDTO accountDTO) {
+        return generateToken(accountDTO, JWT_TOKEN_VALIDITY);
+    }
+
+    /**
+     * Generate a JWT token for the account with a custom validity.
+     *
+     * @param accountDTO      AccountDTO
+     * @param validityMinutes minutes until the token expires
+     * @return JWT token generated for the account
+     */
+    public String generateToken(AccountDTO accountDTO, int validityMinutes) {
         Date expiration = Date.from(LocalDateTime.now()
-                .plusMinutes(JWT_TOKEN_VALIDITY)
+                .plusMinutes(validityMinutes)
                 .atZone(ZoneId.systemDefault())
                 .toInstant());
 
