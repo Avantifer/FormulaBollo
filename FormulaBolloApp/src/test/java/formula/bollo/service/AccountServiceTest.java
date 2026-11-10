@@ -154,10 +154,34 @@ class AccountServiceTest {
     }
 
     @Test
+    void registerTokenContainsPersistedUserId() {
+        AccountDTO input = new AccountDTO(99L, "ana", "password", 1, "ana@example.com");
+        Account pending = new Account(null, "ana", "hash", 0, "ana@example.com");
+        Account persisted = new Account(42L, "ana", "hash", 0, "ana@example.com");
+        AccountDTO persistedDTO = new AccountDTO(42L, "ana", "hash", 0, "ana@example.com");
+        JwtConfig realJwt = new JwtConfig();
+        ReflectionTestUtils.setField(realJwt, "secret", "0123456789012345678901234567890123456789012345678901234567890123");
+        AccountService service = new AccountService(accountRepository, accountImpl, realJwt, emailService);
+        when(accountImpl.accountDTOToAccount(input)).thenAnswer(invocation -> {
+            assertNull(input.getId());
+            assertEquals(0, input.getAdmin());
+            return pending;
+        });
+        when(accountRepository.save(pending)).thenReturn(persisted);
+        when(accountImpl.accountToAccountDTO(persisted)).thenReturn(persistedDTO);
+
+        ResponseEntity<String> response = service.register(input);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(42L, realJwt.extractAllClaims(response.getBody()).get("userId", Long.class));
+        assertEquals(0, realJwt.extractAllClaims(response.getBody()).get("admin", Integer.class));
+    }
+
+    @Test
     void changePasswordUserNotFound() {
         when(accountRepository.findByUsername(anyString())).thenReturn(Arrays.asList());
 
-        ResponseEntity<String> response = accountService.changePassword("Avantifer", "123");
+        ResponseEntity<String> response = accountService.changePassword(() -> "Avantifer", "123");
 
         assertEquals("No se ha podido encontrar el usuario", response.getBody());
     }
@@ -168,7 +192,7 @@ class AccountServiceTest {
 
         when(accountRepository.findByUsername(anyString())).thenReturn(Arrays.asList(account));
 
-        ResponseEntity<String> response = accountService.changePassword("Avantifer", "123");
+        ResponseEntity<String> response = accountService.changePassword(() -> "Avantifer", "123");
 
         assertEquals(200, response.getStatusCode().value());
     }
@@ -196,7 +220,7 @@ class AccountServiceTest {
 
         assertEquals(200, response.getStatusCode().value());
         // El enlace del correo caduca a los 30 minutos (no a los 30 días de una sesión).
-        verify(jwtConfig).generateToken(any(), eq(JwtConfig.RECOVERY_TOKEN_VALIDITY));
+        verify(jwtConfig).generateRecoveryToken(any());
     }
 
     @Test
@@ -207,7 +231,7 @@ class AccountServiceTest {
 
         when(accountRepository.findByEmail(anyString())).thenReturn(Arrays.asList(account));
         when(accountImpl.accountToAccountDTO(any())).thenReturn(accountDTO);
-        when(jwtConfig.generateToken(any(), eq(JwtConfig.RECOVERY_TOKEN_VALIDITY))).thenReturn("tok");
+        when(jwtConfig.generateRecoveryToken(any())).thenReturn("tok");
 
         accountService.recoverPassword("email@mail");
 

@@ -2,6 +2,7 @@ package formula.bollo.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
@@ -63,20 +64,25 @@ class FantasyControllerTest {
     }
 
     @Test
-    void saveFantasyElectionOfAnotherUserIsRejected() {
-        ResponseEntity<String> response = fantasyController.saveFantasyElection(electionOf("ana"), () -> "bob");
+    void saveFantasyElectionUsesPrincipalInsteadOfClientOwner() {
+        FantasyElectionDTO election = electionOf("ana");
+        when(fantasyService.saveFantasyElection(election, "bob")).thenReturn(ResponseEntity.ok("ok"));
+        ResponseEntity<String> response = fantasyController.saveFantasyElection(election, () -> "bob");
 
-        assertEquals(403, response.getStatusCode().value());
-        verifyNoInteractions(fantasyService);
+        assertEquals(200, response.getStatusCode().value());
+        verify(fantasyService).saveFantasyElection(election, "bob");
     }
 
     @Test
     void saveFantasyElectionOfTheOwnUserIsAllowed() {
         FantasyElectionDTO election = electionOf("ana");
-        when(fantasyService.saveFantasyElection(election)).thenReturn(ResponseEntity.ok("ok"));
+        election.setId(99L);
+        election.getAccount().setId(35L);
+        when(fantasyService.saveFantasyElection(election, "ana")).thenReturn(ResponseEntity.ok("ok"));
 
         ResponseEntity<String> response = fantasyController.saveFantasyElection(election, () -> "ana");
 
         assertEquals(200, response.getStatusCode().value());
+        verify(fantasyService).saveFantasyElection(election, "ana");
     }
 }

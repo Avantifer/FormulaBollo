@@ -5,6 +5,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import java.lang.reflect.Field;
 
@@ -14,6 +16,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.MailSendException;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import jakarta.mail.internet.MimeMessage;
 
@@ -25,6 +29,17 @@ class EmailServiceTest {
 
     @Mock
     private JavaMailSender javaMailSender;
+
+    @Test
+    void smtpFailureDoesNotPropagate() {
+        ReflectionTestUtils.setField(emailService, "emailFrom", "noreply@example.com");
+        MimeMessage message = mock(MimeMessage.class);
+        when(javaMailSender.createMimeMessage()).thenReturn(message);
+        doThrow(new MailSendException("SMTP caido")).when(javaMailSender).send(message);
+
+        assertDoesNotThrow(() -> emailService.sendSimpleMessage("email@mail.com", "Subject", "texto"));
+        verify(javaMailSender).send(message);
+    }
 
     @Test
     void sendSimpleMessageFail()

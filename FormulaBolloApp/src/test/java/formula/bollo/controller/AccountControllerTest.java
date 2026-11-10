@@ -3,6 +3,9 @@ package formula.bollo.controller;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+
+import java.security.Principal;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,27 +34,29 @@ class AccountControllerTest {
     private AccountService accountService;
 
     @Test
-    void changePasswordWithoutTokenIsRejected() {
-        ResponseEntity<String> response = accountController.changePassword("ana", "nueva", null);
+    void changePasswordWithoutPasswordIsRejected() {
+        ResponseEntity<String> response = accountController.changePassword(new AccountController.PasswordChangeRequest(null), () -> "ana");
 
-        assertEquals(403, response.getStatusCode().value());
+        assertEquals(400, response.getStatusCode().value());
         verifyNoInteractions(accountService);
     }
 
     @Test
-    void changePasswordWithAnotherUsersTokenIsRejected() {
-        ResponseEntity<String> response = accountController.changePassword("ana", "nueva", () -> "bob");
+    void changePasswordWithBlankPasswordIsRejected() {
+        ResponseEntity<String> response = accountController.changePassword(new AccountController.PasswordChangeRequest(" "), () -> "ana");
 
-        assertEquals(403, response.getStatusCode().value());
+        assertEquals(400, response.getStatusCode().value());
         verifyNoInteractions(accountService);
     }
 
     @Test
     void changePasswordWithOwnTokenIsAllowed() {
-        when(accountService.changePassword("ana", "nueva")).thenReturn(ResponseEntity.ok("ok"));
+        Principal principal = () -> "ana";
+        when(accountService.changePassword(principal, "nueva")).thenReturn(ResponseEntity.ok("ok"));
 
-        ResponseEntity<String> response = accountController.changePassword("ana", "nueva", () -> "ana");
+        ResponseEntity<String> response = accountController.changePassword(new AccountController.PasswordChangeRequest("nueva"), principal);
 
         assertEquals(200, response.getStatusCode().value());
+        verify(accountService).changePassword(principal, "nueva");
     }
 }

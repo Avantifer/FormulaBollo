@@ -59,7 +59,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
-                if (jwtConfig.validateToken(jwt, userDetails)) {
+                String purpose = jwtConfig.extractClaim(jwt, claims -> claims.get("purpose", String.class));
+                // El enlace del correo solo permite cambiar la contraseña mediante POST.
+                boolean allowedPurpose = "session".equals(purpose)
+                        || ("recovery".equals(purpose) && "POST".equals(request.getMethod())
+                                && "/account/changePassword".equals(request.getServletPath()));
+                if (allowedPurpose && jwtConfig.validateToken(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,

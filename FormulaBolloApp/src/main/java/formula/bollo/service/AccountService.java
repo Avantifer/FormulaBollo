@@ -1,6 +1,7 @@
 package formula.bollo.service;
 
 import java.util.List;
+import java.security.Principal;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
@@ -95,8 +96,8 @@ public class AccountService {
         accountDTO.setId(null);
         accountDTO.setAdmin(0);
 
-        accountRepository.save(this.accountImpl.accountDTOToAccount(accountDTO));
-        String token = jwtConfig.generateToken(accountDTO);
+        Account savedAccount = accountRepository.save(this.accountImpl.accountDTOToAccount(accountDTO));
+        String token = jwtConfig.generateToken(this.accountImpl.accountToAccountDTO(savedAccount));
 
         return new ResponseEntity<>(token, HttpStatusCode.valueOf(200));
     }
@@ -104,12 +105,13 @@ public class AccountService {
     /**
      * Changes the password of an existing account.
      *
-     * @param username the username of the account whose password will be changed
+     * @param principal usuario autenticado cuya contraseña se cambia
      * @param password the new password to be encrypted and set for the account
      * @return ResponseEntity<String> a response entity with a success messageor
      *         failed.
      */
-    public ResponseEntity<String> changePassword(String username, String password) {
+    public ResponseEntity<String> changePassword(Principal principal, String password) {
+        String username = principal.getName();
         List<Account> account = accountRepository.findByUsername(username);
 
         if (account.isEmpty()) {
@@ -151,7 +153,7 @@ public class AccountService {
      *                   recovery.
      */
     private void sendEmail(AccountDTO accountDTO) {
-        String token = this.jwtConfig.generateToken(accountDTO, JwtConfig.RECOVERY_TOKEN_VALIDITY);
+        String token = this.jwtConfig.generateRecoveryToken(accountDTO);
         String base = this.frontendUrl.endsWith("/") ? this.frontendUrl : this.frontendUrl + "/";
         String link = base + "fantasy/recoverPassword/" + token;
         String message = """

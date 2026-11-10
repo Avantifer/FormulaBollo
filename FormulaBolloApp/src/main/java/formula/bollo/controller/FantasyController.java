@@ -92,12 +92,11 @@ public class FantasyController {
     @PostMapping(path = "/saveFantasyElection", produces = MediaType.TEXT_PLAIN_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> saveFantasyElection(@RequestBody FantasyElectionDTO fantasyElectionDTO,
             Principal principal) {
-        if (principal == null || fantasyElectionDTO.getAccount() == null
-                || !principal.getName().equals(fantasyElectionDTO.getAccount().getUsername())) {
+        if (principal == null) {
             return new ResponseEntity<>("Solo puedes guardar tu propia elección", HttpStatusCode.valueOf(403));
         }
-        log.info("Guardo la eleccion del fantasy de " + fantasyElectionDTO.getAccount().getUsername());
-        return this.fantasyService.saveFantasyElection(fantasyElectionDTO);
+        log.info("Guardo la eleccion del fantasy de " + principal.getName());
+        return this.fantasyService.saveFantasyElection(fantasyElectionDTO, principal.getName());
     }
 
     @Operation(summary = "Get all driver's fantasy points", tags = Constants.TAG_FANTASY)

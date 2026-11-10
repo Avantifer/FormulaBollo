@@ -2,6 +2,9 @@ package formula.bollo.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -19,6 +22,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -51,6 +55,7 @@ import formula.bollo.model.RaceDTO;
 import formula.bollo.model.SeasonDTO;
 import formula.bollo.model.TeamDTO;
 import formula.bollo.repository.FantasyElectionRepository;
+import formula.bollo.repository.AccountRepository;
 import formula.bollo.repository.FantasyPointsDriverRepository;
 import formula.bollo.repository.FantasyPointsTeamRepository;
 import formula.bollo.repository.FantasyPriceDriverRepository;
@@ -63,6 +68,9 @@ class FantasyServiceTest {
 
     @InjectMocks
     private FantasyService fantasyService;
+
+    @Mock
+    private AccountRepository accountRepository;
 
     @Mock
     private ResultRepository resultRepository;
@@ -167,51 +175,46 @@ class FantasyServiceTest {
         assertEquals(200, response.getStatusCode().value());
     }
 
-    @Test
-    void saveFantasyElectionWithPrevious() {
-        SeasonDTO seasonDTO = new SeasonDTO(2L, "Temporada 3", 2, "2025");
-        TeamDTO teamDTO = new TeamDTO(1L, "Haas", "", "", seasonDTO);
-        DriverDTO driverDTO = new DriverDTO(1L, "Avantifer", 2, "", seasonDTO, teamDTO);
-        RaceDTO raceDTO = new RaceDTO(1L, "Francia", "", "", LocalDateTime.now(), seasonDTO, 0);
-        AccountDTO accountDTO = new AccountDTO(1L, "Avantifer", "123", 1, "email@email.com");
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void saveFantasyElectionIgnoresClientOwnerAndElectionId(boolean hasPrevious) {
+        Account account = new Account(7L, "ana", "hash", 0, "ana@example.com");
+        AccountDTO owner = new AccountDTO(7L, "ana", "hash", 0, "ana@example.com");
+        FantasyElectionDTO input = new FantasyElectionDTO();
+        input.setId(999L);
+        input.setAccount(new AccountDTO(35L, "ana", "ajena", 1, "otro@example.com"));
+        RaceDTO race = new RaceDTO();
+        race.setId(3L);
+        input.setRace(race);
+        FantasyElection mapped = new FantasyElection();
+        mapped.setId(999L);
+        FantasyElection previous = new FantasyElection();
+        previous.setId(12L);
+        when(accountRepository.findByUsername("ana")).thenReturn(List.of(account));
+        when(accountImpl.accountToAccountDTO(account)).thenReturn(owner);
+        when(fantasyElectionImpl.fantasyElectionDTOToFantasyElection(input)).thenAnswer(invocation -> {
+            assertSame(owner, input.getAccount());
+            assertNull(input.getId());
+            return mapped;
+        });
+        when(fantasyElectionRepository.findByUserIdAndRaceId(7, 3))
+                .thenReturn(hasPrevious ? Optional.of(previous) : Optional.empty());
 
-        FantasyElectionDTO fantasyElectionDTO = new FantasyElectionDTO(1L, accountDTO, driverDTO, driverDTO, driverDTO,
-                teamDTO, teamDTO, raceDTO);
+        ResponseEntity<String> response = fantasyService.saveFantasyElection(input, "ana");
 
-        Season season = new Season(2L, "Temporada 3", 2, 2025);
-        Team team = new Team(1L, "Haas", "", "", season);
-        Driver driver = new Driver(1L, "Avantifer", 2, "", season, team);
-        Race race = new Race(1L, "Francia", "", "", LocalDateTime.now(), season, 0);
-        Account account = new Account(1L, "Avantifer", "123", 1, "email@email.com");
-
-        FantasyElection fantasyElection = new FantasyElection(1L, account, driver, driver, driver,
-                team, team, race);
-
-        when(fantasyElectionImpl.fantasyElectionDTOToFantasyElection(any())).thenReturn(fantasyElection);
-        when(fantasyElectionRepository.findByUserIdAndRaceId(anyInt(), anyInt()))
-                .thenReturn(Optional.of(fantasyElection));
-
-        ResponseEntity<String> response = fantasyService.saveFantasyElection(fantasyElectionDTO);
-
-        assertEquals("Tu equipo ha sido guardado correctamente", response.getBody());
         assertEquals(200, response.getStatusCode().value());
+        assertSame(account, mapped.getAccount());
+        assertEquals(hasPrevious ? 12L : null, mapped.getId());
+        verify(fantasyElectionRepository).findByUserIdAndRaceId(7, 3);
+        verify(fantasyElectionRepository).save(mapped);
     }
 
     @Test
-    void saveFantasyElection() {
-        SeasonDTO seasonDTO = new SeasonDTO(2L, "Temporada 3", 2, "2025");
-        TeamDTO teamDTO = new TeamDTO(1L, "Haas", "", "", seasonDTO);
-        DriverDTO driverDTO = new DriverDTO(1L, "Avantifer", 2, "", seasonDTO, teamDTO);
-        RaceDTO raceDTO = new RaceDTO(1L, "Francia", "", "", LocalDateTime.now(), seasonDTO, 0);
-        AccountDTO accountDTO = new AccountDTO(1L, "Avantifer", "123", 1, "email@email.com");
+    void saveFantasyElectionRejectsUnknownPrincipal() {
+        ResponseEntity<String> response = fantasyService.saveFantasyElection(new FantasyElectionDTO(), "desconocido");
 
-        FantasyElectionDTO fantasyElectionDTO = new FantasyElectionDTO(1L, accountDTO, driverDTO, driverDTO, driverDTO,
-                teamDTO, teamDTO, raceDTO);
-
-        ResponseEntity<String> response = fantasyService.saveFantasyElection(fantasyElectionDTO);
-
-        assertEquals("Tu equipo ha sido guardado correctamente", response.getBody());
-        assertEquals(200, response.getStatusCode().value());
+        assertEquals(403, response.getStatusCode().value());
+        verifyNoInteractions(fantasyElectionRepository, fantasyElectionImpl);
     }
 
     @Test

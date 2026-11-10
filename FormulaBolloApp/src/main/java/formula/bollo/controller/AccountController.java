@@ -2,7 +2,6 @@ package formula.bollo.controller;
 
 import java.security.Principal;
 
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -56,16 +55,17 @@ public class AccountController {
     }
 
     @Operation(summary = "Change Password", tags = Constants.TAG_ACCOUNT)
-    @PostMapping(path = "/changePassword", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> changePassword(@RequestParam String username, @RequestParam String password,
+    @PostMapping(path = "/changePassword", produces = MediaType.TEXT_PLAIN_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> changePassword(@RequestBody PasswordChangeRequest request,
             Principal principal) {
-        if (principal == null || !principal.getName().equals(username)) {
-            log.warn("Intento de cambiar la contraseña de " + username + " con un token de otro usuario");
-            return new ResponseEntity<>("No puedes cambiar la contraseña de otro usuario", HttpStatusCode.valueOf(403));
+        if (request.password() == null || request.password().isBlank()) {
+            return ResponseEntity.badRequest().body("Tienes que poner contraseña");
         }
-        log.info("Se va a cambiar la contraseña de " + username);
-        return this.accountService.changePassword(username, password);
+        log.info("Se va a cambiar la contraseña de " + principal.getName());
+        return this.accountService.changePassword(principal, request.password());
     }
+
+    public record PasswordChangeRequest(String password) { }
 
     @Operation(summary = "Recover Password", tags = Constants.TAG_ACCOUNT)
     @PostMapping(path = "/recoverPassword", produces = MediaType.TEXT_PLAIN_VALUE)
