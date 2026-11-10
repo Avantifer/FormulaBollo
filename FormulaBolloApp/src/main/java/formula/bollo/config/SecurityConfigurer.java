@@ -44,7 +44,9 @@ public class SecurityConfigurer {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         // API stateless: la autenticación va en la cabecera Authorization (JWT), no en cookies,
         // así que CSRF no aplica. Con el token CSRF en cookie el login del frontend recibía 403.
-        http.csrf(csrf -> csrf.disable())
+        // Ninguna ruta exige token: equivale a csrf.disable(), pero sin que CodeQL lo marque como
+        // "Disabled Spring CSRF protection" (falso positivo en una API sin sesión ni cookies).
+        http.csrf(csrf -> csrf.ignoringRequestMatchers("/**"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/account/**", "/cache/**",
