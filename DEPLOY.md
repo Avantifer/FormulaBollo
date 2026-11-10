@@ -23,6 +23,19 @@ El backend no trae secretos en el repositorio; deben llegar por ficheros de perf
 - [ ] Certificado (`.p12`) fuera del repositorio. Si el que estuvo versionado llegó a usarse, rótalo.
 - [ ] Carpeta `images/` donde apunte `spring.web.resources.static-locations`: la base guarda rutas relativas.
 
+## 2b. Cambios de contrato que obligan a desplegar backend y frontend a la vez
+
+- `POST /account/changePassword` ahora recibe `{"password": "..."}` en el **cuerpo** y exige el token del enlace
+  del correo (o de sesión) en `Authorization: Bearer`. El usuario afectado es siempre el del token; ya no hay
+  parámetros `username`/`password` en la URL.
+- Los tokens llevan un propósito (`session` o `recovery`) y una huella de la contraseña: el enlace de recuperación
+  solo sirve para `POST /account/changePassword`, caduca a los 30 minutos y es de un solo uso; cambiar la
+  contraseña cierra todas las sesiones anteriores.
+- Las respuestas ya no incluyen `password`, `email` ni `admin` de las cuentas.
+- Los endpoints de guardado (`/results`, `/sprints`, `/races`, `/penalties`, puntos y precios de Fantasy) suben
+  la versión de la caché de los clientes al terminar con éxito, y avisan por WebSocket a los navegadores
+  conectados. `POST /cache/update` sigue existiendo pero exige rol ADMIN.
+
 ## 3. Base de datos
 
 - [ ] Para la aplicación.
