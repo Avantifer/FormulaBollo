@@ -310,6 +310,27 @@ class ResultServiceTest {
     }
 
     @Test
+    void saveResultsReinsertsAsNewRows() {
+        SeasonDTO seasonDTO = new SeasonDTO(2L, "Temporada 3", 2, "2025");
+        TeamDTO team = new TeamDTO(1L, "Ferrari", "", "", seasonDTO);
+        DriverDTO driver = new DriverDTO(1L, "Avantifer", 0, "", seasonDTO, team);
+        RaceDTO race = new RaceDTO(1L, "Francia", "", "", LocalDateTime.now(), null, 0);
+        ResultDTO result = new ResultDTO(7L, race, driver, new PositionDTO(1L, 1, 25), 1, 1);
+
+        Result converted = new Result();
+        converted.setId(7L);
+        when(resultRepository.findByRaceId(1)).thenReturn(List.of(new Result()));
+        when(resultImpl.convertResultsDTOToResults(any())).thenReturn(List.of(converted));
+
+        resultService.saveResults(List.of(result));
+
+        org.mockito.ArgumentCaptor<List<Result>> saved = org.mockito.ArgumentCaptor.forClass(List.class);
+        org.mockito.Mockito.verify(resultRepository).saveAll(saved.capture());
+        // Las filas antiguas se borran antes: conservar el id haría fallar el merge en Hibernate 7.
+        org.junit.jupiter.api.Assertions.assertNull(saved.getValue().get(0).getId());
+    }
+
+    @Test
     void getOverallPositionChanges() {
         Season season = new Season(1L, "Temporada 1", 1, 2024);
         Race race = new Race(1L, "España", "", "", LocalDateTime.now(), season, 0);

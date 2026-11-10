@@ -1,5 +1,7 @@
 package formula.bollo.service;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 
@@ -302,6 +304,7 @@ public class ResultService {
      *
      * @param resultDTOs The list of result to save.
      */
+    @Transactional
     @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public ResponseEntity<String> saveResults(List<ResultDTO> resultDTOs) {
         if (resultDTOs.isEmpty()) {
@@ -316,7 +319,10 @@ public class ResultService {
             this.resultRepository.deleteAll(existingResults);
         }
 
-        resultRepository.saveAll(this.resultImpl.convertResultsDTOToResults(resultDTOs));
+        // Las filas anteriores ya se borraron: se reinsertan como nuevas (con id, Hibernate 7 falla al fusionar filas borradas).
+        List<Result> resultsToSave = this.resultImpl.convertResultsDTOToResults(resultDTOs);
+        resultsToSave.forEach(result -> result.setId(null));
+        resultRepository.saveAll(resultsToSave);
 
         return new ResponseEntity<>("Resultados guardados correctamente", Constants.HEADERS_TEXT_PLAIN,
                 HttpStatusCode.valueOf(200));
