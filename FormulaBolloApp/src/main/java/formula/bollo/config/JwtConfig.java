@@ -2,9 +2,11 @@ package formula.bollo.config;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.Date;
+import java.util.HexFormat;
 import java.util.function.Function;
 
 import javax.crypto.SecretKey;
@@ -22,6 +24,7 @@ import io.jsonwebtoken.security.Keys;
 public class JwtConfig implements Serializable {
     private static final long serialVersionUID = -2550185165626007488L;
     public static final int JWT_TOKEN_VALIDITY = 60 * 24 * 30; // 30 days expiration
+    public static final int RECOVERY_TOKEN_VALIDITY = 30; // minutes: el enlace del correo caduca pronto
 
     @Value("${jwt.secret}")
     private String secret;
@@ -33,16 +36,35 @@ public class JwtConfig implements Serializable {
      * @return JWT token generated for the account
      */
     public String generateToken(AccountDTO accountDTO) {
-        Date expiration = Date.from(LocalDateTime.now()
-                .plusMinutes(JWT_TOKEN_VALIDITY)
-                .atZone(ZoneId.systemDefault())
-                .toInstant());
+        return generateToken(accountDTO, JWT_TOKEN_VALIDITY);
+    }
+
+    /**
+     * Generate a JWT token for the account with a custom validity.
+     *
+     * @param accountDTO      AccountDTO
+     * @param validityMinutes minutes until the token expires
+     * @return JWT token generated for the account
+     */
+    public String generateToken(AccountDTO accountDTO, int validityMinutes) {
+        return generateToken(accountDTO, validityMinutes, "session");
+    }
+
+    public String generateRecoveryToken(AccountDTO accountDTO) {
+        return generateToken(accountDTO, RECOVERY_TOKEN_VALIDITY, "recovery");
+    }
+
+    private String generateToken(AccountDTO accountDTO, int validityMinutes, String purpose) {
+        Instant issuedAt = Instant.now();
+        Date expiration = Date.from(issuedAt.plusSeconds(validityMinutes * 60L));
 
         return Jwts.builder()
                 .subject(accountDTO.getUsername())
                 .claim("userId", accountDTO.getId())
                 .claim("admin", accountDTO.getAdmin())
-                .issuedAt(new Date())
+                .claim("purpose", purpose)
+                .claim("credentialFingerprint", credentialFingerprint(accountDTO.getPassword()))
+                .issuedAt(Date.from(issuedAt))
                 .expiration(expiration)
                 .signWith(this.getKey())
                 .compact();
@@ -117,8 +139,25 @@ public class JwtConfig implements Serializable {
      * @return true if the token is valid, false otherwise
      */
     public boolean validateToken(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        Claims claims = extractAllClaims(token);
+        String purpose = claims.get("purpose", String.class);
+        return userDetails.getUsername().equals(claims.getSubject())
+                && ("session".equals(purpose) || "recovery".equals(purpose))
+                && userDetails.getPassword() != null
+                && credentialFingerprint(userDetails.getPassword())
+                        .equals(claims.get("credentialFingerprint", String.class))
+                && !isTokenExpired(token);
+    }
+
+    // La huella cambia al guardar un nuevo hash bcrypt, invalidando todos los tokens anteriores.
+    private String credentialFingerprint(String passwordHash) {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256")
+                    .digest(passwordHash.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(digest, 0, 8);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 no disponible", e);
+        }
     }
 
     /**

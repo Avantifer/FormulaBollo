@@ -34,29 +34,9 @@ public interface ResultRepository extends JpaRepository<Result, Long> {
     @Query("SELECT r FROM Result r WHERE r.driver.team.id IN :teamIds")
     List<Result> findByTeamIds(List<Long> teamIds);
 
-    @Query(value = "SELECT COUNT(r) FROM Result r WHERE r.driver.id IN :driverIds AND r.pole = 1")
-    int polesByDriverIds(List<Long> driverIds);
-
-    @Query(value = "SELECT COUNT(r) FROM Result r WHERE r.driver.id IN :driverIds AND r.fastlap = 1")
-    int fastlapByDriverIds(List<Long> driverIds);
-
-    @Query(value = "SELECT COUNT(r) FROM Result r WHERE r.driver.id IN :driverIds AND r.position IS NOT NULL")
-    int racesFinishedByDriverIds(List<Long> driverIds);
-
-    @Query(value = "SELECT COUNT(r) FROM Result r WHERE r.driver.id IN :driverIds AND r.position.positionNumber IS NOT NULL AND r.position.positionNumber <= 3")
-    int podiumsByDriverIds(List<Long> driverIds);
-
-    @Query(value = "SELECT COUNT(r) FROM Result r WHERE r.driver.id IN :driverIds AND r.position.positionNumber = 1")
-    int victoriesByDriverIds(List<Long> driverIds);
-
-    @Query(value = "SELECT AVG(r.position.positionNumber) FROM Result r WHERE r.driver.id IN :driverIds")
-    Double averagePositionByDriverIds(List<Long> driverIds);
-
-    @Query(value = "SELECT r FROM Result r WHERE r.driver.id IN :driverIds AND r.position IS NOT NULL ORDER BY r.position.positionNumber ASC LIMIT 1")
-    List<Result> bestResultByDriverIds(List<Long> driverIds);
-
-    @Query(value = "SELECT r FROM Result r WHERE r.driver.id IN :driverIds AND r.position IS NOT NULL ORDER BY r.race.dateStart DESC LIMIT 5")
-    List<Result> last5ResultsByDriverIds(List<Long> driverIds);
+    /** Resultados con carrera y posición ya cargadas: las estadísticas del piloto se calculan en memoria. */
+    @Query("SELECT r FROM Result r JOIN FETCH r.race LEFT JOIN FETCH r.position WHERE r.driver.id IN :driverIds")
+    List<Result> findWithRaceAndPositionByDriverIds(List<Long> driverIds);
 
     @Query("""
             SELECT r
@@ -69,7 +49,7 @@ public interface ResultRepository extends JpaRepository<Result, Long> {
                     GROUP BY r2.race.id, r2.driver.team.id
                     HAVING SUM(r2.position IS NOT NULL) = 0
                 )
-            ORDER BY r.race.dateStart DESC
+            ORDER BY r.race.dateStart DESC, r.id DESC
             LIMIT 15
             """)
     List<Result> last5ResultsByTeamIds(List<Long> teamIds);

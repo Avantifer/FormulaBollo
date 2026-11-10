@@ -1,5 +1,7 @@
 package formula.bollo.service;
 
+import org.springframework.cache.annotation.CacheEvict;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -15,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import formula.bollo.entity.FantasyElection;
+import formula.bollo.entity.Account;
 import formula.bollo.entity.FantasyPointsDriver;
 import formula.bollo.entity.FantasyPointsTeam;
 import formula.bollo.entity.FantasyPriceDriver;
@@ -33,6 +36,7 @@ import formula.bollo.model.FantasyPriceDriverDTO;
 import formula.bollo.model.FantasyPriceTeamDTO;
 import formula.bollo.model.RaceDTO;
 import formula.bollo.repository.FantasyElectionRepository;
+import formula.bollo.repository.AccountRepository;
 import formula.bollo.repository.FantasyPointsDriverRepository;
 import formula.bollo.repository.FantasyPointsTeamRepository;
 import formula.bollo.repository.FantasyPriceDriverRepository;
@@ -45,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class FantasyService {
+    private AccountRepository accountRepository;
     private RaceRepository raceRepository;
     private ResultRepository resultRepository;
     private FantasyElectionRepository fantasyElectionRepository;
@@ -59,6 +64,7 @@ public class FantasyService {
     private RaceImpl raceImpl;
 
     public FantasyService(
+            AccountRepository accountRepository,
             RaceRepository raceRepository,
             ResultRepository resultRepository,
             FantasyElectionRepository fantasyElectionRepository,
@@ -70,6 +76,7 @@ public class FantasyService {
             FantasyPriceImpl fantasyPriceImpl,
             AccountImpl accountImpl,
             RaceImpl raceImpl) {
+        this.accountRepository = accountRepository;
         this.raceRepository = raceRepository;
         this.resultRepository = resultRepository;
         this.fantasyElectionRepository = fantasyElectionRepository;
@@ -89,6 +96,7 @@ public class FantasyService {
      * @param raceId the ID of the race for which points need to be saved
      * @return a ResponseEntity containing a success message or error message.
      */
+    @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public ResponseEntity<String> saveDriverTeamPoints(int raceId) {
         List<Result> results = this.resultRepository.findByRaceId(raceId);
         List<FantasyPointsDriver> fantasyDriversPrevious = this.fantasyPointsDriverRepository.findByRaceId(raceId);
@@ -121,6 +129,7 @@ public class FantasyService {
      * @param raceId the ID of the current race to use for price calculations
      * @return a ResponseEntity containing a success message or error message.
      */
+    @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public ResponseEntity<String> saveDriverTeamPrices(int raceId) {
         List<Result> results = this.resultRepository.findByRaceId(raceId);
         Optional<Race> nextRace = this.raceRepository.findById((long) (raceId + 1));
@@ -160,19 +169,25 @@ public class FantasyService {
      * @return a ResponseEntity containing a success message if the election is
      *         saved correctly
      */
-    public ResponseEntity<String> saveFantasyElection(FantasyElectionDTO fantasyElectionDTO) {
+    @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
+    public ResponseEntity<String> saveFantasyElection(FantasyElectionDTO fantasyElectionDTO, String username) {
+        List<Account> accounts = this.accountRepository.findByUsername(username);
+        if (accounts.isEmpty()) {
+            return new ResponseEntity<>("No se ha podido encontrar el usuario", HttpStatusCode.valueOf(403));
+        }
+        Account account = accounts.get(0);
+        // El propietario y el id de la elección se resuelven en el servidor.
+        fantasyElectionDTO.setAccount(this.accountImpl.accountToAccountDTO(account));
+        fantasyElectionDTO.setId(null);
         FantasyElection fantasyElection = this.fantasyElectionImpl
                 .fantasyElectionDTOToFantasyElection(fantasyElectionDTO);
+        fantasyElection.setAccount(account);
         Optional<FantasyElection> fantasyElectionPrevious = this.fantasyElectionRepository.findByUserIdAndRaceId(
-                fantasyElectionDTO.getAccount().getId().intValue(),
+                account.getId().intValue(),
                 fantasyElectionDTO.getRace().getId().intValue());
 
-        if (fantasyElectionPrevious.isPresent()) {
-            fantasyElection.setId(fantasyElectionPrevious.get().getId());
-            this.fantasyElectionRepository.save(fantasyElection);
-        } else {
-            this.fantasyElectionRepository.save(fantasyElection);
-        }
+        fantasyElection.setId(fantasyElectionPrevious.map(FantasyElection::getId).orElse(null));
+        this.fantasyElectionRepository.save(fantasyElection);
 
         return new ResponseEntity<>("Tu equipo ha sido guardado correctamente", Constants.HEADERS_TEXT_PLAIN,
                 HttpStatusCode.valueOf(200));

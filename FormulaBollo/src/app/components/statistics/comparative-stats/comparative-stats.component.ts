@@ -1,5 +1,5 @@
 import { colorsMappings, ERROR_DRIVER_INFO_FETCH, ERROR_TEAM_INFO_FETCH, getComparisonChartOptions, getComparisonChartOptionsMobile } from './../../../constants';
-import { Component, effect, inject, Input, SimpleChanges } from '@angular/core';
+import { Component, effect, inject, Input, signal, SimpleChanges, WritableSignal } from '@angular/core';
 import { Season } from '../../../../shared/models/season';
 import { environment } from '../../../../enviroments/enviroment';
 import { Driver } from '../../../../shared/models/driver';
@@ -40,10 +40,15 @@ export class ComparativeStatsComponent {
   private driversSelected: Driver[] | null[] = [null, null];
   private teamsSelected: Team[] | null[] = [null, null];
 
-  driversInfo: DriverInfo[] = [];
-  teamsInfo: TeamInfo[] = [];
+  // Se rellenan tras peticiones HTTP: la plantilla los lee a través de signals para refrescarse sin zone.js.
+  private readonly driversInfoState: WritableSignal<DriverInfo[]> = signal<DriverInfo[]>([]);
+  private readonly teamsInfoState: WritableSignal<TeamInfo[]> = signal<TeamInfo[]>([]);
+  private readonly comparisonChartState: WritableSignal<ChartData | undefined> = signal<ChartData | undefined>(undefined);
 
-  comparisonChartData!: ChartData;
+  get driversInfo(): DriverInfo[] { return this.driversInfoState(); }
+  get teamsInfo(): TeamInfo[] { return this.teamsInfoState(); }
+  get comparisonChartData(): ChartData | undefined { return this.comparisonChartState(); }
+
   comparisonChartOptions = getComparisonChartOptions(this.themeService.isDarkTheme());
   comparisonChartOptionsMobile = getComparisonChartOptionsMobile(this.themeService.isDarkTheme());
 
@@ -72,8 +77,7 @@ export class ComparativeStatsComponent {
         this.getInfoTeams(this.teamsSelected.at(1)!)
       ]);
 
-      this.teamsInfo.splice(0, 1, teamAInfo);
-      this.teamsInfo.splice(1, 1, teamBInfo);
+      this.teamsInfoState.set([teamAInfo, teamBInfo]);
 
       this.generateComparisonChart(teamAInfo, teamBInfo);
     }
@@ -88,8 +92,7 @@ export class ComparativeStatsComponent {
         this.getInfoDrivers(this.driversSelected.at(1)!)
       ]);
 
-      this.driversInfo.splice(0, 1, driverAInfo);
-      this.driversInfo.splice(1, 1, driverBInfo);
+      this.driversInfoState.set([driverAInfo, driverBInfo]);
 
       this.generateComparisonChart(driverAInfo, driverBInfo);
     }
@@ -171,9 +174,9 @@ export class ComparativeStatsComponent {
       }
     ];
 
-    this.comparisonChartData = {
+    this.comparisonChartState.set({
       labels,
       datasets
-    };
+    });
   }
 }

@@ -1,5 +1,5 @@
 import { UtilsService } from './../../services/utils.service';
-import { Component, EventEmitter, inject, input, Output, InputSignal, effect, Input } from '@angular/core';
+import { Component, EventEmitter, inject, input, Output, InputSignal, effect, Input, signal, WritableSignal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
 import { Race } from '../../models/race';
@@ -26,7 +26,7 @@ export class SelectRacesComponent {
   @Input() fantasyTeam: boolean = false;
 
   readonly season: InputSignal<Season> = input(environment.seasonActual);
-  public races: Race[] = [];
+  public readonly races: WritableSignal<Race[]> = signal<Race[]>([]);
   public racesForm: FormGroup = new FormGroup({
     race: new FormControl()
   });
@@ -63,9 +63,9 @@ export class SelectRacesComponent {
         })
       )
       .subscribe((races: Race[]) => {
-        this.races = races;
+        this.races.set(races);
         console.log()
-        this.racesForm.get('race')?.setValue(this.races[this.races.length - 1]);
+        this.racesForm.get('race')?.setValue(this.races()[this.races().length - 1]);
       });
   }
 
@@ -78,20 +78,20 @@ export class SelectRacesComponent {
       })
     )
     .subscribe((races: Race[]) => {
-        this.races = races;
-        const findRace: Race | undefined = this.races.find((race: Race) => race.name === this.racesForm.get('race')?.value?.name);
+        this.races.set(races);
+        const findRace: Race | undefined = this.races().find((race: Race) => race.name === this.racesForm.get('race')?.value?.name);
         
         if (this.racesForm.get('race')?.value?.name && !findRace) {
-          this.racesForm.get('race')?.setValue(this.races[0]);
+          this.racesForm.get('race')?.setValue(this.races()[0]);
         } else if (findRace) {
           this.racesForm.get('race')?.setValue(findRace);
         } else if (this.fantasy) {
           const raceOfTotal: Race = new Race(0, "Total", "", "", new Date(), new Season(0, "", 0), 0);
           this.racesForm.get('race')?.setValue(raceOfTotal);
-          this.races = [raceOfTotal, ...races];
+          this.races.set([raceOfTotal, ...races]);
           this.raceChanged.emit(raceOfTotal);
         } else {
-          this.racesForm.get('race')?.setValue(this.races[0]);
+          this.racesForm.get('race')?.setValue(this.races()[0]);
         }
       }); 
   }

@@ -8,13 +8,12 @@ import { RaceDetailsComponent } from "../../../shared/components/race-details/ra
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { ButtonModule } from 'primeng/button';
 import { DriversGridTableComponent } from "../../../shared/components/drivers-teams-grid-table/drivers-teams-grid-table.component";
-import { CommonModule } from '@angular/common';
+
 import { TeamsFiltersComponent } from "../../../shared/components/teams-filters/teams-filters.component";
 
 @Component({
   selector: 'app-drivers',
   imports: [
-    CommonModule,
     FormsModule,
     DividerModule,
     SelectButtonModule,
@@ -23,7 +22,7 @@ import { TeamsFiltersComponent } from "../../../shared/components/teams-filters/
     RaceDetailsComponent,
     DriversGridTableComponent,
     TeamsFiltersComponent
-  ],
+],
   templateUrl: './drivers.component.html',
   styleUrl: './drivers.component.scss'
 })

@@ -1,8 +1,12 @@
 package formula.bollo.controller;
 
+import org.springframework.cache.annotation.Cacheable;
+
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -86,9 +90,13 @@ public class FantasyController {
     @Operation(summary = "Save fantasy Election", tags = Constants.TAG_FANTASY)
     @SecurityRequirement(name = "Bearer Authentication")
     @PostMapping(path = "/saveFantasyElection", produces = MediaType.TEXT_PLAIN_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> saveFantasyElection(@RequestBody FantasyElectionDTO fantasyElectionDTO) {
-        log.info("Guardo la eleccion del fantasy de " + fantasyElectionDTO.getAccount().getUsername());
-        return this.fantasyService.saveFantasyElection(fantasyElectionDTO);
+    public ResponseEntity<String> saveFantasyElection(@RequestBody FantasyElectionDTO fantasyElectionDTO,
+            Principal principal) {
+        if (principal == null) {
+            return new ResponseEntity<>("Solo puedes guardar tu propia elección", HttpStatusCode.valueOf(403));
+        }
+        log.info("Guardo la eleccion del fantasy de " + principal.getName());
+        return this.fantasyService.saveFantasyElection(fantasyElectionDTO, principal.getName());
     }
 
     @Operation(summary = "Get all driver's fantasy points", tags = Constants.TAG_FANTASY)
@@ -153,6 +161,7 @@ public class FantasyController {
 
     @Operation(summary = "Get all fantasy points of season")
     @GetMapping(path = "/getFantasyPointsSeason", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Cacheable(cacheNames = Constants.CACHE_STATS, key = "'fantasyPointsSeason:' + #numberSeason")
     public List<FantasyPointsAccountDTO> getFantasyPointsSeason(@RequestParam Integer numberSeason) {
         log.info("Coger los puntos del fantasy de la temporada " + numberSeason);
         return this.fantasyService.sumAllFantasyPoints(numberSeason);

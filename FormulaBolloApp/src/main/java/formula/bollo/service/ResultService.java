@@ -1,5 +1,10 @@
 package formula.bollo.service;
 
+import org.springframework.transaction.annotation.Transactional;
+
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -74,6 +79,22 @@ public class ResultService {
     }
 
     /**
+     * Suma los puntos de unos resultados y sprints (vuelta rápida solo si terminó la carrera),
+     * sin calcular la clasificación ni los cambios de posición.
+     */
+    public int sumPoints(List<Result> results, List<Sprint> sprints) {
+        int racePoints = results.stream()
+                .filter(result -> result.getPosition() != null)
+                .mapToInt(result -> result.getPosition().getPoints() + result.getFastlap())
+                .sum();
+        int sprintPoints = sprints.stream()
+                .filter(sprint -> sprint.getPosition() != null)
+                .mapToInt(sprint -> sprint.getPosition().getPoints())
+                .sum();
+        return racePoints + sprintPoints;
+    }
+
+    /**
      * Reorder all points in the case that the same pilot races for more than one
      * team
      * 
@@ -119,6 +140,7 @@ public class ResultService {
      * @return A list of DriverPointsDTO objects, representing each driver's total
      *         points for the season.
      */
+    @Cacheable(cacheNames = Constants.CACHE_STATS, key = "#root.methodName + T(java.util.Arrays).toString(#root.args)")
     public List<DriverPointsDTO> getTotalResultsPerDriver(Integer seasonNumber, Integer numResults) {
         List<Result> results;
 
@@ -157,6 +179,7 @@ public class ResultService {
      * @return A list of DriverPointsDTO objects, representing each driver's total
      *         points for the season.
      */
+    @Cacheable(cacheNames = Constants.CACHE_STATS, key = "#root.methodName + T(java.util.Arrays).toString(#root.args)")
     public List<DriverPointsDTO> getTotalResultsSpecificPerDriver(Integer seasonNumber, List<Long> ids) {
         List<Result> results;
         List<Sprint> sprints;
@@ -297,6 +320,8 @@ public class ResultService {
      *
      * @param resultDTOs The list of result to save.
      */
+    @Transactional
+    @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public ResponseEntity<String> saveResults(List<ResultDTO> resultDTOs) {
         if (resultDTOs.isEmpty()) {
             log.error("Hubo un error al guardar los resultados por estan vacios");
@@ -310,7 +335,10 @@ public class ResultService {
             this.resultRepository.deleteAll(existingResults);
         }
 
-        resultRepository.saveAll(this.resultImpl.convertResultsDTOToResults(resultDTOs));
+        // Las filas anteriores ya se borraron: se reinsertan como nuevas (con id, Hibernate 7 falla al fusionar filas borradas).
+        List<Result> resultsToSave = this.resultImpl.convertResultsDTOToResults(resultDTOs);
+        resultsToSave.forEach(result -> result.setId(null));
+        resultRepository.saveAll(resultsToSave);
 
         return new ResponseEntity<>("Resultados guardados correctamente", Constants.HEADERS_TEXT_PLAIN,
                 HttpStatusCode.valueOf(200));
@@ -321,6 +349,7 @@ public class ResultService {
      *
      * @param resultDTOs The list of result to save.
      */
+    @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public ResponseEntity<String> deleteResults(Integer raceId) {
         this.resultRepository.deleteByRaceId(raceId);
 

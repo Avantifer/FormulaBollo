@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, effect, EventEmitter, inject, Input, input, InputSignal, Output } from '@angular/core';
+import { Component, effect, EventEmitter, inject, Input, input, InputSignal, Output, signal, WritableSignal } from '@angular/core';
 import { DriverApiService } from '../../services/api/driver-api.service';
 import { MessageInfoService } from '../../services/toastInfo.service';
 import { Driver } from '../../models/driver';
@@ -24,7 +24,6 @@ import { SpaceToUnderscorePipe } from '../../pipes/spaceToUnderscore.pipe';
 export class SelectDriversComponent {
   private readonly driverApiService: DriverApiService = inject(DriverApiService);
   private readonly messageInfoService: MessageInfoService = inject(MessageInfoService);
-  private readonly cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
 
   @Output() driverChanged = new EventEmitter<Driver>();
   @Input() position?: number;
@@ -34,8 +33,8 @@ export class SelectDriversComponent {
   set driverId(value: number | undefined) {
     this._driverId = value;
 
-    if (this.drivers.length && value !== undefined) {
-      const selected = this.drivers.find(driver => driver.id === value);
+    if (this.drivers().length && value !== undefined) {
+      const selected = this.drivers().find(driver => driver.id === value);
       this.driversForm.get('driver')?.setValue(selected ?? null, { emitEvent: false });
     }
   }
@@ -46,7 +45,7 @@ export class SelectDriversComponent {
 
   readonly season: InputSignal<Season> = input(environment.seasonActual);
   private previousSeasonSelected?: Season;
-  public drivers: Driver[] = [];
+  public readonly drivers: WritableSignal<Driver[]> = signal<Driver[]>([]);
   public driversForm: FormGroup = new FormGroup({
     driver: new FormControl()
   });
@@ -80,7 +79,7 @@ export class SelectDriversComponent {
     .getAllDrivers(this.season().number)
     .subscribe({
       next: (drivers: Driver[]) => {
-          this.drivers = drivers;
+          this.drivers.set(drivers);
           
           if (this.position != undefined) {
             this.driversForm.get('driver')?.setValue(drivers[this.position]);
@@ -90,7 +89,6 @@ export class SelectDriversComponent {
             this.driversForm.get('driver')?.reset();
           }
 
-          this.cdr.detectChanges();
         },
         error: (error) => {
           this.messageInfoService.showError(ERROR_DRIVER_FETCH, error);

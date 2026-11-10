@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, effect, EventEmitter, inject, Input, input, InputSignal, Output } from '@angular/core';
+
+import { Component, effect, EventEmitter, inject, Input, input, InputSignal, Output, signal, WritableSignal } from '@angular/core';
 import { MessageInfoService } from '../../services/toastInfo.service';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
@@ -13,11 +13,10 @@ import { TeamApiService } from '../../services/api/team-api.service';
 @Component({
   selector: 'select-teams',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     SelectModule,
     SpaceToUnderscorePipe
-  ],
+],
   templateUrl: './select-teams.component.html',
   styleUrls: ['./select-teams.component.scss']
 })
@@ -29,7 +28,7 @@ export class SelectTeamsComponent {
   @Input() position!: number;
   readonly season: InputSignal<Season> = input(environment.seasonActual);
   private previousSeasonSelected?: Season;
-  public teams: Team[] = [];
+  public readonly teams: WritableSignal<Team[]> = signal<Team[]>([]);
   public teamsForm: FormGroup = new FormGroup({
     team: new FormControl()
   });
@@ -63,7 +62,7 @@ export class SelectTeamsComponent {
     .getAllTeams(this.season().number)
     .subscribe({
       next: (teams: Team[]) => {
-        this.teams = teams;
+        this.teams.set(teams);
         this.teamsForm.get('team')?.setValue(teams[this.position]);
       },
       error: (error) => {

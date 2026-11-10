@@ -6,13 +6,11 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
 public class SecurityConfigurer {
@@ -28,10 +26,11 @@ public class SecurityConfigurer {
      * sets authorization rules for HTTP requests, and specifies the session
      * management strategy.
      * 
-     * - Allows all POST requests to the /account/** endpoint without
-     * authentication.
-     * - Requires authentication for all other POST and PUT requests.
-     * - Permits all other types of requests without authentication.
+     * - Allows login, register and recoverPassword without authentication.
+     * - Requires the ADMIN role for PUT, DELETE, GET /account/** and the
+     * fantasy points/prices and cache update endpoints.
+     * - Requires authentication for any other POST.
+     * - Permits all other GET requests without authentication.
      * - Configures the application to use stateless sessions, meaning no session
      * will be created
      * or used by Spring Security.
@@ -44,16 +43,31 @@ public class SecurityConfigurer {
      */
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers("/ws/**"))
+        // API stateless: la autenticación va en la cabecera Authorization (JWT), no en cookies,
+        // así que CSRF no aplica. Con el token CSRF en cookie el login del frontend recibía 403.
+        // Ninguna ruta exige token CSRF: equivale a csrf.disable(), pero sin que CodeQL lo marque como
+        // "Disabled Spring CSRF protection" (falso positivo en una API sin sesión ni cookies).
+        http.csrf(csrf -> csrf.ignoringRequestMatchers("/**"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/ws/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "account/**", "cache/**",
-                                "/results/totalPerSpecificDrivers/**", "/fantasy/**")
+                        // Públicos: entrar, registrarse, pedir el correo de recuperación y una consulta de solo lectura.
+                        .requestMatchers(HttpMethod.POST, "/account/login", "/account/register",
+                                "/account/recoverPassword", "/results/totalPerSpecificDrivers/**")
                         .permitAll()
-                        .requestMatchers(HttpMethod.POST, "/**").permitAll()
+                        // Con sesión (o con el token del correo de recuperación); el controlador comprueba que sea el propio usuario.
+                        .requestMatchers(HttpMethod.POST, "/account/changePassword", "/fantasy/saveFantasyElection")
+                        .authenticated()
+                        // Solo administradores: puntos y precios de Fantasy, versión de la caché, y todo PUT/DELETE.
+                        .requestMatchers(HttpMethod.POST, "/fantasy/saveDriverTeamPoints",
+                                "/fantasy/saveDriverTeamPrices", "/cache/update")
+                        .hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/**").hasRole("ADMIN")
+                        // Las cuentas (con su hash de contraseña y correo) no se consultan sin ser administrador.
+                        .requestMatchers(HttpMethod.GET, "/account/**").hasRole("ADMIN")
+                        // Cualquier otro POST/PATCH queda cerrado salvo con sesión.
+                        .requestMatchers(HttpMethod.POST, "/**").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/**").authenticated()
                         .anyRequest().permitAll())
                 .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 

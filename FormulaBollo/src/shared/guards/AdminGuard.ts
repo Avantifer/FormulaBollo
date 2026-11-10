@@ -1,27 +1,25 @@
-import { inject, Injectable } from "@angular/core";
-import { Router } from "@angular/router";
-import { AuthJWTService } from "../services/authJWT.service";
-import { MessageInfoService } from "../services/toastInfo.service";
-import { WARNING_NO_ADMIN } from "../../app/constants";
-@Injectable()
-export class AdminGuard {
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+import { AuthJWTService } from '../services/authJWT.service';
+import { MessageInfoService } from '../services/toastInfo.service';
+import { WARNING_NO_ADMIN } from '../../app/constants';
 
-  private readonly authJWTService: AuthJWTService = inject(AuthJWTService);
-  private readonly messageInfoService: MessageInfoService = inject(MessageInfoService);
-  private readonly router: Router = inject(Router);
+export const adminGuard: CanActivateFn = () => {
+  const authJWTService = inject(AuthJWTService);
+  const messageInfoService = inject(MessageInfoService);
+  const router = inject(Router);
+  const token = localStorage.getItem('auth');
 
-  canActivate(): boolean  {
-    if (localStorage.getItem("auth")) {
-      if (this.authJWTService.checkAdmin(localStorage.getItem("auth")!)) {
-        return true;
-      } else {
-        this.router.navigate(["/"]);
-        this.messageInfoService.showError(WARNING_NO_ADMIN, null);
-        return false;
-      }
-    } else {
-      this.router.navigate(["/login"]);
-      return false;
-    }
+  if (!token) {
+    router.navigate(['/login']);
+    return false;
   }
-}
+
+  if (authJWTService.checkAdmin(token)) {
+    return true;
+  }
+
+  router.navigate(['/']);
+  messageInfoService.showError(WARNING_NO_ADMIN, null);
+  return false;
+};

@@ -1,5 +1,9 @@
 package formula.bollo.service;
 
+import org.springframework.transaction.annotation.Transactional;
+
+import org.springframework.cache.annotation.CacheEvict;
+
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -43,6 +47,8 @@ public class SprintService {
      *
      * @param sprintDTOs The list of SprintDTO objects to be saved.
      */
+    @Transactional
+    @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public ResponseEntity<String> saveSprints(List<SprintDTO> sprintDTOs) {
         List<Sprint> existingSprints = this.sprintRepository
                 .findByRaceId(sprintDTOs.get(0).getRace().getId().intValue());
@@ -51,12 +57,16 @@ public class SprintService {
             sprintRepository.deleteAll(existingSprints);
         }
 
-        sprintRepository.saveAll(this.sprintImpl.convertSprintsDTOToSprints(sprintDTOs));
+        // Las filas anteriores ya se borraron: se reinsertan como nuevas.
+        List<Sprint> sprintsToSave = this.sprintImpl.convertSprintsDTOToSprints(sprintDTOs);
+        sprintsToSave.forEach(sprint -> sprint.setId(null));
+        sprintRepository.saveAll(sprintsToSave);
 
         return new ResponseEntity<>("Resultados de la sprint guardados correctamente", Constants.HEADERS_TEXT_PLAIN,
                 HttpStatusCode.valueOf(200));
     }
 
+    @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public ResponseEntity<String> deleteSprints(Integer raceId) {
         sprintRepository.deleteByRaceId(raceId);
 

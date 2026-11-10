@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Input, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output, SimpleChanges, signal, WritableSignal } from '@angular/core';
 import { Season } from '../../models/season';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { environment } from '../../../enviroments/enviroment';
@@ -25,7 +25,7 @@ export class SelectSeasonsComponent {
   @Input() statistics!: string;
   @Input() fantasy: boolean = false; 
 
-  public seasons: Season[] = [];
+  public readonly seasons: WritableSignal<Season[]> = signal<Season[]>([]);
 
   public seasonForm: FormGroup = new FormGroup({
     season: new FormControl(environment.seasonActual),
@@ -56,7 +56,7 @@ export class SelectSeasonsComponent {
   }
 
   ngOnDestroy(): void {
-    this.seasons = [];
+    this.seasons.set([]);
     this.seasonForm.get('season')?.setValue(null);
   }
 
@@ -69,7 +69,7 @@ export class SelectSeasonsComponent {
 
   obtainAllSeasons(): void {
     this.seasonApiService.getSeasons().subscribe((seasons) => {
-      this.seasons = seasons;
+      this.seasons.set(seasons);
       this.seasonForm.get('season')?.setValue(seasons[seasons.length - 1]);
       this.seasonChanged.emit(seasons[seasons.length - 1]);
     });    
@@ -77,7 +77,7 @@ export class SelectSeasonsComponent {
 
   obtainAllFantasySeasons(): void {
     this.seasonApiService.getSeasonOfFantasy().subscribe((seasons) => {
-      this.seasons = seasons;
+      this.seasons.set(seasons);
       this.seasonForm.get('season')?.setValue(seasons[seasons.length - 1]);
       this.seasonChanged.emit(seasons[seasons.length - 1]);
     });    
@@ -87,7 +87,7 @@ export class SelectSeasonsComponent {
     this.seasonApiService.getSeasons().subscribe((seasons) => {
       const seasonOfTotal: Season = new Season(0, "Total", 0);
       this.seasonForm.get('season')?.setValue(seasonOfTotal);
-      this.seasons = [seasonOfTotal, ...seasons];
+      this.seasons.set([seasonOfTotal, ...seasons]);
       this.seasonChanged.emit(seasonOfTotal);
     });    
   }
@@ -100,10 +100,10 @@ export class SelectSeasonsComponent {
         next: (seasons: Season[]) => {  
           const seasonOfTotal: Season = new Season(0, "Total", 0);
           this.seasonForm.get('season')?.setValue(seasonOfTotal);
-          this.seasons = [seasonOfTotal, ...seasons];
+          this.seasons.set([seasonOfTotal, ...seasons]);
         },
         complete: () => {
-          if (this.seasons.length === 1) {
+          if (this.seasons().length === 1) {
             this.router.navigate(["/drivers"]);
             this.messageInfoService.showError(ERROR_DRIVER_NAME_NOT_FOUND, "");
           }
@@ -119,10 +119,10 @@ export class SelectSeasonsComponent {
       next: (seasons: Season[]) => {
           const seasonOfTotal: Season = new Season(0, "Total", 0);
           this.seasonForm.get('season')?.setValue(seasonOfTotal);
-          this.seasons = [seasonOfTotal, ...seasons];
+          this.seasons.set([seasonOfTotal, ...seasons]);
         },
         complete: () => {
-          if (this.seasons.length === 1) {
+          if (this.seasons().length === 1) {
             this.router.navigate(["/teams"]);
             this.messageInfoService.showError(ERROR_TEAM_NAME_NOT_FOUND, "");
           }

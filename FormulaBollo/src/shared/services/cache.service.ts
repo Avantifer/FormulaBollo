@@ -1,11 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { CACHE_NAME_LOCAL_STORAGE } from '../../../src/app/constants';
 import { environment } from '../../enviroments/enviroment';
 
 @Injectable({ providedIn: 'root' })
 export class CacheService {
   private cache: Map<string, any>;
-  public isVersionRetrieved: boolean = false;
+  readonly isVersionRetrieved = signal(false);
   
   constructor() {
     this.cache = this.loadCache();

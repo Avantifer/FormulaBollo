@@ -1,5 +1,5 @@
 <div class="bg-slate-100 dark:bg-slate-800">
-	<main class="flex-1 bg-slate-100 dark:bg-slate-800">
+	<div class="flex-1 bg-slate-100 dark:bg-slate-800">
 		<div class="my-container mx-auto px-2 py-8">
 			<div class="mb-6 flex flex-col xl:flex-row justify-between xl:items-center p-4 rounded-lg bg-white dark:bg-slate-700 shadow-sm">
 				<div class="flex xl:items-center gap-2 mb-2 xl:mb-0">
@@ -19,8 +19,8 @@
 							<span class="text-sm font-medium">{{ item.value }}</span>
 						</ng-template>
 					</p-selectbutton>
-					<select-races (raceChanged)="onRaceChange($event)" [season]="seasonSelected" class="w-50 md:w-auto"></select-races>
-					<select-seasons (seasonChanged)="onSeasonChange($event)" class="w-50 md:w-auto"></select-seasons>
+					<select-races (raceChanged)="onRaceChange($event)" [season]="seasonSelected" class="w-50 md:w-auto" />
+					<select-seasons (seasonChanged)="onSeasonChange($event)" class="w-50 md:w-auto" />
 					<p-button
 						label="Penalizaciones"
 						icon="pi pi-exclamation-triangle"
@@ -131,29 +131,31 @@
 														'bg-amber-900/20! text-amber-400!': penalty.penaltySeverity.severity === 'Leve',
 														'bg-red-900/20! text-red-400!': penalty.penaltySeverity.severity === 'Grave'
 													}">
-													<svg
-														xmlns="http://www.w3.org/2000/svg"
-														width="14"
-														height="14"
-														viewBox="0 0 24 24"
-														fill="none"
-														stroke="currentColor"
-														stroke-width="2"
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														class="lucide lucide-octagon-alert text-red-400"
-														*ngIf="penalty.penaltySeverity.severity === 'Grave'">
-														<polygon
-															_ngcontent-ng-c3252729811=""
-															points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
-														<line _ngcontent-ng-c3252729811="" x1="12" x2="12" y1="8" y2="12"></line>
-														<line _ngcontent-ng-c3252729811="" x1="12" x2="12.01" y1="16" y2="16"></line>
-													</svg>
-													<i
-														class="pi pi-exclamation-triangle"
-														style="font-size: 14px"
-														*ngIf="penalty.penaltySeverity.severity === 'Leve'"></i>
-													<i class="pi pi-info-circle" style="font-size: 14px" *ngIf="penalty.penaltySeverity.severity === 'Aviso'"></i>
+													@if (penalty.penaltySeverity.severity === 'Grave') {
+														<svg
+															xmlns="http://www.w3.org/2000/svg"
+															width="14"
+															height="14"
+															viewBox="0 0 24 24"
+															fill="none"
+															stroke="currentColor"
+															stroke-width="2"
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															class="lucide lucide-octagon-alert text-red-400">
+															<polygon
+																_ngcontent-ng-c3252729811=""
+																points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
+															<line _ngcontent-ng-c3252729811="" x1="12" x2="12" y1="8" y2="12"></line>
+															<line _ngcontent-ng-c3252729811="" x1="12" x2="12.01" y1="16" y2="16"></line>
+														</svg>
+													}
+													@if (penalty.penaltySeverity.severity === 'Leve') {
+														<i class="pi pi-exclamation-triangle" style="font-size: 14px"></i>
+													}
+													@if (penalty.penaltySeverity.severity === 'Aviso') {
+														<i class="pi pi-info-circle" style="font-size: 14px"></i>
+													}
 													<span class="text-xs"> {{ penalty.penaltySeverity.severity }} </span>
 												</p-chip>
 											</td>
@@ -391,5 +393,5 @@
 				</div>
 			</div>
 		</div>
-	</main>
+	</div>
 </div>

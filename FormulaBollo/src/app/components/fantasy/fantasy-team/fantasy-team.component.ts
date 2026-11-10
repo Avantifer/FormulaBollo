@@ -1,6 +1,6 @@
 import { FantasyApiService } from './../../../../shared/services/api/fantasy-api.service';
 import { ButtonModule } from 'primeng/button';
-import { Component, effect, inject, Signal } from '@angular/core';
+import { Component, effect, inject, Signal, ChangeDetectorRef } from '@angular/core';
 import { SelectRacesComponent } from "../../../../shared/components/select-races/select-races.component";
 import { Race } from '../../../../shared/models/race';
 import { catchError, lastValueFrom, Subject, takeUntil } from 'rxjs';
@@ -62,6 +62,8 @@ export class FantasyTeamComponent {
   private readonly themeService: ThemeService = inject(ThemeService);
   private readonly messageInfoService: MessageInfoService = inject(MessageInfoService)
   private readonly authJWTService: AuthJWTService = inject(AuthJWTService);
+  // Este componente mantiene mucho estado mutable: tras cada respuesta asíncrona se avisa a Angular (sin zone.js).
+  private readonly cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
   
   protected readonly listOptions: any[] = [
     { icon: 'pi pi-users', value: 'Pilotos' },
@@ -240,6 +242,7 @@ export class FantasyTeamComponent {
         catchError((error) => this.utilsService.handleError<FantasyElection>(ERROR_FANTASY_ELECTION_NOT_FOUND, error))
       ).subscribe((fantasyElection: FantasyElection) => {
         this.setFantasyElection(fantasyElection);
+        this.cdr.markForCheck();
       });
     } else {
       this.isLastRace = true;
@@ -254,6 +257,7 @@ export class FantasyTeamComponent {
     ));
 
     this.fantasyPricesDriversFiltered = [...this.fantasyPricesDrivers]
+    this.cdr.markForCheck();
 
     this.fantasyPricesTeams = await lastValueFrom(this.fantasyApiService.getAllPricesTeam(this.raceSelected!.id).pipe(
       takeUntil(this.destroy$),
@@ -261,6 +265,7 @@ export class FantasyTeamComponent {
     ));
 
     this.fantasyPricesTeamsFiltered = [...this.fantasyPricesTeams]
+    this.cdr.markForCheck();
   }
 
   isDriverSelected(driver: Driver): boolean  {
@@ -406,6 +411,7 @@ export class FantasyTeamComponent {
       catchError((error) => this.utilsService.handleError(ERROR_PRICE_FETCH, error, []))
     ).subscribe((fantasyPricesDriverArray: FantasyPricesDriver[]) => {
       if (!fantasyPricesDriverArray.length) return;
+      this.cdr.markForCheck();
 
       this.showDriverMaxPriceData = Math.max(...fantasyPricesDriverArray.map((fp: FantasyPricesDriver) => fp.price));
       this.showDriverStartPriceData = fantasyPricesDriverArray[0].price;
@@ -445,6 +451,7 @@ export class FantasyTeamComponent {
       catchError((error) => this.utilsService.handleError(ERROR_PRICE_FETCH, error, []))
     ).subscribe((fantasyPricesTeamArray: FantasyPricesTeam[]) => {
       if (!fantasyPricesTeamArray.length) return;
+      this.cdr.markForCheck();
 
       this.showTeamMaxPriceData = Math.max(...fantasyPricesTeamArray.map((fp: FantasyPricesTeam) => fp.price));
       this.showTeamStartPriceData = fantasyPricesTeamArray[0].price;
@@ -484,6 +491,7 @@ export class FantasyTeamComponent {
       catchError((error) => this.utilsService.handleError(ERROR_PRICE_FETCH, error, []))
     ).subscribe((fantasyPointsDriverArray: FantasyPointsDriver[]) => {
       if (!fantasyPointsDriverArray.length) return;
+      this.cdr.markForCheck();
 
       this.showDriverBestPointsData = Math.max(...fantasyPointsDriverArray.map((fp: FantasyPointsDriver) => fp.points));
       this.showDriverMedianPointsData = fantasyPointsDriverArray.reduce((acc, fp) => acc + fp.points, 0) / fantasyPointsDriverArray.length;
@@ -523,6 +531,7 @@ export class FantasyTeamComponent {
       catchError((error) => this.utilsService.handleError(ERROR_PRICE_FETCH, error, []))
     ).subscribe((fantasyPointsTeamArray: FantasyPointsTeam[]) => {
       if (!fantasyPointsTeamArray.length) return;
+      this.cdr.markForCheck();
 
       this.showTeamBestPointsData = Math.max(...fantasyPointsTeamArray.map((fp: FantasyPointsTeam) => fp.points));
       this.showTeamMedianPointsData = fantasyPointsTeamArray.reduce((acc, fp) => acc + fp.points, 0) / fantasyPointsTeamArray.length;

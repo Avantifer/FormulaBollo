@@ -1,22 +1,25 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { HttpTestingController } from '@angular/common/http/testing';
+import { provideComponentTesting } from '../../../../../testing/component-test-providers';
 import { Top10DriversComponent } from './top10-drivers.component';
 
 describe('Top10DriversComponent', () => {
   let component: Top10DriversComponent;
   let fixture: ComponentFixture<Top10DriversComponent>;
 
-  beforeEach((() => {
-    TestBed.configureTestingModule({
-      declarations: [ Top10DriversComponent ]
-    })
-    .compileComponents();
-  }));
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [Top10DriversComponent],
+      providers: provideComponentTesting(),
+    }).compileComponents();
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(Top10DriversComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    fixture?.destroy();
   });
 
   it('should create', () => {

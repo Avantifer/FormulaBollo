@@ -33,12 +33,12 @@ export class AppComponent {
       this.cacheApiService.getCache()
       .pipe(
         catchError((error) => {
-          this.cacheService.isVersionRetrieved = false;
+          this.cacheService.isVersionRetrieved.set(false);
           return this.utilsService.handleError<number>(ERROR_CACHE, error, 0);
         })
       )
       .subscribe((cacheVersion: number) => {
-          this.cacheService.isVersionRetrieved = true;
+          this.cacheService.isVersionRetrieved.set(true);
           this.cacheService.setCache(cacheVersion);
         }
       );
@@ -47,7 +47,7 @@ export class AppComponent {
     this.messageSubscription$ = this.webSocketService.getMessages()
     .pipe(
       catchError((error) => {
-        this.cacheService.isVersionRetrieved = false;
+        this.cacheService.isVersionRetrieved.set(false);
         return this.utilsService.handleError<number>(ERROR_CACHE, error, -1);
       })
     )
@@ -58,7 +58,7 @@ export class AppComponent {
         }
       
         if (actualCacheVersion != -1) {
-          this.cacheService.isVersionRetrieved = true;
+          this.cacheService.isVersionRetrieved.set(true);
         }
       }
     )

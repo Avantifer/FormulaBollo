@@ -1,4 +1,4 @@
-import { Component, inject, Signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, Signal, signal, WritableSignal } from '@angular/core';
 import { SelectDriversComponent } from '../../../../shared/components/select-drivers/select-drivers.component';
 import { SelectRacesComponent } from '../../../../shared/components/select-races/select-races.component';
 import { SelectPenaltySeveritiesComponent } from '../../../../shared/components/select-penalty-severities/select-penalty-severities.component';
@@ -15,7 +15,7 @@ import { CardModule } from 'primeng/card';
 import { FormsModule } from '@angular/forms';
 import { Penalty } from '../../../../shared/models/penalty';
 import { PenaltiesApiService } from '../../../../shared/services/api/penalties-api.service';
-import { catchError, of, Subject, takeUntil } from 'rxjs';
+import { catchError, EMPTY, of, Subject, takeUntil } from 'rxjs';
 import { MessageInfoService } from '../../../../shared/services/toastInfo.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { UtilsService } from '../../../../shared/services/utils.service';
@@ -39,7 +39,8 @@ import { TableModule } from 'primeng/table';
     SpaceToUnderscorePipe
   ],
   templateUrl: './admin-penalties.component.html',
-  styleUrl: './admin-penalties.component.scss'
+  styleUrl: './admin-penalties.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AdminPenaltiesComponent {
   private readonly penaltyApiService: PenaltiesApiService = inject(PenaltiesApiService);
@@ -51,7 +52,7 @@ export class AdminPenaltiesComponent {
   driverSelected: Driver | undefined;
   raceSelected: Race | undefined;
   visible: boolean = false;
-  penaltiesToShow: string = "";
+  readonly penaltiesToShow: WritableSignal<string> = signal("");
   penaltiesToSave: Penalty[] = [];
   penaltiesTable: Signal<Penalty[]> = toSignal(
     this.penaltyApiService.getPenaltiesPerDriver()
@@ -79,7 +80,7 @@ export class AdminPenaltiesComponent {
   }
   
   cleanPenalties(): void {
-    const cleanPenalties: string[] = this.penaltiesToShow
+    const cleanPenalties: string[] = this.penaltiesToShow()
       .split(".")
       .map(item => item.trim())
       .filter(item => item !== "")
@@ -120,11 +121,7 @@ export class AdminPenaltiesComponent {
         return of([]);
       })
     ).subscribe((penalties: Penalty[]) => {
-      if (penalties.length) {
-        this.penaltiesToShow = penalties.map((penalty: Penalty) => penalty.reason).join(' ');
-      } else {
-        this.penaltiesToShow = "";
-      }
+      this.penaltiesToShow.set(penalties.map((penalty: Penalty) => penalty.reason).join(' '));
     });
   }
 
@@ -138,7 +135,7 @@ export class AdminPenaltiesComponent {
       catchError((error) => {
         this.messageInfoService.showError(error, error);
         console.error(error);
-        return of("");
+        return EMPTY;
       })
     ).subscribe((success: string) => {
       this.messageInfoService.showSuccess(success);

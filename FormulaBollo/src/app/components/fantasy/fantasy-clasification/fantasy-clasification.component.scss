@@ -48,3 +48,11 @@
 ::ng-deep .dark .p-dialog .closeDialog .p-button:hover {
   background: var(--color-slate-900) !important;
 }
+
+/* En móvil la tabla debe caber entera: la columna de puntos es la importante. */
+@media (max-width: 640px) {
+  :host ::ng-deep .p-datatable-table th,
+  :host ::ng-deep .p-datatable-table td {
+    padding-inline: 0.5rem;
+  }
+}
