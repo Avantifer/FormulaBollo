@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IntSummaryStatistics;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,43 +84,74 @@ public class DriverService {
             return null;
 
         List<Long> listOfIds = drivers.stream().map(Driver::getId).toList();
+        return buildInfo(drivers,
+                this.resultRepository.findWithRaceAndPositionByDriverIds(listOfIds),
+                this.sprintRepository.findByDriverIds(listOfIds),
+                this.penaltyRepository.findByDriverIds(listOfIds),
+                this.championshipRepository.findByDriverIds(listOfIds));
+    }
+
+    /**
+     * Misma información que {@link #getAllInfoDriver(List)} para cada piloto de la lista, pero
+     * cargando resultados, sprints, sanciones y campeonatos en 4 consultas en total.
+     */
+    public List<DriverInfoDTO> getAllInfoDrivers(List<Driver> drivers) {
+        if (drivers.isEmpty())
+            return List.of();
+
+        List<Long> ids = drivers.stream().map(Driver::getId).toList();
+        Map<Long, List<Result>> results = this.resultRepository.findWithRaceAndPositionByDriverIds(ids).stream()
+                .collect(Collectors.groupingBy(result -> result.getDriver().getId()));
+        Map<Long, List<Sprint>> sprints = this.sprintRepository.findByDriverIds(ids).stream()
+                .collect(Collectors.groupingBy(sprint -> sprint.getDriver().getId()));
+        Map<Long, Integer> penalties = toCounts(this.penaltyRepository.countByDriver(ids));
+        Map<Long, Integer> championships = toCounts(this.championshipRepository.countByDriver(ids));
+
+        return drivers.stream()
+                .map(driver -> buildInfo(List.of(driver),
+                        results.getOrDefault(driver.getId(), List.of()),
+                        sprints.getOrDefault(driver.getId(), List.of()),
+                        penalties.getOrDefault(driver.getId(), 0),
+                        championships.getOrDefault(driver.getId(), 0)))
+                .toList();
+    }
+
+    private static Map<Long, Integer> toCounts(List<Object[]> rows) {
+        Map<Long, Integer> counts = new HashMap<>();
+        rows.forEach(row -> counts.put(((Number) row[0]).longValue(), ((Number) row[1]).intValue()));
+        return counts;
+    }
+
+    private DriverInfoDTO buildInfo(List<Driver> drivers, List<Result> results, List<Sprint> sprints,
+            int penalties, int championships) {
         List<Driver> driverList = drivers.stream()
                 .filter(driverFilter -> driverFilter.getSeason().getNumber() == Constants.ACTUAL_SEASON)
                 .toList();
         Driver driver = driverList.isEmpty() ? drivers.get(drivers.size() - 1) : driverList.get(0);
-        DriverDTO driverDTO = driverImpl.driverToDriverDTO(driver);
 
-        int poles = this.resultRepository.polesByDriverIds(listOfIds);
-        int fastlaps = this.resultRepository.fastlapByDriverIds(listOfIds);
-        int racesFinished = this.resultRepository.racesFinishedByDriverIds(listOfIds);
-        int championships = this.championshipRepository.findByDriverIds(listOfIds);
-        int penalties = this.penaltyRepository.findByDriverIds(listOfIds);
-        int podiums = this.resultRepository.podiumsByDriverIds(listOfIds);
-        int victories = this.resultRepository.victoriesByDriverIds(listOfIds);
-        Double averagePosition = this.resultRepository.averagePositionByDriverIds(listOfIds);
-        averagePosition = averagePosition == null ? 0 : averagePosition;
-        List<ResultDTO> last5Results = this.resultImpl
-                .convertResultsToResultsDTO(this.resultRepository.last5ResultsByDriverIds(listOfIds));
+        List<Result> finished = results.stream().filter(result -> result.getPosition() != null).toList();
+        IntSummaryStatistics positions = finished.stream()
+                .mapToInt(result -> result.getPosition().getPositionNumber()).summaryStatistics();
 
-        int bestPosition = this.resultRepository.bestResultByDriverIds(listOfIds).stream()
-                .mapToInt(result -> result.getPosition().getPositionNumber()).min().orElse(0);
+        int poles = (int) results.stream().filter(result -> result.getPole() == 1).count();
+        int fastlaps = (int) results.stream().filter(result -> result.getFastlap() == 1).count();
+        int podiums = (int) finished.stream().filter(result -> result.getPosition().getPositionNumber() <= 3).count();
+        int victories = (int) finished.stream().filter(result -> result.getPosition().getPositionNumber() == 1).count();
+        int bestPosition = finished.isEmpty() ? 0 : positions.getMin();
+        // La base devolvía AVG con 4 decimales; se mantiene el mismo formato.
+        double averagePosition = Math.round(positions.getAverage() * 10000d) / 10000d;
 
-        List<Result> results = this.resultRepository.findByDriverIds(listOfIds);
-        List<Sprint> sprints = this.sprintRepository.findByDriverIds(listOfIds);
-
-        Map<DriverDTO, Integer> totalPointsByDriver = new HashMap<>();
-        resultService.setTotalPointsByDriver(results, sprints, totalPointsByDriver);
-
-        int totalPoints = drivers.stream()
-                .mapToInt(driverMap -> totalPointsByDriver
-                        .getOrDefault(driverImpl.driverToDriverDTO(driverMap), 0))
-                .sum();
+        List<Result> last5 = finished.stream()
+                .sorted(Comparator.comparing((Result result) -> result.getRace().getDateStart())
+                        .thenComparing(Result::getId).reversed())
+                .limit(5)
+                .toList();
 
         return new DriverInfoDTO(
-                driverDTO, poles, fastlaps,
-                racesFinished, totalPoints, championships,
+                driverImpl.driverToDriverDTO(driver), poles, fastlaps,
+                finished.size(), resultService.sumPoints(results, sprints), championships,
                 penalties, bestPosition, victories,
-                podiums, averagePosition, last5Results);
+                podiums, averagePosition, this.resultImpl.convertResultsToResultsDTO(last5));
     }
 
     /**

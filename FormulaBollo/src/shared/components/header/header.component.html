@@ -22,6 +22,7 @@
 		<div class="flex items-center">
 			<p-button
 				[icon]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'"
+					[ariaLabel]="isDarkTheme() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
 				class="header-button text-primary-950 dark:text-slate-50 rounded-md p-1.5"
 				iconPos="right"
 				(click)="toggleDarkMode()"

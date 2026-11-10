@@ -79,6 +79,22 @@ public class ResultService {
     }
 
     /**
+     * Suma los puntos de unos resultados y sprints (vuelta rápida solo si terminó la carrera),
+     * sin calcular la clasificación ni los cambios de posición.
+     */
+    public int sumPoints(List<Result> results, List<Sprint> sprints) {
+        int racePoints = results.stream()
+                .filter(result -> result.getPosition() != null)
+                .mapToInt(result -> result.getPosition().getPoints() + result.getFastlap())
+                .sum();
+        int sprintPoints = sprints.stream()
+                .filter(sprint -> sprint.getPosition() != null)
+                .mapToInt(sprint -> sprint.getPosition().getPoints())
+                .sum();
+        return racePoints + sprintPoints;
+    }
+
+    /**
      * Reorder all points in the case that the same pilot races for more than one
      * team
      * 

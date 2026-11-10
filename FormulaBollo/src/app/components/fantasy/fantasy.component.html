@@ -15,7 +15,7 @@
 						<p class="text-lg text-gray-600 dark:text-gray-300">{{ howToPlay.label }}</p>
 					</div>
 					<div class="flex-1 flex justify-center">
-						<img [src]="imageService.getImageUrl(howToPlay.badge!)" [alt]="howToPlay.target" class="rounded-lg shadow-lg" />
+						<img [src]="imageService.getImageUrl(howToPlay.badge!)" [alt]="howToPlay.target" class="rounded-lg shadow-lg" loading="lazy" decoding="async" />
 					</div>
 				</div>
 			</div>

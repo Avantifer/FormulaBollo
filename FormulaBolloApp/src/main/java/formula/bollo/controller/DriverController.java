@@ -78,11 +78,7 @@ public class DriverController {
         log.info("Se coge toda la informacion de los pilotos de la temporada " + season);
         List<Driver> drivers = (season == 0) ? driverRepository.findAll() : driverRepository.findAllBySeason(season);
 
-        List<DriverInfoDTO> driversInfoDTO = drivers.stream()
-                .map(driver -> this.driverService.getAllInfoDriver(List.of(driver)))
-                .toList();
-
-        return this.driverService.sumDuplicates(driversInfoDTO);
+        return this.driverService.sumDuplicates(this.driverService.getAllInfoDrivers(drivers));
     }
 
     @Operation(summary = "Get all record of drivers", tags = Constants.TAG_DRIVER)

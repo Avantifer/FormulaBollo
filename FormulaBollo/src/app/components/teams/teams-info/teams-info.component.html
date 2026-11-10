@@ -149,7 +149,7 @@
 								<tr class="border-b border-solid">
 									<td class="dark:bg-slate-700 text-sm border-l-4! dark:border-gray-500!">
 										<div class="inline-flex font-medium text-slate-700 dark:text-white">
-											<img [src]="imageService.getImageUrl(resultTeam.race.flagImage)" alt="Bandera País" class="w-8 mr-2" />
+											<img [src]="imageService.getImageUrl(resultTeam.race.flagImage)" alt="Bandera País" class="w-8 mr-2" loading="lazy" decoding="async" />
 											{{ resultTeam.race.name }}
 										</div>
 									</td>
