@@ -1,7 +1,7 @@
 <form [formGroup]="teamsForm">
 	<p-select
 		formControlName="team"
-		[options]="teams"
+		[options]="teams()"
 		optionLabel="name"
 		dataKey="id"
 		class="rounded-lg text-sm bg-slate-100! dark:bg-slate-600! w-full lg:max-w-auto md:w-[184px] lg:w-full border-0! shadow-md!">

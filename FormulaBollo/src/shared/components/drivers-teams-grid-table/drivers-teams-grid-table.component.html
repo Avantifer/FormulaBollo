@@ -11,7 +11,7 @@
 				}
 			</div>
 		}
-		@if (isLoading) {
+		@if (isLoading()) {
 			<div class="grid md:grid-cols-2 xl:grid-cols-3 p-2 md:p-6">
 				@for (item of 9 | skeletonItems; track $index) {
 					<div class="mb-6">
@@ -32,7 +32,7 @@
 				}
 			</div>
 		}
-		@if (isLoading) {
+		@if (isLoading()) {
 			<div class="grid md:grid-cols-2 xl:grid-cols-3 p-2 md:p-6">
 				@for (item of 9 | skeletonItems; track $index) {
 					<div class="mb-6">
@@ -140,7 +140,7 @@
 						}
 					</ng-template>
 				</p-table>
-				@if (isLoading) {
+				@if (isLoading()) {
 					<p-skeleton width="100%" height="50rem" />
 				}
 			</div>
@@ -224,7 +224,7 @@
 						}
 					</ng-template>
 				</p-table>
-				@if (isLoading) {
+				@if (isLoading()) {
 					<p-skeleton width="100%" height="50rem" />
 				}
 			</div>
@@ -242,7 +242,7 @@
 			}
 		</div>
 
-		@if (isLoading) {
+		@if (isLoading()) {
 			<div class="grid md:grid-cols-2 p-2 md:p-6">
 				@for (item of 9 | skeletonItems; track $index) {
 					<div class="mb-6">
@@ -360,7 +360,7 @@
 					}
 				</ng-template>
 			</p-table>
-			@if (isLoading) {
+			@if (isLoading()) {
 				<p-skeleton width="100%" height="50rem" />
 			}
 		</div>

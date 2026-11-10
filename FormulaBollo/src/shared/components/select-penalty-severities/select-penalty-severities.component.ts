@@ -1,11 +1,10 @@
-import { Component, EventEmitter, inject, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Output, signal, WritableSignal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
 import { PenaltySeverityApiService } from '../../services/api/penalty-severity-api.service';
 import { MessageInfoService } from '../../services/toastInfo.service';
 import { PenaltySeverity } from '../../models/penaltySeverity';
 import { ERROR_PENALTIES_FETCH } from '../../../app/constants';
-import { ChangeDetectionTickService } from '../../services/change-detection.service';
 
 @Component({
   selector: 'select-penalty-severities',
@@ -16,10 +15,9 @@ import { ChangeDetectionTickService } from '../../services/change-detection.serv
 export class SelectPenaltySeveritiesComponent {
   private readonly penaltySeverityApiService: PenaltySeverityApiService = inject(PenaltySeverityApiService);
   private readonly messageInfoService: MessageInfoService = inject(MessageInfoService);
-  private readonly tick: ChangeDetectionTickService = inject(ChangeDetectionTickService);
   @Output() penaltySeverityChanged = new EventEmitter<PenaltySeverity>();
   
-  public penaltySeverities: PenaltySeverity[] = [];
+  public readonly penaltySeverities: WritableSignal<PenaltySeverity[]> = signal<PenaltySeverity[]>([]);
   public penaltySeveritiesForm: FormGroup = new FormGroup({
     penaltySeverity: new FormControl<PenaltySeverity | null>(null)
   });
@@ -40,11 +38,10 @@ export class SelectPenaltySeveritiesComponent {
     this.penaltySeverityApiService.getAllPenaltiesSeverity()
       .subscribe({
         next: (penaltySeverities) => {
-          this.penaltySeverities = penaltySeverities;
-          if (this.penaltySeverities.length > 0) {
+          this.penaltySeverities.set(penaltySeverities);
+          if (this.penaltySeverities().length > 0) {
             setTimeout(() => {
-              this.penaltySeveritiesForm.get('penaltySeverity')?.setValue(this.penaltySeverities[0]);
-              this.tick.schedule();
+              this.penaltySeveritiesForm.get('penaltySeverity')?.setValue(this.penaltySeverities()[0]);
             });
           }
         },

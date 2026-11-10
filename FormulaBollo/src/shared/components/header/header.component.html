@@ -1,10 +1,10 @@
-<p-menubar [model]="items" class="m-0" [class]="!isFantasy ? 'bolloHeader' : 'fantasyHeader'">
+<p-menubar [model]="items()" class="m-0" [class]="!isFantasy() ? 'bolloHeader' : 'fantasyHeader'">
 	<ng-template #start>
 		<img
 			src="assets/images/logo/logo.png"
 			alt="Logo FormulaBollo"
 			class="h-11 cursor-pointer ml-2"
-			[routerLink]="isFantasy ? '/fantasy' : '/home'" />
+			[routerLink]="isFantasy() ? '/fantasy' : '/home'" />
 	</ng-template>
 
 	<ng-template #item let-item let-root="root">
@@ -28,11 +28,11 @@
 				(click)="toggleDarkMode()"
 				onkeypress="toggleDarkMode()" />
 			<p-button
-				[label]="!isFantasy ? 'Fantasy' : 'F1Bollo'"
+				[label]="!isFantasy() ? 'Fantasy' : 'F1Bollo'"
 				class="text-white"
-				[class]="!isFantasy ? 'fantasyHeaderButton' : 'bolloHeaderButton'"
-				(click)="!isFantasy ? router.navigate(['/fantasy']) : router.navigate(['/'])"
-				onkeydown="!isFantasy ? router.navigate(['/fantasy']) : router.navigate(['/'])" />
+				[class]="!isFantasy() ? 'fantasyHeaderButton' : 'bolloHeaderButton'"
+				(click)="!isFantasy() ? router.navigate(['/fantasy']) : router.navigate(['/'])"
+				onkeydown="!isFantasy() ? router.navigate(['/fantasy']) : router.navigate(['/'])" />
 		</div>
 	</ng-template>
 </p-menubar>

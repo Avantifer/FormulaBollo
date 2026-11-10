@@ -10,6 +10,20 @@
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Geist:wght@100..900&display=swap" rel="stylesheet" />
 		<link rel="icon" type="image/x-icon" href="favicon.ico" />
+		<script>
+			// Precarga la imagen principal de la portada sin esperar a que arranque Angular (mejora el LCP).
+			// Las URLs deben coincidir con apiUrl de src/enviroments/enviroment.ts y enviroment.prod.ts.
+			(function () {
+				if (location.pathname !== '/' && location.pathname !== '/home') return;
+				var api = location.hostname === 'localhost' ? 'http://localhost:8080' : 'https://formulabollo.es:8443';
+				var link = document.createElement('link');
+				link.rel = 'preload';
+				link.as = 'image';
+				link.href = api + '/intro/introImage.avif';
+				link.setAttribute('fetchpriority', 'high');
+				document.head.appendChild(link);
+			})();
+		</script>
 	</head>
 	<body>
 		<app-root></app-root>

@@ -1,15 +1,13 @@
-import { ApplicationConfig, inject, provideAppInitializer, provideZonelessChangeDetection } from '@angular/core';
-import { ChangeDetectionTickService } from '../shared/services/change-detection.service';
+import { ApplicationConfig, provideZonelessChangeDetection } from '@angular/core';
 
 import { routes } from './app.routes';
-import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
-import { tickInterceptor } from '../shared/interceptors/tick.interceptor';
+import { provideHttpClient, withFetch } from '@angular/common/http';
 import { MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 
 import Aura from '@primeuix/themes/aura';
 import { definePreset } from '@primeuix/themes';
-import { NavigationEnd, PreloadAllModules, Router, provideRouter, withPreloading } from '@angular/router';
+import { PreloadAllModules, provideRouter, withPreloading } from '@angular/router';
 import { JWT_OPTIONS, JwtHelperService } from '@auth0/angular-jwt';
 
 
@@ -31,13 +29,8 @@ const FormulaBolloPreset = definePreset(Aura, {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZonelessChangeDetection(),
-    // Los parámetros de ruta se leen en suscripciones que mutan campos: refrescar al terminar cada navegación.
-    provideAppInitializer(() => {
-      const tick = inject(ChangeDetectionTickService);
-      inject(Router).events.subscribe((event) => event instanceof NavigationEnd && tick.schedule());
-    }),
     provideRouter(routes, withPreloading(PreloadAllModules)),
-    provideHttpClient(withFetch(), withInterceptors([tickInterceptor])),
+    provideHttpClient(withFetch()),
     providePrimeNG({
       theme: {
         preset: FormulaBolloPreset,

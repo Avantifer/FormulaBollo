@@ -55,7 +55,7 @@ export class DriversGridTableComponent {
   protected teamPoints: WritableSignal<TeamWithDrivers[]> = signal([]);
   protected teams: WritableSignal<Team[]> = signal([]);
 
-  protected isLoading: boolean = true;
+  protected readonly isLoading: WritableSignal<boolean> = signal(true);
   private readonly destroy$: Subject<void> = new Subject<void>();
   
   constructor(){
@@ -87,22 +87,22 @@ export class DriversGridTableComponent {
 
   private _updateDriversPointsData(driverPoints: DriverPoints[]): void {
     if (!driverPoints.length) {
-      this.isLoading = true;
+      this.isLoading.set(true);
       this._getAllDrivers();
     }
 
     this.driverPoints.set(driverPoints);
-    this.isLoading = false;
+    this.isLoading.set(false);
   }
 
   private _updateTeamsPointsData(teamWithDrivers: TeamWithDrivers[]): void {
     if (!teamWithDrivers.length) {
-      this.isLoading = true;
+      this.isLoading.set(true);
       this._getAllTeams();
     }
 
     this.teamPoints.set(teamWithDrivers);
-    this.isLoading = false;
+    this.isLoading.set(false);
   }
 
   private _getAllDrivers(): void {
@@ -123,7 +123,7 @@ export class DriversGridTableComponent {
   }
 
   private _resetData(): void {
-    this.isLoading = true;
+    this.isLoading.set(true);
     this.driverPoints.set([]);
     this.drivers.set([]);
     this.teamPoints.set([]);

@@ -5,7 +5,6 @@ import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
-import { AuthJWTService } from '../../../../shared/services/authJWT.service';
 import { AccountApiService } from '../../../../shared/services/api/account-api.service';
 import { catchError, of, Subject, takeUntil } from 'rxjs';
 import { ERROR_CHANGE_PASSWORD } from '../../../constants';
@@ -26,7 +25,6 @@ import { MessageInfoService } from '../../../../shared/services/toastInfo.servic
 })
 export class FantasyRecoverPasswordComponent {
   private readonly router: Router = inject(Router);
-  private readonly authJWTService: AuthJWTService = inject(AuthJWTService);
   private readonly accountApiService: AccountApiService = inject(AccountApiService);
   private readonly messageInfoService: MessageInfoService = inject(MessageInfoService);
 
@@ -57,13 +55,10 @@ export class FantasyRecoverPasswordComponent {
   }
 
   recoverPassword(): void {
-    const username: string = this.authJWTService.getUsernameFromToken(
-      this.token,
-    );
     const password: string = this.recoverPasswordForm.get("password1")?.value;
 
     this.accountApiService
-      .changePassword(username, password, this.token)
+      .changePassword(password, this.token)
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {

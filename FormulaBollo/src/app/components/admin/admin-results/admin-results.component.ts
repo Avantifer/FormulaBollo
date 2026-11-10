@@ -1,5 +1,5 @@
 import { Position } from './../../../../shared/models/position';
-import { ChangeDetectorRef, Component, inject } from '@angular/core';
+import { Component, inject, signal, WritableSignal } from '@angular/core';
 import { SelectRacesComponent } from '../../../../shared/components/select-races/select-races.component';
 import { Season } from '../../../../shared/models/season';
 import { environment } from '../../../../enviroments/enviroment';
@@ -12,7 +12,7 @@ import { Driver } from '../../../../shared/models/driver';
 import { ButtonModule } from 'primeng/button';
 import { ResultApiService } from '../../../../shared/services/api/result-api.service';
 import { Result } from '../../../../shared/models/result';
-import { catchError, EMPTY, lastValueFrom, of, retry, Subject, takeUntil } from 'rxjs';
+import { catchError, EMPTY, lastValueFrom, Observable, of, retry, Subject, takeUntil } from 'rxjs';
 import { MessageInfoService } from '../../../../shared/services/toastInfo.service';
 import { ERROR_DRIVER_FETCH, ERROR_RESULT_FETCH } from '../../../constants';
 import { DividerModule } from 'primeng/divider';
@@ -46,7 +46,6 @@ export class AdminResultsComponent {
   private readonly messageInfoService: MessageInfoService = inject(MessageInfoService);
   private readonly driverApiService: DriverApiService = inject(DriverApiService);
   private readonly utilsService: UtilsService = inject(UtilsService);
-  private readonly cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
   private readonly router: Router = inject(Router);
   private readonly sprintApiService: SprintApiService = inject(SprintApiService);
   private readonly raceApiService: RaceApiService = inject(RaceApiService);
@@ -55,18 +54,18 @@ export class AdminResultsComponent {
   actualSeason: Season = environment.seasonActual;
   raceDate: Date | undefined;
   raceSelected: Race | undefined;
-  results: Result[] = [];
-  sprints: Sprint[] = [];
+  readonly results: WritableSignal<Result[]> = signal<Result[]>([]);
+  readonly sprints: WritableSignal<Sprint[]> = signal<Sprint[]>([]);
   emptyResults: any[] = new Array(20).fill(null);
   resultsToSave: Result[] = [];
   sprintsToSave: Sprint[] = [];
   driversSelected: Driver[] = [];
   allDrivers: Driver[] = [];
 
-  fastlapDriver: Driver | undefined;
-  poleDriver: Driver | undefined;
+  readonly fastlapDriver: WritableSignal<Driver | undefined> = signal<Driver | undefined>(undefined);
+  readonly poleDriver: WritableSignal<Driver | undefined> = signal<Driver | undefined>(undefined);
   isSprint: boolean = false;
-  visible: boolean = false;
+  readonly visible: WritableSignal<boolean> = signal(false);
 
   private readonly destroy$: Subject<void> = new Subject<void>();
   
@@ -89,7 +88,7 @@ export class AdminResultsComponent {
 
   onRaceChange(newRace: Race): void {
     this.resetValuesRaceChange(newRace);
-    this.results = [];
+    this.results.set([]);
     if (this.isSprint) {
       this.sprintApiService.getAllSprintPerRace(this.raceSelected!.id)
         .pipe(
@@ -101,8 +100,7 @@ export class AdminResultsComponent {
             return of([]);
           })
         ).subscribe((sprints: Sprint[]) => {
-          this.sprints = sprints;
-          this.cdr.detectChanges();
+          this.sprints.set(sprints);
         });
 
     } else {
@@ -116,14 +114,13 @@ export class AdminResultsComponent {
             return of([]);
           })
         ).subscribe((results: Result[]) => { 
-          this.results = results;
-          this.cdr.detectChanges();
+          this.results.set(results);
   
           let resultFiltered = results.filter((result: Result) => result.fastlap);
-          this.fastlapDriver = resultFiltered.length ? resultFiltered[0].driver : undefined;
+          this.fastlapDriver.set(resultFiltered.length ? resultFiltered[0].driver : undefined);
   
           resultFiltered = results.filter((result: Result) => result.pole);
-          this.poleDriver = resultFiltered.length ? resultFiltered[0].driver : undefined;
+          this.poleDriver.set(resultFiltered.length ? resultFiltered[0].driver : undefined);
         });
 
     }
@@ -136,17 +133,17 @@ export class AdminResultsComponent {
   private resetValuesRaceChange(newRace: Race): void {
     this.raceSelected = newRace;
     this.raceDate = new Date(newRace.dateStart);
-    this.fastlapDriver = undefined;
-    this.poleDriver = undefined;
+    this.fastlapDriver.set(undefined);
+    this.poleDriver.set(undefined);
     this.driversSelected = new Array(20).fill(null);
   }
  
   onDriverChangeFastLap(newDriver: Driver): void  {
-    this.fastlapDriver = newDriver;
+    this.fastlapDriver.set(newDriver);
   }
 
   onDriverChangePole(newDriver: Driver): void {
-    this.poleDriver = newDriver;
+    this.poleDriver.set(newDriver);
   }
 
   onDriverChangeResult(newDriver: Driver, position: number): void {     
@@ -230,7 +227,7 @@ export class AdminResultsComponent {
   }
 
   private sprintLogicSave(): void {
-    if (this.sprints.length) {
+    if (this.sprints().length) {
       this.updateResultsToSave();
     } else {
       this.createResultsToSave();
@@ -249,43 +246,44 @@ export class AdminResultsComponent {
   }
 
   private async resultLogicSave(): Promise<void> {
-    if (this.results.length) {
+    if (this.results().length) {
       this.updateResultsToSave();
     } else {
       this.createResultsToSave();
     }
 
-    const responseSaveResults: string = await lastValueFrom(
-      this.resultApiService.saveResults(this.resultsToSave).pipe(
-      takeUntil(this.destroy$),
-      catchError((error) => this.utilsService.handleError<string>(error, error))
-    ));
+    // Cada paso depende del anterior: si uno falla se muestra el error y se detiene la secuencia
+    // (sin avisos de éxito ni cálculos de Fantasy sobre unos resultados que no se guardaron).
+    const steps: (() => Observable<string>)[] = [
+      () => this.resultApiService.saveResults(this.resultsToSave),
+      () => this.fantasyApiService.saveDriverTeamPoints(this.resultsToSave[0].race.id),
+      () => this.fantasyApiService.saveDriverTeamPrices(this.resultsToSave[0].race.id),
+    ];
 
-    this.messageInfoService.showSuccess(responseSaveResults);
-    
-    const responseSaveFantasyPoints: string = await lastValueFrom(
-      this.fantasyApiService.saveDriverTeamPoints(this.resultsToSave[0].race.id).pipe(
-        takeUntil(this.destroy$),
-        catchError((error) => this.utilsService.handleError<string>(error.error, error))
-    ));
-      
-    this.messageInfoService.showSuccess(responseSaveFantasyPoints);
+    for (const step of steps) {
+      const response: string | undefined = await lastValueFrom(
+        step().pipe(
+          takeUntil(this.destroy$),
+          catchError((error) => {
+            this.messageInfoService.showError(error, error);
+            console.error(error);
+            return EMPTY;
+          })
+        ),
+        { defaultValue: undefined }
+      );
 
-    const responseSaveFantasyPrices: string = await lastValueFrom(
-      this.fantasyApiService.saveDriverTeamPrices(this.resultsToSave[0].race.id).pipe(
-        takeUntil(this.destroy$),
-        catchError((error) => this.utilsService.handleError<string>(error.error, error))
-    ));
-
-    this.messageInfoService.showSuccess(responseSaveFantasyPrices);
+      if (response === undefined) return;
+      this.messageInfoService.showSuccess(response);
+    }
   }
 
   private getResultValidations(): { condition: boolean; message: string }[] {
     return [
       { condition: !!this.raceSelected, message: 'Necesitas poner alguna carrera' },
       { condition: !!this.raceDate, message: 'Necesitas poner la fecha de la carrera' },
-      { condition: !!this.fastlapDriver, message: 'Necesitas poner el piloto con la vuelta rápida' },
-      { condition: !!this.poleDriver, message: 'Necesitas poner el piloto con la pole' }
+      { condition: !!this.fastlapDriver(), message: 'Necesitas poner el piloto con la vuelta rápida' },
+      { condition: !!this.poleDriver(), message: 'Necesitas poner el piloto con la pole' }
     ];
   }
 
@@ -310,8 +308,8 @@ export class AdminResultsComponent {
     const resultsToSave: Result[] = [];
 
     selectedDrivers.forEach((driver, index) => {
-      const isFastlap = this.fastlapDriver?.id === driver.id;
-      const isPole = this.poleDriver?.id === driver.id;
+      const isFastlap = this.fastlapDriver()?.id === driver.id;
+      const isPole = this.poleDriver()?.id === driver.id;
 
       resultsToSave.push(new Result(
         this.raceSelected!,
@@ -324,8 +322,8 @@ export class AdminResultsComponent {
 
     this.allDrivers.forEach(driver => {
       if (!selectedDrivers.some(d => d.id === driver.id)) {
-        const isFastlap = this.fastlapDriver?.id === driver.id;
-        const isPole = this.poleDriver?.id === driver.id;
+        const isFastlap = this.fastlapDriver()?.id === driver.id;
+        const isPole = this.poleDriver()?.id === driver.id;
 
         resultsToSave.push(new Result(
           this.raceSelected!,
@@ -367,7 +365,7 @@ export class AdminResultsComponent {
 
   private updateResultsToSave(): void {  
     const selectedDrivers: Driver[] = [];
-    const finishedDrivers = this.isSprint ? this.sprints.filter(r => r.position != null).length : this.results.filter(r => r.position != null).length;
+    const finishedDrivers = this.isSprint ? this.sprints().filter(r => r.position != null).length : this.results().filter(r => r.position != null).length;
     
     for (let i = 0; i < finishedDrivers; i++) {
       if (this.driversSelected[i]) {
@@ -409,7 +407,7 @@ export class AdminResultsComponent {
         })
       ).subscribe((success: string) => {
         this.messageInfoService.showSuccess(success);
-        this.visible = false;
+        this.visible.set(false);
       });
     } else {
       this.resultApiService.deleteResultsFromRace(this.raceSelected!.id).pipe(
@@ -421,7 +419,7 @@ export class AdminResultsComponent {
         })
       ).subscribe((success: string) => {
         this.messageInfoService.showSuccess(success);
-        this.visible = false;
+        this.visible.set(false);
       });
     }
   }
