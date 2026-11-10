@@ -5,6 +5,7 @@ import { PenaltySeverityApiService } from '../../services/api/penalty-severity-a
 import { MessageInfoService } from '../../services/toastInfo.service';
 import { PenaltySeverity } from '../../models/penaltySeverity';
 import { ERROR_PENALTIES_FETCH } from '../../../app/constants';
+import { ChangeDetectionTickService } from '../../services/change-detection.service';
 
 @Component({
   selector: 'select-penalty-severities',
@@ -15,6 +16,7 @@ import { ERROR_PENALTIES_FETCH } from '../../../app/constants';
 export class SelectPenaltySeveritiesComponent {
   private readonly penaltySeverityApiService: PenaltySeverityApiService = inject(PenaltySeverityApiService);
   private readonly messageInfoService: MessageInfoService = inject(MessageInfoService);
+  private readonly tick: ChangeDetectionTickService = inject(ChangeDetectionTickService);
   @Output() penaltySeverityChanged = new EventEmitter<PenaltySeverity>();
   
   public penaltySeverities: PenaltySeverity[] = [];
@@ -42,6 +44,7 @@ export class SelectPenaltySeveritiesComponent {
           if (this.penaltySeverities.length > 0) {
             setTimeout(() => {
               this.penaltySeveritiesForm.get('penaltySeverity')?.setValue(this.penaltySeverities[0]);
+              this.tick.schedule();
             });
           }
         },

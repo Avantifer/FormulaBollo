@@ -44,7 +44,7 @@
 	} @else {
 		@if (driverPoints().length) {
 			<div class="p-2 md:p-6">
-				<p-table [value]="driverPoints()" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }">
+				<p-table styleClass="timing-tower" [value]="driverPoints()" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }">
 					<ng-template #header>
 						<tr class="border-b border-solid">
 							<th
@@ -82,7 +82,7 @@
 					<ng-template #body let-driverPoints let-index="rowIndex">
 						@if (showDriverByTeamFilter(driverPoints.driver)) {
 							<tr class="border-b border-solid">
-								<td class="dark:bg-slate-700 text-sm border-l-4! dark:border-gray-500!">
+								<td class="dark:bg-slate-700 text-sm border-l-4!" [class]="'border-' + (driverPoints.driver.team.name | SpaceToUnderscore)">
 									<div
 										class="size-8 font-bold text-slate-700 dark:text-white mr-2 xs:mr-4 rounded-full flex justify-center items-center shadow"
 										[class]="'bg-' + (driverPoints.driver.team.name | SpaceToUnderscore)">
@@ -147,7 +147,7 @@
 		}
 		@if (!driverPoints().length) {
 			<div class="p-2 md:p-6">
-				<p-table [value]="drivers()" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }">
+				<p-table styleClass="timing-tower" [value]="drivers()" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }">
 					<ng-template #header>
 						<tr class="border-b border-solid">
 							<th
@@ -185,7 +185,7 @@
 					<ng-template #body let-driver let-index="rowIndex">
 						@if (showDriverByTeamFilter(driver)) {
 							<tr class="border-b border-solid">
-								<td class="dark:bg-slate-700 text-sm border-l-4! dark:border-gray-500!">
+								<td class="dark:bg-slate-700 text-sm border-l-4!" [class]="'border-' + (driver.team.name | SpaceToUnderscore)">
 									<div
 										class="size-8 font-bold text-slate-700 dark:text-white mr-2 xs:mr-4 rounded-full flex justify-center items-center shadow"
 										[class]="'bg-' + (driver.team.name | SpaceToUnderscore)">
@@ -253,7 +253,7 @@
 		}
 	} @else {
 		<div class="p-2 md:p-6">
-			<p-table [value]="teamPoints()" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }">
+			<p-table styleClass="timing-tower" [value]="teamPoints()" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }">
 				<ng-template #header>
 					<tr class="border-b border-solid">
 						<th
@@ -286,7 +286,7 @@
 				<ng-template #body let-teamPoints let-index="rowIndex">
 					@if (showTeamsByTeamFilter(teamPoints.team)) {
 						<tr class="border-b border-solid">
-							<td class="dark:bg-slate-700 text-sm border-l-4! dark:border-gray-500!">
+							<td class="dark:bg-slate-700 text-sm border-l-4!" [class]="'border-' + (teamPoints.team.name | SpaceToUnderscore)">
 								<div
 									class="w-8 h-8 font-bold text-slate-700 dark:text-white mr-2 xs:mr-4 rounded-full flex justify-center items-center shadow"
 									[class]="'bg-' + utilsService.spaceToUnderScore(teamPoints.team.name)">

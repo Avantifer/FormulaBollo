@@ -7,6 +7,7 @@ import { ERROR_RACE_FETCH } from '../../../app/constants';
 import { catchError } from 'rxjs';
 
 import { UtilsService } from '../../services/utils.service';
+import { ChangeDetectionTickService } from '../../services/change-detection.service';
 
 @Component({
   selector: 'race-details',
@@ -17,6 +18,7 @@ import { UtilsService } from '../../services/utils.service';
 export class RaceDetailsComponent {
   private readonly raceApiService: RaceApiService = inject(RaceApiService);
   private readonly utilsService: UtilsService = inject(UtilsService);
+  private readonly tick: ChangeDetectionTickService = inject(ChangeDetectionTickService);
   
   protected races: Signal<Race[]> = toSignal(
     this.raceApiService.getAllRaces(environment.seasonActual.number)
@@ -65,6 +67,7 @@ export class RaceDetailsComponent {
     this.updateCountdown();
     this.intervalId = setInterval(() => {
       this.updateCountdown();
+      this.tick.schedule();
     }, 1000);
   }
 
