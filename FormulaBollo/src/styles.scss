@@ -82,3 +82,21 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Títulos de sección: neutros, con una marca corta del color de la sección */
+h2.AudioWide.text-red-600 {
+  color: var(--color-slate-900);
+}
+
+.dark h2.AudioWide.text-red-600 {
+  color: #fff;
+}
+
+h2.AudioWide.text-red-600::after {
+  content: "";
+  display: block;
+  width: 3rem;
+  height: 3px;
+  margin: 0.75rem auto 0;
+  background: var(--color-red-600);
+}

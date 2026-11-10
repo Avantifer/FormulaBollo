@@ -32,7 +32,8 @@
   background-color: colors.$colorMcLaren;
 }
 
-.bg-Alfa_Romeo {
+.bg-Alfa_Romeo,
+.bg-Alfa_Romeo_Racing {
   background-color: colors.$colorAlfa;
 }
 
@@ -80,7 +81,8 @@
   color: colors.$colorMcLaren;
 }
 
-.color-Alfa_Romeo {
+.color-Alfa_Romeo,
+.color-Alfa_Romeo_Racing {
   color: colors.$colorAlfa;
 }
 
@@ -128,7 +130,8 @@
   background: colors.$colorMcLaren;
 }
 
-.bg-Fantasy-Alfa_Romeo {
+.bg-Fantasy-Alfa_Romeo,
+.bg-Fantasy-Alfa_Romeo_Racing {
   background: colors.$colorAlfa;
 }
 
@@ -176,7 +179,8 @@
   border-color: colors.$colorMcLaren !important;
 }
 
-.border-Alfa_Romeo {
+.border-Alfa_Romeo,
+.border-Alfa_Romeo_Racing {
   border-color: colors.$colorAlfa !important;
 }
 
@@ -240,7 +244,8 @@
   }
 }
 
-.progress-Alfa_Romeo {
+.progress-Alfa_Romeo,
+.progress-Alfa_Romeo_Racing {
   .p-progressbar-value {
     background-color: colors.$colorAlfa;
   }
@@ -302,7 +307,8 @@
   background-color: colors.$colorMcLaren;
 }
 
-.hover-bg-Alfa_Romeo:hover {
+.hover-bg-Alfa_Romeo:hover,
+.hover-bg-Alfa_Romeo_Racing:hover {
   background-color: colors.$colorAlfa;
 }
 

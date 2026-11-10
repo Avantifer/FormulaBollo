@@ -86,7 +86,7 @@
 						</div>
 					} @else {
 						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-							@for (item of 12 | skeletonItems; track item) {
+							@for (item of 12 | skeletonItems; track $index) {
 								<div class="mb-6">
 									<p-skeleton width="95%" height="5rem" />
 								</div>
