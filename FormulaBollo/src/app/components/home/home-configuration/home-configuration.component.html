@@ -1,6 +1,6 @@
 <div class="my-container mx-auto py-12 px-4">
 	<h2 class="AudioWide uppercase text-2xl xs:text-3xl font-bold mb-8 text-center text-red-600 dark:text-white">Configuraciones</h2>
-	@if (cacheService.isVersionRetrieved && configurations().length) {
+	@if (cacheService.isVersionRetrieved() && configurations().length) {
 		<div class="bg-gray-200/30 dark:bg-gray-900 rounded-xl overflow-hidden shadow-xl p-6">
 			<div class="grid xl:grid-cols-3 gap-8">
 				<div class="border-b border-gray-200 dark:border-gray-800 pb-4">
@@ -74,7 +74,7 @@
 			</div>
 		</div>
 	}
-	@if (!cacheService.isVersionRetrieved) {
+	@if (!cacheService.isVersionRetrieved()) {
 		<div class="rounded border border-surface-600 p-6">
 			<div class="grid xl:grid-cols-3 gap-8">
 				@for (1 of [1, 2, 3]; track $index) {

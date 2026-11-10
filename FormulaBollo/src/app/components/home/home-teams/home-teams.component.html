@@ -17,7 +17,7 @@
 						class="teams-schema-container-image m-auto w-24" />
 				</div>
 			}
-			@if (!cacheService.isVersionRetrieved || !teams().length) {
+			@if (!cacheService.isVersionRetrieved() || !teams().length) {
 				@for (item of 10 | skeletonItems; track $index) {
 					<p-skeleton height="9rem" styleClass="rounded-4 border-round-2xl" />
 				}
