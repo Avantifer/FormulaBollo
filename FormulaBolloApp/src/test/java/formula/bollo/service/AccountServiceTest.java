@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -20,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import formula.bollo.config.JwtConfig;
 import formula.bollo.entity.Account;
@@ -195,5 +197,21 @@ class AccountServiceTest {
         assertEquals(200, response.getStatusCode().value());
         // El enlace del correo caduca a los 30 minutos (no a los 30 días de una sesión).
         verify(jwtConfig).generateToken(any(), eq(JwtConfig.RECOVERY_TOKEN_VALIDITY));
+    }
+
+    @Test
+    void recoverPasswordLinkUsesTheConfiguredFrontendUrl() {
+        accountDTO = new AccountDTO(1L, "Avantifer", "123", 1, "email@mail.com");
+        account = new Account(1L, "Avantifer", "123", 1, "email@mail.com");
+        ReflectionTestUtils.setField(accountService, "frontendUrl", "http://localhost:4200");
+
+        when(accountRepository.findByEmail(anyString())).thenReturn(Arrays.asList(account));
+        when(accountImpl.accountToAccountDTO(any())).thenReturn(accountDTO);
+        when(jwtConfig.generateToken(any(), eq(JwtConfig.RECOVERY_TOKEN_VALIDITY))).thenReturn("tok");
+
+        accountService.recoverPassword("email@mail");
+
+        verify(emailService).sendSimpleMessage(eq("email@mail.com"), anyString(),
+                contains("http://localhost:4200/fantasy/recoverPassword/tok"));
     }
 }

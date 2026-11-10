@@ -2,6 +2,7 @@ package formula.bollo.service;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -27,6 +28,10 @@ public class AccountService {
     private JwtConfig jwtConfig;
 
     private EmailService emailService;
+
+    // Dónde vive el frontend que recibe el enlace del correo; en desarrollo: frontend.url=http://localhost:4200/
+    @Value("${frontend.url:" + Constants.PRODUCTION_FRONTEND + "}")
+    private String frontendUrl = Constants.PRODUCTION_FRONTEND;
 
     public AccountService(AccountRepository accountRepository, AccountImpl accountImpl, JwtConfig jwtConfig,
             EmailService emailService) {
@@ -147,7 +152,8 @@ public class AccountService {
      */
     private void sendEmail(AccountDTO accountDTO) {
         String token = this.jwtConfig.generateToken(accountDTO, JwtConfig.RECOVERY_TOKEN_VALIDITY);
-        String link = Constants.PRODUCTION_FRONTEND + "fantasy/recoverPassword/" + token;
+        String base = this.frontendUrl.endsWith("/") ? this.frontendUrl : this.frontendUrl + "/";
+        String link = base + "fantasy/recoverPassword/" + token;
         String message = """
                 Para recuperar la contraseña, haz click en el siguiente enlace:
                 %s
