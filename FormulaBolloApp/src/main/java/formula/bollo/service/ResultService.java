@@ -1,5 +1,8 @@
 package formula.bollo.service;
 
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -119,6 +122,7 @@ public class ResultService {
      * @return A list of DriverPointsDTO objects, representing each driver's total
      *         points for the season.
      */
+    @Cacheable(cacheNames = Constants.CACHE_STATS, key = "#root.methodName + T(java.util.Arrays).toString(#root.args)")
     public List<DriverPointsDTO> getTotalResultsPerDriver(Integer seasonNumber, Integer numResults) {
         List<Result> results;
 
@@ -157,6 +161,7 @@ public class ResultService {
      * @return A list of DriverPointsDTO objects, representing each driver's total
      *         points for the season.
      */
+    @Cacheable(cacheNames = Constants.CACHE_STATS, key = "#root.methodName + T(java.util.Arrays).toString(#root.args)")
     public List<DriverPointsDTO> getTotalResultsSpecificPerDriver(Integer seasonNumber, List<Long> ids) {
         List<Result> results;
         List<Sprint> sprints;
@@ -297,6 +302,7 @@ public class ResultService {
      *
      * @param resultDTOs The list of result to save.
      */
+    @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public ResponseEntity<String> saveResults(List<ResultDTO> resultDTOs) {
         if (resultDTOs.isEmpty()) {
             log.error("Hubo un error al guardar los resultados por estan vacios");
@@ -321,6 +327,7 @@ public class ResultService {
      *
      * @param resultDTOs The list of result to save.
      */
+    @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public ResponseEntity<String> deleteResults(Integer raceId) {
         this.resultRepository.deleteByRaceId(raceId);
 

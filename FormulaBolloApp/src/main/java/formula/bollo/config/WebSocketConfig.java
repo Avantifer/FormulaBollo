@@ -17,7 +17,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import formula.bollo.service.CacheService;
 import lombok.extern.log4j.Log4j2;
 
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 @Configuration
 @Log4j2

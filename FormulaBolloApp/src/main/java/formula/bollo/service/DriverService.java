@@ -1,5 +1,7 @@
 package formula.bollo.service;
 
+import org.springframework.cache.annotation.Cacheable;
+
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -166,6 +168,7 @@ public class DriverService {
      * 
      * @return a list of RecordDTO objects with the records statistics
      */
+    @Cacheable(cacheNames = Constants.CACHE_STATS, key = "#root.methodName + T(java.util.Arrays).toString(#root.args)")
     public List<RecordDTO> getAllRecords() {
         List<RecordDTO> recordDTOs = new ArrayList<>();
         RecordDTO recordPole = this.resultRepository.recordPoleDriver().getFirst();
@@ -202,6 +205,7 @@ public class DriverService {
      * @return a list of DriverPointsEvolutionDTO objects with the points' evolution
      *         of driver
      */
+    @Cacheable(cacheNames = Constants.CACHE_STATS, key = "#root.methodName + T(java.util.Arrays).toString(#root.args)")
     public List<DriverPointsEvolutionDTO> getAllPointsEvolutionDriver(Set<Integer> driverIds) {
         List<Long> driverIdList = driverIds.stream()
                 .map(Integer::longValue)

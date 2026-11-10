@@ -1,5 +1,7 @@
 package formula.bollo.service;
 
+import org.springframework.cache.annotation.CacheEvict;
+
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -43,6 +45,7 @@ public class SprintService {
      *
      * @param sprintDTOs The list of SprintDTO objects to be saved.
      */
+    @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public ResponseEntity<String> saveSprints(List<SprintDTO> sprintDTOs) {
         List<Sprint> existingSprints = this.sprintRepository
                 .findByRaceId(sprintDTOs.get(0).getRace().getId().intValue());
@@ -57,6 +60,7 @@ public class SprintService {
                 HttpStatusCode.valueOf(200));
     }
 
+    @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public ResponseEntity<String> deleteSprints(Integer raceId) {
         sprintRepository.deleteByRaceId(raceId);
 

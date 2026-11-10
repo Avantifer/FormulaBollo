@@ -6,7 +6,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -49,7 +48,7 @@ public class SecurityConfigurer {
                 .ignoringRequestMatchers("/ws/**"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/ws/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "account/**", "cache/**",
+                        .requestMatchers(HttpMethod.POST, "/account/**", "/cache/**",
                                 "/results/totalPerSpecificDrivers/**", "/fantasy/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.POST, "/**").permitAll()

@@ -1,5 +1,6 @@
 package formula.bollo.utils;
 
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
@@ -65,6 +66,7 @@ public class Constants {
     public static final String ENDPOINT_SEASONS = "/seasons";
     public static final String ENDPOINT_FANTASY = "/fantasy";
     public static final String ENDPOINT_SPRINT = "/sprints";
+    public static final String CACHE_STATS = "stats";
     public static final String ENDPOINT_CACHE = "/cache";
 
     // Urls

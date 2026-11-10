@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { HttpTestingController } from '@angular/common/http/testing';
+import { provideComponentTesting } from '../../../../testing/component-test-providers';
 import { FantasyClasificationComponent } from './fantasy-clasification.component';
 
 describe('FantasyClasificationComponent', () => {
@@ -8,13 +9,18 @@ describe('FantasyClasificationComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [FantasyClasificationComponent]
-    })
-    .compileComponents();
+      imports: [FantasyClasificationComponent],
+      providers: provideComponentTesting(),
+    }).compileComponents();
 
     fixture = TestBed.createComponent(FantasyClasificationComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    fixture?.destroy();
+    TestBed.inject(HttpTestingController).verify({ ignoreCancelled: true });
   });
 
   it('should create', () => {
