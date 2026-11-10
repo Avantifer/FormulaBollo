@@ -15,7 +15,7 @@ import { CardModule } from 'primeng/card';
 import { FormsModule } from '@angular/forms';
 import { Penalty } from '../../../../shared/models/penalty';
 import { PenaltiesApiService } from '../../../../shared/services/api/penalties-api.service';
-import { catchError, of, Subject, takeUntil } from 'rxjs';
+import { catchError, EMPTY, of, Subject, takeUntil } from 'rxjs';
 import { MessageInfoService } from '../../../../shared/services/toastInfo.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { UtilsService } from '../../../../shared/services/utils.service';
@@ -138,7 +138,7 @@ export class AdminPenaltiesComponent {
       catchError((error) => {
         this.messageInfoService.showError(error, error);
         console.error(error);
-        return of("");
+        return EMPTY;
       })
     ).subscribe((success: string) => {
       this.messageInfoService.showSuccess(success);

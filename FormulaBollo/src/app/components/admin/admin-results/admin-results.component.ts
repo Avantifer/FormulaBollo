@@ -12,7 +12,7 @@ import { Driver } from '../../../../shared/models/driver';
 import { ButtonModule } from 'primeng/button';
 import { ResultApiService } from '../../../../shared/services/api/result-api.service';
 import { Result } from '../../../../shared/models/result';
-import { catchError, lastValueFrom, of, retry, Subject, takeUntil } from 'rxjs';
+import { catchError, EMPTY, lastValueFrom, of, retry, Subject, takeUntil } from 'rxjs';
 import { MessageInfoService } from '../../../../shared/services/toastInfo.service';
 import { ERROR_DRIVER_FETCH, ERROR_RESULT_FETCH } from '../../../constants';
 import { DividerModule } from 'primeng/divider';
@@ -222,7 +222,7 @@ export class AdminResultsComponent {
       catchError((error) => {
         this.messageInfoService.showError(error, error);
         console.error(error);
-        return of("");
+        return EMPTY;
       })
     ).subscribe((success: string) => {
       this.messageInfoService.showSuccess(success);
@@ -241,7 +241,7 @@ export class AdminResultsComponent {
       catchError((error) => {
         this.messageInfoService.showError(error, error);
         console.error(error);
-        return of("");
+        return EMPTY;
       })
     ).subscribe((success: string) => {
       this.messageInfoService.showSuccess(success);
@@ -405,7 +405,7 @@ export class AdminResultsComponent {
         catchError((error) => {
           this.messageInfoService.showError(error, error);
           console.error(error);
-          return of("");
+          return EMPTY;
         })
       ).subscribe((success: string) => {
         this.messageInfoService.showSuccess(success);
@@ -417,7 +417,7 @@ export class AdminResultsComponent {
         catchError((error) => {
           this.messageInfoService.showError(error, error);
           console.error(error);
-          return of("");
+          return EMPTY;
         })
       ).subscribe((success: string) => {
         this.messageInfoService.showSuccess(success);

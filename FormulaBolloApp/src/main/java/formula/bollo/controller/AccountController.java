@@ -1,5 +1,8 @@
 package formula.bollo.controller;
 
+import java.security.Principal;
+
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,7 +57,12 @@ public class AccountController {
 
     @Operation(summary = "Change Password", tags = Constants.TAG_ACCOUNT)
     @PostMapping(path = "/changePassword", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> changePassword(@RequestParam String username, @RequestParam String password) {
+    public ResponseEntity<String> changePassword(@RequestParam String username, @RequestParam String password,
+            Principal principal) {
+        if (principal == null || !principal.getName().equals(username)) {
+            log.warn("Intento de cambiar la contraseña de " + username + " con un token de otro usuario");
+            return new ResponseEntity<>("No puedes cambiar la contraseña de otro usuario", HttpStatusCode.valueOf(403));
+        }
         log.info("Se va a cambiar la contraseña de " + username);
         return this.accountService.changePassword(username, password);
     }

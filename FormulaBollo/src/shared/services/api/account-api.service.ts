@@ -31,10 +31,11 @@ export class AccountApiService {
     return this.httpClient.post<string>(`${environment.apiUrl}${this.endpoint}/register`, account, { headers, responseType: "text" as "json" });
   }
 
-  changePassword(username: string, password: string): Observable<string> {
+  changePassword(username: string, password: string, token: string): Observable<string> {
     const headers = new HttpHeaders({
       "Content-Type": "application/json",
       Accept: "text/plain",
+      Authorization: `Bearer ${token}`,
     });
 
     const params = this.baseApiService.createParams({ username: username, password: password });

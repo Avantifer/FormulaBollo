@@ -63,7 +63,7 @@ export class FantasyRecoverPasswordComponent {
     const password: string = this.recoverPasswordForm.get("password1")?.value;
 
     this.accountApiService
-      .changePassword(username, password)
+      .changePassword(username, password, this.token)
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {

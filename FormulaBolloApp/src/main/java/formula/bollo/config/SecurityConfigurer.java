@@ -49,6 +49,8 @@ public class SecurityConfigurer {
         http.csrf(csrf -> csrf.ignoringRequestMatchers("/**"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/ws/**").permitAll()
+                        // El token del correo de recuperación (o de sesión) debe acompañar al cambio de contraseña.
+                        .requestMatchers(HttpMethod.POST, "/account/changePassword").authenticated()
                         .requestMatchers(HttpMethod.POST, "/account/**", "/cache/**",
                                 "/results/totalPerSpecificDrivers/**", "/fantasy/**")
                         .permitAll()
