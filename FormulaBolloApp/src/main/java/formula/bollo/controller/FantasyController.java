@@ -1,5 +1,7 @@
 package formula.bollo.controller;
 
+import org.springframework.cache.annotation.Cacheable;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -153,6 +155,7 @@ public class FantasyController {
 
     @Operation(summary = "Get all fantasy points of season")
     @GetMapping(path = "/getFantasyPointsSeason", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Cacheable(cacheNames = Constants.CACHE_STATS, key = "'fantasyPointsSeason:' + #numberSeason")
     public List<FantasyPointsAccountDTO> getFantasyPointsSeason(@RequestParam Integer numberSeason) {
         log.info("Coger los puntos del fantasy de la temporada " + numberSeason);
         return this.fantasyService.sumAllFantasyPoints(numberSeason);

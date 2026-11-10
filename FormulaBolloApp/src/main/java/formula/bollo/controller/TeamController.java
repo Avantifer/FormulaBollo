@@ -1,5 +1,7 @@
 package formula.bollo.controller;
 
+import org.springframework.cache.annotation.Cacheable;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -76,6 +78,7 @@ public class TeamController {
 
     @Operation(summary = "Get all info of teams", tags = Constants.TAG_TEAM)
     @GetMapping(path = "/allInfoTeam", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Cacheable(cacheNames = Constants.CACHE_STATS, key = "'allInfoTeam:' + #season")
     public List<TeamInfoDTO> getAllInfoTeam(@RequestParam Integer season) {
         log.info("Coger la informacion de los equipos de la temporada " + season);
         List<Team> teams = (season == 0) ? teamRepository.findAll() : teamRepository.findBySeason(season);

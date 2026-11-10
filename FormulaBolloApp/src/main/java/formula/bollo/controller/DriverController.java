@@ -1,5 +1,7 @@
 package formula.bollo.controller;
 
+import org.springframework.cache.annotation.Cacheable;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -71,6 +73,7 @@ public class DriverController {
 
     @Operation(summary = "Get all info of drivers", tags = Constants.TAG_DRIVER)
     @GetMapping(path = "/allInfoDriver", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Cacheable(cacheNames = Constants.CACHE_STATS, key = "'allInfoDriver:' + #season")
     public List<DriverInfoDTO> getAllInfoDriver(@RequestParam Integer season) {
         log.info("Se coge toda la informacion de los pilotos de la temporada " + season);
         List<Driver> drivers = (season == 0) ? driverRepository.findAll() : driverRepository.findAllBySeason(season);

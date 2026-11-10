@@ -1,5 +1,7 @@
 package formula.bollo.service;
 
+import org.springframework.cache.annotation.CacheEvict;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -89,6 +91,7 @@ public class FantasyService {
      * @param raceId the ID of the race for which points need to be saved
      * @return a ResponseEntity containing a success message or error message.
      */
+    @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public ResponseEntity<String> saveDriverTeamPoints(int raceId) {
         List<Result> results = this.resultRepository.findByRaceId(raceId);
         List<FantasyPointsDriver> fantasyDriversPrevious = this.fantasyPointsDriverRepository.findByRaceId(raceId);
@@ -121,6 +124,7 @@ public class FantasyService {
      * @param raceId the ID of the current race to use for price calculations
      * @return a ResponseEntity containing a success message or error message.
      */
+    @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public ResponseEntity<String> saveDriverTeamPrices(int raceId) {
         List<Result> results = this.resultRepository.findByRaceId(raceId);
         Optional<Race> nextRace = this.raceRepository.findById((long) (raceId + 1));
@@ -160,6 +164,7 @@ public class FantasyService {
      * @return a ResponseEntity containing a success message if the election is
      *         saved correctly
      */
+    @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public ResponseEntity<String> saveFantasyElection(FantasyElectionDTO fantasyElectionDTO) {
         FantasyElection fantasyElection = this.fantasyElectionImpl
                 .fantasyElectionDTOToFantasyElection(fantasyElectionDTO);
