@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, effect, EventEmitter, inject, Input, input, InputSignal, Output } from '@angular/core';
 import { MessageInfoService } from '../../services/toastInfo.service';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -13,11 +13,10 @@ import { TeamApiService } from '../../services/api/team-api.service';
 @Component({
   selector: 'select-teams',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     SelectModule,
     SpaceToUnderscorePipe
-  ],
+],
   templateUrl: './select-teams.component.html',
   styleUrls: ['./select-teams.component.scss']
 })

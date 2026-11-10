@@ -8,11 +8,11 @@
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<div>
 					<p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Temporada</p>
-					<select-seasons (seasonChanged)="onSeasonChange($event)" [fantasy]="true"></select-seasons>
+					<select-seasons (seasonChanged)="onSeasonChange($event)" [fantasy]="true" />
 				</div>
 				<div>
 					<p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Circuito</p>
-					<select-races (raceChanged)="onRaceChange($event)" [season]="seasonSelected()!" [fantasy]="true"></select-races>
+					<select-races (raceChanged)="onRaceChange($event)" [season]="seasonSelected()!" [fantasy]="true" />
 				</div>
 			</div>
 		</div>
@@ -63,7 +63,7 @@
 								label="Ver Equipo"
 								class="fantasyClasificationButton text-white"
 								(click)="openDialog(fantasyPointUser)"
-								onkeydown="openDialog(fantasyPointUser)"></p-button>
+								onkeydown="openDialog(fantasyPointUser)" />
 						</td>
 						<td
 							class="dark:bg-slate-800 text-sm dark:border-gray-500!"
@@ -93,7 +93,7 @@
 							<div class="text-2xl font-bold text-white">{{ showAllPoints() }}</div>
 							<div class="text-xs text-blue-100">Puntos Totales</div>
 						</div>
-						<p-button icon="pi pi-times" (click)="showDialog = false" onkeydown="showDialog = false" class="closeDialog"></p-button>
+						<p-button icon="pi pi-times" (click)="showDialog = false" onkeydown="showDialog = false" class="closeDialog" />
 					</div>
 				</div>
 			</ng-template>

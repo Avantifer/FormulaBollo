@@ -1,13 +1,13 @@
 import { HttpParams } from "@angular/common/http";
-import { Injectable } from "@angular/core";
+import { Injectable, inject } from "@angular/core";
 import { CacheService } from "./cache.service";
 
 @Injectable({
   providedIn: "root",
 })
 export class BaseApiService  {
+  private readonly cacheService = inject(CacheService);
 
-  constructor(private readonly cacheService: CacheService) { }
 
   public createParams(params: { [key: string]: any }): HttpParams {
     let httpParams = new HttpParams();

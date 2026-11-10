@@ -3,7 +3,7 @@
 	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
 		<div>
 			<p class="text-sm font-medium mb-2">Circuito</p>
-			<select-races [season]="actualSeason" class="w-full" (raceChanged)="onRaceChange($event)"></select-races>
+			<select-races [season]="actualSeason" class="w-full" (raceChanged)="onRaceChange($event)" />
 		</div>
 		<div>
 			<p class="text-sm font-medium mb-2">Fecha y Hora de la carrera</p>
@@ -12,14 +12,11 @@
 		@if (!isSprint) {
 			<div>
 				<p class="text-sm font-medium mb-2">Piloto con Vuelta Rápida</p>
-				<select-drivers
-					(driverChanged)="onDriverChangeFastLap($event)"
-					[season]="actualSeason"
-					[driverId]="fastlapDriver?.id"></select-drivers>
+				<select-drivers (driverChanged)="onDriverChangeFastLap($event)" [season]="actualSeason" [driverId]="fastlapDriver?.id" />
 			</div>
 			<div>
 				<p class="text-sm font-medium mb-2">Piloto con la Pole</p>
-				<select-drivers (driverChanged)="onDriverChangePole($event)" [season]="actualSeason" [driverId]="poleDriver?.id"></select-drivers>
+				<select-drivers (driverChanged)="onDriverChangePole($event)" [season]="actualSeason" [driverId]="poleDriver?.id" />
 			</div>
 		}
 	</div>
@@ -35,7 +32,7 @@
 							(driverChanged)="onDriverChangeResult($event, $index)"
 							[season]="actualSeason"
 							[driverId]="result.driver.id"
-							class="flex-1"></select-drivers>
+							class="flex-1" />
 					</div>
 				}
 			}
@@ -55,7 +52,7 @@
 							(driverChanged)="onDriverChangeResult($event, $index)"
 							[season]="actualSeason"
 							[driverId]="result.driver.id"
-							class="flex-1"></select-drivers>
+							class="flex-1" />
 					</div>
 				}
 			}
@@ -65,7 +62,7 @@
 			@for (i of emptyResults; track $index) {
 				<div class="flex items-center gap-2">
 					<p class="text-sm w-8 text-right font-semibold">P{{ $index + 1 }}</p>
-					<select-drivers (driverChanged)="onDriverChangeResult($event, $index)" [season]="actualSeason" class="flex-1"></select-drivers>
+					<select-drivers (driverChanged)="onDriverChangeResult($event, $index)" [season]="actualSeason" class="flex-1" />
 				</div>
 			}
 		</div>
@@ -80,7 +77,7 @@
 							(driverChanged)="onDriverChangeResult($event, $index)"
 							[season]="actualSeason"
 							[driverId]="sprint.driver.id"
-							class="flex-1"></select-drivers>
+							class="flex-1" />
 					</div>
 				}
 			}
@@ -100,7 +97,7 @@
 							(driverChanged)="onDriverChangeResult($event, $index)"
 							[season]="actualSeason"
 							[driverId]="sprint.driver.id"
-							class="flex-1"></select-drivers>
+							class="flex-1" />
 					</div>
 				}
 			}
@@ -110,7 +107,7 @@
 			@for (i of emptyResults; track $index) {
 				<div class="flex items-center gap-2">
 					<p class="text-sm w-8 text-right font-semibold">P{{ $index + 1 }}</p>
-					<select-drivers (driverChanged)="onDriverChangeResult($event, $index)" [season]="actualSeason" class="flex-1"></select-drivers>
+					<select-drivers (driverChanged)="onDriverChangeResult($event, $index)" [season]="actualSeason" class="flex-1" />
 				</div>
 			}
 		</div>
@@ -142,7 +139,7 @@
 			</div>
 		</ng-template>
 		<span class="text-surface-500 dark:text-surface-400 block mb-8">¿Estás seguro de que quieres borrar todos los resultados?</span>
-		<p-divider></p-divider>
+		<p-divider />
 		<ng-template #footer>
 			<p-button label="Cancelar" (click)="visible = false" onkeydown="visible = flase" class="w-50" />
 			<p-button label="Borrar todo" icon="pi pi-trash" (click)="deleteResults()" onkeydown="deleteResults()" class="deleteResults w-50" />

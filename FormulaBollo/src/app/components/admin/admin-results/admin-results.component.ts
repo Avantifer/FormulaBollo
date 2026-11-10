@@ -4,7 +4,7 @@ import { SelectRacesComponent } from '../../../../shared/components/select-races
 import { Season } from '../../../../shared/models/season';
 import { environment } from '../../../../enviroments/enviroment';
 import { DatePicker } from 'primeng/datepicker';
-import { CommonModule } from '@angular/common';
+
 import { Race } from '../../../../shared/models/race';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SelectDriversComponent } from '../../../../shared/components/select-drivers/select-drivers.component';
@@ -28,7 +28,6 @@ import { FantasyApiService } from '../../../../shared/services/api/fantasy-api.s
 @Component({
   selector: 'app-admin-results',
   imports: [
-    CommonModule,
     FormsModule,
     ReactiveFormsModule,
     DatePicker,
@@ -37,7 +36,7 @@ import { FantasyApiService } from '../../../../shared/services/api/fantasy-api.s
     DividerModule,
     DialogModule,
     ButtonModule
-  ],
+],
   templateUrl: './admin-results.component.html',
   styleUrl: './admin-results.component.scss'
 })

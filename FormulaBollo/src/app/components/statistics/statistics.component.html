@@ -13,8 +13,7 @@
 									buttonStatisticsSelected: selectedTab === tab.value,
 									buttonStatistics: selectedTab !== tab.value
 								}"
-								class="text-sm rounded-md cursor-pointer justify-center">
-							</p-button>
+								class="text-sm rounded-md cursor-pointer justify-center" />
 						}
 					</div>
 				</div>
@@ -32,24 +31,22 @@
 					<div class="flex flex-wrap gap-4">
 						<div class="w-full md:w-auto">
 							@if (selectedTab != 'records') {
-								<select-seasons
-									*ngIf="selectedTab"
-									(seasonChanged)="onSeasonChange($event)"
-									[statistics]="selectedTab"
-									class="w-50 md:w-auto"></select-seasons>
+								@if (selectedTab) {
+									<select-seasons (seasonChanged)="onSeasonChange($event)" [statistics]="selectedTab" class="w-50 md:w-auto" />
+								}
 							}
 						</div>
 					</div>
 				</div>
 			</div>
 			@if (selectedTab === 'records') {
-				<app-records></app-records>
+				<app-records />
 			} @else if (selectedTab === 'general') {
-				<app-general-stats [seasonSelected]="seasonSelected" [typeSelected]="typeSelected"></app-general-stats>
+				<app-general-stats [seasonSelected]="seasonSelected" [typeSelected]="typeSelected" />
 			} @else if (selectedTab === 'evolucion') {
-				<app-evolution-stats [seasonSelected]="seasonEvolucionSelected" [typeSelected]="typeSelected"></app-evolution-stats>
+				<app-evolution-stats [seasonSelected]="seasonEvolucionSelected" [typeSelected]="typeSelected" />
 			} @else if (selectedTab === 'comparative') {
-				<app-comparative-stats [seasonSelected]="seasonEvolucionSelected" [typeSelected]="typeSelected"></app-comparative-stats>
+				<app-comparative-stats [seasonSelected]="seasonEvolucionSelected" [typeSelected]="typeSelected" />
 			}
 		</div>
 	</main>

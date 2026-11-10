@@ -10,19 +10,18 @@ import { SpaceToUnderscorePipe } from "../../../../shared/pipes/spaceToUnderscor
 import { SkeletonModule } from 'primeng/skeleton';
 import { ImageService } from '../../../../shared/services/image.service';
 import { SkeletonItemsPipe } from '../../../../shared/pipes/skeletonItems.pipe';
-import { CommonModule } from '@angular/common';
+
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CacheService } from '../../../../shared/services/cache.service';
 
 @Component({
   selector: 'app-home-teams',
   imports: [
-    CommonModule,
     RouterModule,
     SkeletonModule,
     SkeletonItemsPipe,
     SpaceToUnderscorePipe
-  ],
+],
   templateUrl: './home-teams.component.html',
   styleUrl: './home-teams.component.scss'
 })

@@ -17,7 +17,7 @@
 			<div class="p-4">
 				<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
 					<div class="flex items-center gap-4 min-w-[225px]">
-						<select-races class="w-full" (raceChanged)="onRaceChange($event)" [fantasyTeam]="true"></select-races>
+						<select-races class="w-full" (raceChanged)="onRaceChange($event)" [fantasyTeam]="true" />
 					</div>
 					@if (isLastRace) {
 						<div class="text-right">
@@ -146,7 +146,7 @@
 									label="Guardar equipo"
 									class="saveElection text-white font-bold"
 									(click)="saveFantasyElecion()"
-									onkeydown="saveFantasyElecion()"></p-button>
+									onkeydown="saveFantasyElecion()" />
 							}
 						</div>
 					</div>
@@ -284,7 +284,7 @@
 													class="addDriver text-white"
 													(click)="addDriverToSelection(fantasyPricesDriver)"
 													onkeydown="addDriverToSelection(fantasyPricesDriver)"
-													[disabled]="isDriverSelected(fantasyPricesDriver.driver) || selectedDriversCount() === 3"></p-button>
+													[disabled]="isDriverSelected(fantasyPricesDriver.driver) || selectedDriversCount() === 3" />
 											</div>
 										</div>
 									</div>
@@ -379,7 +379,7 @@
 													class="addTeam text-white"
 													(click)="addTeamToSelection(fantasyPricesTeam)"
 													onkeydown="addTeamToSelection(fantasyPricesTeam)"
-													[disabled]="isTeamSelected(fantasyPricesTeam.team) || selectedTeamsCount() === 2"></p-button>
+													[disabled]="isTeamSelected(fantasyPricesTeam.team) || selectedTeamsCount() === 2" />
 											</div>
 										</div>
 									</div>
@@ -401,11 +401,7 @@
 			[style]="{ width: '60rem', 'max-width': '95vw' }">
 			<ng-template #header>
 				<h2 class="text-xl font-bold text-gray-900 dark:text-white flex-1">Evolución de Precio - {{ driverPriceData.driver.name }}</h2>
-				<p-button
-					icon="pi pi-times"
-					(click)="showDriverPricesData = false"
-					onkeydown="showDriverPricesData = false"
-					class="closeDialog"></p-button>
+				<p-button icon="pi pi-times" (click)="showDriverPricesData = false" onkeydown="showDriverPricesData = false" class="closeDialog" />
 			</ng-template>
 			<div class="mb-2 xs:mb-3 sm:mb-4">
 				<div class="flex items-center gap-3">
@@ -431,7 +427,7 @@
 				</div>
 			</div>
 			<div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 xs:p-3 sm:p-4">
-				<p-chart type="line" [data]="dataDriversEvolutionPrice" [options]="lineChartOptions" style="width: 100%; height: 100%"></p-chart>
+				<p-chart type="line" [data]="dataDriversEvolutionPrice" [options]="lineChartOptions" style="width: 100%; height: 100%" />
 				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
 					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
 						<div class="text-gray-500 dark:text-gray-400">Precio inicial</div>
@@ -455,11 +451,7 @@
 			[style]="{ width: '60rem', 'max-width': '95vw' }">
 			<ng-template #header>
 				<h2 class="text-xl font-bold text-gray-900 dark:text-white flex-1">Evolución de Precio - {{ teamPriceData.team.name }}</h2>
-				<p-button
-					icon="pi pi-times"
-					(click)="showTeamPricesData = false"
-					onkeydown="showTeamPricesData = false"
-					class="closeDialog"></p-button>
+				<p-button icon="pi pi-times" (click)="showTeamPricesData = false" onkeydown="showTeamPricesData = false" class="closeDialog" />
 			</ng-template>
 			<div class="mb-2 xs:mb-3 sm:mb-4">
 				<div class="flex items-center gap-3">
@@ -493,7 +485,7 @@
 				</div>
 			</div>
 			<div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 xs:p-3 sm:p-4">
-				<p-chart type="line" [data]="dataTeamsEvolutionPrice" [options]="lineChartOptions" style="width: 100%; height: 100%"></p-chart>
+				<p-chart type="line" [data]="dataTeamsEvolutionPrice" [options]="lineChartOptions" style="width: 100%; height: 100%" />
 				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
 					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
 						<div class="text-gray-500 dark:text-gray-400">Precio inicial</div>
@@ -517,11 +509,7 @@
 			[style]="{ width: '60rem', 'max-width': '95vw' }">
 			<ng-template #header>
 				<h2 class="text-xl font-bold text-gray-900 dark:text-white flex-1">Evolución de Puntos - {{ driverPointData.driver.name }}</h2>
-				<p-button
-					icon="pi pi-times"
-					(click)="showDriverPointsData = false"
-					onkeydown="showDriverPointsData = false"
-					class="closeDialog"></p-button>
+				<p-button icon="pi pi-times" (click)="showDriverPointsData = false" onkeydown="showDriverPointsData = false" class="closeDialog" />
 			</ng-template>
 			<div class="mb-2 xs:mb-3 sm:mb-4">
 				<div class="flex items-center gap-3">
@@ -547,7 +535,7 @@
 				</div>
 			</div>
 			<div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 xs:p-3 sm:p-4">
-				<p-chart type="line" [data]="dataDriversEvolutionPoints" [options]="lineChartOptions" style="width: 100%; height: 100%"></p-chart>
+				<p-chart type="line" [data]="dataDriversEvolutionPoints" [options]="lineChartOptions" style="width: 100%; height: 100%" />
 				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
 					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
 						<div class="text-gray-500 dark:text-gray-400">Puntos por carrera</div>
@@ -571,11 +559,7 @@
 			[style]="{ width: '60rem', 'max-width': '95vw' }">
 			<ng-template #header>
 				<h2 class="text-xl font-bold text-gray-900 dark:text-white flex-1">Evolución de Puntos - {{ teamPointData.team.name }}</h2>
-				<p-button
-					icon="pi pi-times"
-					(click)="showTeamPointsData = false"
-					onkeydown="showTeamPointsData = false"
-					class="closeDialog"></p-button>
+				<p-button icon="pi pi-times" (click)="showTeamPointsData = false" onkeydown="showTeamPointsData = false" class="closeDialog" />
 			</ng-template>
 			<div class="mb-2 xs:mb-3 sm:mb-4">
 				<div class="flex items-center gap-3">
@@ -609,7 +593,7 @@
 				</div>
 			</div>
 			<div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 xs:p-3 sm:p-4">
-				<p-chart type="line" [data]="dataTeamsEvolutionPoints" [options]="lineChartOptions" style="width: 100%; height: 100%"></p-chart>
+				<p-chart type="line" [data]="dataTeamsEvolutionPoints" [options]="lineChartOptions" style="width: 100%; height: 100%" />
 				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
 					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
 						<div class="text-gray-500 dark:text-gray-400">Puntos por carrera</div>

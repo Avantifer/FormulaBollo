@@ -3,15 +3,15 @@
 	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
 		<div>
 			<p class="text-sm font-medium mb-2">Circuito</p>
-			<select-races [season]="actualSeason" class="w-full" (raceChanged)="onRaceChange($event)"></select-races>
+			<select-races [season]="actualSeason" class="w-full" (raceChanged)="onRaceChange($event)" />
 		</div>
 		<div>
 			<p class="text-sm font-medium mb-2">Piloto</p>
-			<select-drivers (driverChanged)="onDriverChange($event)" [season]="actualSeason"></select-drivers>
+			<select-drivers (driverChanged)="onDriverChange($event)" [season]="actualSeason" />
 		</div>
 		<div>
 			<p class="text-sm font-medium mb-2">Gravedad de la Penalización</p>
-			<select-penalty-severities (penaltySeverityChanged)="onPenaltySeverityChange($event)"></select-penalty-severities>
+			<select-penalty-severities (penaltySeverityChanged)="onPenaltySeverityChange($event)" />
 		</div>
 	</div>
 	<div>
@@ -36,7 +36,7 @@
 	<div class="flex justify-end mt-8">
 		<p-button label="Guardar Penalizaciones" (click)="savePenalties()" onkeydown="savePenalties()" class="savePenalties text-white" />
 	</div>
-	<p-divider></p-divider>
+	<p-divider />
 	<h1 class="text-2xl font-bold mt-7">Penalizaciones Existentes</h1>
 	<p-table [value]="penaltiesTable()" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }" class="mb-4 penaltiesTable">
 		<ng-template #header>
@@ -104,7 +104,7 @@
 				<strong>Tip:</strong> Cada frase separada por punto se considerará una penalización independiente para el mismo piloto.
 			</span>
 		</div>
-		<p-divider></p-divider>
+		<p-divider />
 		<ng-template #footer>
 			<p-button label="Entendido" [outlined]="false" (click)="visible = false" onkeydown="visible = flase" />
 		</ng-template>

@@ -11,19 +11,18 @@ import { SkeletonItemsPipe } from '../../../../shared/pipes/skeletonItems.pipe';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CacheService } from '../../../../shared/services/cache.service';
 import { UtilsService } from '../../../../shared/services/utils.service';
-import { CommonModule } from '@angular/common';
+
 import { Top3DriversComponent } from "./top3-drivers/top3-drivers.component";
 import { Top10DriversComponent } from "./top10-drivers/top10-drivers.component";
 
 @Component({
   selector: 'app-home-drivers',
   imports: [
-    CommonModule,
     SkeletonModule,
     SkeletonItemsPipe,
     Top3DriversComponent,
     Top10DriversComponent
-  ],
+],
   templateUrl: './home-drivers.component.html',
   styleUrl: './home-drivers.component.scss'
 })

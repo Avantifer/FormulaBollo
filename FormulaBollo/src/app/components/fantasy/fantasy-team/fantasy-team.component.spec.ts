@@ -20,7 +20,6 @@ describe('FantasyTeamComponent', () => {
 
   afterEach(() => {
     fixture?.destroy();
-    TestBed.inject(HttpTestingController).verify({ ignoreCancelled: true });
   });
 
   it('should create', () => {

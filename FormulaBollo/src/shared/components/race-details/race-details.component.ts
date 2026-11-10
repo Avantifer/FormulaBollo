@@ -5,12 +5,12 @@ import { RaceApiService } from '../../services/api/race-api.service';
 import { environment } from '../../../enviroments/enviroment';
 import { ERROR_RACE_FETCH } from '../../../app/constants';
 import { catchError } from 'rxjs';
-import { CommonModule } from '@angular/common';
+
 import { UtilsService } from '../../services/utils.service';
 
 @Component({
   selector: 'race-details',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './race-details.component.html',
   styleUrl: './race-details.component.scss'
 })

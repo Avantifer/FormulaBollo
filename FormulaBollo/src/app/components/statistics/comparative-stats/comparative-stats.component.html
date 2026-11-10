@@ -5,7 +5,7 @@
 				<div class="my-3">
 					<div>
 						<span class="block text-lg font-semibold mb-2">Piloto {{ $index + 1 }}</span>
-						<select-drivers (driverChanged)="onDriverChange($event, $index)" [position]="$index" [season]="seasonSelected"></select-drivers>
+						<select-drivers (driverChanged)="onDriverChange($event, $index)" [position]="$index" [season]="seasonSelected" />
 					</div>
 				</div>
 			</div>
@@ -16,7 +16,7 @@
 				<div class="my-3">
 					<div>
 						<span class="block text-lg font-semibold mb-2">Escudería {{ $index + 1 }}</span>
-						<select-teams (teamChanged)="onTeamChange($event, $index)" [position]="$index" [season]="seasonSelected"></select-teams>
+						<select-teams (teamChanged)="onTeamChange($event, $index)" [position]="$index" [season]="seasonSelected" />
 					</div>
 				</div>
 			</div>
@@ -30,8 +30,8 @@
 			<h2 class="text-xl font-bold text-black dark:text-white">Media de puntos por carrera</h2>
 		</div>
 		<div class="h-[600px] lg:h-[400px]">
-			<p-chart type="bar" [data]="comparisonChartData" [options]="comparisonChartOptions" class="hidden! lg:block!"></p-chart>
-			<p-chart type="bar" [data]="comparisonChartData" [options]="comparisonChartOptionsMobile" class="block! lg:hidden!"></p-chart>
+			<p-chart type="bar" [data]="comparisonChartData" [options]="comparisonChartOptions" class="hidden! lg:block!" />
+			<p-chart type="bar" [data]="comparisonChartData" [options]="comparisonChartOptionsMobile" class="block! lg:hidden!" />
 		</div>
 	</div>
 	@if (driversInfo.length === 2 || teamsInfo.length === 2) {

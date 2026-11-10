@@ -21,23 +21,25 @@
 						" />
 					<div class="flex flex-col" [class]="teamPoints.positionChangeAmount === 0 ? 'justify-center' : ''">
 						<h3 class="font-bold text-slate-800 dark:text-white">{{ teamPoints.team.name }}</h3>
-						<div class="flex items-center" *ngIf="teamPoints.positionChangeAmount != 0">
-							<i
-								style="font-size: 0.55rem"
-								class="pi"
-								[ngClass]="{
-									'pi-arrow-up text-green-500': teamPoints.positionChange === 'ADVANCED',
-									'pi-arrow-down text-red-500': teamPoints.positionChange === 'DROPPED'
-								}"></i>
-							<p
-								class="text-xs ml-0.5"
-								[ngClass]="{
-									'text-green-500': teamPoints.positionChange === 'ADVANCED',
-									'text-red-500': teamPoints.positionChange === 'DROPPED'
-								}">
-								{{ teamPoints.positionChangeAmount }}
-							</p>
-						</div>
+						@if (teamPoints.positionChangeAmount != 0) {
+							<div class="flex items-center">
+								<i
+									style="font-size: 0.55rem"
+									class="pi"
+									[ngClass]="{
+										'pi-arrow-up text-green-500': teamPoints.positionChange === 'ADVANCED',
+										'pi-arrow-down text-red-500': teamPoints.positionChange === 'DROPPED'
+									}"></i>
+								<p
+									class="text-xs ml-0.5"
+									[ngClass]="{
+										'text-green-500': teamPoints.positionChange === 'ADVANCED',
+										'text-red-500': teamPoints.positionChange === 'DROPPED'
+									}">
+									{{ teamPoints.positionChangeAmount }}
+								</p>
+							</div>
+						}
 					</div>
 				</div>
 			</div>
@@ -70,8 +72,8 @@
 				</div>
 			</div>
 
-			<p-divider [styleClass]="'hidden! lg:block!'" layout="vertical"> </p-divider>
-			<p-divider [styleClass]="'lg:hidden!'" layout="horizontal"> </p-divider>
+			<p-divider [styleClass]="'hidden! lg:block!'" layout="vertical" />
+			<p-divider [styleClass]="'lg:hidden!'" layout="horizontal" />
 
 			<div class="flex items-center space-x-2 w-full lg:w-1/2 pr-2">
 				<div class="flex-shrink-0">
