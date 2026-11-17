@@ -180,6 +180,36 @@ class DriverServiceTest {
     }
 
     @Test
+    void sumDuplicatesKeepsTheBestPositionWeightsTheAverageAndMergesLastResults() {
+        SeasonDTO season1 = new SeasonDTO(1L, "Temporada 1", 1, "2023");
+        SeasonDTO season2 = new SeasonDTO(2L, "Temporada 2", 2, "2024");
+        DriverDTO driver1 = new DriverDTO(1L, "Ana", 1, "", season1, null);
+        DriverDTO driver2 = new DriverDTO(2L, "Ana", 1, "", season2, null);
+        DriverDTO driver3 = new DriverDTO(3L, "Ana", 1, "", season2, null);
+        // 10 carreras (media 4,0, mejor 1), 30 carreras (media 8,0, mejor 8) y una entrada sin carreras (mejor 0).
+        DriverInfoDTO first = new DriverInfoDTO(driver1, 0, 0, 10, 0, 0, 0, 1, 0, 0, 4.0, List.of(
+                resultOn(1L, 2023, 12), resultOn(2L, 2023, 11), resultOn(3L, 2023, 10), resultOn(4L, 2023, 9),
+                resultOn(5L, 2023, 8)));
+        DriverInfoDTO second = new DriverInfoDTO(driver2, 0, 0, 30, 0, 0, 0, 8, 0, 0, 8.0, List.of(
+                resultOn(6L, 2024, 3), resultOn(7L, 2024, 2), resultOn(8L, 2024, 1)));
+        DriverInfoDTO empty = new DriverInfoDTO(driver3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, List.of());
+
+        DriverInfoDTO merged = driverService.sumDuplicates(Arrays.asList(first, second, empty)).get(0);
+
+        assertEquals(1, merged.getBestPosition());
+        assertEquals(40, merged.getRacesFinished());
+        assertEquals(7.0, merged.getAveragePosition(), 0.0001); // (4,0 * 10 + 8,0 * 30) / 40
+        assertEquals(List.of(6L, 7L, 8L, 1L, 2L),
+                merged.getLast5Results().stream().map(formula.bollo.model.ResultDTO::getId).toList());
+    }
+
+    private static formula.bollo.model.ResultDTO resultOn(long id, int year, int month) {
+        formula.bollo.model.RaceDTO race = new formula.bollo.model.RaceDTO(id, "GP", "", "",
+                LocalDateTime.of(year, month, 1, 12, 0), null, 1);
+        return new formula.bollo.model.ResultDTO(id, race, null, null, 0, 0);
+    }
+
+    @Test
     void getAllRecords() {
         Season season = new Season(2L, "Temporada 3", 2, 2025);
         Team team = new Team(1L, "Haas", "", "", season);

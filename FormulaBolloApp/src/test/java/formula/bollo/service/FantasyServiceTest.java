@@ -149,10 +149,57 @@ class FantasyServiceTest {
     }
 
     @Test
-    void saveDriverTeamPricesNextRaceEmpty() {
-        ResponseEntity<String> response = fantasyService.saveDriverTeamPrices(0);
+    void saveDriverTeamPricesUnknownRaceIsNotFound() {
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> fantasyService.saveDriverTeamPrices(0));
 
-        assertEquals("No se ha encontrado la siguiente carrera", response.getBody());
+        assertEquals(404, error.getStatusCode().value());
+        verifyNoInteractions(fantasyPriceDriverRepository, fantasyPriceTeamRepository);
+    }
+
+    @Test
+    void saveDriverTeamPricesAfterTheLastRaceOfTheSeasonIsNotAnError() {
+        Season season = new Season(2L, "Temporada 3", 2, 2025);
+        Race earlier = new Race(1L, "Francia", "", "", LocalDateTime.of(2025, 3, 1, 12, 0), season, 1);
+        Race last = new Race(2L, "Italia", "", "", LocalDateTime.of(2025, 3, 8, 12, 0), season, 1);
+        when(raceRepository.findById(2L)).thenReturn(Optional.of(last));
+        when(raceRepository.findBySeason(2)).thenReturn(List.of(last, earlier));
+
+        ResponseEntity<String> response = fantasyService.saveDriverTeamPrices(2);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("Era la última carrera de la temporada: no hay precios que calcular", response.getBody());
+        verifyNoInteractions(fantasyPriceDriverRepository, fantasyPriceTeamRepository);
+    }
+
+    @Test
+    void saveDriverTeamPricesUsesTheNextRaceOfTheCalendarNotRaceIdPlusOne() {
+        Season season = new Season(2L, "Temporada 3", 2, 2025);
+        Team team = new Team(1L, "Haas", "", "", season);
+        Driver driver = new Driver(1L, "Avantifer", 2, "", season, team);
+        Race earlier = new Race(5L, "Francia", "", "", LocalDateTime.of(2025, 2, 22, 12, 0), season, 1);
+        Race race = new Race(10L, "Italia", "", "", LocalDateTime.of(2025, 3, 1, 12, 0), season, 1);
+        // Los ids no son contiguos: tras la 10 viene la 40 por fecha, y la 11 no existe en esta temporada.
+        Race next = new Race(40L, "Bakú", "", "", LocalDateTime.of(2025, 3, 8, 12, 0), season, 0);
+        Race afterNext = new Race(41L, "Monza", "", "", LocalDateTime.of(2025, 3, 15, 12, 0), season, 0);
+        Result result = new Result(1L, race, driver, new Position(1L, 1, 25), 1, 1);
+        FantasyPriceDriver price = new FantasyPriceDriver(1L, driver, race, 2_000_000);
+        FantasyPointsDriver points = new FantasyPointsDriver(1L, driver, race, 5);
+
+        when(resultRepository.findByRaceId(10)).thenReturn(List.of(result));
+        when(raceRepository.findById(10L)).thenReturn(Optional.of(race));
+        when(raceRepository.findBySeason(2)).thenReturn(List.of(afterNext, earlier, next, race));
+        when(fantasyPriceDriverRepository.findByRaceId(anyInt())).thenReturn(List.of(price));
+        when(fantasyPointsDriverRepository.findByRaceId(anyInt())).thenReturn(List.of(points));
+
+        ResponseEntity<String> response = fantasyService.saveDriverTeamPrices(10);
+
+        assertEquals("Precios guardados correctamente", response.getBody());
+        verify(fantasyPriceDriverRepository).findByRaceId(40); // los precios que se reemplazan son los de la carrera 40
+        verify(fantasyPriceTeamRepository).findByRaceId(40);
+        org.mockito.ArgumentCaptor<List<FantasyPriceDriver>> saved = org.mockito.ArgumentCaptor.forClass(List.class);
+        verify(fantasyPriceDriverRepository).saveAll(saved.capture());
+        assertEquals(40L, saved.getValue().getFirst().getRace().getId());
     }
 
     @Test
@@ -160,7 +207,10 @@ class FantasyServiceTest {
         Season season = new Season(2L, "Temporada 3", 2, 2025);
         Race race = new Race(1L, "Francia", "", "", LocalDateTime.now(), season, 0);
 
+        Race next = new Race(2L, "Italia", "", "", LocalDateTime.now().plusDays(7), season, 0);
+
         when(raceRepository.findById(anyLong())).thenReturn(Optional.of(race));
+        when(raceRepository.findBySeason(2)).thenReturn(List.of(race, next));
 
         ResponseEntity<String> response = fantasyService.saveDriverTeamPrices(0);
 
@@ -181,7 +231,9 @@ class FantasyServiceTest {
         FantasyPointsDriver fantasyPointsDriver = new FantasyPointsDriver(1L, driver, race, 5);
 
         when(resultRepository.findByRaceId(anyInt())).thenReturn(Arrays.asList(result, result2));
+        Race next = new Race(2L, "Italia", "", "", LocalDateTime.now().plusDays(7), season, 0);
         when(raceRepository.findById(anyLong())).thenReturn(Optional.of(race));
+        when(raceRepository.findBySeason(2)).thenReturn(List.of(race, next));
         when(fantasyPriceDriverRepository.findByRaceId(anyInt())).thenReturn(Arrays.asList(fantasyPriceDriver));
         when(fantasyPointsDriverRepository.findByRaceId(anyInt())).thenReturn(Arrays.asList(fantasyPointsDriver));
         ResponseEntity<String> response = fantasyService.saveDriverTeamPrices(0);
@@ -523,17 +575,8 @@ class FantasyServiceTest {
         FantasyPriceDriverDTO fantasyPriceDriverDTO = new FantasyPriceDriverDTO(1L, driverDTO, raceDTO, 2000,
                 fantasyInfoDTO);
 
-        Season season = new Season(2L, "Temporada 3", 2, 2025);
-        Team team = new Team(1L, "Haas", "", "", season);
-        Driver driver = new Driver(1L, "Avantifer", 2, "", season, team);
-        Race race = new Race(1L, "Francia", "", "", LocalDateTime.now(), season, 0);
-
-        FantasyPriceDriver fantasyPriceDriver = new FantasyPriceDriver(1L, driver, race, 300);
-
         when(fantasyPriceImpl.convertFantasyPriceDriverToFantasyPriceDriverDTO(anyList()))
                 .thenReturn(Arrays.asList(fantasyPriceDriverDTO, fantasyPriceDriverDTO));
-        when(fantasyPriceDriverRepository.findTwoLastPricesForAllDrivers(anyList()))
-                .thenReturn(Arrays.asList(fantasyPriceDriver, fantasyPriceDriver));
 
         List<FantasyPriceDriverDTO> fantasyPriceDriverDTOs = fantasyService.getAllDriverPrices(0);
 
@@ -550,16 +593,8 @@ class FantasyServiceTest {
         FantasyPriceTeamDTO fantasyPriceDriverDTO = new FantasyPriceTeamDTO(1L, teamDTO, raceDTO, 2000,
                 fantasyInfoDTO);
 
-        Season season = new Season(2L, "Temporada 3", 2, 2025);
-        Team team = new Team(1L, "Haas", "", "", season);
-        Race race = new Race(1L, "Francia", "", "", LocalDateTime.now(), season, 0);
-
-        FantasyPriceTeam fantasyPriceTeam = new FantasyPriceTeam(1L, team, race, 300);
-
         when(fantasyPriceImpl.convertFantasyPriceTeamToFantasyPriceTeamDTO(anyList()))
                 .thenReturn(Arrays.asList(fantasyPriceDriverDTO, fantasyPriceDriverDTO));
-        when(fantasyPriceTeamRepository.findTwoLastPricesForAllTeams(anyList()))
-                .thenReturn(Arrays.asList(fantasyPriceTeam, fantasyPriceTeam));
 
         List<FantasyPriceTeamDTO> fantasyPriceDriverDTOs = fantasyService.getAllTeamPrices(0);
 
@@ -781,32 +816,105 @@ class FantasyServiceTest {
         assertSame(nextRace, prices.getFirst().getRace());
     }
 
+    private static Race raceOn(long id, int day, int finished, Season season) {
+        return new Race(id, "GP" + id, "", "", LocalDateTime.of(2025, 3, day, 12, 0), season, finished);
+    }
+
     @ParameterizedTest
     @ValueSource(ints = {0, 2})
-    void averagesUseRequestedSeasonAndHandleNoFinishedRaces(int finished) {
+    void averagesUseTheFinishedRacesBeforeTheRequestedOneAndHandleNone(int finishedBefore) {
         Season season = new Season(2L, "Anterior", 2, 2025);
         Team team = new Team(1L, "Haas", "", "", season);
         Driver driver = new Driver(1L, "Uno", 2, "", season, team);
-        Race race = new Race(1L, "Francia", "", "", LocalDateTime.now(), season, 0);
+        int finished = finishedBefore == 0 ? 0 : 1;
+        Race earlier1 = raceOn(1L, 1, finished, season);
+        Race earlier2 = raceOn(2L, 8, finished, season);
+        Race requested = raceOn(3L, 15, 0, season);
+        Race later = raceOn(4L, 22, 1, season); // posterior a la pedida: no cuenta
         SeasonDTO seasonDTO = new SeasonDTO(2L, "Anterior", 2, "2025");
         TeamDTO teamDTO = new TeamDTO(1L, "Haas", "", "", seasonDTO);
         DriverDTO driverDTO = new DriverDTO(1L, "Uno", 2, "", seasonDTO, teamDTO);
-        RaceDTO raceDTO = new RaceDTO(1L, "Francia", "", "", LocalDateTime.now(), seasonDTO, 0);
-        when(raceRepository.findById(1L)).thenReturn(Optional.of(race));
-        when(raceRepository.findAllFinished(2)).thenReturn(finished == 0 ? List.of() : List.of(race, race));
+        RaceDTO raceDTO = new RaceDTO(3L, "GP3", "", "", requested.getDateStart(), seasonDTO, 0);
+        when(raceRepository.findById(3L)).thenReturn(Optional.of(requested));
+        when(raceRepository.findBySeason(2)).thenReturn(List.of(later, requested, earlier2, earlier1));
         when(fantasyPriceImpl.convertFantasyPriceDriverToFantasyPriceDriverDTO(anyList())).thenReturn(
                 new java.util.ArrayList<>(List.of(new FantasyPriceDriverDTO(1L, driverDTO, raceDTO, 1000000, null))));
         when(fantasyPriceImpl.convertFantasyPriceTeamToFantasyPriceTeamDTO(anyList())).thenReturn(
                 new java.util.ArrayList<>(List.of(new FantasyPriceTeamDTO(1L, teamDTO, raceDTO, 1000000, null))));
-        when(fantasyPointsDriverRepository.findByDriverIds(List.of(1L)))
-                .thenReturn(List.of(new FantasyPointsDriver(1L, driver, race, 10)));
-        when(fantasyPointsTeamRepository.findByTeamIds(List.of(1L)))
-                .thenReturn(List.of(new FantasyPointsTeam(1L, team, race, 10)));
+        when(fantasyPointsDriverRepository.findByDriverIdsAndRaceIds(List.of(1L), List.of(1L, 2L)))
+                .thenReturn(List.of(new FantasyPointsDriver(1L, driver, earlier1, 10)));
+        when(fantasyPointsTeamRepository.findByTeamIdsAndRaceIds(List.of(1L), List.of(1L, 2L)))
+                .thenReturn(List.of(new FantasyPointsTeam(1L, team, earlier1, 10)));
 
-        assertEquals(finished == 0 ? 0 : 5,
-                fantasyService.getAllDriverPrices(1).getFirst().getFantasyInfo().getAveragePoints());
-        assertEquals(finished == 0 ? 0 : 5,
-                fantasyService.getAllTeamPrices(1).getFirst().getFantasyInfo().getAveragePoints());
-        verify(raceRepository, times(2)).findAllFinished(2);
+        assertEquals(finishedBefore == 0 ? 0 : 5,
+                fantasyService.getAllDriverPrices(3).getFirst().getFantasyInfo().getAveragePoints());
+        assertEquals(finishedBefore == 0 ? 0 : 5,
+                fantasyService.getAllTeamPrices(3).getFirst().getFantasyInfo().getAveragePoints());
+    }
+
+    @Test
+    void pricesCompareWithThePreviousRaceAndCountOnlyEarlierPoints() {
+        Season season = new Season(2L, "Anterior", 2, 2025);
+        Team team = new Team(1L, "Haas", "", "", season);
+        Driver driver = new Driver(1L, "Uno", 2, "", season, team);
+        Race first = raceOn(10L, 1, 1, season);
+        Race second = raceOn(11L, 8, 1, season);
+        Race third = raceOn(12L, 15, 0, season); // la pedida
+        Race fourth = raceOn(13L, 22, 0, season); // futura: ni sus puntos ni su precio cuentan
+        SeasonDTO seasonDTO = new SeasonDTO(2L, "Anterior", 2, "2025");
+        TeamDTO teamDTO = new TeamDTO(1L, "Haas", "", "", seasonDTO);
+        DriverDTO driverDTO = new DriverDTO(1L, "Uno", 2, "", seasonDTO, teamDTO);
+        RaceDTO raceDTO = new RaceDTO(12L, "GP12", "", "", third.getDateStart(), seasonDTO, 0);
+        when(raceRepository.findById(12L)).thenReturn(Optional.of(third));
+        when(raceRepository.findBySeason(2)).thenReturn(List.of(fourth, third, first, second));
+        when(fantasyPriceImpl.convertFantasyPriceDriverToFantasyPriceDriverDTO(anyList())).thenReturn(
+                new java.util.ArrayList<>(List.of(new FantasyPriceDriverDTO(1L, driverDTO, raceDTO, 1200, null))));
+        when(fantasyPriceImpl.convertFantasyPriceTeamToFantasyPriceTeamDTO(anyList())).thenReturn(
+                new java.util.ArrayList<>(List.of(new FantasyPriceTeamDTO(1L, teamDTO, raceDTO, 2000, null))));
+        when(fantasyPriceDriverRepository.findByRaceId(12))
+                .thenReturn(List.of(new FantasyPriceDriver(2L, driver, third, 1200)));
+        when(fantasyPriceDriverRepository.findByRaceId(11))
+                .thenReturn(List.of(new FantasyPriceDriver(1L, driver, second, 1000)));
+        when(fantasyPriceTeamRepository.findByRaceId(12))
+                .thenReturn(List.of(new FantasyPriceTeam(2L, team, third, 2000)));
+        when(fantasyPriceTeamRepository.findByRaceId(11))
+                .thenReturn(List.of(new FantasyPriceTeam(1L, team, second, 2500)));
+        when(fantasyPointsDriverRepository.findByDriverIdsAndRaceIds(List.of(1L), List.of(10L, 11L))).thenReturn(List.of(
+                new FantasyPointsDriver(1L, driver, first, 10), new FantasyPointsDriver(2L, driver, second, 6)));
+        when(fantasyPointsTeamRepository.findByTeamIdsAndRaceIds(List.of(1L), List.of(10L, 11L)))
+                .thenReturn(List.of(new FantasyPointsTeam(1L, team, first, 30)));
+
+        FantasyInfoDTO driverInfo = fantasyService.getAllDriverPrices(12).getFirst().getFantasyInfo();
+        FantasyInfoDTO teamInfo = fantasyService.getAllTeamPrices(12).getFirst().getFantasyInfo();
+
+        assertEquals(16, driverInfo.getTotalPoints());
+        assertEquals(8, driverInfo.getAveragePoints());
+        assertEquals(20.0, driverInfo.getDifferencePrice(), 0.0001); // 1000 -> 1200
+        assertEquals(30, teamInfo.getTotalPoints());
+        assertEquals(15, teamInfo.getAveragePoints());
+        assertEquals(-20.0, teamInfo.getDifferencePrice(), 0.0001); // 2500 -> 2000
+    }
+
+    @Test
+    void theFirstRaceOfTheSeasonHasNoPriceChangeAndNoPoints() {
+        Season season = new Season(2L, "Anterior", 2, 2025);
+        Race first = raceOn(10L, 1, 1, season);
+        Race second = raceOn(11L, 8, 0, season);
+        SeasonDTO seasonDTO = new SeasonDTO(2L, "Anterior", 2, "2025");
+        TeamDTO teamDTO = new TeamDTO(1L, "Haas", "", "", seasonDTO);
+        DriverDTO driverDTO = new DriverDTO(1L, "Uno", 2, "", seasonDTO, teamDTO);
+        RaceDTO raceDTO = new RaceDTO(10L, "GP10", "", "", first.getDateStart(), seasonDTO, 1);
+        when(raceRepository.findById(10L)).thenReturn(Optional.of(first));
+        when(raceRepository.findBySeason(2)).thenReturn(List.of(second, first));
+        when(fantasyPriceImpl.convertFantasyPriceDriverToFantasyPriceDriverDTO(anyList())).thenReturn(
+                new java.util.ArrayList<>(List.of(new FantasyPriceDriverDTO(1L, driverDTO, raceDTO, 1200, null))));
+
+        FantasyInfoDTO info = fantasyService.getAllDriverPrices(10).getFirst().getFantasyInfo();
+
+        assertEquals(0, info.getTotalPoints());
+        assertEquals(0, info.getAveragePoints());
+        assertEquals(0.0, info.getDifferencePrice(), 0.0001);
+        verify(fantasyPriceDriverRepository).findByRaceId(10); // solo sus propios precios, no los de otras carreras
+        verifyNoInteractions(fantasyPointsDriverRepository);
     }
 }

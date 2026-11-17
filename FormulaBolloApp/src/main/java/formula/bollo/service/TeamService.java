@@ -1,6 +1,7 @@
 package formula.bollo.service;
 
 import formula.bollo.utils.Constants;
+import formula.bollo.utils.StatsMerge;
 import org.springframework.cache.annotation.Cacheable;
 
 import java.util.ArrayList;
@@ -335,6 +336,12 @@ public class TeamService {
             String teamName = teamInfo.getTeam().getName();
 
             resultMap.merge(teamName, teamInfo, (existingTeamInfo, newTeamInfo) -> {
+                // La media y las últimas carreras se calculan antes de sumar los contadores.
+                existingTeamInfo.setAveragePosition(StatsMerge.weightedAverage(existingTeamInfo.getAveragePosition(),
+                        existingTeamInfo.getRacesFinished(), newTeamInfo.getAveragePosition(),
+                        newTeamInfo.getRacesFinished()));
+                existingTeamInfo.setLast5Results(
+                        latestRaces(existingTeamInfo.getLast5Results(), newTeamInfo.getLast5Results()));
                 existingTeamInfo.setTeam(newTeamInfo.getTeam());
                 existingTeamInfo.setPoles(existingTeamInfo.getPoles() + newTeamInfo.getPoles());
                 existingTeamInfo.setFastlaps(existingTeamInfo.getFastlaps() + newTeamInfo.getFastlaps());
@@ -342,8 +349,8 @@ public class TeamService {
                 existingTeamInfo.setTotalPoints(existingTeamInfo.getTotalPoints() + newTeamInfo.getTotalPoints());
                 existingTeamInfo.setConstructors(existingTeamInfo.getConstructors() + newTeamInfo.getConstructors());
                 existingTeamInfo.setPenalties(existingTeamInfo.getPenalties() + newTeamInfo.getPenalties());
-                existingTeamInfo
-                        .setBestPosition(Math.min(existingTeamInfo.getBestPosition(), newTeamInfo.getBestPosition()));
+                existingTeamInfo.setBestPosition(
+                        StatsMerge.bestPosition(existingTeamInfo.getBestPosition(), newTeamInfo.getBestPosition()));
                 existingTeamInfo.setVictories(existingTeamInfo.getVictories() + newTeamInfo.getVictories());
                 existingTeamInfo.setPodiums(existingTeamInfo.getPodiums() + newTeamInfo.getPodiums());
 
@@ -352,6 +359,20 @@ public class TeamService {
         }
 
         return new ArrayList<>(resultMap.values());
+    }
+
+    /** Las 5 carreras más recientes de la unión de dos listas ya agrupadas por carrera (más reciente primero). */
+    private static List<ResultTeamDTO> latestRaces(List<ResultTeamDTO> first, List<ResultTeamDTO> second) {
+        List<ResultTeamDTO> all = new ArrayList<>();
+        if (first != null)
+            all.addAll(first);
+        if (second != null)
+            all.addAll(second);
+        return all.stream()
+                .sorted(Comparator.comparing((ResultTeamDTO race) -> race.getRace().getDateStart(),
+                        Comparator.reverseOrder()))
+                .limit(5)
+                .toList();
     }
 
     /**
