@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input, InputSignal } from '@angular/core';
 import { Driver } from '../../../../../shared/models/driver';
 import { DriverPoints } from '../../../../../shared/models/driverPoints';
-import { Router, RouterModule } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { UtilsService } from '../../../../../shared/services/utils.service';
 import { SpaceToUnderscorePipe } from '../../../../../shared/pipes/spaceToUnderscore.pipe';
 import { ChipModule } from 'primeng/chip';
@@ -12,13 +12,12 @@ import { ChipModule } from 'primeng/chip';
   imports: [
     SpaceToUnderscorePipe,
     ChipModule,
-    RouterModule
+    RouterLink
   ],
   templateUrl: './top10-drivers.component.html',
   styleUrls: ['./top10-drivers.component.scss']
 })
 export class Top10DriversComponent {
-  protected router: Router = inject(Router);
   protected utilsService: UtilsService = inject(UtilsService);
 
   readonly top10: InputSignal<Driver[] | DriverPoints[]> = input<Driver[] | DriverPoints[]>([]);  

@@ -1,9 +1,8 @@
 <div class="drivers-top10 mt-8">
 	@for (driverPoint of displayTop10; track $index) {
-		<div
-			class="drivers-top10-container mx-0 my-1 xl:mx-16 py-3 px-3 xs:px-4 animation-cubic-03 shadow-md rounded-xl flex items-center justify-between bg-gray-50 hover:bg-gray-200 dark:bg-slate-950 dark:hover:bg-slate-800 cursor-pointer dark:text-white"
-			(click)="router.navigate(['/drivers/' + utilsService.spaceToUnderScore(driverPoint.driver.name)])"
-			(keydown.enter)="router.navigate(['/drivers/' + utilsService.spaceToUnderScore(driverPoint.driver.name)])">
+		<a
+			class="drivers-top10-container mx-0 my-1 xl:mx-16 py-3 px-3 xs:px-4 animation-cubic-03 shadow-md rounded-xl flex items-center justify-between bg-gray-50 hover:bg-gray-200 dark:bg-slate-950 dark:hover:bg-slate-800 cursor-pointer dark:text-white focus-visible:outline-2 focus-visible:outline-red-600"
+			[routerLink]="['/drivers/' + utilsService.spaceToUnderScore(driverPoint.driver.name)]">
 			<div class="drivers-top10-start flex items-center">
 				<h4 class="my-0 font-bold">{{ $index + 1 }}</h4>
 				<div class="drivers-top10-line mx-2 h-4 w-1" [class]="'bg-' + (driverPoint.driver.team.name | SpaceToUnderscore)"></div>
@@ -16,7 +15,7 @@
 					[label]="driverPoint.totalPoints + ' Puntos'" />
 				<i class="pi pi-chevron-right ml-1 pt-1 text-red-500/80" style="font-size: 0.85rem"></i>
 			</div>
-		</div>
+		</a>
 	}
 </div>
 <div class="mt-8 pb-8 text-center">

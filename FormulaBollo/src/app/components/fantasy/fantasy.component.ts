@@ -1,18 +1,17 @@
 import { Component, inject } from '@angular/core';
 import { ImageService } from '../../../shared/services/image.service';
 import { NgOptimizedImage } from '@angular/common';
-import { Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 
 @Component({
   selector: 'app-fantasy',
-  imports: [NgOptimizedImage],
+  imports: [NgOptimizedImage, RouterLink],
   templateUrl: './fantasy.component.html',
   styleUrl: './fantasy.component.scss'
 })
 export class FantasyComponent {
   protected readonly imageService: ImageService = inject(ImageService);
-  readonly router: Router = inject(Router);
 
   readonly howToPlayList: MenuItem[] = [
     {
@@ -64,7 +63,7 @@ export class FantasyComponent {
       icon: 'pi pi-trophy',
       badge: 'pi pi-flag',
       fragment: 'Liga F1 Bollo',
-      routerLink: 'fantasy/clasification'
+      routerLink: '/fantasy/clasification'
     },
     {
       label: 'Accede a tu cuenta Fantasy',
@@ -72,7 +71,7 @@ export class FantasyComponent {
       icon: 'pi pi-sign-in',
       badge: 'pi pi-users',
       fragment: '¿Nuevo? Regístrate',
-      routerLink: 'fantasy/login'
+      routerLink: '/fantasy/login'
     }
   ];
 }

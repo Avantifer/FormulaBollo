@@ -18,18 +18,16 @@
 					</p>
 				</div>
 				<p class="text-sm text-gray-500 dark:text-gray-400">
-					<span
-						class="cursor-pointer"
-						(click)="router.navigate(['/drivers/' + utilsService.spaceToUnderScore(record.driver.name)])"
-						(keydown.enter)="router.navigate(['/drivers/' + utilsService.spaceToUnderScore(record.driver.name)])">
+					<a
+						class="cursor-pointer hover:underline focus-visible:underline focus-visible:outline-none"
+						[routerLink]="['/drivers/' + utilsService.spaceToUnderScore(record.driver.name)]">
 						{{ record.driver.name }}
-					</span>
-					<span
-						class="cursor-pointer"
-						(click)="router.navigate(['/teams/' + utilsService.spaceToUnderScore(record.team!.name)])"
-						(keydown.enter)="router.navigate(['/teams/' + utilsService.spaceToUnderScore(record.team!.name)])">
+					</a>
+					<a
+						class="cursor-pointer hover:underline focus-visible:underline focus-visible:outline-none"
+						[routerLink]="['/teams/' + utilsService.spaceToUnderScore(record.team.name)]">
 						({{ record.team.name }})
-					</span>
+					</a>
 					• {{ record.season.year }}
 				</p>
 				<img

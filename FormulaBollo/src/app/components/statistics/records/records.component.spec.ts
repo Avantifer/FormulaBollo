@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
-import { provideComponentTesting } from '../../../../testing/component-test-providers';
+import { provideComponentTesting, driverPointsFixture } from '../../../../testing/component-test-providers';
+import { By } from '@angular/platform-browser';
 import { RecordsComponent } from './records.component';
 
 describe('RecordsComponent', () => {
@@ -24,5 +25,25 @@ describe('RecordsComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('renders focusable driver and team links without custom navigation handlers', () => {
+    const driver = driverPointsFixture.driver;
+    TestBed.inject(HttpTestingController).expectOne(request => request.url.endsWith('/recordsDrivers')).flush([
+      { title: 'Victorias', value: 1, driver, team: driver.team, season: driver.season },
+    ]);
+    fixture.detectChanges();
+
+    const links = fixture.debugElement.queryAll(By.css('p a'));
+    expect(links.length).toBe(2);
+    expect(links.map(link => link.nativeElement.getAttribute('href'))).toEqual([
+      '/drivers/Piloto_de_prueba', '/teams/Ferrari',
+    ]);
+    for (const link of links) {
+      expect(link.nativeElement.tagName).toBe('A');
+      expect(link.nativeElement.tabIndex).toBe(0);
+      expect(link.listeners.filter(listener => listener.name === 'click').length).toBe(1);
+      expect(link.listeners.some(listener => listener.name.startsWith('keydown'))).toBeFalse();
+    }
   });
 });

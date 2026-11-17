@@ -5,19 +5,19 @@ import { catchError } from 'rxjs';
 import { Record } from '../../../../shared/models/record';
 import { UtilsService } from '../../../../shared/services/utils.service';
 import { ERROR_RECORDS_NOT_FOUND } from '../../../constants';
-import { Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { ImageService } from '../../../../shared/services/image.service';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-records',
+  imports: [RouterLink],
   templateUrl: './records.component.html',
   styleUrls: ['./records.component.scss']
 })
 export class RecordsComponent  {
   private readonly driverApiService: DriverApiService = inject(DriverApiService);
   protected readonly utilsService: UtilsService = inject(UtilsService);
-  protected readonly router: Router = inject(Router);
   protected readonly imageService: ImageService = inject(ImageService);
 
   protected readonly records: Signal<Record[]> = toSignal( 
