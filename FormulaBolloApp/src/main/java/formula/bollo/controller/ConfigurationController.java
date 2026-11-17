@@ -4,10 +4,12 @@ import java.util.List;
 
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import formula.bollo.entity.Configuration;
 import formula.bollo.impl.ConfigurationImpl;
 import formula.bollo.model.ConfigurationDTO;
 import formula.bollo.repository.ConfigurationRepository;
@@ -35,8 +37,11 @@ public class ConfigurationController {
     @Operation(summary = "Get all configurations", tags = Constants.TAG_CONFIGURATION)
     @Transactional(readOnly = true)
     @GetMapping(path = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<ConfigurationDTO> getAllConfigurations() {
-        log.info("Se coge todas las configuraciones");
-        return configurationImpl.convertConfigurationsToConfigurationsDTO(configurationRepository.findAll());
+    public List<ConfigurationDTO> getAllConfigurations(@RequestParam(required = false) Integer season) {
+        log.info("Se coge todas las configuraciones para la temporada {}", season);
+        List<Configuration> configurations = season == null
+                ? configurationRepository.findAll()
+                : configurationRepository.findBySeason(season);
+        return configurationImpl.convertConfigurationsToConfigurationsDTO(configurations);
     }
 }
