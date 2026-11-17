@@ -74,3 +74,24 @@ Válida justo tras migrar. Con datos nuevos escritos por la aplicación, las col
 de esas filas están a NULL; el script las rellena desde la carrera donde puede (`result`,
 `sprint`, `fantasy_*`) y fallará en `championship`/`constructor`/`configuration` si hay filas
 nuevas sin temporada.
+
+# Migración V002: claves únicas
+
+Sin clave única, un doble envío de resultados duplicaba filas y los puntos se contaban dos veces
+(en la copia local hay 11 pares: 10 en Las Vegas, temporada 2, y 1 en Red Bull Ring, temporada 1).
+Requiere V001 aplicada. No es destructiva salvo la limpieza opcional.
+
+| Fichero | Qué hace |
+|---|---|
+| `V002__find_duplicates.sql` | Solo lectura. Lista los duplicados de `result`, `sprint`, `fantasy_election` y `account.email`. |
+| `V002__dedupe_results.sql` | **Destructiva, opcional.** Borra de `result` la fila de mayor id de cada par idéntico en `position_id`, `fastlap` y `pole`. Los pares que difieren (Escapa, carrera 11: 1º y 4º) no se tocan y se muestran: decide una persona qué fila es la buena. |
+| `V002__unique_keys.sql` | Crea `result_race_driver_un`, `sprint_race_driver_un`, `fantasy_election_account_race_un` y `account_email_un`. Falla si queda algún duplicado. |
+| `V002__rollback.sql` | Elimina las cuatro claves. No recupera las filas que borró la limpieza. |
+
+Orden: parar la aplicación, copia (`mariadb-dump --single-transaction <base> > antes_V002.sql`),
+`find_duplicates`, `dedupe_results` si procede, resolver a mano lo que quede, `unique_keys`.
+El DDL de MariaDB confirma cada `ALTER` por separado: si uno falla, pueden haberse creado ya las
+anteriores. Corrige los datos, elimina esas claves, borra la fila V002 de `schema_migration` y repite.
+
+Con la clave aplicada, el backend responde 409 («Otro guardado simultáneo…») en lugar de duplicar
+cuando dos guardados de la misma carrera coinciden.

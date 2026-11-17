@@ -49,21 +49,23 @@ class CacheServiceTest {
 
     @Test
     void incrementVersionEmpty() {
-        when(cacheRepository.findById(anyString())).thenReturn(Optional.empty());
+        when(cacheRepository.incrementVersion("general_cache")).thenReturn(0);
 
         cacheService.incrementVersion();
 
-        verify(cacheRepository, times(0)).save(any());
+        verify(cacheRepository).incrementVersion("general_cache");
+        verify(cacheRepository).save(new Cache("general_cache", 1));
+        verify(cacheRepository, times(0)).findById(anyString());
     }
 
     @Test
     void incrementVersionGood() {
-        Cache cache = new Cache("cache", 20);
-
-        when(cacheRepository.findById(anyString())).thenReturn(Optional.of(cache));
+        when(cacheRepository.incrementVersion("general_cache")).thenReturn(1);
 
         cacheService.incrementVersion();
 
-        verify(cacheRepository, times(1)).save(any());
+        verify(cacheRepository).incrementVersion("general_cache");
+        verify(cacheRepository, times(0)).save(any());
+        verify(cacheRepository, times(0)).findById(anyString());
     }
 }

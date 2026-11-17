@@ -3,6 +3,7 @@ package formula.bollo.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -17,6 +18,8 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -201,6 +204,33 @@ class DriverServiceTest {
         assertEquals(7.0, merged.getAveragePosition(), 0.0001); // (4,0 * 10 + 8,0 * 30) / 40
         assertEquals(List.of(6L, 7L, 8L, 1L, 2L),
                 merged.getLast5Results().stream().map(formula.bollo.model.ResultDTO::getId).toList());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"2, 200, true", "3, 50, true", "2, 50, false"})
+    void sumDuplicatesSelectsDriverBeforeSummingCounters(int incomingSeason, int incomingPoints,
+            boolean useIncoming) {
+        SeasonDTO season = new SeasonDTO(2L, "Season 2", 2, "2026");
+        SeasonDTO nextSeason = new SeasonDTO((long) incomingSeason, "Incoming", incomingSeason, "2027");
+        DriverDTO firstDriver = new DriverDTO(1L, "Ana", 1, "", season, null);
+        DriverDTO secondDriver = new DriverDTO(2L, "Ana", 1, "", nextSeason, null);
+        DriverInfoDTO first = new DriverInfoDTO(firstDriver, 1, 2, 3, 100, 4, 5, 2, 6, 7, 4.0, List.of());
+        DriverInfoDTO second = new DriverInfoDTO(secondDriver, 10, 20, 30, incomingPoints,
+                40, 50, 1, 60, 70, 8.0, List.of());
+
+        List<DriverInfoDTO> merged = driverService.sumDuplicates(List.of(first, second));
+
+        assertEquals(1, merged.size());
+        DriverInfoDTO info = merged.getFirst();
+        assertSame(useIncoming ? secondDriver : firstDriver, info.getDriver());
+        assertEquals(100 + incomingPoints, info.getTotalPoints());
+        assertEquals(11, info.getPoles());
+        assertEquals(22, info.getFastlaps());
+        assertEquals(33, info.getRacesFinished());
+        assertEquals(44, info.getChampionships());
+        assertEquals(55, info.getPenalties());
+        assertEquals(66, info.getVictories());
+        assertEquals(77, info.getPodiums());
     }
 
     private static formula.bollo.model.ResultDTO resultOn(long id, int year, int month) {

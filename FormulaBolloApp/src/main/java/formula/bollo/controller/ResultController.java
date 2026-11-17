@@ -1,7 +1,9 @@
 package formula.bollo.controller;
 
 import java.util.List;
+import java.util.Objects;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import formula.bollo.impl.ResultImpl;
 import formula.bollo.model.DriverPointsDTO;
@@ -56,9 +59,14 @@ public class ResultController {
     @Operation(summary = "Get results total per indicated driver", tags = Constants.TAG_RESULT)
     @PostMapping(path = "/totalPerSpecificDrivers", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<DriverPointsDTO> getTotalResultsSpecificPerDriver(@RequestParam("season") Integer seasonNumber,
-            @RequestBody List<Long> ids) {
-        log.info("Coger todos los resultados de la temporada " + seasonNumber + " y de los siguientes pilotos "
-                + ids.toString());
+            @RequestBody(required = false) List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        if (ids.size() > Constants.MAX_SPECIFIC_DRIVER_IDS || ids.stream().anyMatch(Objects::isNull)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Demasiados pilotos en la consulta");
+        }
+        log.info("Coger resultados de la temporada {} para {} pilotos", seasonNumber, ids.size());
         return this.resultService.getTotalResultsSpecificPerDriver(seasonNumber, ids);
     }
 

@@ -60,9 +60,6 @@ public class AccountController {
     @PostMapping(path = "/changePassword", produces = MediaType.TEXT_PLAIN_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> changePassword(@RequestBody PasswordChangeRequest request,
             Principal principal) {
-        if (request.password() == null || request.password().isBlank()) {
-            return ResponseEntity.badRequest().body("Tienes que poner contraseña");
-        }
         log.info("Solicitud de cambio de contraseña");
         return this.accountService.changePassword(principal, request.password());
     }

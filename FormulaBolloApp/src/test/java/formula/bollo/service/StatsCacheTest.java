@@ -1,14 +1,26 @@
 package formula.bollo.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
@@ -24,6 +36,7 @@ import formula.bollo.utils.Constants;
  * y que escribir resultados la invalida (si no, la web enseñaría datos antiguos).
  */
 @SpringJUnitConfig(StatsCacheTest.Config.class)
+@Execution(ExecutionMode.SAME_THREAD)
 class StatsCacheTest {
 
     @Configuration
@@ -31,7 +44,7 @@ class StatsCacheTest {
     static class Config {
         @Bean
         CacheManager cacheManager() {
-            return new ConcurrentMapCacheManager(Constants.CACHE_STATS);
+            return new CaffeineCacheManager(Constants.CACHE_STATS);
         }
 
         @Bean
@@ -48,6 +61,27 @@ class StatsCacheTest {
         ResultService resultService(ResultRepository results, SprintRepository sprints) {
             return new ResultService(results, sprints, mock(ResultImpl.class), mock(DriverImpl.class));
         }
+
+        @Bean
+        SynchronizedStats synchronizedStats() {
+            return new SynchronizedStats();
+        }
+    }
+
+    static class SynchronizedStats {
+        final AtomicInteger calls = new AtomicInteger();
+        final CountDownLatch bodyEntered = new CountDownLatch(1);
+        final CountDownLatch releaseBody = new CountDownLatch(1);
+
+        @Cacheable(cacheNames = Constants.CACHE_STATS, sync = true, key = "#root.args[0]")
+        public int load(String key) throws InterruptedException {
+            calls.incrementAndGet();
+            bodyEntered.countDown();
+            if (!releaseBody.await(5, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("Timed out waiting to release the cached computation");
+            }
+            return 42;
+        }
     }
 
     @Autowired
@@ -55,6 +89,9 @@ class StatsCacheTest {
 
     @Autowired
     private ResultRepository resultRepository;
+
+    @Autowired
+    private SynchronizedStats synchronizedStats;
 
     @Test
     void statsAreCachedAndEvictedWhenResultsChange() {
@@ -66,5 +103,38 @@ class StatsCacheTest {
 
         resultService.getTotalResultsPerDriver(2, null);
         verify(resultRepository, times(2)).findBySeason(2);
+    }
+
+    @Test
+    void eightConcurrentRequestsForTheSameKeyComputeOnlyOnce() throws Exception {
+        CountDownLatch ready = new CountDownLatch(8);
+        CountDownLatch start = new CountDownLatch(1);
+        CountDownLatch calling = new CountDownLatch(8);
+        // Inspect state on the target bean: fields on the CGLIB proxy are not the target's fields.
+        SynchronizedStats target = org.springframework.test.util.AopTestUtils.getTargetObject(synchronizedStats);
+        try (var executor = Executors.newFixedThreadPool(8)) {
+            var futures = new ArrayList<Future<Integer>>();
+            try {
+                for (int i = 0; i < 8; i++) {
+                    futures.add(executor.submit(() -> {
+                        ready.countDown();
+                        assertTrue(start.await(5, TimeUnit.SECONDS));
+                        calling.countDown();
+                        return synchronizedStats.load("concurrent-stats");
+                    }));
+                }
+                assertTrue(ready.await(5, TimeUnit.SECONDS));
+                start.countDown();
+                assertTrue(calling.await(5, TimeUnit.SECONDS));
+                assertTrue(target.bodyEntered.await(5, TimeUnit.SECONDS));
+            } finally {
+                start.countDown();
+                target.releaseBody.countDown();
+            }
+            for (Future<Integer> future : futures) {
+                assertEquals(42, future.get(5, TimeUnit.SECONDS));
+            }
+            assertEquals(1, target.calls.get());
+        }
     }
 }

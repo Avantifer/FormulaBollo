@@ -80,6 +80,7 @@ class OptionalSeasonControllerTest {
         verify(mapper).convertRacesToRacesDTO(selected.capture());
         assertEquals(List.of(first, second, tied, pending), selected.getValue());
         verify(races).findActualBySeason(2);
-        verify(races, never()).findActual();
+        verify(races).findAllFinished(2);
+        verifyNoMoreInteractions(races);
     }
 }

@@ -67,6 +67,7 @@ public class Constants {
     public static final String ENDPOINT_FANTASY = "/fantasy";
     public static final String ENDPOINT_SPRINT = "/sprints";
     public static final String CACHE_STATS = "stats";
+    public static final int MAX_SPECIFIC_DRIVER_IDS = 50;
     public static final String ENDPOINT_CACHE = "/cache";
 
     // Urls

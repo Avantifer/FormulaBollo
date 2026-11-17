@@ -35,28 +35,34 @@ class AccountControllerTest {
 
     @Test
     void changePasswordWithoutPasswordIsRejected() {
-        ResponseEntity<String> response = accountController.changePassword(new AccountController.PasswordChangeRequest(null), () -> "ana");
+        AccountService service = new AccountService(accountRepository, accountImpl, null, null);
+        AccountController controller = new AccountController(accountRepository, accountImpl, service);
+        ResponseEntity<String> response = controller.changePassword(new AccountController.PasswordChangeRequest(null), () -> "ana");
 
         assertEquals(400, response.getStatusCode().value());
-        verifyNoInteractions(accountService);
+        assertEquals("La contraseña debe tener al menos 8 caracteres", response.getBody());
+        verifyNoInteractions(accountRepository, accountImpl);
     }
 
     @Test
     void changePasswordWithBlankPasswordIsRejected() {
-        ResponseEntity<String> response = accountController.changePassword(new AccountController.PasswordChangeRequest(" "), () -> "ana");
+        AccountService service = new AccountService(accountRepository, accountImpl, null, null);
+        AccountController controller = new AccountController(accountRepository, accountImpl, service);
+        ResponseEntity<String> response = controller.changePassword(new AccountController.PasswordChangeRequest("        "), () -> "ana");
 
         assertEquals(400, response.getStatusCode().value());
-        verifyNoInteractions(accountService);
+        assertEquals("La contraseña debe tener al menos 8 caracteres", response.getBody());
+        verifyNoInteractions(accountRepository, accountImpl);
     }
 
     @Test
     void changePasswordWithOwnTokenIsAllowed() {
         Principal principal = () -> "ana";
-        when(accountService.changePassword(principal, "nueva")).thenReturn(ResponseEntity.ok("ok"));
+        when(accountService.changePassword(principal, "nueva123")).thenReturn(ResponseEntity.ok("ok"));
 
-        ResponseEntity<String> response = accountController.changePassword(new AccountController.PasswordChangeRequest("nueva"), principal);
+        ResponseEntity<String> response = accountController.changePassword(new AccountController.PasswordChangeRequest("nueva123"), principal);
 
         assertEquals(200, response.getStatusCode().value());
-        verify(accountService).changePassword(principal, "nueva");
+        verify(accountService).changePassword(principal, "nueva123");
     }
 }

@@ -10,7 +10,9 @@ import org.springframework.stereotype.Service;
 import formula.bollo.entity.Cache;
 import formula.bollo.repository.CacheRepository;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class CacheService {
 
@@ -34,15 +36,9 @@ public class CacheService {
     @Transactional
     @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public void incrementVersion() {
-        Optional<Cache> cache = cacheRepository.findById("general_cache");
-
-        if (cache.isPresent()) {
-            Cache cacheToSave = cache.get();
-            Integer versionCache = cacheToSave.getVersion();
-
-            cacheToSave.setVersion(versionCache + 1);
-
-            cacheRepository.save(cacheToSave);
+        if (cacheRepository.incrementVersion("general_cache") == 0) {
+            log.warn("No existe general_cache; se crea con version 1");
+            cacheRepository.save(new Cache("general_cache", 1));
         }
     }
 }

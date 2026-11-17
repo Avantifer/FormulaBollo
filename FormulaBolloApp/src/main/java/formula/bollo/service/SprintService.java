@@ -9,8 +9,12 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.HttpStatus;
+import org.springframework.dao.ConcurrencyFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import formula.bollo.entity.Sprint;
 import formula.bollo.impl.SprintImpl;
@@ -58,15 +62,21 @@ public class SprintService {
         }
         List<Sprint> sprintsToSave = this.sprintImpl.convertSprintsDTOToSprints(sprintDTOs);
         sprintsToSave.forEach(sprint -> sprint.setId(null));
-        List<Sprint> existingSprints = this.sprintRepository
-                .findByRaceId(sprintDTOs.get(0).getRace().getId().intValue());
+        try {
+            List<Sprint> existingSprints = this.sprintRepository
+                    .findByRaceId(sprintDTOs.get(0).getRace().getId().intValue());
 
-        if (!existingSprints.isEmpty()) {
-            sprintRepository.deleteAll(existingSprints);
+            if (!existingSprints.isEmpty()) {
+                sprintRepository.deleteAll(existingSprints);
+                // Ejecutar los borrados antes de insertar filas con la misma clave única.
+                sprintRepository.flush();
+            }
+
+            sprintRepository.saveAllAndFlush(sprintsToSave);
+        } catch (DataIntegrityViolationException | ConcurrencyFailureException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Otro guardado simultáneo ha modificado esta carrera. Vuelve a intentarlo");
         }
-
-        // Las filas anteriores ya se borraron: se reinsertan como nuevas.
-        sprintRepository.saveAll(sprintsToSave);
 
         return new ResponseEntity<>("Resultados de la sprint guardados correctamente", Constants.HEADERS_TEXT_PLAIN,
                 HttpStatusCode.valueOf(200));

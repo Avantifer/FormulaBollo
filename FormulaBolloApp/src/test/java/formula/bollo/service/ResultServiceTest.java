@@ -2,6 +2,8 @@ package formula.bollo.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -19,11 +21,16 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
+import org.springframework.dao.ConcurrencyFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.web.server.ResponseStatusException;
 
 import formula.bollo.entity.Driver;
 import formula.bollo.entity.Position;
@@ -325,9 +332,49 @@ class ResultServiceTest {
         resultService.saveResults(List.of(result));
 
         org.mockito.ArgumentCaptor<List<Result>> saved = org.mockito.ArgumentCaptor.forClass(List.class);
-        org.mockito.Mockito.verify(resultRepository).saveAll(saved.capture());
+        org.mockito.InOrder writes = org.mockito.Mockito.inOrder(resultRepository);
+        writes.verify(resultRepository).deleteAll(org.mockito.ArgumentMatchers.anyList());
+        writes.verify(resultRepository).flush();
+        writes.verify(resultRepository).saveAllAndFlush(saved.capture());
         // Las filas antiguas se borran antes: conservar el id haría fallar el merge en Hibernate 7.
         org.junit.jupiter.api.Assertions.assertNull(saved.getValue().get(0).getId());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void saveResultsTranslatesPersistenceConflicts(boolean concurrencyFailure) {
+        List<ResultDTO> batch = validResultBatch();
+        List<Result> mapped = List.of(new Result());
+        when(resultImpl.convertResultsDTOToResults(batch)).thenReturn(mapped);
+        RuntimeException failure = concurrencyFailure
+                ? new ConcurrencyFailureException("SQL deadlock details")
+                : new DataIntegrityViolationException("SQL constraint details");
+        when(resultRepository.saveAllAndFlush(mapped)).thenThrow(failure);
+
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> resultService.saveResults(batch));
+
+        assertEquals(409, error.getStatusCode().value());
+        assertEquals("Otro guardado simultáneo ha modificado esta carrera. Vuelve a intentarlo", error.getReason());
+        Mockito.verify(resultRepository).saveAllAndFlush(mapped);
+    }
+
+    @Test
+    void saveResultsPropagatesUnrelatedFailures() {
+        List<ResultDTO> batch = validResultBatch();
+        List<Result> mapped = List.of(new Result());
+        when(resultImpl.convertResultsDTOToResults(batch)).thenReturn(mapped);
+        RuntimeException failure = new IllegalStateException("unexpected");
+        when(resultRepository.saveAllAndFlush(mapped)).thenThrow(failure);
+
+        assertSame(failure, assertThrows(RuntimeException.class, () -> resultService.saveResults(batch)));
+    }
+
+    private List<ResultDTO> validResultBatch() {
+        SeasonDTO season = new SeasonDTO(2L, "Season", 2, "2026");
+        RaceDTO race = new RaceDTO(5L, "GP", "", "", LocalDateTime.of(2026, 1, 1, 12, 0), season, 1);
+        DriverDTO driver = new DriverDTO(1L, "Ana", 1, "", season, null);
+        return List.of(new ResultDTO(null, race, driver, null, 0, 0));
     }
 
     @Test
