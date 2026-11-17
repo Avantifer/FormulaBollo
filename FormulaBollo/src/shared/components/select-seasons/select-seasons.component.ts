@@ -1,4 +1,5 @@
-import { Component, EventEmitter, inject, Input, Output, SimpleChanges } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { Component, EventEmitter, inject, Input, Output, SimpleChanges, signal, WritableSignal } from '@angular/core';
 import { Season } from '../../models/season';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { environment } from '../../../enviroments/enviroment';
@@ -25,108 +26,57 @@ export class SelectSeasonsComponent {
   @Input() statistics!: string;
   @Input() fantasy: boolean = false; 
 
-  public seasons: Season[] = [];
+  public readonly seasons: WritableSignal<Season[]> = signal<Season[]>([]);
 
   public seasonForm: FormGroup = new FormGroup({
     season: new FormControl(environment.seasonActual),
   });
 
-  ngOnInit(): void {
-    if (this.driverName) {
-      this.getSeasonsByDriverName(this.driverName)
-    } else if (this.teamName) {
-      this.getSeasonsByTeamName(this.teamName);
-    } else if (this.statistics && this.statistics === 'general') {
-      this.obtainAllSeasonsStats();
-    } else if (this.fantasy) {
-      this.obtainAllFantasySeasons();
-    } else {
-      this.obtainAllSeasons();
-    }
+  private initialized = false;
+  private loadSubscription?: Subscription;
+  private selectionSubscription?: Subscription;
 
-    this.changeSeasonListener();
+  ngOnInit(): void {
+    this.initialized = true;
+    this.selectionSubscription = this.seasonForm.get('season')!.valueChanges.subscribe(season => {
+      if (season) this.seasonChanged.emit(season);
+    });
+    this.loadSeasons();
   }
 
-  ngOnChanges(simpleChanges: SimpleChanges) {
-    if (simpleChanges['statistics'] && simpleChanges['statistics'].currentValue === 'general') {
-      this.obtainAllSeasonsStats();
-    } else {
-      this.obtainAllSeasons();
-    }
+  ngOnChanges(_changes: SimpleChanges): void {
+    if (this.initialized) this.loadSeasons();
+  }
+
+  private loadSeasons(): void {
+    this.loadSubscription?.unsubscribe();
+    const includeTotal = !!this.driverName || !!this.teamName || this.statistics === 'general';
+    const request = this.driverName
+      ? this.seasonApiService.getSeasonByDriverName(this.driverName)
+      : this.teamName
+        ? this.seasonApiService.getSeasonByTeamName(this.teamName)
+        : this.fantasy
+          ? this.seasonApiService.getSeasonOfFantasy()
+          : this.seasonApiService.getSeasons();
+
+    this.loadSubscription = request.subscribe({
+      next: seasons => {
+        const options = includeTotal ? [new Season(0, 'Total', 0), ...seasons] : seasons;
+        this.seasons.set(options);
+        const selection = includeTotal ? options[0] : options.at(-1);
+        this.seasonForm.get('season')!.setValue(selection ?? null, { emitEvent: false });
+        if (selection) this.seasonChanged.emit(selection);
+        if (!seasons.length && (this.driverName || this.teamName)) {
+          void this.router.navigate([this.driverName ? '/drivers' : '/teams']);
+          this.messageInfoService.showError(this.driverName ? ERROR_DRIVER_NAME_NOT_FOUND : ERROR_TEAM_NAME_NOT_FOUND, '');
+        }
+      },
+      error: error => this.messageInfoService.showError('No se pudieron cargar las temporadas', error)
+    });
   }
 
   ngOnDestroy(): void {
-    this.seasons = [];
-    this.seasonForm.get('season')?.setValue(null);
-  }
-
-  changeSeasonListener(): void {
-    this.seasonForm.get('season')?.valueChanges
-      .subscribe((newSeason) => {
-        this.seasonChanged.emit(newSeason);
-      });
-  }
-
-  obtainAllSeasons(): void {
-    this.seasonApiService.getSeasons().subscribe((seasons) => {
-      this.seasons = seasons;
-      this.seasonForm.get('season')?.setValue(seasons[seasons.length - 1]);
-      this.seasonChanged.emit(seasons[seasons.length - 1]);
-    });    
-  }
-
-  obtainAllFantasySeasons(): void {
-    this.seasonApiService.getSeasonOfFantasy().subscribe((seasons) => {
-      this.seasons = seasons;
-      this.seasonForm.get('season')?.setValue(seasons[seasons.length - 1]);
-      this.seasonChanged.emit(seasons[seasons.length - 1]);
-    });    
-  }
-
-  obtainAllSeasonsStats(): void {
-    this.seasonApiService.getSeasons().subscribe((seasons) => {
-      const seasonOfTotal: Season = new Season(0, "Total", 0);
-      this.seasonForm.get('season')?.setValue(seasonOfTotal);
-      this.seasons = [seasonOfTotal, ...seasons];
-      this.seasonChanged.emit(seasonOfTotal);
-    });    
-  }
-
-  getSeasonsByDriverName(driverName: string): void {
-    this.seasonApiService
-      .getSeasonByDriverName(driverName)
-      .pipe()
-      .subscribe({
-        next: (seasons: Season[]) => {  
-          const seasonOfTotal: Season = new Season(0, "Total", 0);
-          this.seasonForm.get('season')?.setValue(seasonOfTotal);
-          this.seasons = [seasonOfTotal, ...seasons];
-        },
-        complete: () => {
-          if (this.seasons.length === 1) {
-            this.router.navigate(["/drivers"]);
-            this.messageInfoService.showError(ERROR_DRIVER_NAME_NOT_FOUND, "");
-          }
-        }
-      });
-  }
-
-  getSeasonsByTeamName(teamName: string): void {
-    this.seasonApiService
-    .getSeasonByTeamName(teamName)
-    .pipe()
-    .subscribe({
-      next: (seasons: Season[]) => {
-          const seasonOfTotal: Season = new Season(0, "Total", 0);
-          this.seasonForm.get('season')?.setValue(seasonOfTotal);
-          this.seasons = [seasonOfTotal, ...seasons];
-        },
-        complete: () => {
-          if (this.seasons.length === 1) {
-            this.router.navigate(["/teams"]);
-            this.messageInfoService.showError(ERROR_TEAM_NAME_NOT_FOUND, "");
-          }
-        }
-      });
+    this.loadSubscription?.unsubscribe();
+    this.selectionSubscription?.unsubscribe();
   }
 }

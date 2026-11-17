@@ -1,5 +1,7 @@
 package formula.bollo.service;
 
+import org.springframework.cache.annotation.CacheEvict;
+
 import java.util.Optional;
 
 import org.springframework.http.HttpStatusCode;
@@ -40,6 +42,7 @@ public class RaceService {
      * @param raceDTO The RaceDTO containing race information to be saved or
      *                updated.
      */
+    @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public ResponseEntity<String> saveRace(RaceDTO raceDTO) {
         Season season = this.seasonRepository.findByNumber(raceDTO.getSeason().getNumber());
 

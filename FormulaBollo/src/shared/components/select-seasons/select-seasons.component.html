@@ -1,7 +1,7 @@
 <form [formGroup]="seasonForm">
 	<p-select
 		formControlName="season"
-		[options]="seasons"
+		[options]="seasons()"
 		optionLabel="name"
 		dataKey="id"
 		class="rounded-lg text-sm bg-slate-100! dark:bg-slate-600! w-full xs:min-w-[150px] border-0! shadow-md!">

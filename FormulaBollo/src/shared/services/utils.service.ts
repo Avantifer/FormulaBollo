@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { EMPTY, Observable, of } from 'rxjs';
 import { MessageInfoService } from './toastInfo.service';
 import { Position } from '../models/position';
 
@@ -29,7 +29,7 @@ export class UtilsService {
   public handleError<T>(errorString: string, errorMessage: any, valueReturn?: T): Observable<T> {
     this.messageInfoService.showError(errorString, errorMessage);
     console.error(errorMessage);
-    return of(valueReturn as T);
+    return valueReturn === undefined ? EMPTY : of(valueReturn);
   }
 
   public getCustomPosition(index: number): number {

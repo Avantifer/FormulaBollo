@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -108,11 +110,52 @@ class DriverServiceTest {
         Driver driver = new Driver(1L, "Avantifer", 2, "", season, team);
         List<Driver> drivers = Arrays.asList(driver);
 
-        when(resultRepository.averagePositionByDriverIds(anyList())).thenReturn(null);
-
         DriverInfoDTO driverInfoDTO = this.driverService.getAllInfoDriver(drivers);
 
         assertNotNull(driverInfoDTO);
+    }
+
+    @Test
+    void getAllInfoDriversComputesStatsInMemory() {
+        Season season = new Season(2L, "Temporada 2", 2, 2024);
+        Team team = new Team(1L, "Haas", "", "", season);
+        Driver driver = new Driver(1L, "Avantifer", 2, "", season, team);
+
+        Race older = new Race();
+        older.setId(1L);
+        older.setDateStart(LocalDateTime.of(2024, 1, 1, 0, 0));
+        Race newer = new Race();
+        newer.setId(2L);
+        newer.setDateStart(LocalDateTime.of(2024, 2, 1, 0, 0));
+
+        Result win = new Result(1L, older, driver, new Position(1L, 1, 25), 1, 1);
+        Result fourth = new Result(2L, newer, driver, new Position(4L, 4, 12), 0, 0);
+        Result dnf = new Result(3L, newer, driver, null, 0, 0);
+
+        when(resultRepository.findWithRaceAndPositionByDriverIds(anyList())).thenReturn(List.of(win, fourth, dnf));
+        when(sprintRepository.findByDriverIds(anyList())).thenReturn(List.of());
+        when(penaltyRepository.countByDriver(anyList())).thenReturn(List.<Object[]>of(new Object[] { 1L, 2L }));
+        when(championshipRepository.countByDriver(anyList())).thenReturn(List.of());
+        when(resultService.sumPoints(anyList(), anyList())).thenReturn(38);
+        when(resultImpl.convertResultsToResultsDTO(anyList())).thenReturn(List.of());
+
+        DriverInfoDTO info = this.driverService.getAllInfoDrivers(List.of(driver)).get(0);
+
+        assertEquals(1, info.getPoles());
+        assertEquals(1, info.getFastlaps());
+        assertEquals(2, info.getRacesFinished());
+        assertEquals(1, info.getPodiums());
+        assertEquals(1, info.getVictories());
+        assertEquals(1, info.getBestPosition());
+        assertEquals(2.5, info.getAveragePosition());
+        assertEquals(2, info.getPenalties());
+        assertEquals(0, info.getChampionships());
+        assertEquals(38, info.getTotalPoints());
+
+        // Las 5 últimas carreras terminadas, de la más reciente a la más antigua.
+        ArgumentCaptor<List<Result>> last5 = ArgumentCaptor.captor();
+        verify(resultImpl).convertResultsToResultsDTO(last5.capture());
+        assertEquals(List.of(fourth, win), last5.getValue());
     }
 
     @Test
@@ -188,5 +231,35 @@ class DriverServiceTest {
         List<DriverPointsEvolutionDTO> driverPointsEvolutionDTOs = driverService.getAllPointsEvolutionDriver(ids);
 
         assertNotNull(driverPointsEvolutionDTOs);
+    }
+
+    @Test
+    void evolutionIncludesSprintInRacePointBeforeAccumulatingNextRace() {
+        Season season = new Season(1L, "Season", 1, 2026);
+        Driver driver = new Driver(1L, "Driver", 1, "", season, null);
+        Race first = new Race(1L, "First", "", "", LocalDateTime.of(2026, 1, 1, 0, 0), season, 1);
+        Race second = new Race(2L, "Second", "", "", first.getDateStart().plusDays(7), season, 1);
+        // The sprint can contain a different entity instance for the same persisted race.
+        Race sprintRace = new Race(1L, "First sprint", "", "", first.getDateStart(), season, 1);
+        when(resultRepository.findByDriverIds(List.of(1L))).thenReturn(List.of(
+                new Result(2L, second, driver, new Position(2L, 2, 18), 0, 0),
+                new Result(1L, first, driver, new Position(1L, 1, 25), 0, 0)));
+        when(sprintRepository.findByDriverIds(List.of(1L))).thenReturn(List.of(
+                new Sprint(1L, sprintRace, new Driver(1L, "Driver", 1, "other instance", season, null),
+                        new SprintPosition(1L, 1, 8))));
+
+        DriverPointsEvolutionDTO evolution = driverService.getAllPointsEvolutionDriver(Set.of(1)).getFirst();
+
+        assertEquals(List.of(33, 51), evolution.getAccumulatedPoints());
+        assertEquals(2, evolution.getRaces().size());
+    }
+
+    @Test
+    void recordsOmitEmptyCategoriesAndReturnEmptyForEmptyDatabase() {
+        // Empty categories are omitted, so an empty database returns an empty list.
+        assertEquals(List.of(), driverService.getAllRecords());
+        RecordDTO pole = new RecordDTO("Poles", 1, null, null, null);
+        when(resultRepository.recordPoleDriver()).thenReturn(List.of(pole));
+        assertEquals(List.of(pole), driverService.getAllRecords());
     }
 }

@@ -1,5 +1,5 @@
 import { colorsMappings, ERROR_DRIVER_INFO_FETCH, ERROR_TEAM_INFO_FETCH, getComparisonChartOptions, getComparisonChartOptionsMobile } from './../../../constants';
-import { Component, effect, inject, Input, SimpleChanges } from '@angular/core';
+import { Component, effect, inject, Input, signal, SimpleChanges, WritableSignal } from '@angular/core';
 import { Season } from '../../../../shared/models/season';
 import { environment } from '../../../../enviroments/enviroment';
 import { Driver } from '../../../../shared/models/driver';
@@ -37,20 +37,30 @@ export class ComparativeStatsComponent {
   @Input() seasonSelected: Season = environment.seasonActual;
   @Input() typeSelected!: string;
   
+  private comparisonGeneration = 0;
   private driversSelected: Driver[] | null[] = [null, null];
   private teamsSelected: Team[] | null[] = [null, null];
 
-  driversInfo: DriverInfo[] = [];
-  teamsInfo: TeamInfo[] = [];
+  // Se rellenan tras peticiones HTTP: la plantilla los lee a través de signals para refrescarse sin zone.js.
+  private readonly driversInfoState: WritableSignal<DriverInfo[]> = signal<DriverInfo[]>([]);
+  private readonly teamsInfoState: WritableSignal<TeamInfo[]> = signal<TeamInfo[]>([]);
+  private readonly comparisonChartState: WritableSignal<ChartData | undefined> = signal<ChartData | undefined>(undefined);
 
-  comparisonChartData!: ChartData;
+  get driversInfo(): DriverInfo[] { return this.driversInfoState(); }
+  get teamsInfo(): TeamInfo[] { return this.teamsInfoState(); }
+  get comparisonChartData(): ChartData | undefined { return this.comparisonChartState(); }
+
   comparisonChartOptions = getComparisonChartOptions(this.themeService.isDarkTheme());
   comparisonChartOptionsMobile = getComparisonChartOptionsMobile(this.themeService.isDarkTheme());
 
   private readonly destroy$: Subject<void> = new Subject<void>();
 
   ngOnChanges(simpleChanges: SimpleChanges): void {
-    if (simpleChanges['seasonSelected']) {
+    if (simpleChanges['seasonSelected'] || simpleChanges['typeSelected']) {
+      this.comparisonGeneration++;
+      this.driversInfoState.set([]);
+      this.teamsInfoState.set([]);
+      this.comparisonChartState.set(undefined);
       this.driversSelected = [null, null];
       this.teamsSelected = [null, null];
     }
@@ -64,6 +74,7 @@ export class ComparativeStatsComponent {
   }
 
   async onTeamChange(newTeam: Team, index: number) {
+    const generation = ++this.comparisonGeneration;
     this.teamsSelected.splice(index, 1, newTeam);
 
     if (this.teamsSelected.every(team => team != null)) {
@@ -72,14 +83,15 @@ export class ComparativeStatsComponent {
         this.getInfoTeams(this.teamsSelected.at(1)!)
       ]);
 
-      this.teamsInfo.splice(0, 1, teamAInfo);
-      this.teamsInfo.splice(1, 1, teamBInfo);
+      if (generation !== this.comparisonGeneration) return;
+      this.teamsInfoState.set([teamAInfo, teamBInfo]);
 
       this.generateComparisonChart(teamAInfo, teamBInfo);
     }
   }
 
   async onDriverChange(newDriver: Driver, index: number) {
+    const generation = ++this.comparisonGeneration;
     this.driversSelected.splice(index, 1, newDriver);
 
     if (this.driversSelected.every(driver => driver != null)) {
@@ -88,8 +100,8 @@ export class ComparativeStatsComponent {
         this.getInfoDrivers(this.driversSelected.at(1)!)
       ]);
 
-      this.driversInfo.splice(0, 1, driverAInfo);
-      this.driversInfo.splice(1, 1, driverBInfo);
+      if (generation !== this.comparisonGeneration) return;
+      this.driversInfoState.set([driverAInfo, driverBInfo]);
 
       this.generateComparisonChart(driverAInfo, driverBInfo);
     }
@@ -171,9 +183,9 @@ export class ComparativeStatsComponent {
       }
     ];
 
-    this.comparisonChartData = {
+    this.comparisonChartState.set({
       labels,
       datasets
-    };
+    });
   }
 }

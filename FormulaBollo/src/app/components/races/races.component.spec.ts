@@ -1,20 +1,25 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
+import { provideComponentTesting } from '../../../testing/component-test-providers';
+import { RacesComponent } from './races.component';
 
-import { ResultsComponent } from './results.component';
-
-describe('ResultsComponent', () => {
-  let component: ResultsComponent;
-  let fixture: ComponentFixture<ResultsComponent>;
+describe('RacesComponent', () => {
+  let component: RacesComponent;
+  let fixture: ComponentFixture<RacesComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ResultsComponent]
-    })
-    .compileComponents();
+      imports: [RacesComponent],
+      providers: provideComponentTesting(),
+    }).compileComponents();
 
-    fixture = TestBed.createComponent(ResultsComponent);
+    fixture = TestBed.createComponent(RacesComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    fixture?.destroy();
   });
 
   it('should create', () => {

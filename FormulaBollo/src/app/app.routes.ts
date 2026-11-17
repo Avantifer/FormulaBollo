@@ -1,26 +1,9 @@
 import { Routes } from '@angular/router';
 import { HomeComponent } from './components/home/home.component';
-import { DriversComponent } from './components/drivers/drivers.component';
-import { DriversInfoComponent } from './components/drivers/drivers-info/drivers-info.component';
-import { TeamsComponent } from './components/teams/teams.component';
-import { TeamsInfoComponent } from './components/teams/teams-info/teams-info.component';
-import { StatuteComponent } from './components/statute/statute.component';
-import { RacesComponent } from './components/races/races.component';
-import { ResultsComponent } from './components/results/results.component';
-import { StatisticsComponent } from './components/statistics/statistics.component';
-import { AdminComponent } from './components/admin/admin.component';
-import { AdminGuard } from '../shared/guards/AdminGuard';
-import { AdminResultsComponent } from './components/admin/admin-results/admin-results.component';
-import { AdminPenaltiesComponent } from './components/admin/admin-penalties/admin-penalties.component';
-import { FantasyComponent } from './components/fantasy/fantasy.component';
-import { FantasyLoginComponent } from './components/fantasy/fantasy-login/fantasy-login.component';
-import { FantasyRegisterComponent } from './components/fantasy/fantasy-register/fantasy-register.component';
-import { LoginGuard } from '../shared/guards/LoginGuard';
-import { FantasyRecoverPasswordComponent } from './components/fantasy/fantasy-recover-password/fantasy-recover-password.component';
-import { RecoverPasswordGuard } from '../shared/guards/RecoverPasswordGuard';
-import { FantasyClasificationComponent } from './components/fantasy/fantasy-clasification/fantasy-clasification.component';
-import { FantasyTeamComponent } from './components/fantasy/fantasy-team/fantasy-team.component';
-import { FantasyTeamGuard } from '../shared/guards/FantasyTeamGuard';
+import { adminGuard } from '../shared/guards/AdminGuard';
+import { loginGuard } from '../shared/guards/LoginGuard';
+import { recoverPasswordGuard } from '../shared/guards/RecoverPasswordGuard';
+import { fantasyTeamGuard } from '../shared/guards/FantasyTeamGuard';
 
 export const routes: Routes = [
   {
@@ -34,40 +17,40 @@ export const routes: Routes = [
   },
   {
     path: 'drivers',
-    component: DriversComponent
+    loadComponent: () => import('./components/drivers/drivers.component').then(m => m.DriversComponent)
   },
   {
     path: 'drivers/:name',
-    component: DriversInfoComponent
+    loadComponent: () => import('./components/drivers/drivers-info/drivers-info.component').then(m => m.DriversInfoComponent)
   },
   {
     path: 'teams',
-    component: TeamsComponent
+    loadComponent: () => import('./components/teams/teams.component').then(m => m.TeamsComponent)
   },
   {
     path: 'teams/:name',
-    component: TeamsInfoComponent
+    loadComponent: () => import('./components/teams/teams-info/teams-info.component').then(m => m.TeamsInfoComponent)
   },
   {
     path: 'results',
-    component: RacesComponent
+    loadComponent: () => import('./components/races/races.component').then(m => m.RacesComponent)
   },
   {
     path: 'results/:name/:season',
-    component: ResultsComponent
+    loadComponent: () => import('./components/results/results.component').then(m => m.ResultsComponent)
   },
   {
     path: 'statute',
-    component: StatuteComponent
+    loadComponent: () => import('./components/statute/statute.component').then(m => m.StatuteComponent)
   },
   {
     path: 'statistics',
-    component: StatisticsComponent
+    loadComponent: () => import('./components/statistics/statistics.component').then(m => m.StatisticsComponent)
   },
   {
     path: 'admin',
-    component: AdminComponent,
-    canActivate: [AdminGuard],
+    loadComponent: () => import('./components/admin/admin.component').then(m => m.AdminComponent),
+    canActivate: [adminGuard],
     children: [
       { 
         path: '',
@@ -76,43 +59,43 @@ export const routes: Routes = [
       },
       {
         path: "results",
-        component: AdminResultsComponent,
+        loadComponent: () => import('./components/admin/admin-results/admin-results.component').then(m => m.AdminResultsComponent),
       },
       {
         path: "penalties",
-        component: AdminPenaltiesComponent,
+        loadComponent: () => import('./components/admin/admin-penalties/admin-penalties.component').then(m => m.AdminPenaltiesComponent),
       },
       {
         path: "sprints",
-        component: AdminResultsComponent,
+        loadComponent: () => import('./components/admin/admin-results/admin-results.component').then(m => m.AdminResultsComponent),
       }
     ],
   },
   {
     path: 'fantasy',
-    component: FantasyComponent
+    loadComponent: () => import('./components/fantasy/fantasy.component').then(m => m.FantasyComponent)
   },
   {
     path: 'fantasy/login',
-    component: FantasyLoginComponent,
-    canActivate: [LoginGuard]
+    loadComponent: () => import('./components/fantasy/fantasy-login/fantasy-login.component').then(m => m.FantasyLoginComponent),
+    canActivate: [loginGuard]
   },
   {
     path: 'fantasy/register',
-    component: FantasyRegisterComponent
+    loadComponent: () => import('./components/fantasy/fantasy-register/fantasy-register.component').then(m => m.FantasyRegisterComponent)
   },
   {
     path: "fantasy/recoverPassword/:token",
-    component: FantasyRecoverPasswordComponent,
-    canActivate: [RecoverPasswordGuard]
+    loadComponent: () => import('./components/fantasy/fantasy-recover-password/fantasy-recover-password.component').then(m => m.FantasyRecoverPasswordComponent),
+    canActivate: [recoverPasswordGuard]
   },
   {
     path: "fantasy/clasification",
-    component: FantasyClasificationComponent
+    loadComponent: () => import('./components/fantasy/fantasy-clasification/fantasy-clasification.component').then(m => m.FantasyClasificationComponent)
   },
   {
     path: "fantasy/team",
-    component: FantasyTeamComponent,
-    canActivate: [FantasyTeamGuard]
+    loadComponent: () => import('./components/fantasy/fantasy-team/fantasy-team.component').then(m => m.FantasyTeamComponent),
+    canActivate: [fantasyTeamGuard]
   }
 ];

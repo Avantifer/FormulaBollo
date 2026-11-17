@@ -6,12 +6,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import formula.bollo.config.WebSocketConfig;
+import formula.bollo.service.CacheNotifier;
 import formula.bollo.service.CacheService;
 import formula.bollo.utils.Constants;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @RestController
@@ -19,14 +19,15 @@ import jakarta.transaction.Transactional;
 @Tag(name = Constants.TAG_CACHE, description = Constants.TAG_CACHE_SUMMARY)
 public class CacheController {
     private final CacheService cacheService;
-    private final WebSocketConfig.CacheWebSocketHandler cacheWebSocketHandler;
+    private final CacheNotifier cacheNotifier;
 
-    public CacheController(CacheService cacheService, WebSocketConfig.CacheWebSocketHandler cacheWebSocketHandler) {
-        this.cacheWebSocketHandler = cacheWebSocketHandler;
+    public CacheController(CacheService cacheService, CacheNotifier cacheNotifier) {
+        this.cacheNotifier = cacheNotifier;
         this.cacheService = cacheService;
     }
 
     @Operation(summary = "Get current cache version", tags = Constants.TAG_CACHE)
+    @Transactional(readOnly = true)
     @GetMapping("/current")
     public Integer getCurrentVersion() {
         return cacheService.getCurrentVersion();
@@ -36,8 +37,7 @@ public class CacheController {
     @PostMapping("/update")
     @Transactional
     public ResponseEntity<Void> updateCache() {
-        cacheService.incrementVersion();
-        cacheWebSocketHandler.checkAndNotify();
+        cacheNotifier.publish();
         return ResponseEntity.ok().build();
     }
 }

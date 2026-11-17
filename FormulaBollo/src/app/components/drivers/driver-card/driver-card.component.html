@@ -1,8 +1,7 @@
-<div
-	class="group overflow-hidden rounded-lg border-t-8 border-b-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer transition-all duration-500 hover:bg-slate-500"
+<a
+	class="block focus-visible:outline-2 focus-visible:outline-red-600 group overflow-hidden rounded-lg border-t-8 border-b-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer transition-all duration-500 hover:bg-slate-500"
 	[class]="'border-' + (driverShow.driver.team.name | SpaceToUnderscore)"
-	(click)="router.navigate(['/drivers/' + utilsService.spaceToUnderScore(driverShow.driver.name)])"
-	(keydown.enter)="router.navigate(['/drivers/' + utilsService.spaceToUnderScore(driverShow.driver.name)])">
+	[routerLink]="['/drivers/' + utilsService.spaceToUnderScore(driverShow.driver.name)]">
 	<div class="flex flex-col h-full">
 		<div class="flex items-center p-3 xs:p-4 bg-white dark:bg-gray-900">
 			<div
@@ -48,10 +47,13 @@
 			</p>
 			<div class="w-full h-48 flex justify-center">
 				<img
+					loading="lazy"
+					width="256"
+					height="192"
 					[src]="imageService.getImageUrl(driverShow.driver.driverImage | SpaceToUnderscore)"
 					[alt]="driverShow.driver.name"
 					class="h-full object-cover object-center" />
 			</div>
 		</div>
 	</div>
-</div>
+</a>

@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
-import { Observable, of, tap } from "rxjs";
+import { Observable } from "rxjs";
 import { environment } from '../../../enviroments/enviroment';
 import { BaseApiService } from "../baseApiService.service";
 import { CacheService } from "../cache.service";
@@ -18,31 +18,15 @@ export class PenaltiesApiService {
 
   getPenaltiesByRace(raceId: number): Observable<Penalty[]> {
     const cacheKey: string = `PenaltiesTotalPerRace-${raceId}`;
-    const cache = this.cacheService.getCache();
-
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as Penalty[]);
     
     const params = this.baseApiService.createParams({ raceId: raceId });
-    return this.httpClient.get<Penalty[]>(`${environment.apiUrl}${this.endpoint}/totalPerRace`, { params }).pipe(
-      tap(data => {
-        cache.set(cacheKey, data);  
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<Penalty[]>(`${environment.apiUrl}${this.endpoint}/totalPerRace`, { params }));
   }
 
   getPenaltiesPerDriver(): Observable<Penalty[]> {
     const cacheKey: string = `PenaltiesTotalPerDriver-0`;
-    const cache = this.cacheService.getCache();
-
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as Penalty[]);
     
-    return this.httpClient.get<Penalty[]>(`${environment.apiUrl}${this.endpoint}/totalPerDriver`).pipe(
-      tap(data => {
-        cache.set(cacheKey, data);  
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<Penalty[]>(`${environment.apiUrl}${this.endpoint}/totalPerDriver`));
   }
 
   getPenaltiesPerDriverAndPerRace(driverId: number, raceId: number, severityId: number): Observable<Penalty[]> {    

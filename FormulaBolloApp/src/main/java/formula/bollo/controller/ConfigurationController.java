@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import formula.bollo.impl.ConfigurationImpl;
@@ -32,6 +33,7 @@ public class ConfigurationController {
     }
 
     @Operation(summary = "Get all configurations", tags = Constants.TAG_CONFIGURATION)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<ConfigurationDTO> getAllConfigurations() {
         log.info("Se coge todas las configuraciones");

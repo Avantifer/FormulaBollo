@@ -1,7 +1,13 @@
+.bolloFooter,
+.fantasyFooter {
+  background: var(--color-slate-950);
+  border-top: 2px solid var(--footer-accent);
+}
+
 .bolloFooter {
-  background-image: linear-gradient(to right, var(--color-principal), var(--color-principal-dark));
+  --footer-accent: var(--color-principal);
 }
 
 .fantasyFooter {
-  background-image: linear-gradient(to right, var(--color-fantasy-principal), var(--color-fantasy-principal-dark));
+  --footer-accent: var(--color-fantasy-principal);
 }

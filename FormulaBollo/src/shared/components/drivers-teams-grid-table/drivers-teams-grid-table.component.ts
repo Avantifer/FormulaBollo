@@ -55,7 +55,7 @@ export class DriversGridTableComponent {
   protected teamPoints: WritableSignal<TeamWithDrivers[]> = signal([]);
   protected teams: WritableSignal<Team[]> = signal([]);
 
-  protected isLoading: boolean = true;
+  protected readonly isLoading: WritableSignal<boolean> = signal(true);
   private readonly destroy$: Subject<void> = new Subject<void>();
   
   constructor(){
@@ -74,7 +74,7 @@ export class DriversGridTableComponent {
       takeUntil(this.destroy$),
       delay(100),
       catchError((error) => this.utilsService.handleError(ERROR_DRIVER_FETCH, error, [])),
-    ).subscribe((driverPoints: DriverPoints[]) => this._updateDriversPointsData(driverPoints))
+    ).subscribe((driverPoints: DriverPoints[]) => this._updateDriversPointsData(driverPoints, season))
   }
 
   private _getTeamsPoints(season: Season): void {
@@ -82,31 +82,31 @@ export class DriversGridTableComponent {
       takeUntil(this.destroy$),
       delay(100),
       catchError((error) => this.utilsService.handleError(ERROR_TEAM_FETCH, error, []))
-    ).subscribe((teamWithDrivers: TeamWithDrivers[]) => this._updateTeamsPointsData(teamWithDrivers));
+    ).subscribe((teamWithDrivers: TeamWithDrivers[]) => this._updateTeamsPointsData(teamWithDrivers, season));
   }
 
-  private _updateDriversPointsData(driverPoints: DriverPoints[]): void {
+  private _updateDriversPointsData(driverPoints: DriverPoints[], season: Season): void {
     if (!driverPoints.length) {
-      this.isLoading = true;
-      this._getAllDrivers();
+      this.isLoading.set(true);
+      this._getAllDrivers(season.number);
     }
 
     this.driverPoints.set(driverPoints);
-    this.isLoading = false;
+    this.isLoading.set(false);
   }
 
-  private _updateTeamsPointsData(teamWithDrivers: TeamWithDrivers[]): void {
+  private _updateTeamsPointsData(teamWithDrivers: TeamWithDrivers[], season: Season): void {
     if (!teamWithDrivers.length) {
-      this.isLoading = true;
-      this._getAllTeams();
+      this.isLoading.set(true);
+      this._getAllTeams(season.number);
     }
 
     this.teamPoints.set(teamWithDrivers);
-    this.isLoading = false;
+    this.isLoading.set(false);
   }
 
-  private _getAllDrivers(): void {
-    this.driversApiService.getAllDrivers(environment.seasonActual.number)
+  private _getAllDrivers(seasonNumber: number): void {
+    this.driversApiService.getAllDrivers(seasonNumber)
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => this.utilsService.handleError(ERROR_DRIVER_FETCH, error, []))
@@ -114,8 +114,8 @@ export class DriversGridTableComponent {
       .subscribe((drivers: Driver[]) => this.drivers.set(drivers));
   }
   
-  private _getAllTeams() {
-    this.teamApiService.getAllTeams(environment.seasonActual.number)
+  private _getAllTeams(seasonNumber: number) {
+    this.teamApiService.getAllTeams(seasonNumber)
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => this.utilsService.handleError(ERROR_TEAM_FETCH, error, []))
@@ -123,7 +123,7 @@ export class DriversGridTableComponent {
   }
 
   private _resetData(): void {
-    this.isLoading = true;
+    this.isLoading.set(true);
     this.driverPoints.set([]);
     this.drivers.set([]);
     this.teamPoints.set([]);

@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
-import { Observable, of, tap } from "rxjs";
+import { Observable } from "rxjs";
 import { DriverPoints } from "../../models/driverPoints";
 import { environment } from "../../../enviroments/enviroment";
 import { Result } from "../../models/result";
@@ -20,24 +20,13 @@ export class ResultApiService {
 
   getAllDriverPoints(seasonNumber: number, numResults?: number): Observable<DriverPoints[]> {
     const cacheKey: string = `allDriverPoints-${seasonNumber}-${numResults}`;
-    const cache = this.cacheService.getCache();
-
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as DriverPoints[]);
 
     const params = this.baseApiService.createParams({ season: seasonNumber, numResults: numResults});
-    return this.httpClient.get<DriverPoints[]>(`${environment.apiUrl}${this.endpoint}/totalPerDriver`, { params }).pipe(
-      tap(data => {
-        cache.set(cacheKey, data)
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<DriverPoints[]>(`${environment.apiUrl}${this.endpoint}/totalPerDriver`, { params }));
   }
 
   getSpecificDriversPoints(seasonNumber: number, driverIds: number[]): Observable<DriverPoints[]> {
     const cacheKey: string = `specificDriverPoints-${seasonNumber}-${driverIds}`;
-    const cache = this.cacheService.getCache();
-
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as DriverPoints[]);
 
     const params = this.baseApiService.createParams({ season: seasonNumber });
     const headers = new HttpHeaders({
@@ -45,42 +34,21 @@ export class ResultApiService {
       Accept: "application/json",
     });
 
-    return this.httpClient.post<DriverPoints[]>(`${environment.apiUrl}${this.endpoint}/totalPerSpecificDrivers`, driverIds, { headers, params }).pipe(
-      tap(data => {
-        cache.set(cacheKey, data)
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.post<DriverPoints[]>(`${environment.apiUrl}${this.endpoint}/totalPerSpecificDrivers`, driverIds, { headers, params }));
   }
 
   getAllResultsPerRacePilots(raceId: number): Observable<Result[]> {
     const cacheKey: string = `allResultsPerRacePilots-${raceId}-0`;
-    const cache = this.cacheService.getCache();
-
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as Result[]);
 
     const params = this.baseApiService.createParams({ raceId: raceId});
-    return this.httpClient.get<Result[]>(`${environment.apiUrl}${this.endpoint}/raceByPilots`, { params }).pipe(
-      tap(data => {
-        cache.set(cacheKey, data)
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<Result[]>(`${environment.apiUrl}${this.endpoint}/raceByPilots`, { params }));
   }
 
   getAllResultsPerRaceTeams(raceId: number): Observable<ResultTeam[]> {
     const cacheKey: string = `allResultsPerRaceTeams-${raceId}-0`;
-    const cache = this.cacheService.getCache();
-
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as ResultTeam[]);
 
     const params = this.baseApiService.createParams({ raceId: raceId});
-    return this.httpClient.get<ResultTeam[]>(`${environment.apiUrl}${this.endpoint}/raceByTeams`, { params }).pipe(
-      tap(data => {
-        cache.set(cacheKey, data)
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<ResultTeam[]>(`${environment.apiUrl}${this.endpoint}/raceByTeams`, { params }));
   }
 
   saveResults(results: Result[]): Observable<string> {

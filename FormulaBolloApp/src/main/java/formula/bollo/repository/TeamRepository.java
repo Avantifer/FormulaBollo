@@ -10,6 +10,9 @@ import formula.bollo.entity.Team;
 
 @Repository
 public interface TeamRepository extends JpaRepository<Team, Long> {
+
+    @Query("SELECT t FROM Team t LEFT JOIN FETCH t.season WHERE t.id IN :teamIds")
+    List<Team> findWithSeasonByIdIn(List<Long> teamIds);
     
     @Query(value = "SELECT t FROM Team t WHERE t.season.number = :seasonNumber")
     List<Team> findBySeason(int seasonNumber);

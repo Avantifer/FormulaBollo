@@ -19,6 +19,7 @@ export class AuthJWTService {
    * @returns A boolean indicating whether the user is an admin or not.
    */
   checkAdmin(jwt: string): boolean {
+    if (!this.checkTokenValid(jwt)) return false;
     let isAdmin: boolean = false;
     const token: Account | null = this.jwtService.decodeToken(jwt);
 
@@ -33,17 +34,18 @@ export class AuthJWTService {
    * @returns A boolean indicating whether the token is valid or not.
    */
   checkTokenValid(token: string | null | undefined): boolean {
-    let isValid: boolean = false;
-
-    if (token) {
+    try {
+      if (!token || token.split('.').length !== 3) return false;
+      const parts = token.split('.');
+      if (!parts.every(part => /^[A-Za-z0-9_-]+={0,2}$/.test(part))) return false;
+      const header = JSON.parse(atob(parts[0].replace(/-/g, '+').replace(/_/g, '/')));
+      if (typeof header?.alg !== 'string' || header.alg.toLowerCase() === 'none') return false;
       const tokenDecoded = this.jwtService.decodeToken(token);
-
-      if (!this.jwtService.isTokenExpired(token) && tokenDecoded.userId) {
-        isValid = true;
-      }
+      return !!tokenDecoded?.userId && typeof tokenDecoded.exp === 'number'
+        && Number.isFinite(tokenDecoded.exp) && tokenDecoded.exp > Date.now() / 1000;
+    } catch {
+      return false;
     }
-
-    return isValid;
   }
 
   /**
@@ -52,6 +54,7 @@ export class AuthJWTService {
    * @returns The id extracted from the token.
    */
   getIdFromToken(token: string): string {
+    if (!this.checkTokenValid(token)) return '';
     let id: string = "";
     const tokenDecoded = this.jwtService.decodeToken(token);
 
@@ -66,6 +69,7 @@ export class AuthJWTService {
    * @returns The username extracted from the token.
    */
   getUsernameFromToken(token: string): string {
+    if (!this.checkTokenValid(token)) return '';
     let username: string = "";
     const tokenDecoded = this.jwtService.decodeToken(token);
 
@@ -82,7 +86,8 @@ export class AuthJWTService {
     let isLogged: boolean = false;
     const token: string | null = localStorage.getItem("auth");
 
-    if (token) isLogged = true;
+    isLogged = this.checkTokenValid(token);
+    if (!isLogged) this.clearSession();
     this.isUserLogged = isLogged;
     return isLogged;
   }
@@ -91,8 +96,12 @@ export class AuthJWTService {
    * Removes the "auth" item from local storage, navigates to the login page, and displays a success message.
    */
   logOut(): void {
-    localStorage.removeItem("auth");
-    this.isUserLogged = false;
+    this.clearSession();
     this.messageInfoService.showInfo("Has cerrado sesión correctamente");
+  }
+
+  clearSession(): void {
+    localStorage.removeItem('auth');
+    this.isUserLogged = false;
   }
 }

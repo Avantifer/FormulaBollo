@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component } from '@angular/core';
 import { SelectSeasonsComponent } from '../../../shared/components/select-seasons/select-seasons.component';
 import { Season } from '../../../shared/models/season';
@@ -16,7 +16,6 @@ import { DriversGridTableComponent } from "../../../shared/components/drivers-te
 @Component({
   selector: 'app-teams',
   imports: [
-    CommonModule,
     SelectButtonModule,
     FormsModule,
     ButtonModule,
@@ -26,7 +25,7 @@ import { DriversGridTableComponent } from "../../../shared/components/drivers-te
     RaceDetailsComponent,
     TeamsFiltersComponent,
     DriversGridTableComponent
-  ],
+],
   templateUrl: './teams.component.html',
   styleUrl: './teams.component.scss'
 })

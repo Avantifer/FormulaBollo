@@ -1,0 +1,48 @@
+// Clasificaciones como torre de tiempos: filas densas, posición, barra del color del equipo
+// y puntos alineados a la derecha. Se activa con styleClass="timing-tower" en <p-table>.
+.timing-tower {
+  .p-datatable-tbody > tr > td {
+    padding-block: 0.4rem;
+    border-bottom: 1px solid var(--color-slate-200);
+  }
+
+  .dark & .p-datatable-tbody > tr > td {
+    border-bottom-color: var(--color-slate-700) !important;
+  }
+
+  // La barra de equipo (border-l-4) ocupa el borde izquierdo de la primera celda.
+  .p-datatable-tbody > tr > td:first-child {
+    border-left-width: 4px;
+    border-left-style: solid;
+    // border-<equipo> colorea los cuatro lados; el divisor inferior vuelve al gris de fila.
+    border-bottom-color: var(--color-slate-200) !important;
+  }
+
+  .dark & .p-datatable-tbody > tr > td:first-child {
+    border-bottom-color: var(--color-slate-700) !important;
+  }
+
+  // Posición como pestaña rectangular, no como círculo
+  .p-datatable-tbody > tr > td:first-child > div {
+    border-radius: 0.25rem;
+    min-width: 2rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  // Puntos: penúltima columna (antes de Acciones), alineada a la derecha y destacada
+  .p-datatable-thead > tr > th:nth-last-child(2),
+  .p-datatable-tbody > tr > td:nth-last-child(2) {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    padding-right: 1.5rem;
+  }
+
+  .p-datatable-tbody > tr > td:nth-last-child(2) {
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  .p-datatable-tbody > tr:hover > td {
+    background: color-mix(in srgb, var(--color-red-600) 7%, transparent) !important;
+  }
+}

@@ -1,20 +1,27 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
-import { TeamsCardComponent } from './team-card.component';
+import { HttpTestingController } from '@angular/common/http/testing';
+import { provideComponentTesting, teamPointsFixture } from '../../../../testing/component-test-providers';
+import { TeamCardComponent } from './team-card.component';
 
 describe('TeamCardComponent', () => {
-  let component: TeamsCardComponent;
-  let fixture: ComponentFixture<TeamsCardComponent>;
+  let component: TeamCardComponent;
+  let fixture: ComponentFixture<TeamCardComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TeamsCardComponent]
-    })
-    .compileComponents();
+      imports: [TeamCardComponent],
+      providers: provideComponentTesting(),
+    }).compileComponents();
 
-    fixture = TestBed.createComponent(TeamsCardComponent);
+    fixture = TestBed.createComponent(TeamCardComponent);
     component = fixture.componentInstance;
+    fixture.componentRef.setInput('teamPoints', teamPointsFixture);
+    fixture.componentRef.setInput('index', 0);
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    fixture?.destroy();
   });
 
   it('should create', () => {

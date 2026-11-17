@@ -1,14 +1,22 @@
 <div class="bg-slate-100 dark:bg-slate-800">
-	<main class="flex-1 bg-slate-100 dark:bg-slate-800">
+	<div class="flex-1 bg-slate-100 dark:bg-slate-800">
 		<div class="my-container mx-auto px-2 py-8">
 			<div class="mb-6 flex flex-row justify-between items-center p-4 rounded-lg bg-white dark:bg-slate-700 shadow-sm">
 				<div class="flex items-center gap-2">
 					<h1 class="text-xl font-bold">Resultados</h1>
 				</div>
 				<div class="flex flex-wrap items-center gap-4">
-					<select-seasons (seasonChanged)="onSeasonChange($event)"></select-seasons>
+					<select-seasons (seasonChanged)="onSeasonChange($event)" />
 				</div>
 			</div>
+			@if (loadError()) {
+				<div role="alert" class="p-4 text-center">
+					<p>No se pudieron cargar las carreras.</p>
+					<button type="button" (click)="retry()" class="underline focus-visible:outline-2">Reintentar</button>
+				</div>
+			} @else if (!loading() && !races().length) {
+				<p role="status" class="p-4 text-center">No hay carreras para esta temporada.</p>
+			}
 			<div class="carousel relative">
 				<div class="h-12 flex justify-between items-center mb-4">
 					<h2 class="text-base xs:text-xl font-bold">Calendario de Carreras</h2>
@@ -44,15 +52,15 @@
 										iconPos="right"
 										[routerLink]="['/results/' + (race.name | SpaceToUnderscore) + '/' + race.season.number]" />
 								</div>
-								<div class="absolute top-2 right-2 px-2 py-1 text-xs rounded-full bg-green-900/70 text-green-400" *ngIf="race.finished">
-									Completada
-								</div>
+								@if (race.finished) {
+									<div class="absolute top-2 right-2 px-2 py-1 text-xs rounded-full bg-green-900/70 text-green-400">Completada</div>
+								}
 							</div>
 						</ng-template>
 					</p-carousel>
-				} @else {
+				} @else if (loading()) {
 					<div class="p-2 md:p-6">
-						<p-skeleton width="100%" height="17rem"></p-skeleton>
+						<p-skeleton width="100%" height="17rem" />
 					</div>
 				}
 			</div>
@@ -84,15 +92,17 @@
 								</div>
 							}
 						</div>
-					} @else {
+					} @else if (loading()) {
 						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-							<div *ngFor="let item of 12 | skeletonItems" class="mb-6">
-								<p-skeleton width="95%" height="5rem"></p-skeleton>
-							</div>
+							@for (item of 12 | skeletonItems; track $index) {
+								<div class="mb-6">
+									<p-skeleton width="95%" height="5rem" />
+								</div>
+							}
 						</div>
 					}
 				</div>
 			</div>
 		</div>
-	</main>
+	</div>
 </div>

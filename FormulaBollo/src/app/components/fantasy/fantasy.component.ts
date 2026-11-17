@@ -17,7 +17,7 @@ export class FantasyComponent {
   readonly howToPlayList: MenuItem[] = [
     {
       title: 'Crea tu equipo',
-      label: 'Escoge tu equipo favorito de 3 pilotos y 2 escuderías, manteniéndote debajo del presupuesto ficticio de 70 millones. Los tendrás que rellenar por cada temporada. El equipo NO se guarda automáticamente, se tendrá que guardar y crear cada jornada. Puedes guardar el equipo hasta 12 horas antes de la carrera, después no dejará.',
+      label: 'Escoge tu equipo favorito de 3 pilotos y 2 escuderías, manteniéndote debajo del presupuesto ficticio de 80 millones. Los tendrás que rellenar por cada temporada. El equipo NO se guarda automáticamente, se tendrá que guardar y crear cada jornada. Puedes guardar el equipo hasta 12 horas antes de la carrera, después no dejará.',
       badge: 'fantasy/fantasyHowToPlay1.avif',
       target: 'fantasyComoJugar1',
       styleClass: 'flex-col lg:flex-row',
@@ -55,7 +55,7 @@ export class FantasyComponent {
       title: 'Tu Equipo',
       icon: 'pi pi-user',
       badge: 'pi pi-dollar',
-      fragment: 'Presupuesto: $70M',
+      fragment: 'Presupuesto: $80M',
       routerLink: '/fantasy/team'
     },
     {

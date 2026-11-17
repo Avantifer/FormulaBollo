@@ -1,4 +1,4 @@
-import { Component, inject, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { ImageService } from '../../../../shared/services/image.service';
 import { SpaceToUnderscorePipe } from "../../../../shared/pipes/spaceToUnderscore.pipe";
@@ -11,6 +11,7 @@ import { Divider } from 'primeng/divider';
 import { SkeletonModule } from 'primeng/skeleton';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-team-card',
   imports: [
     CommonModule,

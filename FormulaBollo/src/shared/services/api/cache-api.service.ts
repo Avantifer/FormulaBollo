@@ -1,4 +1,4 @@
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 import { environment } from '../../../enviroments/enviroment';
@@ -14,7 +14,9 @@ export class CacheApiService {
     return this.httpClient.get<number>(`${environment.apiUrl}${this.endpoint}/current`);
   }
 
+  /** Sube la versión de la caché de los clientes. Solo administradores: necesita el token de sesión. */
   updateCache(): Observable<any> {
-    return this.httpClient.post(`${environment.apiUrl}${this.endpoint}/update`, {});
+    const headers = new HttpHeaders({ Authorization: `Bearer ${localStorage.getItem("auth")}` });
+    return this.httpClient.post(`${environment.apiUrl}${this.endpoint}/update`, {}, { headers });
   }
 }

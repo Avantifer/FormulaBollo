@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -40,6 +41,7 @@ public class SprintController {
     }
 
     @Operation(summary = "Get sprints per race", tags = Constants.TAG_SPRINT)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/race", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<SprintDTO> getSprintsPerRace(@RequestParam Integer raceId) {
         log.info("Coger las sprints por la carrera " + raceId);

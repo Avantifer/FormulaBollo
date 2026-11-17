@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { HttpTestingController } from '@angular/common/http/testing';
+import { provideComponentTesting } from '../../../../testing/component-test-providers';
 import { AdminSprintsComponent } from './admin-sprints.component';
 
 describe('AdminSprintsComponent', () => {
@@ -8,13 +9,17 @@ describe('AdminSprintsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AdminSprintsComponent]
-    })
-    .compileComponents();
+      imports: [AdminSprintsComponent],
+      providers: provideComponentTesting(),
+    }).compileComponents();
 
     fixture = TestBed.createComponent(AdminSprintsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    fixture?.destroy();
   });
 
   it('should create', () => {

@@ -41,8 +41,11 @@ export class FantasyClasificationComponent {
   readonly fantasyPointsUsers = signal<FantasyPointsUser[]>([]);
 
   fantasyPointsUserSelected: FantasyPointsUser | undefined;
-  pointsDriverArray: number[] = [];
-  pointsTeamArray: number[] = [];
+  // Se rellenan tras peticiones HTTP: la plantilla los lee a través de signals para refrescarse sin zone.js.
+  private readonly pointsDriverState = signal<number[]>([]);
+  private readonly pointsTeamState = signal<number[]>([]);
+  get pointsDriverArray(): number[] { return this.pointsDriverState(); }
+  get pointsTeamArray(): number[] { return this.pointsTeamState(); }
   showDialog: boolean = false;
   private readonly destroy$: Subject<void> = new Subject<void>();
 
@@ -97,7 +100,7 @@ export class FantasyClasificationComponent {
         })
       )
       .subscribe((fantasyPointsTeam: FantasyPointsTeam) => {
-          this.pointsTeamArray[index] = fantasyPointsTeam.points;
+          this.pointsTeamState.update((points: number[]) => Object.assign([...points], { [index]: fantasyPointsTeam.points }));
         }
       );
   }
@@ -120,7 +123,7 @@ export class FantasyClasificationComponent {
         })
       )
       .subscribe((fantasyPointsDriver: FantasyPointsDriver) => {
-          this.pointsDriverArray[index] = fantasyPointsDriver.points;
+          this.pointsDriverState.update((points: number[]) => Object.assign([...points], { [index]: fantasyPointsDriver.points }));
         }
       );
   }

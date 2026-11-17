@@ -1,5 +1,9 @@
 package formula.bollo.service;
 
+import org.springframework.transaction.annotation.Transactional;
+
+import org.springframework.cache.annotation.CacheEvict;
+
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -13,6 +17,7 @@ import formula.bollo.impl.SprintImpl;
 import formula.bollo.model.SprintDTO;
 import formula.bollo.repository.SprintRepository;
 import formula.bollo.utils.Constants;
+import formula.bollo.utils.ResultBatchValidator;
 
 @Service
 public class SprintService {
@@ -43,7 +48,16 @@ public class SprintService {
      *
      * @param sprintDTOs The list of SprintDTO objects to be saved.
      */
+    @Transactional
+    @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public ResponseEntity<String> saveSprints(List<SprintDTO> sprintDTOs) {
+        if (!ResultBatchValidator.isValid(sprintDTOs, SprintDTO::getRace, SprintDTO::getDriver)
+                || sprintDTOs.stream().anyMatch(sprint -> sprint.getPosition() != null
+                        && sprint.getPosition().getId() == null)) {
+            return ResponseEntity.badRequest().body("El lote de sprints no es valido");
+        }
+        List<Sprint> sprintsToSave = this.sprintImpl.convertSprintsDTOToSprints(sprintDTOs);
+        sprintsToSave.forEach(sprint -> sprint.setId(null));
         List<Sprint> existingSprints = this.sprintRepository
                 .findByRaceId(sprintDTOs.get(0).getRace().getId().intValue());
 
@@ -51,12 +65,14 @@ public class SprintService {
             sprintRepository.deleteAll(existingSprints);
         }
 
-        sprintRepository.saveAll(this.sprintImpl.convertSprintsDTOToSprints(sprintDTOs));
+        // Las filas anteriores ya se borraron: se reinsertan como nuevas.
+        sprintRepository.saveAll(sprintsToSave);
 
         return new ResponseEntity<>("Resultados de la sprint guardados correctamente", Constants.HEADERS_TEXT_PLAIN,
                 HttpStatusCode.valueOf(200));
     }
 
+    @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public ResponseEntity<String> deleteSprints(Integer raceId) {
         sprintRepository.deleteByRaceId(raceId);
 

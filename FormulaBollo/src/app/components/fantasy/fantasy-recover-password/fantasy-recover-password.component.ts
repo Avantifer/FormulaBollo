@@ -1,11 +1,11 @@
+import { passwordPolicyValidator, passwordsMatchValidator } from '../../../../shared/validators/password.validators';
 import { Component, inject } from '@angular/core';
-import { AbstractControl, FormControl, FormGroup, FormsModule, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
-import { AuthJWTService } from '../../../../shared/services/authJWT.service';
 import { AccountApiService } from '../../../../shared/services/api/account-api.service';
 import { catchError, of, Subject, takeUntil } from 'rxjs';
 import { ERROR_CHANGE_PASSWORD } from '../../../constants';
@@ -26,7 +26,6 @@ import { MessageInfoService } from '../../../../shared/services/toastInfo.servic
 })
 export class FantasyRecoverPasswordComponent {
   private readonly router: Router = inject(Router);
-  private readonly authJWTService: AuthJWTService = inject(AuthJWTService);
   private readonly accountApiService: AccountApiService = inject(AccountApiService);
   private readonly messageInfoService: MessageInfoService = inject(MessageInfoService);
 
@@ -41,29 +40,17 @@ export class FantasyRecoverPasswordComponent {
   }
 
   protected recoverPasswordForm: FormGroup = new FormGroup({
-    password1: new FormControl('', Validators.required),
-    password2: new FormControl('', [
-      Validators.required,
-      this.passwordMatchValidator(),
-    ]),
-  });
-
-  private passwordMatchValidator(): ValidatorFn {
-    return (control: AbstractControl): { [key: string]: unknown } | null => {
-      const password = control.parent?.get("password1")?.value;
-      const passwordRepeated = control.value;
-      return password === passwordRepeated ? null : { passwordMismatch: true };
-    };
-  }
+    password1: new FormControl('', [Validators.required, passwordPolicyValidator]),
+    password2: new FormControl('', Validators.required),
+  }, { validators: passwordsMatchValidator('password1', 'password2') });
 
   recoverPassword(): void {
-    const username: string = this.authJWTService.getUsernameFromToken(
-      this.token,
-    );
+    this.recoverPasswordForm.markAllAsTouched();
+    if (this.recoverPasswordForm.invalid) return;
     const password: string = this.recoverPasswordForm.get("password1")?.value;
 
     this.accountApiService
-      .changePassword(username, password)
+      .changePassword(password, this.token)
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {

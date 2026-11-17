@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -43,6 +44,7 @@ public class ResultController {
     }
 
     @Operation(summary = "Get results total per driver", tags = Constants.TAG_RESULT)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/totalPerDriver", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<DriverPointsDTO> getTotalResultsPerDriver(
             @RequestParam Integer season,
@@ -61,6 +63,7 @@ public class ResultController {
     }
 
     @Operation(summary = "Get results per race by pilots", tags = Constants.TAG_RESULT)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/raceByPilots", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<ResultDTO> getResultsPerRacePilots(@RequestParam Integer raceId) {
         log.info("Coger los resultados agrupados por pilotos de la carrera " + raceId);
@@ -69,6 +72,7 @@ public class ResultController {
     }
 
     @Operation(summary = "Get results per race by teams", tags = Constants.TAG_RESULT)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/raceByTeams", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<ResultTeamDTO> getResultsPerRaceTeams(@RequestParam Integer raceId) {
         log.info("Coger los resultados agrupados por equipos de la carrera " + raceId);

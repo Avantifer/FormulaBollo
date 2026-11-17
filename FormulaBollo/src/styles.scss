@@ -9,8 +9,94 @@
 }
 
 @theme {
+  --color-slate-50: #F6F7F8;
+  --color-slate-100: #EEF0F2;
+  --color-slate-200: #DEE1E5;
+  --color-slate-300: #C3C8CF;
+  --color-slate-400: #8E96A1;
+  --color-slate-500: #646D79;
+  --color-slate-600: #4A525C;
+  --color-slate-700: #2F353D;
+  --color-slate-800: #1D2127;
+  --color-slate-900: #14171B;
+  --color-slate-950: #0E1013;
+  --color-gray-50: #F6F7F8;
+  --color-gray-100: #EEF0F2;
+  --color-gray-200: #DEE1E5;
+  --color-gray-300: #C3C8CF;
+  --color-gray-400: #8E96A1;
+  --color-gray-500: #646D79;
+  --color-gray-600: #4A525C;
+  --color-gray-700: #2F353D;
+  --color-gray-800: #1D2127;
+  --color-gray-900: #14171B;
+  --color-gray-950: #0E1013;
+  --color-red-50: #FFF1F0;
+  --color-red-100: #FFE0DD;
+  --color-red-200: #FFC2BD;
+  --color-red-300: #FF968E;
+  --color-red-400: #FF5D52;
+  --color-red-500: #F2352E;
+  --color-red-600: #E10600;
+  --color-red-700: #B80500;
+  --color-red-800: #900400;
+  --color-red-900: #6E0300;
+  --color-red-950: #430200;
   --breakpoint-xs: 23.438rem;
 }
 
-@custom-variant dark (&:where(.dark, .dark *)); 
+@custom-variant dark (&:where(.dark, .dark *));
 
+body {
+  font-family: "Geist", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: var(--color-slate-50);
+}
+
+.dark body {
+  background: var(--color-slate-950);
+}
+
+/* Cifras de tiempos y puntos alineadas en columna */
+.p-datatable,
+.p-datatable td,
+.p-datatable th {
+  font-variant-numeric: tabular-nums;
+}
+
+.p-datatable-tbody > tr > td {
+  padding-block: 0.6rem;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-red-600);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Títulos de sección: neutros, con una marca corta del color de la sección */
+h2.AudioWide.text-red-600 {
+  color: var(--color-slate-900);
+}
+
+.dark h2.AudioWide.text-red-600 {
+  color: #fff;
+}
+
+h2.AudioWide.text-red-600::after {
+  content: "";
+  display: block;
+  width: 3rem;
+  height: 3px;
+  margin: 0.75rem auto 0;
+  background: var(--color-red-600);
+}

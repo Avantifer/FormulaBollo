@@ -1,5 +1,8 @@
 package formula.bollo.service;
 
+import org.springframework.cache.annotation.CacheEvict;
+import formula.bollo.utils.Constants;
+
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -29,6 +32,7 @@ public class CacheService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public void incrementVersion() {
         Optional<Cache> cache = cacheRepository.findById("general_cache");
 

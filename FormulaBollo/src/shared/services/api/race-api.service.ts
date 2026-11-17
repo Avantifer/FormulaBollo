@@ -3,7 +3,7 @@ import { inject, Injectable } from "@angular/core";
 import { BaseApiService } from "../baseApiService.service";
 import { Race } from "../../models/race";
 import { environment } from "../../../enviroments/enviroment";
-import { Observable, of, tap } from "rxjs";
+import { Observable } from "rxjs";
 import { CacheService } from "../cache.service";
 
 @Injectable({
@@ -18,62 +18,30 @@ export class RaceApiService {
 
   getAllRaces(seasonNumber: number): Observable<Race[]> {
     const cacheKey: string = `allRaces-${seasonNumber}`;
-    const cache = this.cacheService.getCache();
-
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as Race[]);
 
     const params = this.baseApiService.createParams({ season: seasonNumber });
-    return this.httpClient.get<Race[]>(`${environment.apiUrl}${this.endpoint}/all`, { params }).pipe(
-      tap(data => {
-        cache.set(cacheKey, data)
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<Race[]>(`${environment.apiUrl}${this.endpoint}/all`, { params }));
   }
 
   getAllRacesFinished(seasonNumber: number): Observable<Race[]> {
     const cacheKey: string = `allRacesFinished-${seasonNumber}`;
-    const cache = this.cacheService.getCache();
-
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as Race[]);
 
     const params = this.baseApiService.createParams({ season: seasonNumber });
-    return this.httpClient.get<Race[]>(`${environment.apiUrl}${this.endpoint}/allFinished`, { params }).pipe(
-      tap(data => {
-        cache.set(cacheKey, data)
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<Race[]>(`${environment.apiUrl}${this.endpoint}/allFinished`, { params }));
   }
 
   getActualRace(seasonNumber: number): Observable<Race> {
     const cacheKey: string = `actualRace-${seasonNumber}`;
-    const cache = this.cacheService.getCache();
-
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as Race);
 
     const params = this.baseApiService.createParams({ season: seasonNumber });
-    return this.httpClient.get<Race>(`${environment.apiUrl}${this.endpoint}/actual`, { params }).pipe(
-      tap(data => {
-        cache.set(cacheKey, data);
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<Race>(`${environment.apiUrl}${this.endpoint}/actual`, { params }));
   }
 
   getAllRacesFinishedAndActual(seasonNumber: number): Observable<Race[]> {
     const cacheKey: string = `allRacesFinishedAndActual-${seasonNumber}`;
-    const cache = this.cacheService.getCache();
-
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as Race[]);
 
     const params = this.baseApiService.createParams({ season: seasonNumber });
-    return this.httpClient.get<Race[]>(`${environment.apiUrl}${this.endpoint}/allFinishedAndActual`, { params }).pipe(
-      tap(data => {
-        cache.set(cacheKey, data)
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<Race[]>(`${environment.apiUrl}${this.endpoint}/allFinishedAndActual`, { params }));
   }
 
   saveRace(race: Race): Observable<string> {

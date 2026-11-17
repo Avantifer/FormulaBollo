@@ -1,7 +1,14 @@
 package formula.bollo.service;
 
 import java.util.List;
+import java.security.Principal;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.regex.Pattern;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -19,6 +26,19 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class AccountService {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private static final Pattern EMAIL = Pattern.compile("^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*@[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?)*$");
+    private AccountAttemptLimiter attemptLimiter = new AccountAttemptLimiter(Duration.ofMinutes(15), 10, 30, 3, 20, System::nanoTime);
+
+    @Autowired
+    void configureAttemptLimits(@Value("${account.rate-limit.window:PT15M}") String window,
+            @Value("${account.rate-limit.login-account:10}") int loginAccount,
+            @Value("${account.rate-limit.login-ip:30}") int loginIp,
+            @Value("${account.rate-limit.recovery-email:3}") int recoveryEmail,
+            @Value("${account.rate-limit.recovery-ip:20}") int recoveryIp,
+            @Value("${account.rate-limit.recovery-email-total:10}") int recoveryEmailTotal) {
+        attemptLimiter = new AccountAttemptLimiter(Duration.parse(window), loginAccount, loginIp, recoveryEmail, recoveryIp,
+                recoveryEmailTotal, System::nanoTime);
+    }
 
     private AccountRepository accountRepository;
 
@@ -27,6 +47,10 @@ public class AccountService {
     private JwtConfig jwtConfig;
 
     private EmailService emailService;
+
+    // Dónde vive el frontend que recibe el enlace del correo; en desarrollo: frontend.url=http://localhost:4200/
+    @Value("${frontend.url:" + Constants.PRODUCTION_FRONTEND + "}")
+    private String frontendUrl = Constants.PRODUCTION_FRONTEND;
 
     public AccountService(AccountRepository accountRepository, AccountImpl accountImpl, JwtConfig jwtConfig,
             EmailService emailService) {
@@ -44,13 +68,22 @@ public class AccountService {
      * @return ResponseEntity containing the JWT token if authentication is
      *         successful.
      */
-    public ResponseEntity<String> login(AccountDTO accountDTO) {
+    public ResponseEntity<String> login(AccountDTO accountDTO, String remoteAddress) {
+        return attemptLimiter.login(accountDTO == null ? null : accountDTO.getUsername(), remoteAddress,
+                () -> authenticate(accountDTO));
+    }
+
+    private ResponseEntity<String> authenticate(AccountDTO accountDTO) {
+        if (accountDTO == null || accountDTO.getUsername() == null || !validPassword(accountDTO.getPassword())) {
+            return ResponseEntity.status(401).body("Las credenciales no son válidas");
+        }
         List<Account> account = accountRepository.findByUsername(accountDTO.getUsername());
-        boolean goodCredentials = passwordEncoder.matches(accountDTO.getPassword(), account.get(0).getPassword());
+        boolean goodCredentials = !account.isEmpty() && accountDTO.getPassword() != null
+                && passwordEncoder.matches(accountDTO.getPassword(), account.get(0).getPassword());
 
         if (!goodCredentials) {
-            log.error("Las credenciales no son válidas - " + accountDTO.getUsername());
-            return new ResponseEntity<>("Las credenciales no son válidas", HttpStatusCode.valueOf(500));
+            log.warn("Intento de acceso con credenciales no validas");
+            return new ResponseEntity<>("Las credenciales no son válidas", HttpStatusCode.valueOf(401));
         }
 
         AccountDTO adminDTO = this.accountImpl.accountToAccountDTO(account.get(0));
@@ -68,25 +101,39 @@ public class AccountService {
      *         successful.
      */
     public ResponseEntity<String> register(AccountDTO accountDTO) {
-        if (accountDTO.getPassword() == null)
-            return new ResponseEntity<>("Tienes que poner contraseña", HttpStatusCode.valueOf(500));
+        if (accountDTO == null || !validPassword(accountDTO.getPassword()))
+            return ResponseEntity.badRequest().body("Tienes que poner contraseña");
+        if (accountDTO.getUsername() == null || accountDTO.getUsername().isBlank() || accountDTO.getUsername().length() > 25
+                || accountDTO.getEmail() == null || accountDTO.getEmail().isBlank() || accountDTO.getEmail().length() > 100
+                || !EMAIL.matcher(accountDTO.getEmail()).matches()) {
+            return ResponseEntity.badRequest().body("El usuario o el correo no son validos");
+        }
 
         List<Account> account = accountRepository.findByUsername(accountDTO.getUsername());
 
         if (!account.isEmpty()) {
-            log.error("El nombre de usuario ya ha sido utilizado - " + accountDTO.getUsername());
-            return new ResponseEntity<>("El nombre de usuario ya ha sido utilizado", HttpStatusCode.valueOf(500));
+            log.warn("El nombre de usuario ya ha sido utilizado");
+            return new ResponseEntity<>("El nombre de usuario ya ha sido utilizado", HttpStatusCode.valueOf(409));
         }
 
         account = accountRepository.findByEmail(accountDTO.getEmail());
 
         if (!account.isEmpty()) {
-            log.error("El correo ya ha sido utilizado - " + accountDTO.getUsername());
-            return new ResponseEntity<>("El correo ya ha sido utilizado", HttpStatusCode.valueOf(500));
+            log.warn("El correo ya ha sido utilizado");
+            return new ResponseEntity<>("El correo ya ha sido utilizado", HttpStatusCode.valueOf(409));
         }
 
-        accountRepository.save(this.accountImpl.accountDTOToAccount(accountDTO));
-        String token = jwtConfig.generateToken(accountDTO);
+        // El cliente no decide su id ni su rol: con un id ajeno sobrescribiría otra cuenta y con admin=1 se haría administrador.
+        accountDTO.setId(null);
+        accountDTO.setAdmin(0);
+
+        Account savedAccount;
+        try {
+            savedAccount = accountRepository.save(this.accountImpl.accountDTOToAccount(accountDTO));
+        } catch (DataIntegrityViolationException exception) {
+            return ResponseEntity.status(409).body("El usuario o el correo ya han sido utilizados");
+        }
+        String token = jwtConfig.generateToken(this.accountImpl.accountToAccountDTO(savedAccount));
 
         return new ResponseEntity<>(token, HttpStatusCode.valueOf(200));
     }
@@ -94,16 +141,20 @@ public class AccountService {
     /**
      * Changes the password of an existing account.
      *
-     * @param username the username of the account whose password will be changed
+     * @param principal usuario autenticado cuya contraseña se cambia
      * @param password the new password to be encrypted and set for the account
      * @return ResponseEntity<String> a response entity with a success messageor
      *         failed.
      */
-    public ResponseEntity<String> changePassword(String username, String password) {
+    public ResponseEntity<String> changePassword(Principal principal, String password) {
+        if (!validPassword(password)) {
+            return ResponseEntity.badRequest().body("La contraseña no es valida");
+        }
+        String username = principal.getName();
         List<Account> account = accountRepository.findByUsername(username);
 
         if (account.isEmpty()) {
-            log.error("No se ha podido encontrar el usuario - " + username);
+            log.warn("No se ha podido encontrar el usuario");
             return new ResponseEntity<>("No se ha podido encontrar el usuario", HttpStatusCode.valueOf(500));
         }
 
@@ -120,17 +171,27 @@ public class AccountService {
      *              recovery.
      * @return ResponseEntity<String> with the status of the operation.
      */
-    public ResponseEntity<String> recoverPassword(String email) {
+    public ResponseEntity<String> recoverPassword(String email, String remoteAddress) {
+        ResponseEntity<String> limited = attemptLimiter.recovery(email, remoteAddress);
+        if (limited != null) {
+            return limited;
+        }
+        email = AccountAttemptLimiter.normalize(email);
         List<Account> account = accountRepository.findByEmail(email);
 
         if (account.isEmpty()) {
-            log.error("El usuario no existe - " + email);
-            return new ResponseEntity<>("El usuario no existe", HttpStatusCode.valueOf(500));
+            log.info("Solicitud de recuperacion de contraseña procesada");
+        } else {
+            this.sendEmail(this.accountImpl.accountToAccountDTO(account.get(0)));
         }
 
-        this.sendEmail(this.accountImpl.accountToAccountDTO(account.get(0)));
+        // Misma respuesta exista o no la cuenta, para no revelar qué correos están registrados.
+        return new ResponseEntity<>("Si el correo está registrado, recibirás un mensaje con el enlace para recuperar la contraseña",
+                HttpStatusCode.valueOf(200));
+    }
 
-        return new ResponseEntity<>("Se ha enviado el correo correctamente", HttpStatusCode.valueOf(200));
+    private boolean validPassword(String password) {
+        return password != null && !password.isBlank() && password.getBytes(StandardCharsets.UTF_8).length <= 72;
     }
 
     /**
@@ -140,8 +201,9 @@ public class AccountService {
      *                   recovery.
      */
     private void sendEmail(AccountDTO accountDTO) {
-        String token = this.jwtConfig.generateToken(accountDTO);
-        String link = Constants.PRODUCTION_FRONTEND + "fantasy/recoverPassword/" + token;
+        String token = this.jwtConfig.generateRecoveryToken(accountDTO);
+        String base = this.frontendUrl.endsWith("/") ? this.frontendUrl : this.frontendUrl + "/";
+        String link = base + "fantasy/recoverPassword/" + token;
         String message = """
                 Para recuperar la contraseña, haz click en el siguiente enlace:
                 %s

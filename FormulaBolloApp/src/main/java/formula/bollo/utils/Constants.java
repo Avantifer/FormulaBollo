@@ -1,5 +1,6 @@
 package formula.bollo.utils;
 
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
@@ -65,6 +66,7 @@ public class Constants {
     public static final String ENDPOINT_SEASONS = "/seasons";
     public static final String ENDPOINT_FANTASY = "/fantasy";
     public static final String ENDPOINT_SPRINT = "/sprints";
+    public static final String CACHE_STATS = "stats";
     public static final String ENDPOINT_CACHE = "/cache";
 
     // Urls
@@ -72,7 +74,10 @@ public class Constants {
     public static final String LOCAL_FRONTEND = "http://localhost:4200/";
 
     // Season
-    public static final int ACTUAL_SEASON = 3;
+    // shortcut: el frontend tiene su copia en src/enviroments; cambiar ambas al empezar temporada.
+    public static final int ACTUAL_SEASON = Integer.parseInt(System.getenv().getOrDefault("SEASON_ACTUAL", "3"));
+
+    public static final int FANTASY_BUDGET = 80_000_000;
 
     public static final HttpHeaders HEADERS_TEXT_PLAIN = createHeaders();
 

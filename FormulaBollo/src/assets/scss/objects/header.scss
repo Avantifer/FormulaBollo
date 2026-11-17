@@ -60,40 +60,38 @@
   background: var(--color-principal-dark) !important;
 }
 
-.fantasyHeader.p-menubar {
-  background-image: linear-gradient(to right, var(--color-fantasy-principal), var(--color-fantasy-principal-dark));
-}
-
+.fantasyHeader.p-menubar,
 .bolloHeader.p-menubar {
-  background-image: linear-gradient(to right, var(--color-principal), var(--color-principal-dark));
+  background: var(--color-slate-950);
+  background-image: none;
+  border-bottom: 2px solid var(--header-accent) !important;
 }
 
-.fantasyHeader .p-menubar-active {
-  background-color: var(--color-fantasy-principal-darkest);
-}
+.bolloHeader { --header-accent: var(--color-principal); }
+.fantasyHeader { --header-accent: var(--color-fantasy-principal); }
 
+// Enlace activo: subrayado del color de la sección, sin caja rellena
+.fantasyHeader .p-menubar-active,
 .bolloHeader .p-menubar-active {
-  background-color: var(--color-principal-darkest);
+  background-color: transparent;
+  box-shadow: inset 0 -3px 0 var(--header-accent);
+  border-radius: 0.25rem 0.25rem 0 0;
 }
 
-.p-menubar-active {
-  border-radius: 0.5rem;
+.fantasyHeader.p-menubar-mobile .p-menubar-root-list,
+.bolloHeader.p-menubar-mobile .p-menubar-root-list {
+  background: var(--color-slate-900);
+  background-image: none;
 }
 
-.fantasyHeader .p-menubar-mobile .p-menubar-root-list {
-  background-image: linear-gradient(to right, var(--color-fantasy-principal), var(--color-fantasy-principal-dark));
-}
-
-.bolloHeader .p-menubar-mobile .p-menubar-root-list {
-  background-image: linear-gradient(to right, var(--color-principal), var(--color-principal-dark));
-}
-
-.fantasyHeader .p-menubar-button:hover {
-  background: var(--color-fantasy-principal-darkest);
-}
-
+.fantasyHeader .p-menubar-button:hover,
 .bolloHeader .p-menubar-button:hover {
-  background: var(--color-principal-darkest);
+  background: rgb(255 255 255 / 0.1);
+}
+
+.fantasyHeader .p-menubar-button,
+.bolloHeader .p-menubar-button {
+  color: rgb(255 255 255 / 0.9);
 }
 
 .dark .header-button .p-button  {
@@ -104,11 +102,8 @@
 	min-width: auto;
 }
 
-.fantasyHeader .p-menubar-item-link:hover {
-  background: color-mix(in oklab, var(--color-blue-500)50%, transparent);
-}
-
+.fantasyHeader .p-menubar-item-link:hover,
 .bolloHeader .p-menubar-item-link:hover {
-  background: color-mix(in oklab, var(--color-red-500)50%, transparent);
+  background: rgb(255 255 255 / 0.08);
 }
 

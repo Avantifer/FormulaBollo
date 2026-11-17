@@ -1,5 +1,5 @@
 import { Account } from './../../../../shared/models/account';
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, WritableSignal } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -42,7 +42,7 @@ export class FantasyLoginComponent {
   });
 
   protected showPassword: boolean = false;
-  protected recoveryPasswordDialog: boolean = false;
+  protected readonly recoveryPasswordDialog: WritableSignal<boolean> = signal(false);
   private readonly destroy$: Subject<void> = new Subject<void>();
 
   ngOnDestroy(): void {
@@ -76,7 +76,7 @@ export class FantasyLoginComponent {
       })
     ).subscribe(() => {
       this.messageInfoService.showSuccess('Enlace enviado al correo correctamente');
-      this.recoveryPasswordDialog = false;
+      this.recoveryPasswordDialog.set(false);
     }); 
   }
 }

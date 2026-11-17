@@ -294,7 +294,7 @@ class ResultServiceTest {
         SeasonDTO seasonDTO = new SeasonDTO(2L, "Temporada 3", 2, "2025");
         TeamDTO team = new TeamDTO(1L, "Ferrari", "", "", seasonDTO);
         DriverDTO driver = new DriverDTO(1L, "Avantifer", 0, "", seasonDTO, team);
-        RaceDTO race = new RaceDTO(1L, "Francia", "", "", LocalDateTime.now(), null, 0);
+        RaceDTO race = new RaceDTO(1L, "Francia", "", "", LocalDateTime.now(), seasonDTO, 0);
         PositionDTO pos = new PositionDTO(1L, 1, 25);
 
         ResultDTO result = new ResultDTO(1L, race, driver, pos, 1, 1);
@@ -307,6 +307,27 @@ class ResultServiceTest {
         ResponseEntity<String> response = resultService.saveResults(List.of(result));
 
         assertEquals("Resultados guardados correctamente", response.getBody());
+    }
+
+    @Test
+    void saveResultsReinsertsAsNewRows() {
+        SeasonDTO seasonDTO = new SeasonDTO(2L, "Temporada 3", 2, "2025");
+        TeamDTO team = new TeamDTO(1L, "Ferrari", "", "", seasonDTO);
+        DriverDTO driver = new DriverDTO(1L, "Avantifer", 0, "", seasonDTO, team);
+        RaceDTO race = new RaceDTO(1L, "Francia", "", "", LocalDateTime.now(), seasonDTO, 0);
+        ResultDTO result = new ResultDTO(7L, race, driver, new PositionDTO(1L, 1, 25), 1, 1);
+
+        Result converted = new Result();
+        converted.setId(7L);
+        when(resultRepository.findByRaceId(1)).thenReturn(List.of(new Result()));
+        when(resultImpl.convertResultsDTOToResults(any())).thenReturn(List.of(converted));
+
+        resultService.saveResults(List.of(result));
+
+        org.mockito.ArgumentCaptor<List<Result>> saved = org.mockito.ArgumentCaptor.forClass(List.class);
+        org.mockito.Mockito.verify(resultRepository).saveAll(saved.capture());
+        // Las filas antiguas se borran antes: conservar el id haría fallar el merge en Hibernate 7.
+        org.junit.jupiter.api.Assertions.assertNull(saved.getValue().get(0).getId());
     }
 
     @Test
@@ -375,5 +396,24 @@ class ResultServiceTest {
         resultService.getOverallPositionChanges(list, 1);
 
         assertEquals(PositionChange.SAME, dp.getPositionChange());
+    }
+
+    @Test
+    void latestRaceUsesDateThenIdWithUnorderedResults() {
+        Season season = new Season(1L, "Season", 1, 2026);
+        Driver driver = new Driver(1L, "Driver", 1, "", season, null);
+        LocalDateTime date = LocalDateTime.of(2026, 2, 1, 0, 0);
+        Race latest = new Race(3L, "Latest", "", "", date, season, 1);
+        Race tied = new Race(2L, "Tied", "", "", date, season, 1);
+        Race older = new Race(99L, "Older", "", "", date.minusDays(1), season, 1);
+        SeasonDTO dtoSeason = new SeasonDTO(1L, "Season", 1, "2026");
+        when(driverImpl.driverToDriverDTO(driver)).thenReturn(new DriverDTO(1L, "Driver", 1, "", dtoSeason, null));
+        List<Result> unordered = List.of(new Result(1L, latest, driver, null, 0, 0),
+                new Result(2L, tied, driver, null, 0, 0), new Result(3L, older, driver, null, 0, 0));
+
+        resultService.setTotalPointsByDriver(unordered, List.of(), new HashMap<>());
+
+        Mockito.verify(resultRepository).findByRaceId(3);
+        Mockito.verify(sprintRepository).findByRaceId(3);
     }
 }

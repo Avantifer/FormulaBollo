@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
-import { Observable, of, tap } from "rxjs";
+import { Observable } from "rxjs";
 import { environment } from "../../../enviroments/enviroment";
 import { BaseApiService } from "../baseApiService.service";
 import { CacheService } from "../cache.service";
@@ -18,17 +18,9 @@ export class SprintApiService {
 
   getAllSprintPerRace(raceId: number): Observable<Sprint[]> {
     const cacheKey: string = `allSprintPerRace-${raceId}-0`;
-    const cache = this.cacheService.getCache();
-
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as Sprint[]);
 
     const params = this.baseApiService.createParams({ raceId: raceId });
-    return this.httpClient.get<Sprint[]>(`${environment.apiUrl}${this.endpoint}/race`, { params }).pipe(
-      tap(data => {
-        cache.set(cacheKey, data)
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<Sprint[]>(`${environment.apiUrl}${this.endpoint}/race`, { params }));
   }
 
   saveSprints(sprints: Sprint[]): Observable<string> {

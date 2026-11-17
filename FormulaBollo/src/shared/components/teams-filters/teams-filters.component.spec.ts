@@ -1,20 +1,25 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
+import { provideComponentTesting } from '../../../testing/component-test-providers';
+import { TeamsFiltersComponent } from './teams-filters.component';
 
-import { DriversFiltersComponent } from './teams-filters.component';
-
-describe('DriversFiltersComponent', () => {
-  let component: DriversFiltersComponent;
-  let fixture: ComponentFixture<DriversFiltersComponent>;
+describe('TeamsFiltersComponent', () => {
+  let component: TeamsFiltersComponent;
+  let fixture: ComponentFixture<TeamsFiltersComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DriversFiltersComponent]
-    })
-    .compileComponents();
+      imports: [TeamsFiltersComponent],
+      providers: provideComponentTesting(),
+    }).compileComponents();
 
-    fixture = TestBed.createComponent(DriversFiltersComponent);
+    fixture = TestBed.createComponent(TeamsFiltersComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    fixture?.destroy();
   });
 
   it('should create', () => {

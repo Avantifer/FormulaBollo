@@ -1,11 +1,14 @@
 package formula.bollo.controller;
 
+import org.springframework.cache.annotation.Cacheable;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.springframework.http.MediaType;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -42,6 +45,7 @@ public class DriverController {
     }
 
     @Operation(summary = "Get all drivers", tags = Constants.TAG_DRIVER)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<DriverDTO> getAllDrivers(@RequestParam Integer season) {
         log.info("Se coge todos los pilotos de la temporada " + season);
@@ -49,40 +53,41 @@ public class DriverController {
     }
 
     @Operation(summary = "Get drivers of a team", tags = Constants.TAG_DRIVER)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/byTeamName", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<DriverDTO> getDriversByTeam(@RequestParam(required = false) Integer season,
             @RequestParam String teamName) {
         log.info("Se coge todos los pilotos del equipo " + teamName + " y la temporada " + season);
-        List<Driver> drivers = (season == 0)
+        List<Driver> drivers = (season == null || season == 0)
                 ? this.driverRepository.findByTeamName(teamName)
                 : this.driverRepository.findByTeamNameAndSeason(season, teamName);
         return this.driverImpl.convertListDriversToDriversDTO(drivers);
     }
 
     @Operation(summary = "Get info of a driver", tags = Constants.TAG_DRIVER)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/infoDriverByName", produces = MediaType.APPLICATION_JSON_VALUE)
     public DriverInfoDTO getinfoDriverByName(@RequestParam(required = false) Integer season,
             @RequestParam String driverName) {
         log.info("Se coge la informacion del piloto " + driverName + "y de la temporada " + season);
-        List<Driver> drivers = (season == 0) ? driverRepository.findByName(driverName)
+        List<Driver> drivers = (season == null || season == 0) ? driverRepository.findByName(driverName)
                 : driverRepository.findByNameAndSeason(season, driverName);
         return this.driverService.getAllInfoDriver(drivers);
     }
 
     @Operation(summary = "Get all info of drivers", tags = Constants.TAG_DRIVER)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/allInfoDriver", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Cacheable(cacheNames = Constants.CACHE_STATS, key = "'allInfoDriver:' + #season")
     public List<DriverInfoDTO> getAllInfoDriver(@RequestParam Integer season) {
         log.info("Se coge toda la informacion de los pilotos de la temporada " + season);
         List<Driver> drivers = (season == 0) ? driverRepository.findAll() : driverRepository.findAllBySeason(season);
 
-        List<DriverInfoDTO> driversInfoDTO = drivers.stream()
-                .map(driver -> this.driverService.getAllInfoDriver(List.of(driver)))
-                .toList();
-
-        return this.driverService.sumDuplicates(driversInfoDTO);
+        return this.driverService.sumDuplicates(this.driverService.getAllInfoDrivers(drivers));
     }
 
     @Operation(summary = "Get all record of drivers", tags = Constants.TAG_DRIVER)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/recordsDrivers", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<RecordDTO> getAllDriversRecords() {
         log.info("Coger todos los records de los pilotos");
@@ -90,6 +95,7 @@ public class DriverController {
     }
 
     @Operation(summary = "Get all evolution points of drivers", tags = Constants.TAG_DRIVER)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/evolutionPoints", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<DriverPointsEvolutionDTO> getEvolutionPoints(@RequestParam Integer driver1Id,
             @RequestParam Integer driver2Id,

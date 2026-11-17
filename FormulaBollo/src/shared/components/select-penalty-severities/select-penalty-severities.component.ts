@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Output, signal, WritableSignal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
 import { PenaltySeverityApiService } from '../../services/api/penalty-severity-api.service';
@@ -17,7 +17,7 @@ export class SelectPenaltySeveritiesComponent {
   private readonly messageInfoService: MessageInfoService = inject(MessageInfoService);
   @Output() penaltySeverityChanged = new EventEmitter<PenaltySeverity>();
   
-  public penaltySeverities: PenaltySeverity[] = [];
+  public readonly penaltySeverities: WritableSignal<PenaltySeverity[]> = signal<PenaltySeverity[]>([]);
   public penaltySeveritiesForm: FormGroup = new FormGroup({
     penaltySeverity: new FormControl<PenaltySeverity | null>(null)
   });
@@ -38,10 +38,10 @@ export class SelectPenaltySeveritiesComponent {
     this.penaltySeverityApiService.getAllPenaltiesSeverity()
       .subscribe({
         next: (penaltySeverities) => {
-          this.penaltySeverities = penaltySeverities;
-          if (this.penaltySeverities.length > 0) {
+          this.penaltySeverities.set(penaltySeverities);
+          if (this.penaltySeverities().length > 0) {
             setTimeout(() => {
-              this.penaltySeveritiesForm.get('penaltySeverity')?.setValue(this.penaltySeverities[0]);
+              this.penaltySeveritiesForm.get('penaltySeverity')?.setValue(this.penaltySeverities()[0]);
             });
           }
         },

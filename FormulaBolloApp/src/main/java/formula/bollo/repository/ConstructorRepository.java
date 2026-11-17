@@ -13,4 +13,7 @@ public interface ConstructorRepository extends JpaRepository<Constructor, Long> 
 
     @Query(value = "SELECT COUNT(c) FROM Constructor c WHERE c.team.id IN (:teamId)")
     int findByTeamId(List<Long> teamId);
+
+    @Query("SELECT c.team.id, COUNT(c) FROM Constructor c WHERE c.team.id IN :teamIds GROUP BY c.team.id")
+    List<Object[]> countByTeam(List<Long> teamIds);
 }

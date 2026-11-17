@@ -1,5 +1,5 @@
 import { ERROR_EVOLUTION_POINTS_NOT_FOUND, getLineChartOptions } from './../../../constants';
-import { Component, effect, inject, Input, SimpleChanges } from '@angular/core';
+import { Component, effect, inject, Input, signal, SimpleChanges, WritableSignal } from '@angular/core';
 import { Chart, ChartData } from 'chart.js';
 import { catchError, of, Subject, takeUntil } from 'rxjs';
 import { DriverApiService } from '../../../../shared/services/api/driver-api.service';
@@ -38,7 +38,9 @@ export class EvolutionStatsComponent {
   private teamsSelected: Team[] | null[] = [null, null, null, null];
 
   lineChartOptions = getLineChartOptions(this.themeService.isDarkTheme())
-  dataDriversEvolutionPoints!: ChartData;
+  // Se rellena tras una petición HTTP: la plantilla lo lee a través de un signal para refrescarse sin zone.js.
+  private readonly evolutionPointsState: WritableSignal<ChartData | undefined> = signal<ChartData | undefined>(undefined);
+  get dataDriversEvolutionPoints(): ChartData | undefined { return this.evolutionPointsState(); }
 
   private readonly destroy$: Subject<void> = new Subject<void>();
 
@@ -137,9 +139,9 @@ export class EvolutionStatsComponent {
       };
     });
 
-    this.dataDriversEvolutionPoints = {
+    this.evolutionPointsState.set({
       labels,
       datasets
-    };
+    });
   }
 }

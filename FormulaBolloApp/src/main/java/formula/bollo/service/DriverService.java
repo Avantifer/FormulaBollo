@@ -1,10 +1,12 @@
 package formula.bollo.service;
 
-import java.util.AbstractMap;
+import org.springframework.cache.annotation.Cacheable;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IntSummaryStatistics;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,43 +83,98 @@ public class DriverService {
             return null;
 
         List<Long> listOfIds = drivers.stream().map(Driver::getId).toList();
+        return buildInfo(drivers,
+                this.resultRepository.findWithRaceAndPositionByDriverIds(listOfIds),
+                this.sprintRepository.findByDriverIds(listOfIds),
+                this.penaltyRepository.findByDriverIds(listOfIds),
+                this.championshipRepository.findByDriverIds(listOfIds));
+    }
+
+    /**
+     * Misma información que {@link #getAllInfoDriver(List)} para cada piloto de la lista, pero
+     * cargando resultados, sprints, sanciones y campeonatos en 4 consultas en total.
+     */
+    public List<DriverInfoDTO> getAllInfoDrivers(List<Driver> drivers) {
+        if (drivers.isEmpty())
+            return List.of();
+
+        List<Long> ids = drivers.stream().map(Driver::getId).toList();
+        Map<Long, List<Result>> results = this.resultRepository.findWithRaceAndPositionByDriverIds(ids).stream()
+                .collect(Collectors.groupingBy(result -> result.getDriver().getId()));
+        Map<Long, List<Sprint>> sprints = this.sprintRepository.findByDriverIds(ids).stream()
+                .collect(Collectors.groupingBy(sprint -> sprint.getDriver().getId()));
+        Map<Long, Integer> penalties = toCounts(this.penaltyRepository.countByDriver(ids));
+        Map<Long, Integer> championships = toCounts(this.championshipRepository.countByDriver(ids));
+
+        return drivers.stream()
+                .map(driver -> buildInfo(List.of(driver),
+                        results.getOrDefault(driver.getId(), List.of()),
+                        sprints.getOrDefault(driver.getId(), List.of()),
+                        penalties.getOrDefault(driver.getId(), 0),
+                        championships.getOrDefault(driver.getId(), 0)))
+                .toList();
+    }
+
+    /** Uses the same aggregate calculation as getAllInfoDriver, once for each team. */
+    Map<Long, DriverInfoDTO> getAllInfoDriversByTeam(List<Driver> drivers, List<Result> results) {
+        if (drivers.isEmpty())
+            return Map.of();
+
+        List<Long> ids = drivers.stream().map(Driver::getId).toList();
+        Map<Long, List<Driver>> driversByTeam = drivers.stream()
+                .collect(Collectors.groupingBy(driver -> driver.getTeam().getId()));
+        Map<Long, List<Result>> resultsByTeam = results.stream()
+                .collect(Collectors.groupingBy(result -> result.getDriver().getTeam().getId()));
+        Map<Long, List<Sprint>> sprintsByTeam = this.sprintRepository.findWithPositionByDriverIds(ids).stream()
+                .collect(Collectors.groupingBy(sprint -> sprint.getDriver().getTeam().getId()));
+        Map<Long, Integer> penalties = toCounts(this.penaltyRepository.countByDriver(ids));
+        Map<Long, Integer> championships = toCounts(this.championshipRepository.countByDriver(ids));
+
+        Map<Long, DriverInfoDTO> infoByTeam = new HashMap<>();
+        driversByTeam.forEach((teamId, teamDrivers) -> infoByTeam.put(teamId,
+                buildInfo(teamDrivers, resultsByTeam.getOrDefault(teamId, List.of()),
+                        sprintsByTeam.getOrDefault(teamId, List.of()),
+                        teamDrivers.stream().mapToInt(driver -> penalties.getOrDefault(driver.getId(), 0)).sum(),
+                        teamDrivers.stream().mapToInt(driver -> championships.getOrDefault(driver.getId(), 0)).sum())));
+        return infoByTeam;
+    }
+
+    private static Map<Long, Integer> toCounts(List<Object[]> rows) {
+        Map<Long, Integer> counts = new HashMap<>();
+        rows.forEach(row -> counts.put(((Number) row[0]).longValue(), ((Number) row[1]).intValue()));
+        return counts;
+    }
+
+    private DriverInfoDTO buildInfo(List<Driver> drivers, List<Result> results, List<Sprint> sprints,
+            int penalties, int championships) {
         List<Driver> driverList = drivers.stream()
                 .filter(driverFilter -> driverFilter.getSeason().getNumber() == Constants.ACTUAL_SEASON)
                 .toList();
         Driver driver = driverList.isEmpty() ? drivers.get(drivers.size() - 1) : driverList.get(0);
-        DriverDTO driverDTO = driverImpl.driverToDriverDTO(driver);
 
-        int poles = this.resultRepository.polesByDriverIds(listOfIds);
-        int fastlaps = this.resultRepository.fastlapByDriverIds(listOfIds);
-        int racesFinished = this.resultRepository.racesFinishedByDriverIds(listOfIds);
-        int championships = this.championshipRepository.findByDriverIds(listOfIds);
-        int penalties = this.penaltyRepository.findByDriverIds(listOfIds);
-        int podiums = this.resultRepository.podiumsByDriverIds(listOfIds);
-        int victories = this.resultRepository.victoriesByDriverIds(listOfIds);
-        Double averagePosition = this.resultRepository.averagePositionByDriverIds(listOfIds);
-        averagePosition = averagePosition == null ? 0 : averagePosition;
-        List<ResultDTO> last5Results = this.resultImpl
-                .convertResultsToResultsDTO(this.resultRepository.last5ResultsByDriverIds(listOfIds));
+        List<Result> finished = results.stream().filter(result -> result.getPosition() != null).toList();
+        IntSummaryStatistics positions = finished.stream()
+                .mapToInt(result -> result.getPosition().getPositionNumber()).summaryStatistics();
 
-        int bestPosition = this.resultRepository.bestResultByDriverIds(listOfIds).stream()
-                .mapToInt(result -> result.getPosition().getPositionNumber()).min().orElse(0);
+        int poles = (int) results.stream().filter(result -> result.getPole() == 1).count();
+        int fastlaps = (int) results.stream().filter(result -> result.getFastlap() == 1).count();
+        int podiums = (int) finished.stream().filter(result -> result.getPosition().getPositionNumber() <= 3).count();
+        int victories = (int) finished.stream().filter(result -> result.getPosition().getPositionNumber() == 1).count();
+        int bestPosition = finished.isEmpty() ? 0 : positions.getMin();
+        // La base devolvía AVG con 4 decimales; se mantiene el mismo formato.
+        double averagePosition = Math.round(positions.getAverage() * 10000d) / 10000d;
 
-        List<Result> results = this.resultRepository.findByDriverIds(listOfIds);
-        List<Sprint> sprints = this.sprintRepository.findByDriverIds(listOfIds);
-
-        Map<DriverDTO, Integer> totalPointsByDriver = new HashMap<>();
-        resultService.setTotalPointsByDriver(results, sprints, totalPointsByDriver);
-
-        int totalPoints = drivers.stream()
-                .mapToInt(driverMap -> totalPointsByDriver
-                        .getOrDefault(driverImpl.driverToDriverDTO(driverMap), 0))
-                .sum();
+        List<Result> last5 = finished.stream()
+                .sorted(Comparator.comparing((Result result) -> result.getRace().getDateStart())
+                        .thenComparing(Result::getId).reversed())
+                .limit(5)
+                .toList();
 
         return new DriverInfoDTO(
-                driverDTO, poles, fastlaps,
-                racesFinished, totalPoints, championships,
+                driverImpl.driverToDriverDTO(driver), poles, fastlaps,
+                finished.size(), resultService.sumPoints(results, sprints), championships,
                 penalties, bestPosition, victories,
-                podiums, averagePosition, last5Results);
+                podiums, averagePosition, this.resultImpl.convertResultsToResultsDTO(last5));
     }
 
     /**
@@ -166,32 +223,23 @@ public class DriverService {
      * 
      * @return a list of RecordDTO objects with the records statistics
      */
+    @Cacheable(cacheNames = Constants.CACHE_STATS, key = "#root.methodName + T(java.util.Arrays).toString(#root.args)")
     public List<RecordDTO> getAllRecords() {
         List<RecordDTO> recordDTOs = new ArrayList<>();
-        RecordDTO recordPole = this.resultRepository.recordPoleDriver().getFirst();
-        RecordDTO recordPodiums = this.resultRepository.recordPodiumsDriver().getFirst();
-        RecordDTO recordFastLap = this.resultRepository.recordFastlapDriver().getFirst();
-        RecordDTO recordVictories = this.resultRepository.recordVictoriesDriver().getFirst();
-        RecordDTO recordPorcentageVictories = this.resultRepository.recordPorcentageVictoriesDriver()
-                .getFirst();
-        RecordDTO recordPenalties = this.penaltyRepository.recordPenaltiesDriver().getFirst();
-        RecordDTO recordRacesFinished = this.resultRepository.recordRacesFinishedDriver().getFirst();
-        DriverPointsDTO resultDTO = this.resultService.getTotalResultsPerDriver(0, null).getFirst();
-        RecordDTO recordPoints = new RecordDTO(
+        this.resultRepository.recordPoleDriver().stream().findFirst().ifPresent(recordDTOs::add);
+        this.resultRepository.recordPodiumsDriver().stream().findFirst().ifPresent(recordDTOs::add);
+        this.resultRepository.recordFastlapDriver().stream().findFirst().ifPresent(recordDTOs::add);
+        this.resultRepository.recordVictoriesDriver().stream().findFirst().ifPresent(recordDTOs::add);
+        this.resultRepository.recordPorcentageVictoriesDriver().stream().findFirst().ifPresent(recordDTOs::add);
+        this.penaltyRepository.recordPenaltiesDriver().stream().findFirst().ifPresent(recordDTOs::add);
+        this.resultRepository.recordRacesFinishedDriver().stream().findFirst().ifPresent(recordDTOs::add);
+        this.resultService.getTotalResultsPerDriver(0, null).stream().findFirst().ifPresent(resultDTO ->
+                recordDTOs.add(new RecordDTO(
                 "Mayor número de puntos en una temporada",
                 resultDTO.getTotalPoints(),
                 this.driverImpl.driverDTOToDriver(resultDTO.getDriver()),
                 this.teamImpl.teamDTOToTeam(resultDTO.getDriver().getTeam()),
-                this.seasonImpl.seasonDTOToSeason(resultDTO.getDriver().getSeason()));
-
-        recordDTOs.add(recordPole);
-        recordDTOs.add(recordPodiums);
-        recordDTOs.add(recordFastLap);
-        recordDTOs.add(recordVictories);
-        recordDTOs.add(recordPorcentageVictories);
-        recordDTOs.add(recordPenalties);
-        recordDTOs.add(recordRacesFinished);
-        recordDTOs.add(recordPoints);
+                this.seasonImpl.seasonDTOToSeason(resultDTO.getDriver().getSeason()))));
 
         return recordDTOs;
     }
@@ -202,6 +250,7 @@ public class DriverService {
      * @return a list of DriverPointsEvolutionDTO objects with the points' evolution
      *         of driver
      */
+    @Cacheable(cacheNames = Constants.CACHE_STATS, key = "#root.methodName + T(java.util.Arrays).toString(#root.args)")
     public List<DriverPointsEvolutionDTO> getAllPointsEvolutionDriver(Set<Integer> driverIds) {
         List<Long> driverIdList = driverIds.stream()
                 .map(Integer::longValue)
@@ -210,45 +259,44 @@ public class DriverService {
         List<Result> results = resultRepository.findByDriverIds(driverIdList);
         List<Sprint> sprints = sprintRepository.findByDriverIds(driverIdList);
 
-        Map<Driver, List<Result>> groupedResults = results.stream()
-                .collect(Collectors.groupingBy(Result::getDriver));
-        Map<Driver, List<Sprint>> groupedSprints = sprints.stream()
-                .collect(Collectors.groupingBy(Sprint::getDriver));
+        Map<Long, List<Result>> groupedResults = results.stream()
+                .collect(Collectors.groupingBy(result -> result.getDriver().getId()));
+        Map<Long, List<Sprint>> groupedSprints = sprints.stream()
+                .collect(Collectors.groupingBy(sprint -> sprint.getDriver().getId()));
 
         List<DriverPointsEvolutionDTO> driverPointsList = new ArrayList<>();
 
-        Set<Driver> allDrivers = new HashSet<>();
-        allDrivers.addAll(groupedResults.keySet());
-        allDrivers.addAll(groupedSprints.keySet());
+        Map<Long, Driver> allDrivers = new HashMap<>();
+        results.forEach(result -> allDrivers.putIfAbsent(result.getDriver().getId(), result.getDriver()));
+        sprints.forEach(sprint -> allDrivers.putIfAbsent(sprint.getDriver().getId(), sprint.getDriver()));
 
-        for (Driver driver : allDrivers) {
+        for (Driver driver : allDrivers.values()) {
             DriverDTO driverDTO = driverImpl.driverToDriverDTO(driver);
-            List<Map.Entry<Race, Integer>> allEntries = new ArrayList<>();
+            Map<Long, Integer> pointsByRace = new HashMap<>();
+            Map<Long, Race> raceById = new HashMap<>();
 
-            for (Result result : groupedResults.getOrDefault(driver, List.of())) {
+            for (Result result : groupedResults.getOrDefault(driver.getId(), List.of())) {
                 int points = calculatePoints(result);
-                allEntries.add(new AbstractMap.SimpleEntry<>(result.getRace(), points));
+                pointsByRace.merge(result.getRace().getId(), points, Integer::sum);
+                raceById.put(result.getRace().getId(), result.getRace());
             }
 
-            for (Sprint sprint : groupedSprints.getOrDefault(driver, List.of())) {
+            for (Sprint sprint : groupedSprints.getOrDefault(driver.getId(), List.of())) {
                 int points = sprint.getPosition() != null ? sprint.getPosition().getPoints() : 0;
-                allEntries.add(new AbstractMap.SimpleEntry<>(sprint.getRace(), points));
+                pointsByRace.merge(sprint.getRace().getId(), points, Integer::sum);
+                raceById.put(sprint.getRace().getId(), sprint.getRace());
             }
 
-            allEntries.sort(Comparator.comparing(entry -> entry.getKey().getDateStart()));
+            List<Race> sortedRaces = raceById.values().stream()
+                    .sorted(Comparator.comparing(Race::getDateStart).thenComparing(Race::getId)).toList();
 
             int total = 0;
             List<Integer> accumulated = new ArrayList<>();
             List<RaceDTO> races = new ArrayList<>();
-            Set<Long> addedRaceIds = new HashSet<>();
-
-            for (Map.Entry<Race, Integer> entry : allEntries) {
-                total += entry.getValue();
-
-                if (addedRaceIds.add(entry.getKey().getId())) {
-                    accumulated.add(total);
-                    races.add(raceImpl.raceToRaceDTO(entry.getKey()));
-                }
+            for (Race race : sortedRaces) {
+                total += pointsByRace.get(race.getId());
+                accumulated.add(total);
+                races.add(raceImpl.raceToRaceDTO(race));
             }
 
             driverPointsList.add(new DriverPointsEvolutionDTO(driverDTO, accumulated, races));

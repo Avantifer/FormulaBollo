@@ -71,7 +71,7 @@ export class ResultsComponent  {
 
   ngAfterViewInit(): void {
     const seasonParam = parseInt(this.activatedRoute.snapshot.paramMap.get("season")!);
-    const selectedSeason = this.selectSeasonComponent.seasons.find(
+    const selectedSeason = this.selectSeasonComponent.seasons().find(
       (s: Season) => s.number === seasonParam
     );
 
@@ -85,7 +85,7 @@ export class ResultsComponent  {
     this.cdr.detectChanges();
     
     this.selectRacesComponent.racesForm.get('race')?.setValue(
-      this.selectRacesComponent.races.find(
+      this.selectRacesComponent.races().find(
         (race: Race) => race.name === this.activatedRoute.snapshot.paramMap.get("name")!.replaceAll("_", " ")
       )
     );

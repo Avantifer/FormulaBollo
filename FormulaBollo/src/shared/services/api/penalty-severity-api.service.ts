@@ -1,7 +1,7 @@
 import { PenaltySeverity } from './../../models/penaltySeverity';
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable, of, tap } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '../../../enviroments/enviroment';
 import { CacheService } from '../cache.service';
 
@@ -16,15 +16,7 @@ export class PenaltySeverityApiService {
 
   getAllPenaltiesSeverity(): Observable<PenaltySeverity[]> {
     const cacheKey: string = `allPenaltySeverity`;
-    const cache = this.cacheService.getCache();
 
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as PenaltySeverity[]);
-
-    return this.httpClient.get<PenaltySeverity[]>(`${environment.apiUrl}${this.endpoint}/all`).pipe(
-      tap(data => {
-        cache.set(cacheKey, data);
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<PenaltySeverity[]>(`${environment.apiUrl}${this.endpoint}/all`));
   }
 }

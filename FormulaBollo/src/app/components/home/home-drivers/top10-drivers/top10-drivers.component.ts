@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, InputSignal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, input, InputSignal } from '@angular/core';
 import { Driver } from '../../../../../shared/models/driver';
 import { DriverPoints } from '../../../../../shared/models/driverPoints';
 import { Router, RouterModule } from '@angular/router';
@@ -7,6 +7,7 @@ import { SpaceToUnderscorePipe } from '../../../../../shared/pipes/spaceToUnders
 import { ChipModule } from 'primeng/chip';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-top10-drivers',
   imports: [
     SpaceToUnderscorePipe,

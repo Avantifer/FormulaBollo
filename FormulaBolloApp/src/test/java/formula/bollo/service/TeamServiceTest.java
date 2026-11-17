@@ -3,13 +3,16 @@ package formula.bollo.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
 import java.util.*;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -19,9 +22,30 @@ import formula.bollo.enums.PositionChange;
 import formula.bollo.impl.*;
 import formula.bollo.model.*;
 import formula.bollo.repository.*;
+import formula.bollo.mapper.*;
 
 @ExtendWith(MockitoExtension.class)
 class TeamServiceTest {
+
+    @Test
+    void latestRaceUsesDateAndStableIdWithUnorderedResults() {
+        Season season = new Season(1L, "Season", 1, 2026);
+        Team team = new Team(1L, "Team", "", "", season);
+        Driver driver = new Driver(1L, "Driver", 1, "", season, team);
+        LocalDateTime date = LocalDateTime.of(2026, 2, 1, 0, 0);
+        Race latest = new Race(3L, "Latest", "", "", date, season, 1);
+        Race tied = new Race(2L, "Tied", "", "", date, season, 1);
+        Race older = new Race(99L, "Older", "", "", date.minusDays(1), season, 1);
+        when(resultRepository.findByDriverIds(List.of(1L))).thenReturn(List.of(
+                new Result(1L, latest, driver, null, 0, 0), new Result(2L, tied, driver, null, 0, 0),
+                new Result(3L, older, driver, null, 0, 0)));
+        when(teamImpl.teamToTeamDTO(team)).thenReturn(new TeamDTO(1L, "Team", "", "", null));
+
+        teamService.getTeamWithDriversDTO(List.of(driver));
+
+        org.mockito.Mockito.verify(resultRepository).findByRaceId(3);
+        org.mockito.Mockito.verify(sprintRepository).findByRaceId(3);
+    }
 
     @InjectMocks
     private TeamService teamService;
@@ -35,6 +59,8 @@ class TeamServiceTest {
     @Mock
     private ConstructorRepository constructorRepository;
     @Mock
+    private TeamRepository teamRepository;
+    @Mock
     private TeamImpl teamImpl;
     @Mock
     private DriverImpl driverImpl;
@@ -44,6 +70,162 @@ class TeamServiceTest {
     private RaceImpl raceImpl;
     @Mock
     private DriverService driverService;
+
+    @Test
+    void getAllInfoTeamsEmptyDoesNotReadRepositories() {
+        assertEquals(List.of(), teamService.getAllInfoTeams(List.of()));
+        verifyNoInteractions(resultRepository, sprintRepository, driverRepository, constructorRepository,
+                teamRepository, driverService);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { 0, 1, 2, 3 })
+    void getAllInfoTeamsMatchesSingletonsIncludingEmptyTeamsAndRetirements(int season) {
+        BatchFixture fixture = new BatchFixture();
+        List<Team> teams = fixture.teams.stream()
+                .filter(team -> season == 0 || team.getSeason().getNumber() == season).toList();
+        // A deliberately different order from the bulk repository response.
+        teams = new ArrayList<>(teams);
+        Collections.reverse(teams);
+        List<TeamInfoDTO> expected = teams.stream().map(team -> fixture.service.getAllInfoTeam(List.of(team))).toList();
+        List<TeamInfoDTO> actual = fixture.service.getAllInfoTeams(teams);
+
+        assertEquals(expected, actual);
+        assertEquals(fixture.service.sumDuplicates(expected), fixture.service.sumDuplicates(actual));
+        assertTrue(actual.stream().anyMatch(info -> info.getLast5Results() == null));
+        assertTrue(actual.stream().anyMatch(info -> List.of().equals(info.getLast5Results())));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { 1, 5 })
+    void getAllInfoTeamsRepositoryCallsAreConstant(int teamCount) {
+        BatchFixture fixture = new BatchFixture();
+        List<Team> teams = fixture.teams.subList(0, teamCount);
+        List<Long> teamIds = teams.stream().map(Team::getId).toList();
+        List<Long> driverIds = fixture.drivers.stream().filter(driver -> teamIds.contains(driver.getTeam().getId()))
+                .map(Driver::getId).toList();
+
+        assertEquals(teamCount, fixture.service.getAllInfoTeams(teams).size());
+
+        verify(fixture.teamsRepository, times(1)).findWithSeasonByIdIn(teamIds);
+        verify(fixture.constructors, times(1)).countByTeam(teamIds);
+        verify(fixture.driversRepository, times(1)).findByTeamIdIn(teamIds);
+        verify(fixture.resultsRepository, times(1)).findForTeamInfoByDriverIds(driverIds);
+        verify(fixture.sprintsRepository, times(1)).findWithPositionByDriverIds(driverIds);
+        verify(fixture.penalties, times(1)).countByDriver(driverIds);
+        verify(fixture.championships, times(1)).countByDriver(driverIds);
+        verifyNoMoreInteractions(fixture.teamsRepository, fixture.constructors, fixture.driversRepository,
+                fixture.resultsRepository, fixture.sprintsRepository, fixture.penalties, fixture.championships);
+    }
+
+    @Test
+    void getAllInfoTeamsLimitsRowsBeforeGroupingAndKeepsRetirementsWithFinishers() {
+        BatchFixture fixture = new BatchFixture();
+        Team team = fixture.teams.getFirst();
+        List<Driver> drivers = fixture.drivers.stream().filter(driver -> driver.getTeam().equals(team)).toList();
+        fixture.results.clear();
+        for (int raceNumber = 0; raceNumber < 7; raceNumber++) {
+            Race race = new Race((long) raceNumber + 1, "Race " + raceNumber, "", "",
+                    LocalDateTime.of(2026, 1, 1, 0, 0).plusDays(raceNumber / 2), team.getSeason(), 1);
+            for (Driver driver : drivers) {
+                fixture.results.add(new Result((long) fixture.results.size() + 1, race, driver,
+                        driver == drivers.getFirst() ? new Position(1L, 1, 25) : null, 1, 1));
+            }
+        }
+
+        TeamInfoDTO expected = fixture.service.getAllInfoTeam(List.of(team));
+        TeamInfoDTO actual = fixture.service.getAllInfoTeams(List.of(team)).getFirst();
+
+        assertEquals(expected, actual);
+        assertEquals(4, actual.getLast5Results().size());
+        assertEquals(15, actual.getLast5Results().stream().mapToInt(race -> race.getResults().size()).sum());
+        assertTrue(actual.getLast5Results().stream().flatMap(race -> race.getResults().stream())
+                .anyMatch(result -> result.getPosition() == null));
+    }
+
+    /** Real calculators and mappers; only database access is mocked. */
+    private static class BatchFixture {
+        final TeamRepository teamsRepository = mock(TeamRepository.class);
+        final DriverRepository driversRepository = mock(DriverRepository.class);
+        final ConstructorRepository constructors = mock(ConstructorRepository.class);
+        final ResultRepository resultsRepository = mock(ResultRepository.class);
+        final SprintRepository sprintsRepository = mock(SprintRepository.class);
+        final PenaltyRepository penalties = mock(PenaltyRepository.class);
+        final ChampionshipRepository championships = mock(ChampionshipRepository.class);
+        final List<Team> teams = new ArrayList<>();
+        final List<Driver> drivers = new ArrayList<>();
+        final List<Result> results = new ArrayList<>();
+        final List<Sprint> sprints = new ArrayList<>();
+        final TeamService service;
+
+        BatchFixture() {
+            TeamImpl teamMapper = new TeamImpl(Mappers.getMapper(TeamMapper.class));
+            DriverImpl driverMapper = new DriverImpl(Mappers.getMapper(DriverMapper.class));
+            ResultImpl resultMapper = new ResultImpl(Mappers.getMapper(ResultMapper.class));
+            RaceImpl raceMapper = new RaceImpl(Mappers.getMapper(RaceMapper.class));
+            DriverService driverCalculator = new DriverService(resultsRepository, championships, penalties,
+                    sprintsRepository, driverMapper, teamMapper, resultMapper, null, raceMapper,
+                    new ResultService(resultsRepository, sprintsRepository, resultMapper, driverMapper));
+            service = new TeamService(resultsRepository, sprintsRepository, driversRepository, constructors,
+                    teamsRepository, teamMapper, driverMapper, resultMapper, raceMapper, driverCalculator);
+            for (int seasonNumber = 1; seasonNumber <= 3; seasonNumber++) {
+                Season season = new Season((long) seasonNumber, "Season " + seasonNumber, seasonNumber, 2026);
+                for (int kind = 0; kind < 5; kind++) {
+                    Team team = new Team((long) teams.size() + 1, "Team " + kind, "car", "logo", season);
+                    teams.add(team);
+                    if (kind == 3) // no drivers
+                        continue;
+                    for (int number = 0; number < (kind == 0 ? 4 : 1); number++) {
+                        Driver driver = new Driver((long) drivers.size() + 1, "Driver " + number, number, "", season, team);
+                        drivers.add(driver);
+                        if (kind == 2) // driver without results
+                            continue;
+                        Race race = new Race((long) seasonNumber, "Race", "", "",
+                                LocalDateTime.of(2026, seasonNumber, 1, 0, 0), season, 1);
+                        results.add(new Result((long) results.size() + 1, race, driver,
+                                kind == 1 || number == 1 ? null : new Position(1L, number + 1, 25 - number), 1, 1));
+                        sprints.add(new Sprint((long) sprints.size() + 1, race, driver,
+                                number == 1 ? null : new SprintPosition(1L, 1, 8)));
+                    }
+                }
+            }
+            lenient().when(teamsRepository.findWithSeasonByIdIn(anyList())).thenAnswer(call -> teams.stream()
+                    .filter(team -> call.<List<Long>>getArgument(0).contains(team.getId())).toList());
+            lenient().when(driversRepository.findByTeamIdIn(anyList())).thenAnswer(call -> drivers.stream()
+                    .filter(driver -> call.<List<Long>>getArgument(0).contains(driver.getTeam().getId())).toList());
+            lenient().when(driversRepository.findByTeamId(any())).thenAnswer(call -> drivers.stream()
+                    .filter(driver -> driver.getTeam().getId().equals(call.getArgument(0))).toList());
+            lenient().when(constructors.countByTeam(anyList())).thenAnswer(call -> teams.stream()
+                    .filter(team -> call.<List<Long>>getArgument(0).contains(team.getId()) && team.getId() % 2 == 1)
+                    .map(team -> new Object[] { team.getId(), 2L }).toList());
+            lenient().when(constructors.findByTeamId(anyList())).thenAnswer(call ->
+                    call.<List<Long>>getArgument(0).stream().mapToInt(id -> id % 2 == 1 ? 2 : 0).sum());
+            lenient().when(resultsRepository.findForTeamInfoByDriverIds(anyList())).thenAnswer(call -> results.stream()
+                    .filter(result -> call.<List<Long>>getArgument(0).contains(result.getDriver().getId())).toList());
+            lenient().when(resultsRepository.findWithRaceAndPositionByDriverIds(anyList())).thenAnswer(call -> results.stream()
+                    .filter(result -> call.<List<Long>>getArgument(0).contains(result.getDriver().getId())).toList());
+            lenient().when(sprintsRepository.findWithPositionByDriverIds(anyList())).thenAnswer(call -> sprints.stream()
+                    .filter(sprint -> call.<List<Long>>getArgument(0).contains(sprint.getDriver().getId())).toList());
+            lenient().when(sprintsRepository.findByDriverIds(anyList())).thenAnswer(call -> sprints.stream()
+                    .filter(sprint -> call.<List<Long>>getArgument(0).contains(sprint.getDriver().getId())).toList());
+            lenient().when(penalties.countByDriver(anyList())).thenAnswer(call -> call.<List<Long>>getArgument(0).stream()
+                    .filter(id -> id % 2 == 1).map(id -> new Object[] { id, 2L }).toList());
+            lenient().when(penalties.findByDriverIds(anyList())).thenAnswer(call ->
+                    (int) call.<List<Long>>getArgument(0).stream().filter(id -> id % 2 == 1).count() * 2);
+            lenient().when(championships.countByDriver(anyList())).thenAnswer(call -> call.<List<Long>>getArgument(0).stream()
+                    .filter(id -> id % 3 == 0).map(id -> new Object[] { id, 1L }).toList());
+            lenient().when(championships.findByDriverIds(anyList())).thenAnswer(call ->
+                    (int) call.<List<Long>>getArgument(0).stream().filter(id -> id % 3 == 0).count());
+            lenient().when(resultsRepository.last5ResultsByTeamIds(anyList())).thenAnswer(call -> {
+                List<Result> matching = results.stream()
+                        .filter(result -> call.<List<Long>>getArgument(0).contains(result.getDriver().getTeam().getId())).toList();
+                return matching.stream().filter(result -> matching.stream().anyMatch(other ->
+                                other.getRace().getId().equals(result.getRace().getId()) && other.getPosition() != null))
+                        .sorted(Comparator.comparing((Result result) -> result.getRace().getDateStart())
+                                .thenComparing(Result::getId).reversed()).limit(15).toList();
+            });
+        }
+    }
 
     @Test
     void getTeamWithDriversDTO_ShouldReturnCorrectPoints() {

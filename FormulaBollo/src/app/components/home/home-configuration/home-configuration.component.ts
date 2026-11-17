@@ -5,7 +5,7 @@ import { catchError } from 'rxjs';
 import { environment } from '../../../../enviroments/enviroment';
 import { ERROR_CONFIGURATION_FETCH } from '../../../constants';
 import { SkeletonModule } from 'primeng/skeleton';
-import { CommonModule } from '@angular/common';
+
 import { ImageService } from '../../../../shared/services/image.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { UtilsService } from '../../../../shared/services/utils.service';
@@ -16,10 +16,9 @@ import { SkeletonItemsPipe } from '../../../../shared/pipes/skeletonItems.pipe';
 @Component({
   selector: 'app-home-configuration',
   imports: [
-    CommonModule,
     SkeletonItemsPipe,
     SkeletonModule
-  ],
+],
   templateUrl: './home-configuration.component.html',
   styleUrls: ['./home-configuration.component.scss']
 })

@@ -1,5 +1,5 @@
 import { AuthJWTService } from './../../services/authJWT.service';
-import { Component, inject, Signal } from '@angular/core';
+import { Component, inject, Signal, signal, WritableSignal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -22,15 +22,16 @@ export class HeaderComponent {
   private readonly messageInfoService: MessageInfoService = inject(MessageInfoService);
 
   protected readonly isDarkTheme: Signal<boolean> = this.themeService.isDarkTheme;
-  protected items: MenuItem[] = [];
-  private currentRoute = '';
-  isFantasy: boolean = false;
+  // El menú cambia con cada evento del router (fuera de un evento de plantilla): por eso es estado en signals.
+  protected readonly items: WritableSignal<MenuItem[]> = signal<MenuItem[]>([]);
+  private readonly currentRoute: WritableSignal<string> = signal('');
+  readonly isFantasy: WritableSignal<boolean> = signal(false);
 
   ngOnInit(): void {
     this.router.events.subscribe(() => {
       this.checkIsFantasy();
       this.putItemsHeader();
-      this.currentRoute = this.router.url;
+      this.currentRoute.set(this.router.url);
     });
   }
 
@@ -38,27 +39,27 @@ export class HeaderComponent {
     const isAdmin: boolean = this.authJWTService.checkAdmin(localStorage.getItem('auth')!);
     const isLogged: boolean = this.authJWTService.isLogged();
 
-    if (this.isFantasy) {
-      this.items = [
+    if (this.isFantasy()) {
+      this.items.set([
         { label: 'Tu equipo', icon: 'pi pi-sitemap', routerLink: '/fantasy/team' },
         { label: 'Clasificación', icon: 'pi pi-trophy', routerLink: '/fantasy/clasification' },
         { label: 'Iniciar sesión', icon: 'pi pi-sign-in', routerLink: '/fantasy/login', visible: !isLogged },
         { label: 'Cerrar sesión', icon: 'pi pi-sign-out', routerLink: '/fantasy/login', visible: isLogged, command: () => this.logoutAction() }
-      ];
+      ]);
     } else {
-      this.items = [
+      this.items.set([
         { label: 'Pilotos', icon: 'pi pi-user', routerLink: '/drivers' },
         { label: 'Escuderías', icon: 'pi pi-car', routerLink: '/teams' },
         { label: 'Resultados', icon: 'pi pi-chart-bar', routerLink: '/results' },
         { label: 'Estatuto', icon: 'pi pi-file', routerLink: '/statute' },
         { label: 'Estadísticas', icon: 'pi pi-chart-line', routerLink: '/statistics' },
         { label: 'Administración', icon: 'pi pi-cog', routerLink: '/admin', visible: isAdmin }
-      ];
+      ]);
     }
   }
 
   checkIsFantasy(): void {
-    this.isFantasy = !!this.router.url.includes("fantasy");
+    this.isFantasy.set(!!this.router.url.includes("fantasy"));
   }
 
   toggleDarkMode(): void {
@@ -66,10 +67,11 @@ export class HeaderComponent {
   }
 
   isActive(route: string): boolean {
-    if (this.currentRoute.includes('fantasy')) {
-      return ('/' + this.currentRoute.split('/')[1] + '/' + this.currentRoute.split('/')[2]) === route;
+    const currentRoute: string = this.currentRoute();
+    if (currentRoute.includes('fantasy')) {
+      return ('/' + currentRoute.split('/')[1] + '/' + currentRoute.split('/')[2]) === route;
     } else {
-      return ('/' + this.currentRoute.split('/')[1]) === route;
+      return ('/' + currentRoute.split('/')[1]) === route;
     }
   }
 

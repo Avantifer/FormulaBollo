@@ -57,7 +57,7 @@ export class DriversInfoComponent {
   }
 
   protected onSeasonChange(newSeason: Season): void {
-    this._getInfoByDriverName(newSeason.number);
+    this._getInfoByDriverName(newSeason?.number ?? 0);
   }
 
   private _getInfoByDriverName(seasonNumber: number): void {

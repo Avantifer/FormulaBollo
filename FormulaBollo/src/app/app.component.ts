@@ -5,7 +5,7 @@ import { RouterModule } from '@angular/router';
 import { HeaderComponent } from "../shared/components/header/header.component";
 import { ToastModule } from 'primeng/toast';
 import { WebSocketService } from '../shared/services/websocket.service';
-import { catchError, Subscription } from 'rxjs';
+import { catchError, EMPTY, filter, fromEvent, merge, of, Subscription, switchMap } from 'rxjs';
 import { UtilsService } from '../shared/services/utils.service';
 import { ERROR_CACHE } from './constants';
 import { FooterComponent } from "../shared/components/footer/footer.component";
@@ -29,39 +29,17 @@ export class AppComponent {
   private messageSubscription$: Subscription = new Subscription();
 
   ngOnInit(): void {
-    if (localStorage.getItem("cacheVersion") === null) {
-      this.cacheApiService.getCache()
-      .pipe(
-        catchError((error) => {
-          this.cacheService.isVersionRetrieved = false;
-          return this.utilsService.handleError<number>(ERROR_CACHE, error, 0);
+    const visible$ = fromEvent(document, 'visibilitychange').pipe(filter(() => document.visibilityState === 'visible'));
+    this.messageSubscription$.add(merge(of(undefined), this.webSocketService.connected$, visible$).pipe(
+      switchMap(() => this.cacheApiService.getCache().pipe(
+        catchError(error => {
+          this.utilsService.handleError(ERROR_CACHE, error);
+          return EMPTY;
         })
-      )
-      .subscribe((cacheVersion: number) => {
-          this.cacheService.isVersionRetrieved = true;
-          this.cacheService.setCache(cacheVersion);
-        }
-      );
-    }
+      ))
+    ).subscribe(version => this.cacheService.updateVersion(version)));
 
-    this.messageSubscription$ = this.webSocketService.getMessages()
-    .pipe(
-      catchError((error) => {
-        this.cacheService.isVersionRetrieved = false;
-        return this.utilsService.handleError<number>(ERROR_CACHE, error, -1);
-      })
-    )
-    .subscribe((actualCacheVersion: number) => {
-        if (!this.cacheService.isValidCache(actualCacheVersion)) {
-          this.cacheService.setCache(actualCacheVersion);
-          this.cacheService.clearCache();
-        }
-      
-        if (actualCacheVersion != -1) {
-          this.cacheService.isVersionRetrieved = true;
-        }
-      }
-    )
+    this.messageSubscription$.add(this.webSocketService.getMessages().subscribe(version => this.cacheService.updateVersion(version)));
   }
 
   ngOnDestroy(): void {

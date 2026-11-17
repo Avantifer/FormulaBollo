@@ -3,6 +3,7 @@ package formula.bollo.controller;
 import java.util.List;
 
 import org.springframework.http.MediaType;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,6 +34,7 @@ public class SeasonController {
     }
 
     @Operation(summary = "Get all seasons", tags = Constants.TAG_SEASON)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<SeasonDTO> getAllConfigurations() {
         log.info("Coger todas las temporadas");
@@ -40,6 +42,7 @@ public class SeasonController {
     }
 
     @Operation(summary = "Get actual season", tags = Constants.TAG_SEASON)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/actual", produces = MediaType.APPLICATION_JSON_VALUE)
     public SeasonDTO getActualSeasonDTO() {
         log.info("Coger la temporada actual");
@@ -47,6 +50,7 @@ public class SeasonController {
     }
 
     @Operation(summary = "Get seasons by Team's name", tags = Constants.TAG_SEASON)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/byTeamName", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<SeasonDTO> getSeasonsByTeamName(@RequestParam String teamName) {
         log.info("Coger las temporadas del equipo " + teamName);
@@ -54,6 +58,7 @@ public class SeasonController {
     }
 
     @Operation(summary = "Get seasons by Driver's name", tags = Constants.TAG_SEASON)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/byDriverName", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<SeasonDTO> getSeasonsByDriverName(@RequestParam String driverName) {
         log.info("Coger las temporadas del piloto " + driverName);
@@ -61,6 +66,7 @@ public class SeasonController {
     }
 
     @Operation(summary = "Get seasons of fantasy", tags = Constants.TAG_SEASON)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/fantasy", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<SeasonDTO> seasonsOfFantasy() {
         log.info("Coger las temporadas del fantasy");

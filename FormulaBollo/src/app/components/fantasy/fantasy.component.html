@@ -15,7 +15,12 @@
 						<p class="text-lg text-gray-600 dark:text-gray-300">{{ howToPlay.label }}</p>
 					</div>
 					<div class="flex-1 flex justify-center">
-						<img [src]="imageService.getImageUrl(howToPlay.badge!)" [alt]="howToPlay.target" class="rounded-lg shadow-lg" />
+						<img
+							[src]="imageService.getImageUrl(howToPlay.badge!)"
+							[alt]="howToPlay.target"
+							class="rounded-lg shadow-lg"
+							loading="lazy"
+							decoding="async" />
 					</div>
 				</div>
 			</div>
@@ -31,8 +36,9 @@
 					class="rounded-lg border border-2 border-gray-300 dark:border-gray-700 shadow-2xs hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
 					(click)="router.navigate([adventure.routerLink])"
 					role="button"
-					tabIndex="{0}"
-					onkeydown="router.navigate([adventure.routerLink])">
+					tabindex="0"
+					(keydown.enter)="router.navigate([adventure.routerLink])"
+					(keydown.space)="$event.preventDefault(); router.navigate([adventure.routerLink])">
 					<div class="flex flex-col space-y-1.5 p-6">
 						<div class="flex gap-3">
 							<i [class]="adventure.icon" class="text-blue-600" style="font-size: 1.75rem"></i>

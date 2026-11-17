@@ -1,4 +1,4 @@
-<main class="flex-1 bg-slate-100 dark:bg-slate-900 p-4 relative">
+<div class="flex-1 bg-slate-100 dark:bg-slate-900 p-4 relative">
 	<div class="container mx-auto">
 		<div class="rounded-lg shadow-2xs mt-2 mb-6 border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20">
 			<div class="p-4">
@@ -17,7 +17,7 @@
 			<div class="p-4">
 				<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
 					<div class="flex items-center gap-4 min-w-[225px]">
-						<select-races class="w-full" (raceChanged)="onRaceChange($event)" [fantasyTeam]="true"></select-races>
+						<select-races class="w-full" (raceChanged)="onRaceChange($event)" [fantasyTeam]="true" />
 					</div>
 					@if (isLastRace) {
 						<div class="text-right">
@@ -65,7 +65,7 @@
 									<div
 										class="w-20 h-30 xs:w-24 xs:h-32 sm:w-31 sm:h-38 relative rounded-xl overflow-hidden border-2 border-gray-300 bg-gray-200 dark:border-gray-600 dark:bg-gray-700">
 										<div class="w-20 h-30 xs:w-24 xs:h-32 sm:w-31 sm:h-38">
-											<button (click)="deleteDriverFromSelection(i)" onkeydown="deleteDriverFromSelection(i)" class="absolute right-1.5">
+											<button (click)="deleteDriverFromSelection(i)" class="absolute right-1.5">
 												<i
 													class="pi pi-times text-red-400 hover:bg-red-200 p-0.5 transition-all duration-200 ease-out rounded-[4px] cursor-pointer"
 													style="font-size: 8px"></i>
@@ -114,7 +114,7 @@
 									<div
 										class="relative w-30 h-20 xs:w-36 xs:h-24 sm:w-44 sm:h-28 rounded-xl border-2 transition-all duration-200 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 rounded-xl overflow-hidden">
 										<div class="w-30 h-20 xs:w-36 xs:h-24 sm:w-44 sm:h-28">
-											<button (click)="deleteTeamFromSelection(i)" onkeydown="deleteTeamFromSelection(i)" class="absolute right-1.5">
+											<button (click)="deleteTeamFromSelection(i)" class="absolute right-1.5">
 												<i
 													class="pi pi-times text-red-400 hover:bg-red-200 p-0.5 transition-all duration-200 ease-out rounded-[4px] cursor-pointer"
 													style="font-size: 8px"></i>
@@ -139,14 +139,15 @@
 							}
 						</div>
 					</div>
+					<p role="status" class="text-center my-3">La elección de Fantasy no está habilitada.</p>
 					<div class="flex justify-center w-full">
 						<div class="w-9/10 xs:w-1/2 md:w-1/3">
 							@if (isLastRace) {
 								<p-button
 									label="Guardar equipo"
+									[disabled]="!electionEnabled"
 									class="saveElection text-white font-bold"
-									(click)="saveFantasyElecion()"
-									onkeydown="saveFantasyElecion()"></p-button>
+									(click)="saveFantasyElecion()" />
 							}
 						</div>
 					</div>
@@ -180,7 +181,7 @@
 					<div class="flex justify-center items-center gap-2 mb-6 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-auto">
 						<span class="text-sm font-bold dark:text-white mr-2">Ordenar:</span>
 						@for (order of orders; track $index) {
-							<button (click)="changeOrder(order)" onkeydown="changeOrder(order)">
+							<button (click)="changeOrder(order)">
 								<div
 									class="rounded-md p-1.5 flex items-center cursor-pointer"
 									[class]="
@@ -259,20 +260,14 @@
 													</div>
 												</div>
 												<div class="flex flex-col gap-2">
-													<button
-														class="h-3.5 flex mt-1.5"
-														(click)="generateEvolutionPointDriverChart(fantasyPricesDriver)"
-														onkeydown="generateEvolutionPointDriverChart(fantasyPricesDriver)">
+													<button class="h-3.5 flex mt-1.5" (click)="generateEvolutionPointDriverChart(fantasyPricesDriver)">
 														<i
 															class="pi pi-chart-bar cursor-pointer hover:text-blue-500"
 															style="font-size: 12px"
 															pTooltip="Gráfico de puntos"></i>
 													</button>
 
-													<button
-														class="h-3.5 flex"
-														(click)="generateEvolutionDriverPriceChart(fantasyPricesDriver)"
-														onkeydown="generateEvolutionDriverPriceChart(fantasyPricesDriver)">
+													<button class="h-3.5 flex" (click)="generateEvolutionDriverPriceChart(fantasyPricesDriver)">
 														<i
 															class="pi pi-chart-line cursor-pointer hover:text-blue-500"
 															style="font-size: 12px"
@@ -283,8 +278,7 @@
 													icon="pi pi-plus"
 													class="addDriver text-white"
 													(click)="addDriverToSelection(fantasyPricesDriver)"
-													onkeydown="addDriverToSelection(fantasyPricesDriver)"
-													[disabled]="isDriverSelected(fantasyPricesDriver.driver) || selectedDriversCount() === 3"></p-button>
+													[disabled]="isDriverSelected(fantasyPricesDriver.driver) || selectedDriversCount() === 3" />
 											</div>
 										</div>
 									</div>
@@ -354,20 +348,14 @@
 													</div>
 												</div>
 												<div class="flex flex-col gap-2">
-													<button
-														class="h-3.5 flex mt-1.5"
-														(click)="generateEvolutionPointTeamChart(fantasyPricesTeam)"
-														onkeydown="generateEvolutionPointTeamChart(fantasyPricesTeam)">
+													<button class="h-3.5 flex mt-1.5" (click)="generateEvolutionPointTeamChart(fantasyPricesTeam)">
 														<i
 															class="pi pi-chart-bar cursor-pointer hover:text-orange-500"
 															style="font-size: 12px"
 															pTooltip="Gráfico de puntos"></i>
 													</button>
 
-													<button
-														class="h-3.5 flex"
-														(click)="generateEvolutionTeamPriceChart(fantasyPricesTeam)"
-														onkeydown="generateEvolutionPointTeamChart(fantasyPricesTeam)">
+													<button class="h-3.5 flex" (click)="generateEvolutionTeamPriceChart(fantasyPricesTeam)">
 														<i
 															class="pi pi-chart-line cursor-pointer hover:text-orange-500"
 															style="font-size: 12px"
@@ -378,8 +366,7 @@
 													icon="pi pi-plus"
 													class="addTeam text-white"
 													(click)="addTeamToSelection(fantasyPricesTeam)"
-													onkeydown="addTeamToSelection(fantasyPricesTeam)"
-													[disabled]="isTeamSelected(fantasyPricesTeam.team) || selectedTeamsCount() === 2"></p-button>
+													[disabled]="isTeamSelected(fantasyPricesTeam.team) || selectedTeamsCount() === 2" />
 											</div>
 										</div>
 									</div>
@@ -401,11 +388,7 @@
 			[style]="{ width: '60rem', 'max-width': '95vw' }">
 			<ng-template #header>
 				<h2 class="text-xl font-bold text-gray-900 dark:text-white flex-1">Evolución de Precio - {{ driverPriceData.driver.name }}</h2>
-				<p-button
-					icon="pi pi-times"
-					(click)="showDriverPricesData = false"
-					onkeydown="showDriverPricesData = false"
-					class="closeDialog"></p-button>
+				<p-button icon="pi pi-times" (click)="showDriverPricesData = false" class="closeDialog" />
 			</ng-template>
 			<div class="mb-2 xs:mb-3 sm:mb-4">
 				<div class="flex items-center gap-3">
@@ -431,7 +414,7 @@
 				</div>
 			</div>
 			<div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 xs:p-3 sm:p-4">
-				<p-chart type="line" [data]="dataDriversEvolutionPrice" [options]="lineChartOptions" style="width: 100%; height: 100%"></p-chart>
+				<p-chart type="line" [data]="dataDriversEvolutionPrice" [options]="lineChartOptions" style="width: 100%; height: 100%" />
 				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
 					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
 						<div class="text-gray-500 dark:text-gray-400">Precio inicial</div>
@@ -455,11 +438,7 @@
 			[style]="{ width: '60rem', 'max-width': '95vw' }">
 			<ng-template #header>
 				<h2 class="text-xl font-bold text-gray-900 dark:text-white flex-1">Evolución de Precio - {{ teamPriceData.team.name }}</h2>
-				<p-button
-					icon="pi pi-times"
-					(click)="showTeamPricesData = false"
-					onkeydown="showTeamPricesData = false"
-					class="closeDialog"></p-button>
+				<p-button icon="pi pi-times" (click)="showTeamPricesData = false" class="closeDialog" />
 			</ng-template>
 			<div class="mb-2 xs:mb-3 sm:mb-4">
 				<div class="flex items-center gap-3">
@@ -493,7 +472,7 @@
 				</div>
 			</div>
 			<div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 xs:p-3 sm:p-4">
-				<p-chart type="line" [data]="dataTeamsEvolutionPrice" [options]="lineChartOptions" style="width: 100%; height: 100%"></p-chart>
+				<p-chart type="line" [data]="dataTeamsEvolutionPrice" [options]="lineChartOptions" style="width: 100%; height: 100%" />
 				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
 					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
 						<div class="text-gray-500 dark:text-gray-400">Precio inicial</div>
@@ -517,11 +496,7 @@
 			[style]="{ width: '60rem', 'max-width': '95vw' }">
 			<ng-template #header>
 				<h2 class="text-xl font-bold text-gray-900 dark:text-white flex-1">Evolución de Puntos - {{ driverPointData.driver.name }}</h2>
-				<p-button
-					icon="pi pi-times"
-					(click)="showDriverPointsData = false"
-					onkeydown="showDriverPointsData = false"
-					class="closeDialog"></p-button>
+				<p-button icon="pi pi-times" (click)="showDriverPointsData = false" class="closeDialog" />
 			</ng-template>
 			<div class="mb-2 xs:mb-3 sm:mb-4">
 				<div class="flex items-center gap-3">
@@ -547,7 +522,7 @@
 				</div>
 			</div>
 			<div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 xs:p-3 sm:p-4">
-				<p-chart type="line" [data]="dataDriversEvolutionPoints" [options]="lineChartOptions" style="width: 100%; height: 100%"></p-chart>
+				<p-chart type="line" [data]="dataDriversEvolutionPoints" [options]="lineChartOptions" style="width: 100%; height: 100%" />
 				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
 					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
 						<div class="text-gray-500 dark:text-gray-400">Puntos por carrera</div>
@@ -571,11 +546,7 @@
 			[style]="{ width: '60rem', 'max-width': '95vw' }">
 			<ng-template #header>
 				<h2 class="text-xl font-bold text-gray-900 dark:text-white flex-1">Evolución de Puntos - {{ teamPointData.team.name }}</h2>
-				<p-button
-					icon="pi pi-times"
-					(click)="showTeamPointsData = false"
-					onkeydown="showTeamPointsData = false"
-					class="closeDialog"></p-button>
+				<p-button icon="pi pi-times" (click)="showTeamPointsData = false" class="closeDialog" />
 			</ng-template>
 			<div class="mb-2 xs:mb-3 sm:mb-4">
 				<div class="flex items-center gap-3">
@@ -609,7 +580,7 @@
 				</div>
 			</div>
 			<div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 xs:p-3 sm:p-4">
-				<p-chart type="line" [data]="dataTeamsEvolutionPoints" [options]="lineChartOptions" style="width: 100%; height: 100%"></p-chart>
+				<p-chart type="line" [data]="dataTeamsEvolutionPoints" [options]="lineChartOptions" style="width: 100%; height: 100%" />
 				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
 					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
 						<div class="text-gray-500 dark:text-gray-400">Puntos por carrera</div>
@@ -623,4 +594,4 @@
 			</div>
 		</p-dialog>
 	}
-</main>
+</div>

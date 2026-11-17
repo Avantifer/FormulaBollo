@@ -1,5 +1,6 @@
+import { passwordPolicyValidator, passwordsMatchValidator } from '../../../../shared/validators/password.validators';
 import { Component, inject } from '@angular/core';
-import { AbstractControl, FormControl, FormGroup, FormsModule, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -33,12 +34,9 @@ export class FantasyRegisterComponent {
   protected registerForm: FormGroup = new FormGroup({
     username: new FormControl('', Validators.required),
     mail: new FormControl('', [Validators.required, Validators.email]),
-    password: new FormControl('', Validators.required),
-    passwordRepeated: new FormControl('', [
-      Validators.required,
-      this.passwordMatchValidator(),
-    ]),
-  })
+    password: new FormControl('', [Validators.required, passwordPolicyValidator]),
+    passwordRepeated: new FormControl('', Validators.required),
+  }, { validators: passwordsMatchValidator('password', 'passwordRepeated') });
   showPassword: boolean = false;
   showPasswordRepeated: boolean = false;
 
@@ -49,15 +47,9 @@ export class FantasyRegisterComponent {
     this.destroy$.complete();
   }
 
-  private passwordMatchValidator(): ValidatorFn {
-    return (control: AbstractControl): { [key: string]: unknown } | null => {
-      const password = control.parent?.get("password")?.value;
-      const passwordRepeated = control.value;
-      return password === passwordRepeated ? null : { passwordMismatch: true };
-    };
-  }
-
   register(): void {
+    this.registerForm.markAllAsTouched();
+    if (this.registerForm.invalid) return;
     const account: Account = new Account(
       0,
       this.registerForm.get("username")!.value,

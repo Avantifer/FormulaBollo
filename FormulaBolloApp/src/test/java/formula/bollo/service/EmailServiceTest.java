@@ -5,6 +5,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.lang.reflect.Field;
 
@@ -14,6 +17,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.MailSendException;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 
 import jakarta.mail.internet.MimeMessage;
 
@@ -25,6 +32,29 @@ class EmailServiceTest {
 
     @Mock
     private JavaMailSender javaMailSender;
+
+    @Test
+    void smtpFailureDoesNotPropagate() {
+        ReflectionTestUtils.setField(emailService, "emailFrom", "noreply@example.com");
+        MimeMessage message = mock(MimeMessage.class);
+        when(javaMailSender.createMimeMessage()).thenReturn(message);
+        doThrow(new MailSendException("SMTP caido")).when(javaMailSender).send(message);
+
+        assertDoesNotThrow(() -> emailService.sendSimpleMessage("email@mail.com", "Subject", "texto"));
+        verify(javaMailSender).send(message);
+    }
+
+    @Test
+    @ExtendWith(OutputCaptureExtension.class)
+    void smtpFailureDoesNotLogRecipientOrRecoveryToken(CapturedOutput output) {
+        ReflectionTestUtils.setField(emailService, "emailFrom", "noreply@example.com");
+        MimeMessage message = mock(MimeMessage.class);
+        when(javaMailSender.createMimeMessage()).thenReturn(message);
+        doThrow(new MailSendException("private@example.com recovery-secret-token")).when(javaMailSender).send(message);
+        emailService.sendSimpleMessage("private@example.com", "Subject", "recovery-secret-token");
+        assertFalse(output.getAll().contains("private@example.com"));
+        assertFalse(output.getAll().contains("recovery-secret-token"));
+    }
 
     @Test
     void sendSimpleMessageFail()

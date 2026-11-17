@@ -15,6 +15,10 @@ public interface PenaltyRepository extends JpaRepository<Penalty, Long> {
     @Query(value = "SELECT COUNT(p) FROM Penalty p WHERE p.driver.id IN :driverIds")
     int findByDriverIds(List<Long> driverIds);
 
+    /** Pares [driverId, nº de sanciones] de una sola vez (pilotos sin sanciones no aparecen). */
+    @Query("SELECT p.driver.id, COUNT(p) FROM Penalty p WHERE p.driver.id IN :driverIds GROUP BY p.driver.id")
+    List<Object[]> countByDriver(List<Long> driverIds);
+
     @Query(value = "SELECT p FROM Penalty p WHERE p.race.id = :race")
     List<Penalty> findByRaceId(Long race);
 

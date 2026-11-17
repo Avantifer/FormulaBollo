@@ -1,6 +1,7 @@
 package formula.bollo.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -40,8 +41,8 @@ public class EmailService {
             helper.setText(text, false);
 
             emailSender.send(message);
-        } catch (MessagingException e) {
-            log.error("Hubo un error al enviar el email", e);
+        } catch (MessagingException | MailException e) {
+            log.error("Hubo un error al enviar el email ({})", e.getClass().getSimpleName());
         }
     }
 }

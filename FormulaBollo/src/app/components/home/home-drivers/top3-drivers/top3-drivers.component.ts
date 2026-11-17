@@ -1,5 +1,5 @@
 import { UtilsService } from './../../../../../shared/services/utils.service';
-import { Component, effect, inject, input, InputSignal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, input, InputSignal } from '@angular/core';
 import { DriverPoints } from '../../../../../shared/models/driverPoints';
 import { Driver } from '../../../../../shared/models/driver';
 import { CommonModule } from '@angular/common';
@@ -7,6 +7,7 @@ import { SpaceToUnderscorePipe } from '../../../../../shared/pipes/spaceToUnders
 import { ImageService } from '../../../../../shared/services/image.service';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-top3-drivers',
   imports: [
     CommonModule,
@@ -29,7 +30,8 @@ export class Top3DriversComponent {
   }
 
   private prepareDisplayDrivers(): void {
-    this.displayTop3 = this.top3().map((driver: Driver | DriverPoints) => {
+    // _extractTop3Drivers intercambia las posiciones 0 y 1: con menos de 2 pilotos deja huecos undefined.
+    this.displayTop3 = (this.top3() as Array<Driver | DriverPoints | undefined>).filter((d): d is Driver | DriverPoints => !!d).map((driver: Driver | DriverPoints) => {
       if ((driver as DriverPoints).totalPoints !== undefined) {
         return driver as DriverPoints;
       }

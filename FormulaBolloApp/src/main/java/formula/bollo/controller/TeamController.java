@@ -1,11 +1,14 @@
 package formula.bollo.controller;
 
+import org.springframework.cache.annotation.Cacheable;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.springframework.http.MediaType;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -51,6 +54,7 @@ public class TeamController {
     }
 
     @Operation(summary = "Get all teams", tags = Constants.TAG_TEAM)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<TeamDTO> getAllTeams(@RequestParam Integer season) {
         log.info("Coger todos los equipos de la temporada " + season);
@@ -58,6 +62,7 @@ public class TeamController {
     }
 
     @Operation(summary = "Get all teams with their drivers", tags = Constants.TAG_TEAM)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/withDrivers", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<TeamWithDriversDTO> getAllTeamsWithDrivers(@RequestParam Integer season) {
         log.info("Coger todos los equipos con sus pilotos de la temporada " + season);
@@ -65,29 +70,31 @@ public class TeamController {
     }
 
     @Operation(summary = "Get info of a team", tags = Constants.TAG_TEAM)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/infoTeamByName", produces = MediaType.APPLICATION_JSON_VALUE)
     public TeamInfoDTO getInfoTeamByName(@RequestParam(required = false) Integer season,
             @RequestParam String teamName) {
         log.info("Coger la informacion del equipo " + teamName + " de la temporada " + season);
-        List<Team> teams = (season == 0) ? teamRepository.findByName(teamName)
+        List<Team> teams = (season == null || season == 0) ? teamRepository.findByName(teamName)
                 : teamRepository.findByNameAndSeason(season, teamName);
         return this.teamService.getAllInfoTeam(teams);
     }
 
     @Operation(summary = "Get all info of teams", tags = Constants.TAG_TEAM)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/allInfoTeam", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Cacheable(cacheNames = Constants.CACHE_STATS, key = "'allInfoTeam:' + #season")
     public List<TeamInfoDTO> getAllInfoTeam(@RequestParam Integer season) {
         log.info("Coger la informacion de los equipos de la temporada " + season);
         List<Team> teams = (season == 0) ? teamRepository.findAll() : teamRepository.findBySeason(season);
 
-        List<TeamInfoDTO> teamInfoDTOs = teams.stream()
-                .map(team -> this.teamService.getAllInfoTeam(List.of(team)))
-                .toList();
+        List<TeamInfoDTO> teamInfoDTOs = this.teamService.getAllInfoTeams(teams);
 
         return this.teamService.sumDuplicates(teamInfoDTOs);
     }
 
     @Operation(summary = "Get all evolution points of team", tags = Constants.TAG_TEAM)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/evolutionPoints", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<TeamPointsEvolutionDTO> getEvolutionPoints(@RequestParam Integer team1Id,
             @RequestParam Integer team2Id,
