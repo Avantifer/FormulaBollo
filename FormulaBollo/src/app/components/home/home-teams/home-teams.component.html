@@ -19,12 +19,20 @@
 						class="teams-schema-container-image m-auto w-24" />
 				</a>
 			}
-			@if (!cacheService.isVersionRetrieved() || !teams().length) {
+			@if (loading()) {
 				@for (item of 10 | skeletonItems; track $index) {
 					<p-skeleton height="9rem" styleClass="rounded-4 border-round-2xl" />
 				}
 			}
 		</div>
+		@if (loadError()) {
+			<div role="alert" class="text-center p-4">
+				<p>No se pudieron cargar las escuderías.</p>
+				<button type="button" (click)="retry()" class="underline focus-visible:outline-2">Reintentar</button>
+			</div>
+		} @else if (!loading() && !teams().length) {
+			<p role="status" class="text-center p-4">No hay escuderías para esta temporada.</p>
+		}
 		<div class="mt-8 pb-8 text-center">
 			<a
 				[routerLink]="['/teams']"
