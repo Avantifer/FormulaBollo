@@ -43,7 +43,7 @@ describe('Frontend regressions', () => {
     it(`${formName} revalidates both passwords and refuses invalid submissions`, () => {
       const component = TestBed.createComponent(type as typeof FantasyRegisterComponent).componentInstance as any;
       const form = component[formName] as FormGroup;
-      form.patchValue({ username: 'user', mail: 'user@example.com', [first]: 'secret', [repeated]: 'secret' });
+      form.patchValue({ username: 'user', mail: 'user@example.com', [first]: 'secret-pass', [repeated]: 'secret-pass' });
       expect(form.valid).toBeTrue();
       form.get(first)!.setValue('different');
       expect(form.hasError('passwordMismatch')).toBeTrue();
@@ -57,7 +57,9 @@ describe('Frontend regressions', () => {
       expect(form.valid).toBeFalse();
       form.patchValue({ [first]: 'é'.repeat(36), [repeated]: 'é'.repeat(36) });
       expect(form.valid).toBeTrue();
-      form.patchValue({ [first]: 'a', [repeated]: 'a' });
+      form.patchValue({ [first]: 'abcdefg', [repeated]: 'abcdefg' });
+      expect(form.valid).toBeFalse();
+      form.patchValue({ [first]: 'abcdefgh', [repeated]: 'abcdefgh' });
       expect(form.valid).toBeTrue();
     });
   }

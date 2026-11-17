@@ -8,8 +8,8 @@ import { providePrimeNG } from 'primeng/config';
 
 import Aura from '@primeuix/themes/aura';
 import { definePreset } from '@primeuix/themes';
-import { PreloadAllModules, provideRouter, withPreloading } from '@angular/router';
-import { JWT_OPTIONS, JwtHelperService } from '@auth0/angular-jwt';
+import { provideRouter, withPreloading } from '@angular/router';
+import { SelectivePreloadStrategy } from '../shared/services/selective-preload.strategy';
 
 
 const palette = {
@@ -30,7 +30,7 @@ const FormulaBolloPreset = definePreset(Aura, {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZonelessChangeDetection(),
-    provideRouter(routes, withPreloading(PreloadAllModules)),
+    provideRouter(routes, withPreloading(SelectivePreloadStrategy)),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     providePrimeNG({
       translation: {
@@ -103,8 +103,6 @@ export const appConfig: ApplicationConfig = {
         }
       }
     }),
-    { provide: JWT_OPTIONS, useValue: JWT_OPTIONS },
-    JwtHelperService,
     MessageService,
   ] 
 };

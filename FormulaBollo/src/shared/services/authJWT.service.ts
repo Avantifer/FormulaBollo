@@ -1,14 +1,14 @@
 import { inject, Injectable } from "@angular/core";
-import { JwtHelperService } from "@auth0/angular-jwt";
+import { decodeJwtPayload } from '../utils/jwt';
+import { CacheService } from './cache.service';
 import { MessageInfoService } from "./toastInfo.service";
-import { Account } from "../models/account";
 
 @Injectable({
   providedIn: "root"
 })
 export class AuthJWTService {
 
-  private readonly jwtService: JwtHelperService = inject(JwtHelperService);
+  private readonly cacheService = inject(CacheService);
   private readonly messageInfoService: MessageInfoService = inject(MessageInfoService);
   
   isUserLogged: boolean = false;
@@ -21,9 +21,9 @@ export class AuthJWTService {
   checkAdmin(jwt: string): boolean {
     if (!this.checkTokenValid(jwt)) return false;
     let isAdmin: boolean = false;
-    const token: Account | null = this.jwtService.decodeToken(jwt);
+    const token = decodeJwtPayload(jwt);
 
-    if (token?.admin) isAdmin = true;
+    if (token?.['admin']) isAdmin = true;
 
     return isAdmin;
   }
@@ -40,9 +40,9 @@ export class AuthJWTService {
       if (!parts.every(part => /^[A-Za-z0-9_-]+={0,2}$/.test(part))) return false;
       const header = JSON.parse(atob(parts[0].replace(/-/g, '+').replace(/_/g, '/')));
       if (typeof header?.alg !== 'string' || header.alg.toLowerCase() === 'none') return false;
-      const tokenDecoded = this.jwtService.decodeToken(token);
-      return !!tokenDecoded?.userId && typeof tokenDecoded.exp === 'number'
-        && Number.isFinite(tokenDecoded.exp) && tokenDecoded.exp > Date.now() / 1000;
+      const tokenDecoded = decodeJwtPayload(token);
+      return !!tokenDecoded?.['userId'] && typeof tokenDecoded['exp'] === 'number'
+        && Number.isFinite(tokenDecoded['exp']) && tokenDecoded['exp'] > Date.now() / 1000;
     } catch {
       return false;
     }
@@ -56,9 +56,9 @@ export class AuthJWTService {
   getIdFromToken(token: string): string {
     if (!this.checkTokenValid(token)) return '';
     let id: string = "";
-    const tokenDecoded = this.jwtService.decodeToken(token);
+    const tokenDecoded = decodeJwtPayload(token);
 
-    if (tokenDecoded.userId) id = tokenDecoded.userId;
+    if (tokenDecoded?.['userId']) id = tokenDecoded['userId'];
 
     return id;
   }
@@ -71,9 +71,9 @@ export class AuthJWTService {
   getUsernameFromToken(token: string): string {
     if (!this.checkTokenValid(token)) return '';
     let username: string = "";
-    const tokenDecoded = this.jwtService.decodeToken(token);
+    const tokenDecoded = decodeJwtPayload(token);
 
-    if (tokenDecoded.sub) username = tokenDecoded.sub;
+    if (tokenDecoded?.['sub']) username = tokenDecoded['sub'];
 
     return username;
   }
@@ -102,6 +102,7 @@ export class AuthJWTService {
 
   clearSession(): void {
     localStorage.removeItem('auth');
+    this.cacheService.removeByPrefix('fantasyElection-authenticated-');
     this.isUserLogged = false;
   }
 }

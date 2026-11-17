@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { provideComponentTesting } from '../../../../testing/component-test-providers';
 import { FantasyRecoverPasswordComponent } from './fantasy-recover-password.component';
-import { Router } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
 import { environment } from '../../../../enviroments/enviroment';
 
 describe('FantasyRecoverPasswordComponent', () => {
@@ -12,10 +12,13 @@ describe('FantasyRecoverPasswordComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [FantasyRecoverPasswordComponent],
-      providers: provideComponentTesting(),
+      providers: [
+        ...provideComponentTesting(),
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ token: 'recovery-token' }) } } }
+      ],
     }).compileComponents();
 
-    spyOnProperty(TestBed.inject(Router), 'url', 'get').and.returnValue('/fantasy/recoverPassword/recovery-token');
+    spyOnProperty(TestBed.inject(Router), 'url', 'get').and.returnValue('/fantasy/recoverPassword/recovery-token?utm=1#x');
     spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
 
     fixture = TestBed.createComponent(FantasyRecoverPasswordComponent);
@@ -29,6 +32,16 @@ describe('FantasyRecoverPasswordComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('shows the minimum password length inline', () => {
+    const input = fixture.nativeElement.querySelector('#password1');
+    input.value = '1234567';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#fantasy-recover-password-password1-error').textContent)
+      .toContain('La contraseña debe tener al menos 8 caracteres');
+    expect(fixture.nativeElement.querySelector('p-button button').disabled).toBeTrue();
   });
 
   it('usa el token del enlace y envía únicamente la contraseña en el cuerpo', () => {
