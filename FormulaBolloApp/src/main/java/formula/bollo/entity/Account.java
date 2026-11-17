@@ -9,6 +9,7 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "Account")
@@ -26,11 +27,13 @@ public class Account {
     private String username;
 
     @Column(name = "password", nullable = false, length = 100)
+    @ToString.Exclude
     private String password;
 
     @Column(name = "admin", nullable = false, length = 1)
     private int admin;
 
     @Column(name = "email", nullable = false, length = 100, unique = true)
+    @ToString.Exclude
     private String email;
 }

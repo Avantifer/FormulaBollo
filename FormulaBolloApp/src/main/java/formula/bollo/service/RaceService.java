@@ -5,8 +5,11 @@ import org.springframework.cache.annotation.CacheEvict;
 import java.util.Optional;
 
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import formula.bollo.entity.Race;
 import formula.bollo.entity.Season;
@@ -43,7 +46,14 @@ public class RaceService {
      *                updated.
      */
     @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
+    @Transactional
     public ResponseEntity<String> saveRace(RaceDTO raceDTO) {
+        if (raceDTO.getSeason() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La temporada es obligatoria");
+        }
+        if (raceDTO.getName() == null || raceDTO.getName().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre de la carrera es obligatorio");
+        }
         Season season = this.seasonRepository.findByNumber(raceDTO.getSeason().getNumber());
 
         if (season == null) {
@@ -61,13 +71,14 @@ public class RaceService {
             raceToUpdate.setFlagImage(raceDTO.getFlagImage());
             raceToUpdate.setCircuitImage(raceDTO.getCircuitImage());
             raceToUpdate.setDateStart(raceDTO.getDateStart());
-            raceToUpdate.setSeason(this.seasonImpl.seasonDTOToSeason(raceDTO.getSeason()));
+            raceToUpdate.setSeason(season);
             raceToUpdate.setFinished(raceDTO.getFinished());
             this.raceRepository.save(raceToUpdate);
 
             return new ResponseEntity<>("La carrera se ha actualizado correctamente", HttpStatusCode.valueOf(200));
         } else {
             Race raceToSave = this.raceImpl.raceDTOToRace(raceDTO);
+            raceToSave.setSeason(season);
             this.raceRepository.save(raceToSave);
 
             return new ResponseEntity<>("La carrera se ha creado correctamente", HttpStatusCode.valueOf(200));

@@ -3,6 +3,8 @@ package formula.bollo.service;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -16,6 +18,56 @@ class AccountAttemptLimiterTest {
     private final AtomicLong time = new AtomicLong();
     private final AccountAttemptLimiter limiter = new AccountAttemptLimiter(Duration.ofMinutes(15), 10, 30, 3, 20, time::get);
     private final Supplier<ResponseEntity<String>> badCredentials = () -> ResponseEntity.status(401).body("invalid");
+
+    @Test
+    void fiftyFailuresAcrossIpsBlockOnlyTheNormalizedAccountUntilTheWindowEnds() {
+        for (int i = 0; i < 50; i++) {
+            assertEquals(401, limiter.login(" Ana ", "ip" + i, badCredentials).getStatusCode().value());
+        }
+        ResponseEntity<String> blocked = limiter.login("ANA", "new-ip", () -> {
+            fail("No autenticar ni con la contraseña correcta tras el limite total");
+            return ResponseEntity.ok("token");
+        });
+        assertEquals(429, blocked.getStatusCode().value());
+        assertEquals("900", blocked.getHeaders().getFirst("Retry-After"));
+        assertEquals(200, limiter.login("other", "new-ip", () -> ResponseEntity.ok("token")).getStatusCode().value());
+
+        time.addAndGet(Duration.ofMinutes(15).toNanos());
+        assertEquals(200, limiter.login("ana", "new-ip", () -> ResponseEntity.ok("token")).getStatusCode().value());
+    }
+
+    @Test
+    void successfulLoginDoesNotResetTheTotalAccountFailures() {
+        for (int i = 0; i < 49; i++) {
+            assertEquals(401, limiter.login("ana", "ip" + i, badCredentials).getStatusCode().value());
+        }
+        assertEquals(200, limiter.login("ana", "good-ip", () -> ResponseEntity.ok("token")).getStatusCode().value());
+        assertEquals(401, limiter.login("ana", "last-ip", badCredentials).getStatusCode().value());
+        assertEquals(429, limiter.login("ana", "new-ip", badCredentials).getStatusCode().value());
+    }
+
+    @Test
+    void concurrentFailuresFromDifferentIpsAreAllCounted() throws Exception {
+        try (var executor = Executors.newFixedThreadPool(8)) {
+            var start = new CountDownLatch(1);
+            var tasks = new ArrayList<Future<ResponseEntity<String>>>();
+            for (int i = 0; i < 40; i++) {
+                String ip = "ip" + i;
+                tasks.add(executor.submit(() -> {
+                    assertTrue(start.await(5, TimeUnit.SECONDS));
+                    return limiter.login("ana", ip, badCredentials);
+                }));
+            }
+            start.countDown();
+            for (var task : tasks) {
+                assertEquals(401, task.get(5, TimeUnit.SECONDS).getStatusCode().value());
+            }
+        }
+        for (int i = 40; i < 50; i++) {
+            assertEquals(401, limiter.login("ana", "ip" + i, badCredentials).getStatusCode().value());
+        }
+        assertEquals(429, limiter.login("ana", "new-ip", badCredentials).getStatusCode().value());
+    }
 
     @Test
     void tenFailuresBlockTheNormalizedAccountAndIpUntilTheWindowEnds() {

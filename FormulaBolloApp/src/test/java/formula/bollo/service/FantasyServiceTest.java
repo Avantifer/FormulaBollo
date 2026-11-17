@@ -37,6 +37,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
+import org.springframework.dao.ConcurrencyFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -275,7 +277,7 @@ class FantasyServiceTest {
         assertSame(storedRace, mapped.getRace());
         assertEquals(hasPrevious ? 12L : null, mapped.getId());
         verify(fantasyElectionRepository).findByUserIdAndRaceId(7, 3);
-        verify(fantasyElectionRepository).save(mapped);
+        verify(fantasyElectionRepository).saveAndFlush(mapped);
     }
 
     @Test
@@ -284,6 +286,35 @@ class FantasyServiceTest {
 
         assertEquals(403, response.getStatusCode().value());
         verifyNoInteractions(fantasyElectionRepository, fantasyElectionImpl);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void saveFantasyElectionTranslatesPersistenceConflicts(boolean concurrencyFailure) {
+        FantasyElectionDTO input = validElection();
+        prepareElection(input);
+        RuntimeException failure = concurrencyFailure
+                ? new ConcurrencyFailureException("SQL deadlock details")
+                : new DataIntegrityViolationException("SQL constraint details");
+        when(fantasyElectionRepository.saveAndFlush(any())).thenThrow(failure);
+
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> fantasyService.saveFantasyElection(input, "ana"));
+
+        assertEquals(409, error.getStatusCode().value());
+        assertEquals("Tu equipo ya se estaba guardando. Vuelve a intentarlo", error.getReason());
+        verify(fantasyElectionRepository).saveAndFlush(any());
+    }
+
+    @Test
+    void saveFantasyElectionPropagatesUnrelatedFailures() {
+        FantasyElectionDTO input = validElection();
+        prepareElection(input);
+        RuntimeException failure = new IllegalStateException("unexpected");
+        when(fantasyElectionRepository.saveAndFlush(any())).thenThrow(failure);
+
+        assertSame(failure, assertThrows(RuntimeException.class,
+                () -> fantasyService.saveFantasyElection(input, "ana")));
     }
 
     private FantasyElectionDTO validElection() {
@@ -339,7 +370,7 @@ class FantasyServiceTest {
                 () -> fantasyService.saveFantasyElection(input, "ana"));
         assertEquals(status, error.getStatusCode().value());
         assertEquals(message, error.getReason());
-        verify(fantasyElectionRepository, never()).save(any());
+        verify(fantasyElectionRepository, never()).saveAndFlush(any());
         verifyNoInteractions(fantasyElectionImpl);
     }
 

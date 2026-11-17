@@ -19,6 +19,7 @@ import formula.bollo.model.AccountDTO;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 
 @Component
 public class JwtConfig implements Serializable {
@@ -28,6 +29,13 @@ public class JwtConfig implements Serializable {
 
     @Value("${jwt.secret}")
     private String secret;
+
+    @PostConstruct
+    void validateSecret() {
+        if (secret == null || secret.isBlank() || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("jwt.secret debe tener al menos 32 bytes");
+        }
+    }
 
     /**
      * Generate a JWT token for the account.

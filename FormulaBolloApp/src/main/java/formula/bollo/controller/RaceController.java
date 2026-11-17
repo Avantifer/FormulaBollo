@@ -80,7 +80,7 @@ public class RaceController {
     @GetMapping(path = "/actual", produces = MediaType.APPLICATION_JSON_VALUE)
     public RaceDTO getActualRace() {
         log.info("Coger la carrera actual");
-        Optional<Race> raceActual = this.raceRepository.findActual();
+        Optional<Race> raceActual = this.raceRepository.findActualBySeason(Constants.ACTUAL_SEASON);
         return this.raceImpl.raceToRaceDTO(raceActual.isPresent() ? raceActual.get() : new Race());
     }
 

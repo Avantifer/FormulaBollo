@@ -1,5 +1,7 @@
 package formula.bollo.service;
 
+import org.springframework.dao.ConcurrencyFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.cache.annotation.CacheEvict;
 
 import java.time.Clock;
@@ -279,12 +281,17 @@ public class FantasyService {
                 .fantasyElectionDTOToFantasyElection(fantasyElectionDTO);
         fantasyElection.setAccount(account);
         fantasyElection.setRace(race);
-        Optional<FantasyElection> fantasyElectionPrevious = this.fantasyElectionRepository.findByUserIdAndRaceId(
-                account.getId().intValue(),
-                fantasyElectionDTO.getRace().getId().intValue());
+        try {
+            Optional<FantasyElection> fantasyElectionPrevious = this.fantasyElectionRepository.findByUserIdAndRaceId(
+                    account.getId().intValue(),
+                    fantasyElectionDTO.getRace().getId().intValue());
 
-        fantasyElection.setId(fantasyElectionPrevious.map(FantasyElection::getId).orElse(null));
-        this.fantasyElectionRepository.save(fantasyElection);
+            fantasyElection.setId(fantasyElectionPrevious.map(FantasyElection::getId).orElse(null));
+            this.fantasyElectionRepository.saveAndFlush(fantasyElection);
+        } catch (DataIntegrityViolationException | ConcurrencyFailureException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Tu equipo ya se estaba guardando. Vuelve a intentarlo");
+        }
 
         return new ResponseEntity<>("Tu equipo ha sido guardado correctamente", Constants.HEADERS_TEXT_PLAIN,
                 HttpStatusCode.valueOf(200));

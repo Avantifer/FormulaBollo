@@ -101,24 +101,6 @@ public class FantasyController {
         return this.fantasyService.saveFantasyElection(fantasyElectionDTO, principal.getName());
     }
 
-    @Operation(summary = "Get all driver's fantasy points", tags = Constants.TAG_FANTASY)
-    @Transactional(readOnly = true)
-    @GetMapping(path = "/allDriverPoints", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<FantasyPointsDriverDTO> getAllDriverPoints(@RequestParam Integer raceId) {
-        log.info("Coger todos los puntos del fantasy de los pilotos de la carrera " + raceId);
-        return this.fantasyPointsImpl.convertFantasyPointsDriverToFantasyPointsDriverDTO(
-                this.fantasyPointsDriverRepository.findByRaceId(raceId));
-    }
-
-    @Operation(summary = "Get all team's fantasy points", tags = Constants.TAG_FANTASY)
-    @Transactional(readOnly = true)
-    @GetMapping(path = "/allTeamPoints", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<FantasyPointsTeamDTO> getAllTeamPoints(@RequestParam Integer raceId) {
-        log.info("Coger todos los puntos del fantasy de los equipos de la carrera " + raceId);
-        return this.fantasyPointsImpl
-                .convertFantasyPointsTeamToFantasyPointsTeamDTO(this.fantasyPointsTeamRepository.findByRaceId(raceId));
-    }
-
     @Operation(summary = "Get fantasy points of a driver", tags = Constants.TAG_FANTASY)
     @Transactional(readOnly = true)
     @GetMapping(path = "/driverPointsSpecificRace", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -175,7 +157,7 @@ public class FantasyController {
     @Operation(summary = "Get all fantasy points of season")
     @Transactional(readOnly = true)
     @GetMapping(path = "/getFantasyPointsSeason", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Cacheable(cacheNames = Constants.CACHE_STATS, key = "'fantasyPointsSeason:' + #numberSeason")
+    @Cacheable(cacheNames = Constants.CACHE_STATS, sync = true, key = "'fantasyPointsSeason:' + #numberSeason")
     public List<FantasyPointsAccountDTO> getFantasyPointsSeason(@RequestParam Integer numberSeason) {
         log.info("Coger los puntos del fantasy de la temporada " + numberSeason);
         return this.fantasyService.sumAllFantasyPoints(numberSeason);

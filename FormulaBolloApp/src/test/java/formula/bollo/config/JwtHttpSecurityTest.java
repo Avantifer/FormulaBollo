@@ -213,7 +213,7 @@ class JwtHttpSecurityTest {
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         assertEquals("session", jwt.extractAllClaims(login).get("purpose"));
         mvc.perform(route("POST", "/account/register")
-                .content("{\"username\":\"new\",\"password\":\"secret\",\"email\":\"new@example.com\",\"admin\":0}"))
+                .content("{\"username\":\"new\",\"password\":\"secret123\",\"email\":\"new@example.com\",\"admin\":0}"))
                 .andExpect(status().isOk());
         mvc.perform(route("POST", "/results/totalPerSpecificDrivers").param("season", "1"))
                 .andExpect(status().isOk());

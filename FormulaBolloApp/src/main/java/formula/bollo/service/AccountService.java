@@ -35,9 +35,10 @@ public class AccountService {
             @Value("${account.rate-limit.login-ip:30}") int loginIp,
             @Value("${account.rate-limit.recovery-email:3}") int recoveryEmail,
             @Value("${account.rate-limit.recovery-ip:20}") int recoveryIp,
-            @Value("${account.rate-limit.recovery-email-total:10}") int recoveryEmailTotal) {
+            @Value("${account.rate-limit.recovery-email-total:10}") int recoveryEmailTotal,
+            @Value("${account.rate-limit.login-account-total:50}") int loginAccountTotal) {
         attemptLimiter = new AccountAttemptLimiter(Duration.parse(window), loginAccount, loginIp, recoveryEmail, recoveryIp,
-                recoveryEmailTotal, System::nanoTime);
+                recoveryEmailTotal, loginAccountTotal, System::nanoTime);
     }
 
     private AccountRepository accountRepository;
@@ -101,8 +102,8 @@ public class AccountService {
      *         successful.
      */
     public ResponseEntity<String> register(AccountDTO accountDTO) {
-        if (accountDTO == null || !validPassword(accountDTO.getPassword()))
-            return ResponseEntity.badRequest().body("Tienes que poner contraseña");
+        if (accountDTO == null || !validNewPassword(accountDTO.getPassword()))
+            return ResponseEntity.badRequest().body("La contraseña debe tener al menos 8 caracteres");
         if (accountDTO.getUsername() == null || accountDTO.getUsername().isBlank() || accountDTO.getUsername().length() > 25
                 || accountDTO.getEmail() == null || accountDTO.getEmail().isBlank() || accountDTO.getEmail().length() > 100
                 || !EMAIL.matcher(accountDTO.getEmail()).matches()) {
@@ -147,8 +148,8 @@ public class AccountService {
      *         failed.
      */
     public ResponseEntity<String> changePassword(Principal principal, String password) {
-        if (!validPassword(password)) {
-            return ResponseEntity.badRequest().body("La contraseña no es valida");
+        if (!validNewPassword(password)) {
+            return ResponseEntity.badRequest().body("La contraseña debe tener al menos 8 caracteres");
         }
         String username = principal.getName();
         List<Account> account = accountRepository.findByUsername(username);
@@ -191,7 +192,11 @@ public class AccountService {
     }
 
     private boolean validPassword(String password) {
-        return password != null && !password.isBlank() && password.getBytes(StandardCharsets.UTF_8).length <= 72;
+        return password != null && !password.isEmpty() && password.getBytes(StandardCharsets.UTF_8).length <= 72;
+    }
+
+    private boolean validNewPassword(String password) {
+        return validPassword(password) && !password.isBlank() && password.length() >= 8;
     }
 
     /**

@@ -89,7 +89,7 @@ class AccountServiceTest {
     }
 
     @Test
-    void loginGoodCredentials() {
+    void existingAccountCanStillLoginWithAThreeCharacterPassword() {
         accountDTO = new AccountDTO(1L, "Avantifer", "123", 1, "email@mail.com");
         account = new Account(1L, "Avantifer", realEncoder.encode("123"), 1, "email@mail.com");
 
@@ -104,13 +104,13 @@ class AccountServiceTest {
     void registerNoPassword() {
         ResponseEntity<String> response = accountService.register(accountDTO);
 
-        assertEquals("Tienes que poner contraseña", response.getBody());
+        assertEquals("La contraseña debe tener al menos 8 caracteres", response.getBody());
         assertEquals(400, response.getStatusCode().value());
     }
 
     @Test
     void registerUsernameExists() {
-        accountDTO = new AccountDTO(1L, "Avantifer", "123", 1, "email@mail.com");
+        accountDTO = new AccountDTO(1L, "Avantifer", "12345678", 1, "email@mail.com");
         account = new Account(1L, "Avantifer", "123", 1, "email@mail.com");
 
         when(accountRepository.findByUsername(anyString())).thenReturn(Arrays.asList(account));
@@ -123,7 +123,7 @@ class AccountServiceTest {
 
     @Test
     void registerEmailExists() {
-        accountDTO = new AccountDTO(1L, "Avantifer", "123", 1, "email@mail.com");
+        accountDTO = new AccountDTO(1L, "Avantifer", "12345678", 1, "email@mail.com");
         account = new Account(2L, "Bubapu", "123", 1, "email@mail.com");
 
         when(accountRepository.findByUsername(anyString())).thenReturn(Collections.emptyList());
@@ -136,8 +136,8 @@ class AccountServiceTest {
     }
 
     @Test
-    void registerGood() {
-        accountDTO = new AccountDTO(1L, "Avantifer", "123", 1, "email@mail.com");
+    void registerWithEightCharacterPasswordSucceeds() {
+        accountDTO = new AccountDTO(1L, "Avantifer", "12345678", 1, "email@mail.com");
         account = new Account(2L, "Bubapu", "123", 1, "email2@mail.com");
 
         when(accountRepository.findByUsername(anyString())).thenReturn(Collections.emptyList());
@@ -151,7 +151,7 @@ class AccountServiceTest {
     @Test
     void registerIgnoresIdAndAdminSentByTheClient() {
         // Un id ajeno sobrescribiría otra cuenta y admin=1 daría permisos de administrador.
-        accountDTO = new AccountDTO(35L, "Atacante", "123", 1, "atacante@mail.com");
+        accountDTO = new AccountDTO(35L, "Atacante", "12345678", 1, "atacante@mail.com");
 
         when(accountRepository.findByUsername(anyString())).thenReturn(Collections.emptyList());
         when(accountRepository.findByEmail(anyString())).thenReturn(Collections.emptyList());
@@ -191,7 +191,7 @@ class AccountServiceTest {
     void changePasswordUserNotFound() {
         when(accountRepository.findByUsername(anyString())).thenReturn(Arrays.asList());
 
-        ResponseEntity<String> response = accountService.changePassword(() -> "Avantifer", "123");
+        ResponseEntity<String> response = accountService.changePassword(() -> "Avantifer", "12345678");
 
         assertEquals("No se ha podido encontrar el usuario", response.getBody());
     }
@@ -202,7 +202,7 @@ class AccountServiceTest {
 
         when(accountRepository.findByUsername(anyString())).thenReturn(Arrays.asList(account));
 
-        ResponseEntity<String> response = accountService.changePassword(() -> "Avantifer", "123");
+        ResponseEntity<String> response = accountService.changePassword(() -> "Avantifer", "12345678");
 
         assertEquals(200, response.getStatusCode().value());
     }
@@ -251,7 +251,7 @@ class AccountServiceTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {" ", "\t", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "ééééééééééééééééééééééééééééééééééééé"})
+    @ValueSource(strings = {" ", "\t", "        ", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "ééééééééééééééééééééééééééééééééééééé"})
     void invalidPasswordIsRejectedByRegistrationAndChange(String password) {
         AccountDTO input = new AccountDTO(null, "ana", password, 0, "ana@example.com");
         assertEquals(400, accountService.register(input).getStatusCode().value());
@@ -263,7 +263,7 @@ class AccountServiceTest {
     @NullAndEmptySource
     @ValueSource(strings = {" ", "abcdefghijklmnopqrstuvwxyz"})
     void invalidUsernameIsRejectedBeforePersistence(String username) {
-        assertEquals(400, accountService.register(new AccountDTO(null, username, "x", 0, "ana@example.com")).getStatusCode().value());
+        assertEquals(400, accountService.register(new AccountDTO(null, username, "password", 0, "ana@example.com")).getStatusCode().value());
         verifyNoInteractions(accountRepository, accountImpl, jwtConfig);
     }
 
@@ -271,14 +271,14 @@ class AccountServiceTest {
     @NullAndEmptySource
     @ValueSource(strings = {" ", "invalid", "ana@", "@example.com", "ana a@example.com", "ana..a@example.com", ".ana@example.com", "ana@-example.com"})
     void invalidEmailIsRejectedBeforePersistence(String email) {
-        assertEquals(400, accountService.register(new AccountDTO(null, "ana", "x", 0, email)).getStatusCode().value());
+        assertEquals(400, accountService.register(new AccountDTO(null, "ana", "password", 0, email)).getStatusCode().value());
         verifyNoInteractions(accountRepository, accountImpl, jwtConfig);
     }
 
     @Test
     void emailLongerThanEntityColumnIsRejected() {
         String email = "a".repeat(90) + "@example.com";
-        assertEquals(400, accountService.register(new AccountDTO(null, "ana", "x", 0, email)).getStatusCode().value());
+        assertEquals(400, accountService.register(new AccountDTO(null, "ana", "password", 0, email)).getStatusCode().value());
         verifyNoInteractions(accountRepository, accountImpl, jwtConfig);
     }
 
@@ -292,8 +292,28 @@ class AccountServiceTest {
     }
 
     @Test
-    void oneCharacterPasswordRemainsCompatibleWithTheFrontend() {
-        assertEquals(200, accountService.register(new AccountDTO(null, "ana", "x", 0, "ana@example.com")).getStatusCode().value());
+    void oneCharacterPasswordIsRejectedForRegistration() {
+        assertEquals(400, accountService.register(new AccountDTO(null, "ana", "x", 0, "ana@example.com")).getStatusCode().value());
+        verifyNoInteractions(accountRepository, accountImpl, jwtConfig);
+    }
+
+    @Test
+    void threeCharacterPasswordIsRejectedForRegistration() {
+        ResponseEntity<String> response = accountService.register(
+                new AccountDTO(null, "ana", "abc", 0, "ana@example.com"));
+
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("La contraseña debe tener al menos 8 caracteres", response.getBody());
+        verifyNoInteractions(accountRepository, accountImpl, jwtConfig);
+    }
+
+    @Test
+    void sevenCharacterPasswordIsRejectedForChange() {
+        ResponseEntity<String> response = accountService.changePassword(() -> "ana", "1234567");
+
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("La contraseña debe tener al menos 8 caracteres", response.getBody());
+        verifyNoInteractions(accountRepository, accountImpl, jwtConfig);
     }
 
     @Test
@@ -301,7 +321,7 @@ class AccountServiceTest {
         Account pending = new Account();
         when(accountImpl.accountDTOToAccount(any())).thenReturn(pending);
         when(accountRepository.save(pending)).thenThrow(new DataIntegrityViolationException("duplicate"));
-        assertEquals(409, accountService.register(new AccountDTO(null, "ana", "x", 0, "ana@example.com")).getStatusCode().value());
+        assertEquals(409, accountService.register(new AccountDTO(null, "ana", "password", 0, "ana@example.com")).getStatusCode().value());
         verifyNoInteractions(jwtConfig);
     }
 

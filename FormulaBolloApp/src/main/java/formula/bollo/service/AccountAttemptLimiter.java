@@ -2,6 +2,7 @@ package formula.bollo.service;
 
 import java.time.Duration;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
@@ -14,8 +15,10 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 
 class AccountAttemptLimiter {
     private static final int DEFAULT_RECOVERY_EMAIL_TOTAL = 10;
+    private static final int DEFAULT_LOGIN_ACCOUNT_TOTAL = 50;
 
     private final Cache<String, Attempts> loginAccounts;
+    private final Cache<String, Attempts> loginAccountTotals;
     private final Cache<String, Attempts> loginIps;
     private final Cache<String, Attempts> recoveryEmailIps;
     private final Cache<String, Attempts> recoveryEmails;
@@ -23,6 +26,7 @@ class AccountAttemptLimiter {
     private final long windowNanos;
     private final LongSupplier ticker;
     private final int loginAccountLimit;
+    private final int loginAccountTotalLimit;
     private final int loginIpLimit;
     private final int recoveryEmailLimit;
     private final int recoveryIpLimit;
@@ -40,13 +44,22 @@ class AccountAttemptLimiter {
     // recoveryEmailTotalLimit es el tope del buzon desde todas las IPs, contra el bombardeo de correos.
     AccountAttemptLimiter(Duration window, int loginAccountLimit, int loginIpLimit,
             int recoveryEmailLimit, int recoveryIpLimit, int recoveryEmailTotalLimit, LongSupplier ticker) {
+        this(window, loginAccountLimit, loginIpLimit, recoveryEmailLimit, recoveryIpLimit,
+                recoveryEmailTotalLimit, DEFAULT_LOGIN_ACCOUNT_TOTAL, ticker);
+    }
+
+    AccountAttemptLimiter(Duration window, int loginAccountLimit, int loginIpLimit,
+            int recoveryEmailLimit, int recoveryIpLimit, int recoveryEmailTotalLimit,
+            int loginAccountTotalLimit, LongSupplier ticker) {
         if (window.isZero() || window.isNegative() || loginAccountLimit < 1 || loginIpLimit < 1
-                || recoveryEmailLimit < 1 || recoveryIpLimit < 1 || recoveryEmailTotalLimit < 1) {
+                || recoveryEmailLimit < 1 || recoveryIpLimit < 1 || recoveryEmailTotalLimit < 1
+                || loginAccountTotalLimit < 1) {
             throw new IllegalArgumentException("Los limites y la ventana deben ser positivos");
         }
         this.windowNanos = window.toNanos();
         this.ticker = ticker;
         this.loginAccountLimit = loginAccountLimit;
+        this.loginAccountTotalLimit = loginAccountTotalLimit;
         this.loginIpLimit = loginIpLimit;
         this.recoveryEmailLimit = recoveryEmailLimit;
         this.recoveryIpLimit = recoveryIpLimit;
@@ -55,6 +68,7 @@ class AccountAttemptLimiter {
             loginLocks[i] = new ReentrantLock();
         }
         loginAccounts = cache(window);
+        loginAccountTotals = cache(window);
         loginIps = cache(window);
         recoveryEmailIps = cache(window);
         recoveryEmails = cache(window);
@@ -66,15 +80,18 @@ class AccountAttemptLimiter {
                 .ticker(ticker::getAsLong).build();
     }
 
-    // La comprobacion y el registro del fallo son atomicos tambien entre peticiones concurrentes.
+    // La comprobacion y el registro del fallo se serializan para cada IP.
     // ReentrantLock y no synchronized: aqui dentro se consulta la BD y se hace BCrypt, y en Java 21
     // un synchronized fija el hilo virtual al hilo del sistema mientras espera.
     ResponseEntity<String> login(String username, String ip, Supplier<ResponseEntity<String>> authenticate) {
         ReentrantLock lock = loginLocks[(ip.hashCode() & Integer.MAX_VALUE) % loginLocks.length];
         lock.lock();
         try {
-            String accountKey = normalize(username) + '\0' + ip;
-            long retry = Math.max(retryAfter(loginAccounts, accountKey, loginAccountLimit),
+            String normalizedUsername = normalize(username);
+            String accountKey = normalizedUsername + '\0' + ip;
+            long retry = Math.max(
+                    Math.max(retryAfter(loginAccounts, accountKey, loginAccountLimit),
+                            retryAfter(loginAccountTotals, normalizedUsername, loginAccountTotalLimit)),
                     retryAfter(loginIps, ip, loginIpLimit));
             if (retry > 0) {
                 return limited(retry);
@@ -84,6 +101,7 @@ class AccountAttemptLimiter {
                 loginAccounts.invalidate(accountKey);
             } else if (response.getStatusCode().value() == 401) {
                 increment(loginAccounts, accountKey);
+                increment(loginAccountTotals, normalizedUsername);
                 increment(loginIps, ip);
             }
             return response;
@@ -115,12 +133,12 @@ class AccountAttemptLimiter {
 
     private long retryAfter(Cache<String, Attempts> cache, String key, int limit) {
         Attempts attempts = cache.getIfPresent(key);
-        return attempts == null || attempts.count < limit ? 0
+        return attempts == null || attempts.count.get() < limit ? 0
                 : Math.max(1, (windowNanos - (ticker.getAsLong() - attempts.started) + 999_999_999L) / 1_000_000_000L);
     }
 
     private void increment(Cache<String, Attempts> cache, String key) {
-        cache.get(key, ignored -> new Attempts(ticker.getAsLong())).count++;
+        cache.get(key, ignored -> new Attempts(ticker.getAsLong())).count.incrementAndGet();
     }
 
     private ResponseEntity<String> limited(long seconds) {
@@ -134,7 +152,7 @@ class AccountAttemptLimiter {
 
     private static class Attempts {
         private final long started;
-        private int count;
+        private final AtomicInteger count = new AtomicInteger();
 
         private Attempts(long started) {
             this.started = started;

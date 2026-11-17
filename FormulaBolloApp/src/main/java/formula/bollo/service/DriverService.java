@@ -194,6 +194,10 @@ public class DriverService {
             String driverName = driverInfo.getDriver().getName();
 
             resultMap.merge(driverName, driverInfo, (existing, incoming) -> {
+                int existingSeason = existing.getDriver().getSeason().getNumber();
+                int incomingSeason = incoming.getDriver().getSeason().getNumber();
+                boolean useIncomingDriver = incomingSeason > existingSeason ||
+                        (incomingSeason == existingSeason && incoming.getTotalPoints() > existing.getTotalPoints());
                 // La media y las últimas carreras se calculan antes de sumar los contadores.
                 existing.setAveragePosition(StatsMerge.weightedAverage(existing.getAveragePosition(),
                         existing.getRacesFinished(), incoming.getAveragePosition(), incoming.getRacesFinished()));
@@ -208,11 +212,7 @@ public class DriverService {
                 existing.setVictories(existing.getVictories() + incoming.getVictories());
                 existing.setPodiums(existing.getPodiums() + incoming.getPodiums());
 
-                int existingSeason = existing.getDriver().getSeason().getNumber();
-                int incomingSeason = incoming.getDriver().getSeason().getNumber();
-
-                if (incomingSeason > existingSeason ||
-                        (incomingSeason == existingSeason && incoming.getTotalPoints() > existing.getTotalPoints())) {
+                if (useIncomingDriver) {
                     existing.setDriver(incoming.getDriver());
                 }
 
@@ -242,7 +242,7 @@ public class DriverService {
      * 
      * @return a list of RecordDTO objects with the records statistics
      */
-    @Cacheable(cacheNames = Constants.CACHE_STATS, key = "#root.methodName + T(java.util.Arrays).toString(#root.args)")
+    @Cacheable(cacheNames = Constants.CACHE_STATS, sync = true, key = "#root.methodName + T(java.util.Arrays).toString(#root.args)")
     public List<RecordDTO> getAllRecords() {
         List<RecordDTO> recordDTOs = new ArrayList<>();
         this.resultRepository.recordPoleDriver().stream().findFirst().ifPresent(recordDTOs::add);
@@ -269,7 +269,7 @@ public class DriverService {
      * @return a list of DriverPointsEvolutionDTO objects with the points' evolution
      *         of driver
      */
-    @Cacheable(cacheNames = Constants.CACHE_STATS, key = "#root.methodName + T(java.util.Arrays).toString(#root.args)")
+    @Cacheable(cacheNames = Constants.CACHE_STATS, sync = true, key = "#root.methodName + T(java.util.Arrays).toString(#root.args)")
     public List<DriverPointsEvolutionDTO> getAllPointsEvolutionDriver(Set<Integer> driverIds) {
         List<Long> driverIdList = driverIds.stream()
                 .map(Integer::longValue)

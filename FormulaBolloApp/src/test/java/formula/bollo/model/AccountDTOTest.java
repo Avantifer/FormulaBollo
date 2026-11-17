@@ -7,11 +7,23 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import formula.bollo.entity.Account;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 class AccountDTOTest {
     private final JsonMapper mapper = JsonMapper.builder().build();
+
+    @Test
+    void dtoAndEntityToStringDoNotExposePasswordOrEmail() {
+        AccountDTO dto = new AccountDTO(7L, "ana", "secreta123", 0, "a@b.com");
+        Account entity = new Account(7L, "ana", "secreta123", 0, "a@b.com");
+
+        for (String value : List.of(dto.toString(), entity.toString())) {
+            assertFalse(value.contains("secreta123"));
+            assertFalse(value.contains("a@b.com"));
+        }
+    }
 
     @Test
     void accountAndFantasyResponsesDoNotExposeSensitiveFields() {

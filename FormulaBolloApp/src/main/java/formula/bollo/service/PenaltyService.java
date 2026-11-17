@@ -29,20 +29,6 @@ public class PenaltyService {
         this.penaltyImpl = penaltyImpl;
     }
 
-    /**
-     * Saves penalties from a list of PenaltyDTO objects to a repository.
-     *
-     * @param penaltyDTOs The list of PenaltyDTO objects to be saved.
-     */
-    @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
-    @Transactional
-    public void savePenalties(List<PenaltyDTO> penaltyDTOs) {
-        List<Penalty> penalties = preparePenalties(penaltyDTOs);
-        if (!penalties.isEmpty()) {
-            replacePenalties(penalties);
-        }
-    }
-
     @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     @Transactional
     public void savePenalties(List<PenaltyDTO> penaltyDTOs, int driverId, int raceId) {

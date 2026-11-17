@@ -21,9 +21,6 @@ public interface RaceRepository extends JpaRepository<Race, Long> {
     @Query("SELECT r FROM Race r WHERE r.finished = 1 AND r.season.number = :seasonNumber ORDER BY r.dateStart ASC, r.id ASC")
     List<Race> findAllFinished(int seasonNumber);
     
-    @Query("SELECT r FROM Race r WHERE r.finished = 0 ORDER BY r.dateStart ASC LIMIT 1")
-    Optional<Race> findActual();
-
     @Query("SELECT r FROM Race r WHERE r.finished = 0 AND r.season.number = :seasonNumber ORDER BY r.dateStart ASC, r.id ASC LIMIT 1")
     Optional<Race> findActualBySeason(int seasonNumber);
 }

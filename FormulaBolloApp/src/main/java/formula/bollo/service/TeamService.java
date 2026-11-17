@@ -439,7 +439,7 @@ public class TeamService {
      * @return a list of TeamPointsEvolutionDTO objects with the points' evolution
      *         of teams
      */
-    @Cacheable(cacheNames = Constants.CACHE_STATS, key = "#root.methodName + T(java.util.Arrays).toString(#root.args)")
+    @Cacheable(cacheNames = Constants.CACHE_STATS, sync = true, key = "#root.methodName + T(java.util.Arrays).toString(#root.args)")
     public List<TeamPointsEvolutionDTO> getAllPointsEvolutionTeam(Set<Integer> teamIds) {
         List<Long> teamIdList = teamIds.stream()
                 .map(Integer::longValue)

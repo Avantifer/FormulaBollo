@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.springframework.http.HttpStatusCode;
+import org.springframework.dao.ConcurrencyFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -147,7 +149,7 @@ public class ResultService {
      * @return A list of DriverPointsDTO objects, representing each driver's total
      *         points for the season.
      */
-    @Cacheable(cacheNames = Constants.CACHE_STATS, key = "#root.methodName + T(java.util.Arrays).toString(#root.args)")
+    @Cacheable(cacheNames = Constants.CACHE_STATS, sync = true, key = "#root.methodName + T(java.util.Arrays).toString(#root.args)")
     public List<DriverPointsDTO> getTotalResultsPerDriver(Integer seasonNumber, Integer numResults) {
         if (numResults != null && numResults < 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El numero de resultados no puede ser negativo");
@@ -189,7 +191,7 @@ public class ResultService {
      * @return A list of DriverPointsDTO objects, representing each driver's total
      *         points for the season.
      */
-    @Cacheable(cacheNames = Constants.CACHE_STATS, key = "#root.methodName + T(java.util.Arrays).toString(#root.args)")
+    @Cacheable(cacheNames = Constants.CACHE_STATS, sync = true, key = "#root.methodName + T(java.util.Arrays).toString(#root.args)")
     @Transactional
     public List<DriverPointsDTO> getTotalResultsSpecificPerDriver(Integer seasonNumber, List<Long> ids) {
         List<Result> results;
@@ -348,15 +350,21 @@ public class ResultService {
         List<Result> resultsToSave = this.resultImpl.convertResultsDTOToResults(resultDTOs);
         resultsToSave.forEach(result -> result.setId(null));
 
-        List<Result> existingResults = this.resultRepository
-                .findByRaceId(resultDTOs.get(0).getRace().getId().intValue());
+        try {
+            List<Result> existingResults = this.resultRepository
+                    .findByRaceId(resultDTOs.get(0).getRace().getId().intValue());
 
-        if (!existingResults.isEmpty()) {
-            this.resultRepository.deleteAll(existingResults);
+            if (!existingResults.isEmpty()) {
+                this.resultRepository.deleteAll(existingResults);
+                // Ejecutar los borrados antes de insertar filas con la misma clave única.
+                this.resultRepository.flush();
+            }
+
+            resultRepository.saveAllAndFlush(resultsToSave);
+        } catch (DataIntegrityViolationException | ConcurrencyFailureException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Otro guardado simultáneo ha modificado esta carrera. Vuelve a intentarlo");
         }
-
-        // Las filas anteriores ya se borraron: se reinsertan como nuevas (con id, Hibernate 7 falla al fusionar filas borradas).
-        resultRepository.saveAll(resultsToSave);
 
         return new ResponseEntity<>("Resultados guardados correctamente", Constants.HEADERS_TEXT_PLAIN,
                 HttpStatusCode.valueOf(200));

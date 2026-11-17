@@ -83,7 +83,7 @@ public class TeamController {
     @Operation(summary = "Get all info of teams", tags = Constants.TAG_TEAM)
     @Transactional(readOnly = true)
     @GetMapping(path = "/allInfoTeam", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Cacheable(cacheNames = Constants.CACHE_STATS, key = "'allInfoTeam:' + #season")
+    @Cacheable(cacheNames = Constants.CACHE_STATS, sync = true, key = "'allInfoTeam:' + #season")
     public List<TeamInfoDTO> getAllInfoTeam(@RequestParam Integer season) {
         log.info("Coger la informacion de los equipos de la temporada " + season);
         List<Team> teams = (season == 0) ? teamRepository.findAll() : teamRepository.findBySeason(season);

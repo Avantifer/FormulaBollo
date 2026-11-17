@@ -74,7 +74,7 @@ class PenaltyServiceTest {
         Penalty penalty = new Penalty(1L, race, driver, "", penaltySeverity, season);
 
         when(penaltyImpl.penaltyDTOToPenalty(any())).thenReturn(penalty);
-        penaltyService.savePenalties(Arrays.asList(penaltyDTO));
+        penaltyService.savePenalties(Arrays.asList(penaltyDTO), 1, 1);
 
         verify(penaltyRepository, times(0)).save(any());
     }
@@ -96,7 +96,7 @@ class PenaltyServiceTest {
         Penalty penalty = new Penalty(1L, race, driver, "Razon", penaltySeverity, season);
 
         when(penaltyImpl.penaltyDTOToPenalty(any())).thenReturn(penalty);
-        penaltyService.savePenalties(Arrays.asList(penaltyDTO));
+        penaltyService.savePenalties(Arrays.asList(penaltyDTO), 1, 1);
 
         verify(penaltyRepository, times(1)).save(any());
     }

@@ -110,7 +110,7 @@ class RepositoryQueriesTest {
         assertThat(races.findByNameAndSeason("Latest", 1)).isEmpty();
         assertThat(races.findBySeason(2)).hasSize(5).allMatch(r -> r.getSeason().getNumber() == 2);
         assertThat(races.findAllFinished(2)).extracting(Race::getName).containsExactly("Earlier", "Retired", "Latest");
-        assertThat(races.findActual()).contains(oldNext);
+        assertThat(races.findActualBySeason(1)).contains(oldNext);
         assertThat(races.findActualBySeason(2)).contains(next);
 
         var controller = new RaceController(races, new RaceImpl(Mappers.getMapper(RaceMapper.class)), null);

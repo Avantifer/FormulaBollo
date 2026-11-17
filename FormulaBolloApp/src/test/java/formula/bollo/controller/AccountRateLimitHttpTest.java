@@ -60,11 +60,23 @@ class AccountRateLimitHttpTest {
 
     @Test
     void configuredLimitsAreUsedByTheHttpEndpoints() throws Exception {
-        ReflectionTestUtils.invokeMethod(service, "configureAttemptLimits", "PT30S", 1, 2, 1, 2, 2);
+        ReflectionTestUtils.invokeMethod(service, "configureAttemptLimits", "PT30S", 1, 2, 1, 2, 2, 2);
         mvc.perform(post("/account/recoverPassword").param("email", "ana@example.com"))
                 .andExpect(status().isOk());
         mvc.perform(post("/account/recoverPassword").param("email", "ana@example.com"))
                 .andExpect(status().isTooManyRequests()).andExpect(header().string("Retry-After", "30"));
+        for (int i = 0; i < 2; i++) {
+            String ip = "192.0.2." + i;
+            mvc.perform(post("/account/login").contentType("application/json")
+                    .with(request -> { request.setRemoteAddr(ip); return request; })
+                    .content("{\"username\":\"ana\",\"password\":\"bad\",\"admin\":0}"))
+                    .andExpect(status().isUnauthorized());
+        }
+        mvc.perform(post("/account/login").contentType("application/json")
+                .with(request -> { request.setRemoteAddr("192.0.2.3"); return request; })
+                .content("{\"username\":\"ana\",\"password\":\"bad\",\"admin\":0}"))
+                .andExpect(status().isTooManyRequests()).andExpect(header().string("Retry-After", "30"));
+        verify(repository, times(2)).findByUsername("ana");
     }
 
     @Test
@@ -74,7 +86,7 @@ class AccountRateLimitHttpTest {
                 .andExpect(status().isBadRequest());
         when(repository.findByUsername("ana")).thenReturn(java.util.List.of(new formula.bollo.entity.Account()));
         mvc.perform(post("/account/register").contentType("application/json")
-                .content("{\"username\":\"ana\",\"password\":\"x\",\"email\":\"ana@example.com\",\"admin\":0}"))
+                .content("{\"username\":\"ana\",\"password\":\"password\",\"email\":\"ana@example.com\",\"admin\":0}"))
                 .andExpect(status().isConflict());
     }
 }

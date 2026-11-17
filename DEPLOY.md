@@ -125,6 +125,24 @@ Esto es infraestructura: no se arregla con código y lo tienes que hacer tú en 
       (antes devolvía todas las temporadas mezcladas). Para la temporada 3 hay que insertar sus filas en
       `configuration` con `season_id` = 3; sin ellas la sección «Configuraciones» de la portada sale vacía. Las filas
       con `season_id` nulo solo se devuelven si se llama sin `season`.
+- [ ] **V002: claves únicas (auditoría del backend).** Sin ellas un doble envío podía duplicar resultados (hay
+      duplicados reales en la copia local) y sumar puntos de más. Con la aplicación parada y copia hecha
+      (`mariadb-dump --single-transaction <bd> > antes_V002.sql`):
+      1. `mariadb <bd> < FormulaBolloApp/db/migration/V002__find_duplicates.sql` (solo lectura): lista los duplicados
+         de `result`, `sprint`, `fantasy_election` y `account.email`.
+      2. Si hay en `result`: `V002__dedupe_results.sql` borra los idénticos (mismo guardado insertado dos veces, caso
+         de Las Vegas). Los que difieren (en la copia, Escapa en la carrera 11: 1º y 4º) los decide una persona; el
+         script los deja y los muestra.
+      3. `mariadb <bd> < FormulaBolloApp/db/migration/V002__unique_keys.sql`. Falla si queda algún duplicado.
+      Vuelta atrás: `V002__rollback.sql`. Hasta aplicarla, la aplicación nueva funciona igual, pero un doble envío
+      simultáneo sigue pudiendo duplicar filas.
+- [ ] **Contraseñas y login.** Registro y cambio de contraseña exigen 8 caracteres o más; el login sigue aceptando las
+      cortas de cuentas existentes. Además de los límites por cuenta+IP y por IP hay un tope por cuenta desde cualquier
+      IP (`account.rate-limit.login-account-total`, 50 fallos cada 15 min): bajo un ataque dirigido la cuenta atacada
+      (también la de administrador) queda bloqueada hasta que caduque la ventana.
+- [ ] **`jwt.secret` de 32 bytes o más.** La aplicación ya no arranca con un secreto más corto (antes arrancaba y
+      cada login daba 500).
+- [ ] **Logs.** Se conservan 30 días (antes 5) y los saltos de línea de los mensajes se sustituyen por un espacio.
 - [ ] Arranca la aplicación nueva.
 
 ## 4. Pruebas de humo (en el entorno de pruebas y otra vez en producción)
