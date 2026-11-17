@@ -35,6 +35,74 @@ El backend no trae secretos en el repositorio; deben llegar por ficheros de perf
 - Los endpoints de guardado (`/results`, `/sprints`, `/races`, `/penalties`, puntos y precios de Fantasy) suben
   la versión de la caché de los clientes al terminar con éxito, y avisan por WebSocket a los navegadores
   conectados. `POST /cache/update` sigue existiendo pero exige rol ADMIN.
+- Login y recuperación de contraseña tienen límite de intentos (en memoria, se reinicia con cada arranque): 10
+  fallos de login por cuenta+IP y 30 por IP cada 15 min; 3 recuperaciones por correo+IP, 10 por correo en total
+  (frena el bombardeo de un buzón desde muchas IPs) y 20 por IP. Superado el límite responden `429` con
+  `Retry-After`. Se ajusta con `account.rate-limit.{window,login-account,login-ip,recovery-email,recovery-email-total,recovery-ip}`.
+  Usa la IP de `request.getRemoteAddr()`: si hay un proxy inverso delante de Spring, todos los usuarios
+  compartirían IP; en ese caso hay que configurar `server.forward-headers-strategy` antes de desplegar.
+- `POST /account/register` devuelve `400` si faltan datos o son inválidos (contraseña vacía o de más de 72 bytes,
+  correo mal formado) y `409` si el usuario o el correo ya existen (antes `500`).
+- Resultados y sprints: un lote vacío, con varias carreras o con pilotos repetidos se rechaza con `400` sin borrar nada.
+- Frontend: la configuración de Angular `prod` ahora se llama `production` y es la predeterminada de `npm run build`.
+  Si algún script de despliegue usa `--configuration prod`, hay que cambiarlo.
+- `GET /fantasy/fantasyElection` ahora exige sesión (`Authorization: Bearer`), recibe solo `raceId` y devuelve
+  siempre la elección del usuario del token; `userId` se ignora. Un frontend antiguo sin token recibe 401/403.
+- `GET /fantasy/getFantasyPointsRace` devuelve lista vacía mientras la carrera no esté terminada, para no
+  publicar las alineaciones de los rivales antes de correr. El ranking de carreras terminadas no cambia.
+- `POST /fantasy/saveFantasyElection` valida en el servidor: carrera existente, plazo (hasta 12 h antes de la
+  carrera, con `dateStart` tratada como UTC, que es como la guarda el administrador), 3 pilotos y 2 escuderías
+  distintos, con precio para esa carrera, y presupuesto de 80.000.000. Si falla responde 400, 403 o 404 con el motivo.
+  Revisa que las carreras insertadas a mano tengan `date_start` en UTC: si estuvieran en hora local, el plazo se
+  desplazaría 1 o 2 horas.
+- Las bonificaciones de pilotos baratos de Fantasy ahora usan la escala real de precios (menos de 10 M y de 10 M a
+  20 M). Solo afectan a los puntos que se calculen a partir de ahora: el histórico guardado no se recalcula.
+- Los errores de validación (`400`, `403`, `404` con motivo) llegan ahora al cliente como texto plano, para que el
+  frontend los muestre. Antes Spring ocultaba el motivo y el usuario veía «Ha ocurrido un error».
+- WebSocket `/ws/cache-version`: solo acepta los orígenes `https://formulabollo.es` y `http://localhost:4200`, con un
+  máximo de 500 conexiones simultáneas. Si el frontend se sirve desde otro dominio hay que añadirlo en `WebSocketConfig`.
+- `spring.jpa.open-in-view` pasa a `false`: la sesión de Hibernate ya no dura toda la petición. Todos los GET de los
+  controladores llevan `@Transactional(readOnly = true)`; un endpoint nuevo que lea relaciones LAZY sin esa
+  anotación falla con `LazyInitializationException`. Comprobado contra MariaDB real con 180 URLs GET: todas 200 y
+  con la misma respuesta que antes.
+- `GET /teams/allInfoTeam` hace ahora 7 consultas SELECT con la caché fría, sea cual sea el número de equipos (antes
+  76 por temporada y 151 para `season=0`). El JSON es idéntico.
+- CI: `.github/workflows/ci.yml` ejecuta los tests del backend (con H2, sin Docker) y del frontend, y compila el
+  frontend, en cada PR. Los tests de repositorio usan H2 y no sustituyen a la prueba con MariaDB real del paso 4.
+
+## 2c. Endurecimiento de producción (auditoría)
+
+Esto es infraestructura: no se arregla con código y lo tienes que hacer tú en el servidor.
+
+- [ ] **Base de datos fuera de Internet.** El perfil de producción se conecta como `root` a una IP pública. Cierra
+      el puerto 3306 al exterior (cortafuegos o red privada) y deja entrar solo a la máquina de la aplicación.
+      Comprueba desde fuera con `nc -vz <ip-de-la-bd> 3306`: debe fallar.
+- [ ] **Usuario de BD con permisos mínimos.** La aplicación no ejecuta DDL (no hay `ddl-auto`), solo datos. Las
+      migraciones (`V001`) se siguen aplicando a mano con un usuario administrador.
+
+      ```sql
+      CREATE USER 'fb_app'@'<ip-de-la-app>' IDENTIFIED BY '<clave larga y aleatoria>';
+      GRANT SELECT, INSERT, UPDATE, DELETE ON f1bollo.* TO 'fb_app'@'<ip-de-la-app>';
+      ```
+
+      Cambia también la contraseña de `root`: ha estado accesible desde fuera.
+- [ ] **Secretos por variables de entorno**, no en el fichero de perfil. Spring las lee sin tocar código:
+      `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `JWT_SECRET`,
+      `SPRING_MAIL_PASSWORD`.
+- [ ] **Logs en INFO.** Quita `logging.level.org.springframework.web=DEBUG` del perfil de producción: registra el
+      detalle de cada petición y los ficheros crecen sin necesidad.
+- [ ] **Temporada actual.** Vive en dos sitios: la variable de entorno `SEASON_ACTUAL` del backend (por defecto 3) y
+      `environment.seasonActual` del frontend. Al empezar una temporada cambia las dos y despliega el frontend.
+- [ ] **Cabeceras de seguridad en el servidor web del frontend.** La sesión es un JWT en `localStorage` y no hay
+      CSP. Empieza en modo informe y revisa la consola del navegador antes de hacerla obligatoria:
+
+      ```
+      Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://formulabollo.es:8443; connect-src 'self' https://formulabollo.es:8443 wss://formulabollo.es:8443; object-src 'none'; base-uri 'self'; frame-ancestors 'none'
+      ```
+
+      `script-src` lleva `'unsafe-inline'` porque `index.html` y la compilación de Angular tienen scripts en línea;
+      cuando el informe salga limpio, cámbialo por los hashes `sha256-…` de esos scripts. El token de sesión dura
+      30 días (`JwtConfig.JWT_TOKEN_VALIDITY`): acortarlo es decisión tuya.
 
 ## 3. Base de datos
 
