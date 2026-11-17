@@ -67,6 +67,15 @@ El backend no trae secretos en el repositorio; deben llegar por ficheros de perf
   con la misma respuesta que antes.
 - `GET /teams/allInfoTeam` hace ahora 7 consultas SELECT con la caché fría, sea cual sea el número de equipos (antes
   76 por temporada y 151 para `season=0`). El JSON es idéntico.
+- **Cifras que cambian para el público.** En la vista «todas las temporadas» (`season=0`) de pilotos y equipos, la mejor
+  posición pasa a ser la mínima de las positivas (antes salía la peor), la media se pondera por carreras terminadas
+  (antes era la de una sola temporada) y las últimas 5 carreras se unen por fecha. En Fantasy, la variación de precio y
+  los puntos de una carrera pasada se calculan con las carreras anteriores de su temporada; antes mostraban siempre los
+  datos de la última. Comprobado contra MariaDB real con SQL como referencia.
+- `POST /fantasy/saveDriverTeamPrices` busca la carrera siguiente por fecha dentro de la temporada, no como `raceId + 1`.
+  Tras la última carrera responde 200 «Era la última carrera de la temporada…» (antes 404); 404 solo si la carrera no
+  existe. Los precios de la carrera 31 que ya estaban guardados no coinciden con los que se regeneran desde la 30 (ni
+  siquiera con el código anterior): vienen de datos editados después de calcularlos. No se ha tocado ningún dato.
 - CI: `.github/workflows/ci.yml` ejecuta los tests del backend (con H2, sin Docker) y del frontend, y compila el
   frontend, en cada PR. Los tests de repositorio usan H2 y no sustituyen a la prueba con MariaDB real del paso 4.
 

@@ -59,6 +59,8 @@ import lombok.extern.slf4j.Slf4j;
 public class FantasyService {
     private static final int LOW_PRICE_DRIVER_LIMIT = 10_000_000;
     private static final int MEDIUM_PRICE_DRIVER_LIMIT = 20_000_000;
+    private static final Comparator<Race> CALENDAR_ORDER = Comparator.comparing(Race::getDateStart)
+            .thenComparing(Race::getId);
 
     private final Clock clock;
     private AccountRepository accountRepository;
@@ -139,10 +141,29 @@ public class FantasyService {
         return points;
     }
 
-    private int finishedRaces(Integer raceId) {
-        return raceRepository.findById(raceId.longValue())
-                .map(race -> raceRepository.findAllFinished(race.getSeason().getNumber()).size())
-                .orElse(0);
+    /** Carreras de la misma temporada que se corren antes que la dada, en orden de calendario. */
+    private List<Race> racesBefore(Race race) {
+        return raceRepository.findBySeason(race.getSeason().getNumber()).stream()
+                .filter(other -> CALENDAR_ORDER.compare(other, race) < 0)
+                .sorted(CALENDAR_ORDER)
+                .toList();
+    }
+
+    /** La carrera siguiente de la misma temporada según el calendario (fecha y luego id), no según el id. */
+    private Optional<Race> nextRaceAfter(Race race) {
+        return raceRepository.findBySeason(race.getSeason().getNumber()).stream()
+                .filter(other -> CALENDAR_ORDER.compare(other, race) > 0)
+                .min(CALENDAR_ORDER);
+    }
+
+    /** Puntos y media hasta antes de la carrera; la variación es el cambio del precio frente a la carrera anterior. */
+    private static FantasyInfoDTO fantasyInfo(int totalPoints, int finishedRaces, Integer previousPrice, int price) {
+        FantasyInfoDTO info = new FantasyInfoDTO();
+        info.setTotalPoints(totalPoints);
+        info.setAveragePoints(finishedRaces != 0 ? totalPoints / finishedRaces : 0);
+        if (previousPrice != null && previousPrice != 0)
+            info.setDifferencePrice((price - previousPrice) / (double) previousPrice * 100);
+        return info;
     }
 
     /**
@@ -190,15 +211,18 @@ public class FantasyService {
     public ResponseEntity<String> saveDriverTeamPrices(int raceId) {
         List<Result> results = this.resultRepository.findByRaceId(raceId);
         validateResults(results);
-        Optional<Race> nextRace = this.raceRepository.findById((long) (raceId + 1));
+        Race race = this.raceRepository.findById((long) raceId).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No se ha encontrado la carrera"));
+        Optional<Race> nextRace = nextRaceAfter(race);
 
-        if (!nextRace.isPresent()) {
-            log.error("No se ha encontrado la siguiente carrera");
-            return new ResponseEntity<>("No se ha encontrado la siguiente carrera", Constants.HEADERS_TEXT_PLAIN,
-                    HttpStatusCode.valueOf(404));
+        if (nextRace.isEmpty()) {
+            // Tras la última carrera de la temporada no hay precios que calcular: no es un error.
+            return new ResponseEntity<>("Era la última carrera de la temporada: no hay precios que calcular",
+                    Constants.HEADERS_TEXT_PLAIN, HttpStatusCode.valueOf(200));
         }
 
-        List<FantasyPriceDriver> fantasyDriversPrevious = this.fantasyPriceDriverRepository.findByRaceId(raceId + 1);
+        int nextRaceId = nextRace.get().getId().intValue();
+        List<FantasyPriceDriver> fantasyDriversPrevious = this.fantasyPriceDriverRepository.findByRaceId(nextRaceId);
         List<FantasyPriceDriver> fantasyPricesDriver = this.createDriversPrices(results, nextRace.get());
         if (fantasyPricesDriver.isEmpty()) {
             log.error("Hubo un problema con los precios");
@@ -206,7 +230,7 @@ public class FantasyService {
                     Constants.HEADERS_TEXT_PLAIN, HttpStatusCode.valueOf(500));
         }
 
-        List<FantasyPriceTeam> fantasyTeamPrevious = this.fantasyPriceTeamRepository.findByRaceId(raceId + 1);
+        List<FantasyPriceTeam> fantasyTeamPrevious = this.fantasyPriceTeamRepository.findByRaceId(nextRaceId);
         List<FantasyPriceTeam> fantasyPricesTeam = this.createTeamsPrices(fantasyPricesDriver, nextRace.get());
 
         fantasyPriceDriverRepository.deleteAll(fantasyDriversPrevious);
@@ -612,42 +636,26 @@ public class FantasyService {
         List<FantasyPriceDriverDTO> fantasyPriceDriverDTOs = this.fantasyPriceImpl
                 .convertFantasyPriceDriverToFantasyPriceDriverDTO(
                         this.fantasyPriceDriverRepository.findByRaceId(raceId));
-        int totalRacesFinished = finishedRaces(raceId);
-        List<Long> driverIds = fantasyPriceDriverDTOs.stream().map(dto -> dto.getDriver().getId())
-                .toList();
+        // Puntos y variación de precio se calculan con las carreras anteriores de la temporada, no con todas.
+        List<Race> previousRaces = this.raceRepository.findById(raceId.longValue()).map(this::racesBefore)
+                .orElse(List.of());
+        int finishedRaces = (int) previousRaces.stream().filter(race -> race.getFinished() == 1).count();
+        List<Long> driverIds = fantasyPriceDriverDTOs.stream().map(dto -> dto.getDriver().getId()).toList();
 
-        // Obtain all points and prices
-        List<FantasyPointsDriver> allFantasyPointsDrivers = this.fantasyPointsDriverRepository
-                .findByDriverIds(driverIds);
-        Map<Long, List<FantasyPointsDriver>> pointsDriverMap = allFantasyPointsDrivers.stream()
-                .collect(Collectors.groupingBy(fantasyPointsDriver -> fantasyPointsDriver.getDriver().getId()));
+        Map<Long, Integer> totalPoints = previousRaces.isEmpty() || driverIds.isEmpty() ? Map.of()
+                : this.fantasyPointsDriverRepository
+                        .findByDriverIdsAndRaceIds(driverIds, previousRaces.stream().map(Race::getId).toList())
+                        .stream().collect(Collectors.groupingBy(points -> points.getDriver().getId(),
+                                Collectors.summingInt(FantasyPointsDriver::getPoints)));
+        Map<Long, Integer> previousPrices = previousRaces.isEmpty() ? Map.of()
+                : this.fantasyPriceDriverRepository.findByRaceId(previousRaces.getLast().getId().intValue()).stream()
+                        .collect(Collectors.toMap(price -> price.getDriver().getId(), FantasyPriceDriver::getPrice,
+                                (first, second) -> first));
 
-        List<FantasyPriceDriver> allFantasyPrices = this.fantasyPriceDriverRepository
-                .findTwoLastPricesForAllDrivers(driverIds);
-        Map<Long, List<FantasyPriceDriver>> priceDriverMap = allFantasyPrices.stream()
-                .collect(Collectors.groupingBy(fantasyPriceDriver -> fantasyPriceDriver.getDriver().getId()));
-
-        for (FantasyPriceDriverDTO fantasyPriceDriverDTO : fantasyPriceDriverDTOs) {
-            fantasyPriceDriverDTO.setFantasyInfo(new FantasyInfoDTO());
-
-            // Setting total Points and averagePoints
-            int totalPoints = pointsDriverMap
-                    .getOrDefault(fantasyPriceDriverDTO.getDriver().getId(), Collections.emptyList())
-                    .stream().mapToInt(FantasyPointsDriver::getPoints).sum();
-
-            fantasyPriceDriverDTO.getFantasyInfo()
-                    .setAveragePoints(totalRacesFinished != 0 ? totalPoints / totalRacesFinished : 0);
-            fantasyPriceDriverDTO.getFantasyInfo().setTotalPoints(totalPoints);
-
-            // Setting differencePrice
-            List<FantasyPriceDriver> driverPrices = priceDriverMap.get(fantasyPriceDriverDTO.getDriver().getId());
-            if (driverPrices != null && driverPrices.size() >= 2) {
-                double price1 = driverPrices.reversed().get(0).getPrice();
-                double price2 = driverPrices.reversed().get(1).getPrice();
-                double difference = price2 - price1;
-                double percentage = ((difference / price2) * 100) * -1;
-                fantasyPriceDriverDTO.getFantasyInfo().setDifferencePrice(percentage);
-            }
+        for (FantasyPriceDriverDTO dto : fantasyPriceDriverDTOs) {
+            Long driverId = dto.getDriver().getId();
+            dto.setFantasyInfo(fantasyInfo(totalPoints.getOrDefault(driverId, 0), finishedRaces,
+                    previousPrices.get(driverId), dto.getPrice()));
         }
 
         fantasyPriceDriverDTOs.sort(Comparator
@@ -669,39 +677,26 @@ public class FantasyService {
     public List<FantasyPriceTeamDTO> getAllTeamPrices(Integer raceId) {
         List<FantasyPriceTeamDTO> fantasyPriceTeamDTOs = this.fantasyPriceImpl
                 .convertFantasyPriceTeamToFantasyPriceTeamDTO(this.fantasyPriceTeamRepository.findByRaceId(raceId));
-        int totalRacesFinished = finishedRaces(raceId);
-        List<Long> teamIds = fantasyPriceTeamDTOs.stream().map(dto -> dto.getTeam().getId())
-                .toList();
+        // Puntos y variación de precio se calculan con las carreras anteriores de la temporada, no con todas.
+        List<Race> previousRaces = this.raceRepository.findById(raceId.longValue()).map(this::racesBefore)
+                .orElse(List.of());
+        int finishedRaces = (int) previousRaces.stream().filter(race -> race.getFinished() == 1).count();
+        List<Long> teamIds = fantasyPriceTeamDTOs.stream().map(dto -> dto.getTeam().getId()).toList();
 
-        // Obtain all points and prices
-        List<FantasyPointsTeam> allFantasyPointsTeams = this.fantasyPointsTeamRepository.findByTeamIds(teamIds);
-        Map<Long, List<FantasyPointsTeam>> pointsTeamMap = allFantasyPointsTeams.stream()
-                .collect(Collectors.groupingBy(fantasyPointsTeam -> fantasyPointsTeam.getTeam().getId()));
+        Map<Long, Integer> totalPoints = previousRaces.isEmpty() || teamIds.isEmpty() ? Map.of()
+                : this.fantasyPointsTeamRepository
+                        .findByTeamIdsAndRaceIds(teamIds, previousRaces.stream().map(Race::getId).toList())
+                        .stream().collect(Collectors.groupingBy(points -> points.getTeam().getId(),
+                                Collectors.summingInt(FantasyPointsTeam::getPoints)));
+        Map<Long, Integer> previousPrices = previousRaces.isEmpty() ? Map.of()
+                : this.fantasyPriceTeamRepository.findByRaceId(previousRaces.getLast().getId().intValue()).stream()
+                        .collect(Collectors.toMap(price -> price.getTeam().getId(), FantasyPriceTeam::getPrice,
+                                (first, second) -> first));
 
-        List<FantasyPriceTeam> allFantasyPrices = this.fantasyPriceTeamRepository.findTwoLastPricesForAllTeams(teamIds);
-        Map<Long, List<FantasyPriceTeam>> priceDriverMap = allFantasyPrices.stream()
-                .collect(Collectors.groupingBy(fantasyPointsTeam -> fantasyPointsTeam.getTeam().getId()));
-
-        for (FantasyPriceTeamDTO fantasyPriceTeamDTO : fantasyPriceTeamDTOs) {
-            fantasyPriceTeamDTO.setFantasyInfo(new FantasyInfoDTO());
-
-            // Setting total Points and averagePoints
-            int totalPoints = pointsTeamMap.getOrDefault(fantasyPriceTeamDTO.getTeam().getId(), Collections.emptyList())
-                    .stream().mapToInt(FantasyPointsTeam::getPoints).sum();
-
-            fantasyPriceTeamDTO.getFantasyInfo()
-                    .setAveragePoints(totalRacesFinished != 0 ? totalPoints / totalRacesFinished : 0);
-            fantasyPriceTeamDTO.getFantasyInfo().setTotalPoints(totalPoints);
-
-            // Setting differencePrice
-            List<FantasyPriceTeam> teamPrices = priceDriverMap.get(fantasyPriceTeamDTO.getTeam().getId());
-            if (teamPrices != null && teamPrices.size() >= 2) {
-                double price1 = teamPrices.reversed().get(0).getPrice();
-                double price2 = teamPrices.reversed().get(1).getPrice();
-                double difference = price2 - price1;
-                double percentage = ((difference / price2) * 100) * -1;
-                fantasyPriceTeamDTO.getFantasyInfo().setDifferencePrice(percentage);
-            }
+        for (FantasyPriceTeamDTO dto : fantasyPriceTeamDTOs) {
+            Long teamId = dto.getTeam().getId();
+            dto.setFantasyInfo(fantasyInfo(totalPoints.getOrDefault(teamId, 0), finishedRaces,
+                    previousPrices.get(teamId), dto.getPrice()));
         }
 
         fantasyPriceTeamDTOs.sort(Comparator

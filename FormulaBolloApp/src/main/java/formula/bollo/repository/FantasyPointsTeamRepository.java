@@ -17,8 +17,8 @@ public interface FantasyPointsTeamRepository extends JpaRepository<FantasyPoints
     @Query("SELECT fp FROM FantasyPointsTeam fp WHERE fp.team.id = ?1")
     List<FantasyPointsTeam> findByTeamId(int teamId);
 
-    @Query("SELECT fpt FROM FantasyPointsTeam fpt WHERE fpt.team.id IN :teamIds")
-    List<FantasyPointsTeam> findByTeamIds(List<Long> teamIds);
+    @Query("SELECT fpt FROM FantasyPointsTeam fpt WHERE fpt.team.id IN :teamIds AND fpt.race.id IN :raceIds")
+    List<FantasyPointsTeam> findByTeamIdsAndRaceIds(List<Long> teamIds, List<Long> raceIds);
 
     @Query("SELECT fpt FROM FantasyPointsTeam fpt WHERE fpt.team.id = :teamId AND fpt.race.id = :raceId")
     Optional<FantasyPointsTeam> findByTeamIdAndRaceId(int teamId, int raceId);

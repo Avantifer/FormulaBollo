@@ -210,13 +210,19 @@ class RepositoryQueriesTest {
                 .extracting(FantasyPointsDriver::getPoints).containsExactly(31);
         assertThat(driverPoints.findByRaceId(id(next.getId()))).isEmpty();
         assertThat(driverPoints.findByDriverId(id(driver.getId()))).hasSize(2);
-        assertThat(driverPoints.findByDriverIds(List.of(driver.getId()))).hasSize(2);
+        assertThat(driverPoints.findByDriverIdsAndRaceIds(List.of(driver.getId()), List.of(earlier.getId(), latest.getId())))
+                .hasSize(2);
+        assertThat(driverPoints.findByDriverIdsAndRaceIds(List.of(driver.getId()), List.of(earlier.getId())))
+                .extracting(FantasyPointsDriver::getPoints).containsExactly(12); // solo las carreras pedidas
         assertThat(driverPoints.findByDriverIdAndRaceId(id(driver.getId()), id(latest.getId()))).contains(latestDriver);
         assertThat(teamPoints.findByRaceId(id(latest.getId()))).containsExactly(latestTeam)
                 .extracting(FantasyPointsTeam::getPoints).containsExactly(45);
         assertThat(teamPoints.findByRaceId(id(next.getId()))).isEmpty();
         assertThat(teamPoints.findByTeamId(id(team.getId()))).hasSize(2);
-        assertThat(teamPoints.findByTeamIds(List.of(team.getId()))).hasSize(2);
+        assertThat(teamPoints.findByTeamIdsAndRaceIds(List.of(team.getId()), List.of(earlier.getId(), latest.getId())))
+                .hasSize(2);
+        assertThat(teamPoints.findByTeamIdsAndRaceIds(List.of(team.getId()), List.of(earlier.getId())))
+                .extracting(FantasyPointsTeam::getPoints).containsExactly(20); // solo las carreras pedidas
         assertThat(teamPoints.findByTeamIdAndRaceId(id(team.getId()), id(latest.getId()))).contains(latestTeam);
     }
 
@@ -231,11 +237,9 @@ class RepositoryQueriesTest {
         assertThat(driverPrices.findByRaceId(id(next.getId()))).isEmpty();
         assertThat(driverPrices.findTwoLastPrices(id(driver.getId()))).containsExactly(earlierDriver, latestDriver);
         assertThat(driverPrices.findByDriverId(id(driver.getId()))).containsExactlyInAnyOrder(latestDriver, earlierDriver);
-        assertThat(driverPrices.findTwoLastPricesForAllDrivers(List.of(driver.getId()))).containsExactly(latestDriver, earlierDriver);
         assertThat(teamPrices.findByRaceId(id(latest.getId()))).containsExactly(latestTeam)
                 .extracting(FantasyPriceTeam::getPrice).containsExactly(250);
         assertThat(teamPrices.findByRaceId(id(next.getId()))).isEmpty();
         assertThat(teamPrices.findByTeamId(id(team.getId()))).containsExactlyInAnyOrder(latestTeam, earlierTeam);
-        assertThat(teamPrices.findTwoLastPricesForAllTeams(List.of(team.getId()))).containsExactly(latestTeam, earlierTeam);
     }
 }

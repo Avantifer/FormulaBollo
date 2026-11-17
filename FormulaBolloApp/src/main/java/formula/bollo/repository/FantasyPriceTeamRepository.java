@@ -15,7 +15,4 @@ public interface FantasyPriceTeamRepository extends JpaRepository<FantasyPriceTe
 
     @Query("SELECT fpt FROM FantasyPriceTeam fpt WHERE fpt.team.id = :teamId")
     List<FantasyPriceTeam> findByTeamId(int teamId);
-    
-    @Query("SELECT fpt FROM FantasyPriceTeam fpt WHERE fpt.team.id IN :teamIds ORDER BY fpt.team.id, fpt.race.id")
-    List<FantasyPriceTeam> findTwoLastPricesForAllTeams(List<Long> teamIds);
 }

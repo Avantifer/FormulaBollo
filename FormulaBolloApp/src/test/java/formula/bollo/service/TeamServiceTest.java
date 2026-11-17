@@ -352,6 +352,32 @@ class TeamServiceTest {
     }
 
     @Test
+    void sumDuplicatesIgnoresAZeroBestPositionWeightsTheAverageAndMergesLastRaces() {
+        TeamDTO team1 = new TeamDTO(1L, "Alpine", "", "", null);
+        TeamDTO team2 = new TeamDTO(2L, "Alpine", "", "", null);
+        TeamDTO team3 = new TeamDTO(3L, "Alpine", "", "", null);
+        // Una temporada sin resultados (mejor 0), otra con 20 carreras (mejor 3, media 10,0) y otra con 5 (mejor 1, media 4,0).
+        TeamInfoDTO empty = new TeamInfoDTO(team1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, List.of());
+        TeamInfoDTO first = new TeamInfoDTO(team2, 0, 0, 20, 0, 0, 0, 3, 0, 0, 10.0,
+                List.of(raceGroup(1L, 2024, 3), raceGroup(2L, 2024, 2)));
+        TeamInfoDTO second = new TeamInfoDTO(team3, 0, 0, 5, 0, 0, 0, 1, 0, 0, 4.0,
+                List.of(raceGroup(3L, 2024, 5), raceGroup(4L, 2024, 4)));
+
+        TeamInfoDTO merged = teamService.sumDuplicates(List.of(empty, first, second)).get(0);
+
+        assertEquals(1, merged.getBestPosition());
+        assertEquals(25, merged.getRacesFinished());
+        assertEquals(8.8, merged.getAveragePosition(), 0.0001); // (10,0 * 20 + 4,0 * 5) / 25
+        assertEquals(List.of(3L, 4L, 1L, 2L),
+                merged.getLast5Results().stream().map(group -> group.getRace().getId()).toList());
+    }
+
+    private static ResultTeamDTO raceGroup(long id, int year, int month) {
+        return new ResultTeamDTO(new RaceDTO(id, "GP", "", "", LocalDateTime.of(year, month, 1, 12, 0), null, 1),
+                List.of(), 0, 0, 0);
+    }
+
+    @Test
     void getAllPointsEvolutionTeam_ShouldReturnEvolution() {
         Season season = new Season(1L, "Temp", 1, 2024);
         Team team = new Team(1L, "Ferrari", "", "", season);

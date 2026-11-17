@@ -33,6 +33,7 @@ import formula.bollo.model.RecordDTO;
 import formula.bollo.model.ResultDTO;
 import formula.bollo.repository.*;
 import formula.bollo.utils.Constants;
+import formula.bollo.utils.StatsMerge;
 
 @Service
 public class DriverService {
@@ -193,13 +194,17 @@ public class DriverService {
             String driverName = driverInfo.getDriver().getName();
 
             resultMap.merge(driverName, driverInfo, (existing, incoming) -> {
+                // La media y las últimas carreras se calculan antes de sumar los contadores.
+                existing.setAveragePosition(StatsMerge.weightedAverage(existing.getAveragePosition(),
+                        existing.getRacesFinished(), incoming.getAveragePosition(), incoming.getRacesFinished()));
+                existing.setLast5Results(latestResults(existing.getLast5Results(), incoming.getLast5Results()));
                 existing.setPoles(existing.getPoles() + incoming.getPoles());
                 existing.setFastlaps(existing.getFastlaps() + incoming.getFastlaps());
                 existing.setRacesFinished(existing.getRacesFinished() + incoming.getRacesFinished());
                 existing.setTotalPoints(existing.getTotalPoints() + incoming.getTotalPoints());
                 existing.setChampionships(existing.getChampionships() + incoming.getChampionships());
                 existing.setPenalties(existing.getPenalties() + incoming.getPenalties());
-                existing.setBestPosition(Math.max(existing.getBestPosition(), incoming.getBestPosition()));
+                existing.setBestPosition(StatsMerge.bestPosition(existing.getBestPosition(), incoming.getBestPosition()));
                 existing.setVictories(existing.getVictories() + incoming.getVictories());
                 existing.setPodiums(existing.getPodiums() + incoming.getPodiums());
 
@@ -216,6 +221,20 @@ public class DriverService {
         }
 
         return new ArrayList<>(resultMap.values());
+    }
+
+    /** Las 5 carreras más recientes de la unión de dos listas (fecha de carrera y luego id, de más a menos reciente). */
+    private static List<ResultDTO> latestResults(List<ResultDTO> first, List<ResultDTO> second) {
+        List<ResultDTO> all = new ArrayList<>();
+        if (first != null)
+            all.addAll(first);
+        if (second != null)
+            all.addAll(second);
+        return all.stream()
+                .sorted(Comparator.comparing((ResultDTO result) -> result.getRace().getDateStart())
+                        .thenComparing(ResultDTO::getId).reversed())
+                .limit(5)
+                .toList();
     }
 
     /**
