@@ -1,7 +1,7 @@
 @if (showFilters()) {
 	<div class="bg-gray-200 dark:bg-slate-600 flex gap-2 mt-4 p-4 overflow-x-auto whitespace-nowrap">
 		<p-chip
-			class="px-2.5! py-0.5! border-1 border-red-500 cursor-pointer select-none"
+			class="min-h-11 md:min-h-0 px-2.5! py-0.5! border-1 border-red-500 cursor-pointer select-none"
 			(click)="toggleSelection('Todos los equipos')"
 			onkeypress="toggleSelection('Todos los equipos')"
 			[ngClass]="{
@@ -12,7 +12,7 @@
 		</p-chip>
 		@for (teamName of teamsName(); track $index) {
 			<p-chip
-				class="px-2.5! py-0.5! border-1 cursor-pointer select-none"
+				class="min-h-11 md:min-h-0 px-2.5! py-0.5! border-1 cursor-pointer select-none"
 				[class]="'border-' + (teamName | SpaceToUnderscore)"
 				(click)="toggleSelection(teamName)"
 				onkeypress="toggleSelection(teamName)"
@@ -23,7 +23,7 @@
 					[ngClass]="{ 'bg-white!': isSelected(teamName) }"></div>
 				<span class="text-xs font-bold"> {{ teamName }} </span>
 				@if (isSelected(teamName)) {
-					<button class="pi pi-times-circle cursor-pointer" (click)="removeSelection($event, teamName)" style="font-size: 0.75rem"></button>
+					<button class="pi pi-times-circle cursor-pointer min-h-11 min-w-11 md:min-h-0 md:min-w-0" [attr.aria-label]="'Quitar filtro de ' + teamName" (click)="removeSelection($event, teamName)" style="font-size: 0.75rem"></button>
 				}
 			</p-chip>
 		}

@@ -1,5 +1,29 @@
 @use "../settings/colors";
 
+// Texto blanco o negro sobre el fondo de marca: todos superan WCAG AA (4.5:1).
+// Ferrari (5.19:1) y Aston Martin (5.16:1) usan negro para alcanzar el mínimo.
+$teamTextColors: (
+  "Red_Bull": #fff,
+  "AlphaTauri": #000,
+  "Ferrari": #000,
+  "Mercedes": #000,
+  "Aston_Martin": #000,
+  "Williams": #000,
+  "Haas": #000,
+  "McLaren": #000,
+  "Alfa_Romeo": #fff,
+  "Alfa_Romeo_Racing": #fff,
+  "Alpine": #000,
+  "Kick_Sauber": #000,
+  "RB": #000
+);
+
+@each $team, $textColor in $teamTextColors {
+  .on-#{$team} {
+    color: $textColor;
+  }
+}
+
 .bg-Red_Bull {
   background-color: colors.$colorRedBull;
 }

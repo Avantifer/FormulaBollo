@@ -1,8 +1,8 @@
 <div class="bg-slate-100 dark:bg-slate-800">
 	<div class="flex-1 bg-slate-100 dark:bg-slate-800">
-		<div class="my-container mx-auto px-2 py-8">
+		<div class="my-container mx-auto py-8">
 			<div class="flex">
-				<p-button class="block lg:hidden menuButton pr-3" (click)="isAdminMenuOpen = !isAdminMenuOpen">
+				<p-button class="block lg:hidden menuButton pr-3" ariaLabel="Menú de administración" (click)="isAdminMenuOpen = !isAdminMenuOpen">
 					@if (isAdminMenuOpen) {
 						<i class="pi pi-chevron-left"></i>
 					} @else {

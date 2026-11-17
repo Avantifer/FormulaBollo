@@ -27,6 +27,10 @@ describe('FooterComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('renders the footer landmark', () => {
+    expect(fixture.nativeElement.querySelectorAll('footer').length).toBe(1);
+  });
+
   it('renders focusable Fantasy information buttons that scroll to the top', () => {
     component.isFantasy.set(true);
     component.putItemsHeader();

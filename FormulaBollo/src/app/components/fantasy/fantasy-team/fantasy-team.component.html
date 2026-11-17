@@ -5,7 +5,7 @@
 				<div class="flex items-center gap-3">
 					<i class="pi pi-exclamation-triangle text-yellow-800 dark:text-yellow-200" style="font-size: 20px"></i>
 					<div>
-						<h3 class="font-semibold text-yellow-800 dark:text-yellow-200">Fantasy no habilitado para esta temporada</h3>
+						<p class="font-semibold text-yellow-800 dark:text-yellow-200">Fantasy no habilitado para esta temporada</p>
 						<p class="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
 							El modo Fantasy no está disponible para la temporada actual. Mantente atento para futuras actualizaciones.
 						</p>
@@ -21,10 +21,10 @@
 					</div>
 					@if (isLastRace) {
 						<div class="text-right">
-							<div class="text-sm text-gray-500 dark:text-gray-400">Presupuesto restante</div>
+							<div class="text-sm text-gray-500 dark:text-gray-300">Presupuesto restante</div>
 							<div
 								class="text-xl font-bold flex items-center gap-1"
-								[class]="utilsService.isNegative(totalMoney) ? 'text-red-500' : 'text-green-500'">
+								[class]="utilsService.isNegative(totalMoney) ? 'text-red-700 dark:text-red-300' : 'text-green-700 dark:text-green-400'">
 								<i class="pi pi-dollar"></i>
 								{{ totalMoney | pricePipe }}
 							</div>
@@ -37,17 +37,17 @@
 			<div class="rounded-lg bg-white/80 dark:bg-black/80 shadow-2xs">
 				<div class="p-3 md:p-6">
 					<div class="text-center mb-6">
-						<h2 class="text-2xl font-bold dark:text-white flex items-center justify-center gap-2">
+						<h1 class="text-2xl font-bold dark:text-white flex items-center justify-center gap-2">
 							<i class="pi pi-users" style="font-size: 25px"></i> Tu equipo Fantasy
-						</h2>
-						<p class="text-gray-500 dark:text-gray-400 mt-2">Selecciona 3 pilotos y 2 equipos para tu alineación</p>
+						</h1>
+						<p class="text-gray-500 dark:text-gray-300 mt-2">Selecciona 3 pilotos y 2 equipos para tu alineación</p>
 					</div>
 					<div class="mb-8">
 						<div class="flex">
 							<i class="pi pi-star mt-1" style="font-size: 18px"></i>
-							<h3 class="text-lg font-semibold mb-4 ml-2 dark:text-white flex items-center gap-2">
+							<h2 class="text-lg font-semibold mb-4 ml-2 dark:text-white flex items-center gap-2">
 								Pilotos ({{ selectedDriversCount() }}/3)
-							</h3>
+							</h2>
 						</div>
 						<div class="flex justify-center gap-2 md:gap-4">
 							@for (i of [0, 1, 2]; track $index) {
@@ -56,8 +56,8 @@
 										<div
 											class="w-20 h-30 xs:w-24 xs:h-32 sm:w-31 sm:h-38 rounded-xl border-2 transition-all duration-200 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 flex flex-col items-center justify-center">
 											<div class="flex flex-col text-center">
-												<i class="pi pi-plus text-gray-400 mb-4" style="font-size: 22px"></i>
-												<p class="text-xs text-gray-500 dark:text-gray-400 cursor-default">Piloto {{ i + 1 }}</p>
+												<i aria-hidden="true" class="pi pi-plus text-gray-400 mb-4" style="font-size: 22px"></i>
+												<p class="text-xs text-gray-500 dark:text-gray-300 cursor-default">Piloto {{ i + 1 }}</p>
 											</div>
 										</div>
 									</div>
@@ -65,7 +65,7 @@
 									<div
 										class="w-20 h-30 xs:w-24 xs:h-32 sm:w-31 sm:h-38 relative rounded-xl overflow-hidden border-2 border-gray-300 bg-gray-200 dark:border-gray-600 dark:bg-gray-700">
 										<div class="w-20 h-30 xs:w-24 xs:h-32 sm:w-31 sm:h-38">
-											<button (click)="deleteDriverFromSelection(i)" class="absolute right-1.5">
+											<button (click)="deleteDriverFromSelection(i)" class="selection-remove absolute right-1.5">
 												<i
 													class="pi pi-times text-red-400 hover:bg-red-200 p-0.5 transition-all duration-200 ease-out rounded-[4px] cursor-pointer"
 													style="font-size: 8px"></i>
@@ -80,9 +80,9 @@
 												</div>
 											</div>
 											<div class="h-1/3 p-1 md:p-2 flex flex-col justify-center bg-gray-200 dark:bg-gray-700">
-												<h4 class="dark:text-white text-black font-bold text-xs md:text-sm text-center truncate max-w-[70px] xs:max-w-none">
+												<h3 class="dark:text-white text-black font-bold text-xs md:text-sm text-center truncate max-w-[70px] xs:max-w-none">
 													{{ driversSelected[i].name }}
-												</h4>
+												</h3>
 												<p class="text-xs text-gray-600 dark:text-gray-300 text-center truncate">{{ driversSelected[i].team.name }}</p>
 											</div>
 										</div>
@@ -94,9 +94,9 @@
 					<div class="mb-12">
 						<div class="flex">
 							<i class="pi pi-trophy mt-1" style="font-size: 18px"></i>
-							<h3 class="text-lg font-semibold mb-4 ml-2 dark:text-white flex items-center gap-2">
+							<h2 class="text-lg font-semibold mb-4 ml-2 dark:text-white flex items-center gap-2">
 								Equipos ({{ selectedTeamsCount() }}/2)
-							</h3>
+							</h2>
 						</div>
 						<div class="flex justify-center gap-4">
 							@for (i of [0, 1]; track $index) {
@@ -105,8 +105,8 @@
 										<div
 											class="w-30 h-20 xs:w-36 xs:h-24 sm:w-44 sm:h-28 rounded-xl border-2 transition-all duration-200 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
 											<div class="flex flex-col text-center">
-												<i class="pi pi-plus text-gray-400 mb-4" style="font-size: 22px"></i>
-												<p class="text-xs text-gray-500 dark:text-gray-400 cursor-default">Equipo {{ i + 1 }}</p>
+												<i aria-hidden="true" class="pi pi-plus text-gray-400 mb-4" style="font-size: 22px"></i>
+												<p class="text-xs text-gray-500 dark:text-gray-300 cursor-default">Equipo {{ i + 1 }}</p>
 											</div>
 										</div>
 									</div>
@@ -114,7 +114,7 @@
 									<div
 										class="relative w-30 h-20 xs:w-36 xs:h-24 sm:w-44 sm:h-28 rounded-xl border-2 transition-all duration-200 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 rounded-xl overflow-hidden">
 										<div class="w-30 h-20 xs:w-36 xs:h-24 sm:w-44 sm:h-28">
-											<button (click)="deleteTeamFromSelection(i)" class="absolute right-1.5">
+											<button (click)="deleteTeamFromSelection(i)" class="selection-remove absolute right-1.5">
 												<i
 													class="pi pi-times text-red-400 hover:bg-red-200 p-0.5 transition-all duration-200 ease-out rounded-[4px] cursor-pointer"
 													style="font-size: 8px"></i>
@@ -129,9 +129,9 @@
 												</div>
 											</div>
 											<div class="h-1/3 p-1 md:p-2 flex flex-col justify-center items-center bg-gray-200 dark:bg-gray-700">
-												<h4 class="dark:text-white text-black font-bold text-xs md:text-sm text-center truncate max-w-[70px] xs:max-w-none">
+												<h3 class="dark:text-white text-black font-bold text-xs md:text-sm text-center truncate max-w-[70px] xs:max-w-none">
 													{{ teamsSelected[i].name }}
-												</h4>
+												</h3>
 											</div>
 										</div>
 									</div>
@@ -181,7 +181,7 @@
 					<div class="flex justify-center items-center gap-2 mb-6 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-auto">
 						<span class="text-sm font-bold dark:text-white mr-2">Ordenar:</span>
 						@for (order of orders; track $index) {
-							<button (click)="changeOrder(order)">
+							<button class="min-h-11 min-w-11 md:min-h-0 md:min-w-0" (click)="changeOrder(order)">
 								<div
 									class="rounded-md p-1.5 flex items-center cursor-pointer"
 									[class]="
@@ -230,7 +230,7 @@
 														</p>
 													</div>
 
-													<div class="text-xs xs:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+													<div class="text-xs xs:text-sm text-gray-500 dark:text-gray-300 mt-0.5">
 														{{ fantasyPricesDriver.fantasyInfo.totalPoints }} puntos
 													</div>
 												</div>
@@ -242,17 +242,17 @@
 													</div>
 													<div class="text-xs flex justify-end gap-1">
 														@if (fantasyPricesDriver.fantasyInfo.differencePrice > 0) {
-															<span class="text-green-500">
+															<span class="text-green-700 dark:text-green-400">
 																<i class="pi pi-arrow-up-right" style="font-size: 8px"></i>
 																{{ fantasyPricesDriver.fantasyInfo.differencePrice.toFixed(2) }} %</span
 															>
 														} @else if (fantasyPricesDriver.fantasyInfo.differencePrice < 0) {
-															<span class="text-red-500"
+															<span class="text-red-700 dark:text-red-300"
 																><i class="pi pi-arrow-down-right" style="font-size: 8px"></i>
 																{{ fantasyPricesDriver.fantasyInfo.differencePrice.toFixed(2) }} %</span
 															>
 														} @else {
-															<span class="text-gray-500"
+															<span class="text-gray-500 dark:text-gray-300"
 																><i class="pi pi-arrow-right" style="font-size: 8px"></i>
 																{{ fantasyPricesDriver.fantasyInfo.differencePrice.toFixed(2) }} %</span
 															>
@@ -318,7 +318,7 @@
 																[src]="imageService.getImageUrl(fantasyPricesTeam.team.logoImage | SpaceToUnderscore)" />
 														</div>
 													</div>
-													<div class="text-xs xs:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+													<div class="text-xs xs:text-sm text-gray-500 dark:text-gray-300 mt-0.5">
 														{{ fantasyPricesTeam.fantasyInfo.totalPoints }} puntos
 													</div>
 												</div>
@@ -330,17 +330,17 @@
 													</div>
 													<div class="text-xs flex justify-end gap-1">
 														@if (fantasyPricesTeam.fantasyInfo.differencePrice > 0) {
-															<span class="text-green-500">
+															<span class="text-green-700 dark:text-green-400">
 																<i class="pi pi-arrow-up-right" style="font-size: 8px"></i>
 																{{ fantasyPricesTeam.fantasyInfo.differencePrice.toFixed(2) }} %</span
 															>
 														} @else if (fantasyPricesTeam.fantasyInfo.differencePrice < 0) {
-															<span class="text-red-500"
+															<span class="text-red-700 dark:text-red-300"
 																><i class="pi pi-arrow-down-right" style="font-size: 8px"></i>
 																{{ fantasyPricesTeam.fantasyInfo.differencePrice.toFixed(2) }} %</span
 															>
 														} @else {
-															<span class="text-gray-500"
+															<span class="text-gray-500 dark:text-gray-300"
 																><i class="pi pi-arrow-right" style="font-size: 8px"></i>
 																{{ fantasyPricesTeam.fantasyInfo.differencePrice.toFixed(2) }} %</span
 															>
@@ -417,11 +417,11 @@
 				<p-chart type="line" [data]="dataDriversEvolutionPrice" [options]="lineChartOptions" style="width: 100%; height: 100%" />
 				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
 					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
-						<div class="text-gray-500 dark:text-gray-400">Precio inicial</div>
+						<div class="text-gray-500 dark:text-gray-300">Precio inicial</div>
 						<div class="font-bold dark:text-white">${{ showDriverStartPriceData | pricePipe }}</div>
 					</div>
 					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
-						<div class="text-gray-500 dark:text-gray-400">Precio máximo</div>
+						<div class="text-gray-500 dark:text-gray-300">Precio máximo</div>
 						<div class="font-bold dark:text-white">${{ showDriverMaxPriceData | pricePipe }}</div>
 					</div>
 				</div>
@@ -475,11 +475,11 @@
 				<p-chart type="line" [data]="dataTeamsEvolutionPrice" [options]="lineChartOptions" style="width: 100%; height: 100%" />
 				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
 					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
-						<div class="text-gray-500 dark:text-gray-400">Precio inicial</div>
+						<div class="text-gray-500 dark:text-gray-300">Precio inicial</div>
 						<div class="font-bold dark:text-white">${{ showTeamStartPriceData | pricePipe }}</div>
 					</div>
 					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
-						<div class="text-gray-500 dark:text-gray-400">Precio máximo</div>
+						<div class="text-gray-500 dark:text-gray-300">Precio máximo</div>
 						<div class="font-bold dark:text-white">${{ showTeamMaxPriceData | pricePipe }}</div>
 					</div>
 				</div>
@@ -525,11 +525,11 @@
 				<p-chart type="line" [data]="dataDriversEvolutionPoints" [options]="lineChartOptions" style="width: 100%; height: 100%" />
 				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
 					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
-						<div class="text-gray-500 dark:text-gray-400">Puntos por carrera</div>
+						<div class="text-gray-500 dark:text-gray-300">Puntos por carrera</div>
 						<div class="font-bold dark:text-white">{{ showDriverMedianPointsData.toFixed(1) }}</div>
 					</div>
 					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
-						<div class="text-gray-500 dark:text-gray-400">Mejor resultado</div>
+						<div class="text-gray-500 dark:text-gray-300">Mejor resultado</div>
 						<div class="font-bold dark:text-white">{{ showDriverBestPointsData }}</div>
 					</div>
 				</div>
@@ -583,11 +583,11 @@
 				<p-chart type="line" [data]="dataTeamsEvolutionPoints" [options]="lineChartOptions" style="width: 100%; height: 100%" />
 				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
 					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
-						<div class="text-gray-500 dark:text-gray-400">Puntos por carrera</div>
+						<div class="text-gray-500 dark:text-gray-300">Puntos por carrera</div>
 						<div class="font-bold dark:text-white">{{ showTeamMedianPointsData.toFixed(1) }}</div>
 					</div>
 					<div class="bg-white dark:bg-gray-600 p-2 sm:p-3 rounded">
-						<div class="text-gray-500 dark:text-gray-400">Mejor resultado</div>
+						<div class="text-gray-500 dark:text-gray-300">Mejor resultado</div>
 						<div class="font-bold dark:text-white">{{ showTeamBestPointsData }}</div>
 					</div>
 				</div>

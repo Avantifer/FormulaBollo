@@ -84,8 +84,8 @@
 							<tr class="border-b border-solid">
 								<td class="dark:bg-slate-700 text-sm border-l-4!" [class]="'border-' + (driverPoints.driver.team.name | SpaceToUnderscore)">
 									<div
-										class="size-8 font-bold text-slate-700 dark:text-white mr-2 xs:mr-4 rounded-full flex justify-center items-center shadow"
-										[class]="'bg-' + (driverPoints.driver.team.name | SpaceToUnderscore)">
+										class="size-8 font-bold mr-2 xs:mr-4 rounded-full flex justify-center items-center shadow"
+										[class]="'bg-' + (driverPoints.driver.team.name | SpaceToUnderscore) + ' on-' + (driverPoints.driver.team.name | SpaceToUnderscore)">
 										{{ index + 1 }}
 									</div>
 								</td>
@@ -102,14 +102,14 @@
 												style="font-size: 0.55rem"
 												class="pi mt-1 ml-2"
 												[ngClass]="{
-													'pi-arrow-up text-green-500': driverPoints.positionChange === 'ADVANCED',
-													'pi-arrow-down text-red-500': driverPoints.positionChange === 'DROPPED'
+													'pi-arrow-up text-green-800 dark:text-green-300': driverPoints.positionChange === 'ADVANCED',
+													'pi-arrow-down text-red-700 dark:text-red-200': driverPoints.positionChange === 'DROPPED'
 												}"></i>
 											<p
 												class="text-xs mt-1 ml-0.5"
 												[ngClass]="{
-													'text-green-500': driverPoints.positionChange === 'ADVANCED',
-													'text-red-500': driverPoints.positionChange === 'DROPPED'
+													'text-green-800 dark:text-green-300': driverPoints.positionChange === 'ADVANCED',
+													'text-red-700 dark:text-red-200': driverPoints.positionChange === 'DROPPED'
 												}">
 												{{ driverPoints.positionChangeAmount != 0 ? driverPoints.positionChangeAmount : undefined }}
 											</p>
@@ -187,8 +187,8 @@
 							<tr class="border-b border-solid">
 								<td class="dark:bg-slate-700 text-sm border-l-4!" [class]="'border-' + (driver.team.name | SpaceToUnderscore)">
 									<div
-										class="size-8 font-bold text-slate-700 dark:text-white mr-2 xs:mr-4 rounded-full flex justify-center items-center shadow"
-										[class]="'bg-' + (driver.team.name | SpaceToUnderscore)">
+										class="size-8 font-bold mr-2 xs:mr-4 rounded-full flex justify-center items-center shadow"
+										[class]="'bg-' + (driver.team.name | SpaceToUnderscore) + ' on-' + (driver.team.name | SpaceToUnderscore)">
 										{{ index + 1 }}
 									</div>
 								</td>
@@ -310,14 +310,14 @@
 											style="font-size: 0.55rem"
 											class="pi mt-1 ml-2"
 											[ngClass]="{
-												'pi-arrow-up text-green-500': teamPoints.positionChange === 'ADVANCED',
-												'pi-arrow-down text-red-500': teamPoints.positionChange === 'DROPPED'
+												'pi-arrow-up text-green-800 dark:text-green-300': teamPoints.positionChange === 'ADVANCED',
+												'pi-arrow-down text-red-700 dark:text-red-200': teamPoints.positionChange === 'DROPPED'
 											}"></i>
 										<p
 											class="text-xs mt-1 ml-0.5"
 											[ngClass]="{
-												'text-green-500': teamPoints.positionChange === 'ADVANCED',
-												'text-red-500': teamPoints.positionChange === 'DROPPED'
+												'text-green-800 dark:text-green-300': teamPoints.positionChange === 'ADVANCED',
+												'text-red-700 dark:text-red-200': teamPoints.positionChange === 'DROPPED'
 											}">
 											{{ teamPoints.positionChangeAmount != 0 ? teamPoints.positionChangeAmount : undefined }}
 										</p>

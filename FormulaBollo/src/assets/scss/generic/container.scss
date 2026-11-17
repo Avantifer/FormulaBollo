@@ -1,6 +1,7 @@
 .my-container {
   margin-right: auto;
   margin-left: auto;
+  padding-inline: 1rem;
 }
 
 @media (min-width: 576px) {
@@ -24,12 +25,13 @@
 @media (min-width: 1200px) {
   .my-container {
     max-width: 1140px;
+    padding-inline: 1.5rem;
   }
 }
 
 @media (min-width: 1400px) {
   .my-container {
-    max-width: 96rem;
+    max-width: 84rem;
     width: 100%;
   }
 }

@@ -1,5 +1,5 @@
 <div class="flex-1 bg-white dark:bg-slate-700 border-2 border-gray-400 dark:border-gray-600 rounded-lg p-4">
-	<h1 class="text-2xl md:text-3xl font-bold mb-8">Gestión de Penalizaciones</h1>
+	<h2 class="text-2xl md:text-3xl font-bold mb-8">Gestión de Penalizaciones</h2>
 	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
 		<div>
 			<p class="text-sm font-medium mb-2">Circuito</p>
@@ -18,7 +18,8 @@
 		<div class="flex items-center mb-2">
 			<p class="text-sm font-medium mr-0.25">Razón de la penalización</p>
 			<button
-				class="py-0.5 px-1.75 rounded-full transition-all duration-200 text-blue-400 hover:bg-blue-400/20 hover:text-blue-300 cursor-pointer"
+				class="min-h-11 min-w-11 md:min-h-0 md:min-w-0 py-0.5 px-1.75 rounded-full transition-all duration-200 text-blue-400 hover:bg-blue-400/20 hover:text-blue-300 cursor-pointer"
+				aria-label="Información sobre múltiples penalizaciones"
 				(click)="visible = true">
 				<i class="pi pi-info-circle" style="font-size: 14px"></i>
 			</button>
@@ -37,7 +38,7 @@
 		<p-button label="Guardar Penalizaciones" (click)="savePenalties()" class="savePenalties text-white" />
 	</div>
 	<p-divider />
-	<h1 class="text-2xl font-bold mt-7">Penalizaciones Existentes</h1>
+	<h2 class="text-2xl font-bold mt-7">Penalizaciones Existentes</h2>
 	<p-table [value]="penaltiesTable()" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }" class="mb-4 penaltiesTable">
 		<ng-template #header>
 			<tr class="border-b border-solid">
@@ -86,7 +87,7 @@
 				</div>
 				<div>
 					<h3 class="text-lg font-semibold dark:text-white">Múltiples Penalizaciones</h3>
-					<p class="text-sm dark:text-gray-400">Cómo agregar varias penalizaciones a la vez</p>
+					<p class="text-sm dark:text-gray-300">Cómo agregar varias penalizaciones a la vez</p>
 				</div>
 			</div>
 		</ng-template>
@@ -96,10 +97,10 @@
 				<strong class="dark:text-surface-200">punto (.)</strong>
 			</span>
 			<p-card>
-				<p class="text-xs font-medium mb-2 text-black dark:text-gray-400">Ejemplo:</p>
-				<p class="m-0 text-black dark:text-gray-400">Se ha estrellado contra otro piloto. Se ha saltado una curva.</p>
+				<p class="text-xs font-medium mb-2 text-black dark:text-gray-300">Ejemplo:</p>
+				<p class="m-0 text-black dark:text-gray-300">Se ha estrellado contra otro piloto. Se ha saltado una curva.</p>
 			</p-card>
-			<span class="text-xs dark:text-gray-400">
+			<span class="text-xs dark:text-gray-300">
 				<i class="pi pi-lightbulb mr-1 text-yellow-300"></i>
 				<strong>Tip:</strong> Cada frase separada por punto se considerará una penalización independiente para el mismo piloto.
 			</span>

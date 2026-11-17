@@ -3,6 +3,11 @@
   border: none;
 }
 
+.dark .p-togglebutton,
+.dark .p-togglebutton .p-togglebutton-icon {
+  color: var(--color-slate-100) !important;
+}
+
 .dark .p-togglebutton-checked .p-togglebutton-content {
   background: var(--color-slate-500) !important;
 }

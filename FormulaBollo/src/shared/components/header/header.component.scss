@@ -1,0 +1,18 @@
+:host ::ng-deep nav {
+  .p-menubar-button,
+  .p-button {
+    min-height: 2.25rem;
+  }
+
+  @media (max-width: 767px) {
+    .p-menubar-button,
+    .p-button {
+      min-height: 2.75rem;
+      min-width: 2.75rem;
+    }
+
+    .p-menubar-item-link {
+      min-height: 2.75rem;
+    }
+  }
+}
