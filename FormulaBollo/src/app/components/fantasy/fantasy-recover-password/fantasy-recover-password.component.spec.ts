@@ -35,6 +35,9 @@ describe('FantasyRecoverPasswordComponent', () => {
     const input = fixture.nativeElement.querySelector('input');
     input.value = 'nueva-clave';
     input.dispatchEvent(new Event('input'));
+    const repeated = fixture.nativeElement.querySelector('#password2');
+    repeated.value = 'nueva-clave';
+    repeated.dispatchEvent(new Event('input'));
 
     component.recoverPassword();
 

@@ -1,7 +1,8 @@
 import { ApplicationConfig, provideZonelessChangeDetection } from '@angular/core';
 
 import { routes } from './app.routes';
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { authInterceptor } from '../shared/services/auth.interceptor';
 import { MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 
@@ -30,7 +31,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZonelessChangeDetection(),
     provideRouter(routes, withPreloading(PreloadAllModules)),
-    provideHttpClient(withFetch()),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     providePrimeNG({
       theme: {
         preset: FormulaBolloPreset,

@@ -42,6 +42,6 @@ export class HomeTeamsComponent {
   );
 
   protected teamNameSpaceToUnderScore(teamName: string): string {
-    return teamName.replaceAll(" ", "");
+    return this.utilsService.spaceToUnderScore(teamName);
   }
 }

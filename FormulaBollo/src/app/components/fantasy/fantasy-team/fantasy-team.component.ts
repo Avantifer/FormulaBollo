@@ -134,10 +134,11 @@ export class FantasyTeamComponent {
 
   constructor() {
     effect(() => {
-      this.lineChartOptions = getLineChartOptions(this.themeService.isDarkTheme(), false)
-      
+      this.lineChartOptions = getLineChartOptions(this.themeService.isDarkTheme(), false);
+    });
+    effect(() => {
       const race = this.lastRace();
-      if (race) {
+      if (race && !this.raceSelected) {
         this.raceSelected = race;
         this.getDriversTeamPrices();
       }
@@ -237,7 +238,7 @@ export class FantasyTeamComponent {
 
     if (this.lastRace()?.id !== this.raceSelected.id)  {
       this.isLastRace = false;
-      this.fantasyApiService.getFantasyElection(this.raceSelected.id, parseInt(this.authJWTService.getIdFromToken(localStorage.getItem("auth")!))).pipe(
+      this.fantasyApiService.getFantasyElection(this.raceSelected.id).pipe(
         takeUntil(this.destroy$),
         catchError((error) => this.utilsService.handleError<FantasyElection>(ERROR_FANTASY_ELECTION_NOT_FOUND, error))
       ).subscribe((fantasyElection: FantasyElection) => {
@@ -562,7 +563,10 @@ export class FantasyTeamComponent {
     });
   }
 
+  readonly electionEnabled = false;
+
   saveFantasyElecion(): void {
+    if (!this.electionEnabled) return;
     if (this.raceSelected?.dateStart) {
       const today: Date = new Date();
       const dateStart: Date = new Date(this.raceSelected?.dateStart);

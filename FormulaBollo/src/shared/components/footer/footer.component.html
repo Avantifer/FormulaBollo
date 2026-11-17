@@ -15,9 +15,18 @@
 				</h3>
 				@for (navigation of navigationRouters(); track $index) {
 					@if (navigation.visible) {
-						<a [routerLink]="[navigation.routerLink]" (click)="scrollToTop()" class="my-1 hover:text-gray-200 focus-visible:outline-none">
-							{{ navigation.label }}
-						</a>
+						@if (navigation.command) {
+							<button
+								type="button"
+								(click)="navigation.command({}); scrollToTop()"
+								class="my-1 text-left hover:text-gray-200 focus-visible:outline-2">
+								{{ navigation.label }}
+							</button>
+						} @else {
+							<a [routerLink]="[navigation.routerLink]" (click)="scrollToTop()" class="my-1 hover:text-gray-200 focus-visible:outline-none">
+								{{ navigation.label }}
+							</a>
+						}
 					}
 				}
 			</div>
@@ -39,7 +48,9 @@
 				}
 			</div>
 			<div>
-				<h3 class="text-lg font-semibold border-b pb-2 mb-3" [class]="isFantasy() ? 'border-blue-500/50' : 'border-red-500/50'">Contacto</h3>
+				<h3 class="text-lg font-semibold border-b pb-2 mb-3" [class]="isFantasy() ? 'border-blue-500/50' : 'border-red-500/50'">
+					Contacto
+				</h3>
 				@for (navigation of contactRouters; track $index) {
 					<p class="flex items-center my-1">
 						<i class="text-xl mr-2" [class]="navigation.icon"></i>

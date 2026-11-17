@@ -1,6 +1,6 @@
-import { Component, inject, signal, Signal, WritableSignal } from '@angular/core';
+import { Component, inject, signal, WritableSignal } from '@angular/core';
 import { DriverApiService } from '../../../../shared/services/api/driver-api.service';
-import { catchError, finalize, tap } from 'rxjs';
+import { Subscription, switchMap, of, tap } from 'rxjs';
 import { Driver } from '../../../../shared/models/driver';
 import { DriverPoints } from '../../../../shared/models/driverPoints';
 import { ResultApiService } from '../../../../shared/services/api/result-api.service';
@@ -8,8 +8,6 @@ import { environment } from '../../../../enviroments/enviroment';
 import { ERROR_DRIVER_FETCH } from '../../../constants';
 import { SkeletonModule } from 'primeng/skeleton';
 import { SkeletonItemsPipe } from '../../../../shared/pipes/skeletonItems.pipe';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { CacheService } from '../../../../shared/services/cache.service';
 import { UtilsService } from '../../../../shared/services/utils.service';
 
 import { Top3DriversComponent } from "./top3-drivers/top3-drivers.component";
@@ -30,58 +28,55 @@ export class HomeDriversComponent {
   private readonly driverApiService: DriverApiService = inject(DriverApiService);
   private readonly resultApiService: ResultApiService = inject(ResultApiService);
   protected readonly utilsService: UtilsService = inject(UtilsService);
-  protected readonly cacheService: CacheService = inject(CacheService);
 
   protected drivers: WritableSignal<Driver[]> = signal([]);
   protected top3Drivers: Driver[] = [];
   protected top3DriverPoints: DriverPoints[] = [];
 
-  protected driverPoints: Signal<DriverPoints[]> = toSignal(
-   this.resultApiService.getAllDriverPoints(environment.seasonActual.number, 10).pipe(
-      tap((driverPoints: DriverPoints[]) => {
-        this.top3DriverPoints = this._extractTop3Drivers(driverPoints) as DriverPoints[];
-      }),
-      catchError((error) => this.utilsService.handleError(ERROR_DRIVER_FETCH, error, [])),
-      finalize(() => {        
-        if (this.top3DriverPoints[0] === undefined) {
-          this._getAllDrivers();
-        }
-      })
-    ),
-    { initialValue: [] }
-  );
+  protected readonly driverPoints = signal<DriverPoints[]>([]);
+  protected readonly loading = signal(true);
+  protected readonly loadError = signal(false);
+  private loadSubscription?: Subscription;
 
   ngOnInit(): void {
-    this._getDriversCache();
+    this.retry();
   }
 
-  private _getDriversCache(): void {
-    const cache: Map<string, DriverPoints[] | Driver[]> = this.cacheService.loadCache();
-    const cacheKeyDriverPoints: string = `allDriverPoints-${environment.seasonActual.number}-undefined`;
-    const cacheKeyAllDriver: string = `allDrivers-${environment.seasonActual.number}`;
-
-    if (cache.has(cacheKeyDriverPoints)) {
-      this.top3DriverPoints = this._extractTop3Drivers(cache.get(cacheKeyDriverPoints) as DriverPoints[]) as DriverPoints[];
-    }
-
-    if (cache.has(cacheKeyAllDriver)) {
-      this.top3Drivers = this._extractTop3Drivers(cache.get(cacheKeyAllDriver) as Driver[]) as Driver[];
-    }
-  }
-
-  private _getAllDrivers(): void {  
-    this.driverApiService.getAllDrivers(environment.seasonActual.number, 0, 10).pipe(
-      tap((drivers: Driver[]) => {
+  protected retry(): void {
+    this.loadSubscription?.unsubscribe();
+    this.loading.set(true);
+    this.loadError.set(false);
+    this.drivers.set([]);
+    this.driverPoints.set([]);
+    this.top3Drivers = [];
+    this.top3DriverPoints = [];
+    this.loadSubscription = this.resultApiService.getAllDriverPoints(environment.seasonActual.number, 10).pipe(
+      tap(points => {
+        this.driverPoints.set(points);
+        this.top3DriverPoints = this._extractTop3Drivers(points) as DriverPoints[];
+      }),
+      switchMap(points => points.length ? of([] as Driver[]) : this.driverApiService.getAllDrivers(environment.seasonActual.number, 0, 10))
+    ).subscribe({
+      next: drivers => {
         this.top3Drivers = this._extractTop3Drivers(drivers) as Driver[];
         this.drivers.set(drivers);
-      }),
-      catchError((error) => this.utilsService.handleError(ERROR_DRIVER_FETCH, error, []))
-    ).subscribe();
+        this.loading.set(false);
+      },
+      error: error => {
+        this.loadError.set(true);
+        this.loading.set(false);
+        this.utilsService.handleError(ERROR_DRIVER_FETCH, error);
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.loadSubscription?.unsubscribe();
   }
 
   private _extractTop3Drivers(drivers: DriverPoints[] | Driver[]): DriverPoints[] | Driver[] {
     const top3 = drivers.slice(0, 3);
-    [top3[0], top3[1]] = [top3[1], top3[0]];
+    if (top3.length > 1) [top3[0], top3[1]] = [top3[1], top3[0]];
     return top3;
   }
 }

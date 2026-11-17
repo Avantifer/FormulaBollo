@@ -2,7 +2,7 @@
 	Clasificación de pilotos
 </h2>
 <div class="relative my-container flex flex-col justify-start m-auto md:block z-20">
-	@if (driverPoints().length === 0 && drivers().length === 0) {
+	@if (loading()) {
 		<div class="w-full flex justify-evenly">
 			<p-skeleton height="13rem" class="mb-2 w-full sm:w-36 md:w-52 lg:w-72 hidden sm:block" />
 			<p-skeleton height="13rem" class="mb-2 w-full sm:w-36 md:w-52 lg:w-72" />
@@ -15,6 +15,14 @@
 		</div>
 	}
 
+	@if (loadError()) {
+		<div role="alert" class="text-center p-4">
+			<p>No se pudieron cargar los pilotos.</p>
+			<button type="button" (click)="retry()" class="underline focus-visible:outline-2">Reintentar</button>
+		</div>
+	} @else if (!loading() && !driverPoints().length && !drivers().length) {
+		<p role="status" class="text-center p-4">No hay pilotos para esta temporada.</p>
+	}
 	<app-top3-drivers [top3]="driverPoints().length ? top3DriverPoints : top3Drivers" />
 	<app-top10-drivers [top10]="driverPoints().length ? driverPoints() : drivers()" />
 </div>

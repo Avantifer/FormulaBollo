@@ -27,6 +27,8 @@ export class FooterComponent {
   ];
 
   ngOnInit(): void {
+    this.checkIsFantasy();
+    this.putItemsHeader();
     this.router.events.subscribe(() => {
       this.checkIsFantasy();
       this.putItemsHeader();
@@ -41,7 +43,7 @@ export class FooterComponent {
         { label: 'Tu equipo', routerLink: '/fantasy/team', visible: true },
         { label: 'Clasificación', routerLink: '/fantasy/clasification', visible: true },
         { label: 'Iniciar sesión', routerLink: '/fantasy/login', visible: !isLogged },
-        { label: 'Cerrar sesión', routerLink: '/fantasy/logout', visible: isLogged }
+        { label: 'Cerrar sesión', command: () => this.logout(), visible: isLogged }
       ]);
 
       this.informationRouters.set([
@@ -59,10 +61,16 @@ export class FooterComponent {
 
       this.informationRouters.set([
         { label: 'Estatuto', routerLink: '/statute' },
-        { label: 'Estadísticas', routerLink: '/stats' },
+        { label: 'Estadísticas', routerLink: '/statistics' },
         { label: 'Resultados', routerLink: '/results' }
       ]);
     }
+  }
+
+  private logout(): void {
+    this.authJWTService.logOut();
+    this.putItemsHeader();
+    void this.router.navigate(['/fantasy/login']);
   }
 
   checkIsFantasy(): void {

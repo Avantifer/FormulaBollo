@@ -16,6 +16,7 @@
       "architect": {
         "build": {
           "builder": "@angular/build:application",
+          "defaultConfiguration": "production",
           "options": {
             "outputPath": "dist/formula-bollo",
             "index": "src/index.html",
@@ -49,7 +50,7 @@
             "scripts": []
           },
           "configurations": {
-            "prod": {
+            "production": {
               "aot": true,
               "optimization": true,
               "outputHashing": "all",

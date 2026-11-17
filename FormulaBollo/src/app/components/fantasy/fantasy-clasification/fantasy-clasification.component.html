@@ -59,11 +59,7 @@
 							<p>{{ fantasyPointUser.account.username }}</p>
 						</td>
 						<td class="dark:bg-slate-800 text-sm dark:border-gray-500!">
-							<p-button
-								label="Ver Equipo"
-								class="fantasyClasificationButton text-white"
-								(click)="openDialog(fantasyPointUser)"
-								onkeydown="openDialog(fantasyPointUser)" />
+							<p-button label="Ver Equipo" class="fantasyClasificationButton text-white" (click)="openDialog(fantasyPointUser)" />
 						</td>
 						<td
 							class="dark:bg-slate-800 text-sm dark:border-gray-500!"
@@ -93,7 +89,7 @@
 							<div class="text-2xl font-bold text-white">{{ showAllPoints() }}</div>
 							<div class="text-xs text-blue-100">Puntos Totales</div>
 						</div>
-						<p-button icon="pi pi-times" (click)="showDialog = false" onkeydown="showDialog = false" class="closeDialog" />
+						<p-button icon="pi pi-times" (click)="showDialog = false" class="closeDialog" />
 					</div>
 				</div>
 			</ng-template>

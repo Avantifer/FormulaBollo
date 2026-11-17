@@ -1,5 +1,5 @@
 import { Position } from './../../../../shared/models/position';
-import { Component, inject, signal, WritableSignal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, WritableSignal } from '@angular/core';
 import { SelectRacesComponent } from '../../../../shared/components/select-races/select-races.component';
 import { Season } from '../../../../shared/models/season';
 import { environment } from '../../../../enviroments/enviroment';
@@ -12,7 +12,7 @@ import { Driver } from '../../../../shared/models/driver';
 import { ButtonModule } from 'primeng/button';
 import { ResultApiService } from '../../../../shared/services/api/result-api.service';
 import { Result } from '../../../../shared/models/result';
-import { catchError, EMPTY, lastValueFrom, Observable, of, retry, Subject, takeUntil } from 'rxjs';
+import { catchError, concatMap, defer, EMPTY, finalize, lastValueFrom, map, Observable, of, retry, Subject, switchMap, takeUntil, tap } from 'rxjs';
 import { MessageInfoService } from '../../../../shared/services/toastInfo.service';
 import { ERROR_DRIVER_FETCH, ERROR_RESULT_FETCH } from '../../../constants';
 import { DividerModule } from 'primeng/divider';
@@ -38,7 +38,8 @@ import { FantasyApiService } from '../../../../shared/services/api/fantasy-api.s
     ButtonModule
 ],
   templateUrl: './admin-results.component.html',
-  styleUrl: './admin-results.component.scss'
+  styleUrl: './admin-results.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminResultsComponent {
 
@@ -59,15 +60,63 @@ export class AdminResultsComponent {
   emptyResults: any[] = new Array(20).fill(null);
   resultsToSave: Result[] = [];
   sprintsToSave: Sprint[] = [];
-  driversSelected: Driver[] = [];
+  driversSelected: (Driver | null)[] = [];
   allDrivers: Driver[] = [];
 
   readonly fastlapDriver: WritableSignal<Driver | undefined> = signal<Driver | undefined>(undefined);
   readonly poleDriver: WritableSignal<Driver | undefined> = signal<Driver | undefined>(undefined);
   isSprint: boolean = false;
   readonly visible: WritableSignal<boolean> = signal(false);
+  readonly isLoading = signal(false);
+  readonly isSaving = signal(false);
+  private readonly loadedRaceId = signal<number | undefined>(undefined);
+  readonly canSave = computed(() => {
+    const loadedRaceId = this.loadedRaceId();
+    return loadedRaceId !== undefined && loadedRaceId === this.raceSelected?.id
+      && !this.isLoading() && !this.isSaving();
+  });
 
   private readonly destroy$: Subject<void> = new Subject<void>();
+  private readonly raceChanges$ = new Subject<{ raceId: number; sprint: boolean }>();
+
+  constructor() {
+    this.raceChanges$.pipe(
+      switchMap(({ raceId, sprint }) => {
+        const request$: Observable<(Result | Sprint)[]> = sprint
+          ? this.sprintApiService.getAllSprintPerRace(raceId)
+          : this.resultApiService.getAllResultsPerRacePilots(raceId);
+        return request$.pipe(
+          retry(1),
+          map(rows => ({ raceId, sprint, rows })),
+          catchError(error => {
+            this.isLoading.set(false);
+            this.messageInfoService.showError(ERROR_RESULT_FETCH, error);
+            console.error(error);
+            return EMPTY;
+          }),
+        );
+      }),
+      takeUntil(this.destroy$),
+    ).subscribe(({ raceId, sprint, rows }) => {
+      if (raceId !== this.raceSelected?.id || sprint !== this.isSprint) return;
+      // Keep editable selections and positions separate from objects held in the API cache.
+      this.driversSelected = rows.length ? rows.map(row => row.driver) : new Array(20).fill(null);
+      if (sprint) {
+        this.sprints.set(rows.map(row => new Sprint(
+          this.raceSelected!, row.driver, row.position ? { ...row.position } : null,
+        )));
+      } else {
+        const results = rows as Result[];
+        this.results.set(results.map(row => new Result(
+          this.raceSelected!, row.driver, row.position ? { ...row.position } : null, row.fastlap, row.pole,
+        )));
+        this.fastlapDriver.set(results.find(row => row.fastlap)?.driver);
+        this.poleDriver.set(results.find(row => row.pole)?.driver);
+      }
+      this.loadedRaceId.set(raceId);
+      this.isLoading.set(false);
+    });
+  }
   
   ngOnInit(): void {
     this.checkIsSprint();
@@ -89,41 +138,10 @@ export class AdminResultsComponent {
   onRaceChange(newRace: Race): void {
     this.resetValuesRaceChange(newRace);
     this.results.set([]);
-    if (this.isSprint) {
-      this.sprintApiService.getAllSprintPerRace(this.raceSelected!.id)
-        .pipe(
-          takeUntil(this.destroy$),
-          retry(1),
-          catchError((error) => {
-            this.messageInfoService.showError(ERROR_RESULT_FETCH, error);
-            console.error(error);
-            return of([]);
-          })
-        ).subscribe((sprints: Sprint[]) => {
-          this.sprints.set(sprints);
-        });
-
-    } else {
-      this.resultApiService.getAllResultsPerRacePilots(this.raceSelected!.id)
-        .pipe(
-          takeUntil(this.destroy$),
-          retry(1),
-          catchError((error) => {
-            this.messageInfoService.showError(ERROR_RESULT_FETCH, error);
-            console.error(error);
-            return of([]);
-          })
-        ).subscribe((results: Result[]) => { 
-          this.results.set(results);
-  
-          let resultFiltered = results.filter((result: Result) => result.fastlap);
-          this.fastlapDriver.set(resultFiltered.length ? resultFiltered[0].driver : undefined);
-  
-          resultFiltered = results.filter((result: Result) => result.pole);
-          this.poleDriver.set(resultFiltered.length ? resultFiltered[0].driver : undefined);
-        });
-
-    }
+    this.sprints.set([]);
+    this.loadedRaceId.set(undefined);
+    this.isLoading.set(true);
+    this.raceChanges$.next({ raceId: newRace.id, sprint: this.isSprint });
   }
 
   checkIsSprint(): void {
@@ -131,7 +149,7 @@ export class AdminResultsComponent {
   }
 
   private resetValuesRaceChange(newRace: Race): void {
-    this.raceSelected = newRace;
+    this.raceSelected = { ...newRace, dateStart: new Date(newRace.dateStart) };
     this.raceDate = new Date(newRace.dateStart);
     this.fastlapDriver.set(undefined);
     this.poleDriver.set(undefined);
@@ -146,21 +164,45 @@ export class AdminResultsComponent {
     this.poleDriver.set(newDriver);
   }
 
-  onDriverChangeResult(newDriver: Driver, position: number): void {     
-    if (position < 20) {
+  onDriverChangeResult(newDriver: Driver | null, position: number): void {
+    if (position >= 0 && position < this.driversSelected.length) {
       this.driversSelected[position] = newDriver;
     }
   }
 
   saveResults(): void {
-    if (!this.validateForm()) return;
-    this.updateRaceIfNeccesary();
+    if (!this.canSave() || !this.validateForm()) return;
 
-    if (this.isSprint) {
-      this.sprintLogicSave();
-    } else {
-      this.resultLogicSave();
-    }
+    const race: Race = { ...this.raceSelected!, dateStart: new Date(this.raceDate!) };
+    if (this.isSprint ? this.sprints().length : this.results().length) this.updateResultsToSave(race);
+    else this.createResultsToSave(race);
+
+    // Each request uses this submission's snapshot even if another race is selected meanwhile.
+    const results = this.resultsToSave;
+    const sprints = this.sprintsToSave;
+    const steps: (() => Observable<string>)[] = this.isSprint
+      ? [() => this.sprintApiService.saveSprints(sprints)]
+      : [
+        () => this.resultApiService.saveResults(results),
+        () => this.raceApiService.saveRace({ ...race, finished: 1 }),
+        () => this.fantasyApiService.saveDriverTeamPoints(race.id),
+        () => this.fantasyApiService.saveDriverTeamPrices(race.id),
+      ];
+
+    this.isSaving.set(true);
+    // No next request is subscribed until the preceding one has returned successfully.
+    const sequence$ = steps.reduce((previous, step) => previous.pipe(
+      concatMap(() => defer(step).pipe(tap(response => this.messageInfoService.showSuccess(response)))),
+    ), of(''));
+    sequence$.pipe(
+      takeUntil(this.destroy$),
+      catchError(error => {
+        this.messageInfoService.showError(error, error);
+        console.error(error);
+        return EMPTY;
+      }),
+      finalize(() => this.isSaving.set(false)),
+    ).subscribe();
   }
 
   private validateForm(): boolean {
@@ -180,6 +222,10 @@ export class AdminResultsComponent {
   }
 
   private validateDrivers(): { valid: boolean; message: string } {
+    const rows = this.isSprint ? this.sprints() : this.results();
+    if (rows.length && this.driversSelected.some(driver => !driver)) {
+      return { valid: false, message: 'Debes seleccionar un piloto en cada fila' };
+    }
     let lastSelectedIndex = -1;
     for (let i = 0; i < this.driversSelected.length; i++) {
       if (this.driversSelected[i]) {
@@ -210,74 +256,6 @@ export class AdminResultsComponent {
     return { valid: true, message: '' };
   }
 
-  private updateRaceIfNeccesary(): void {
-    const dateStart = new Date(this.raceSelected!.dateStart);
-    this.raceSelected!.dateStart = dateStart;
-    this.raceSelected!.finished = 1;
-    this.raceApiService.saveRace(this.raceSelected!).pipe(
-      takeUntil(this.destroy$),
-      catchError((error) => {
-        this.messageInfoService.showError(error, error);
-        console.error(error);
-        return EMPTY;
-      })
-    ).subscribe((success: string) => {
-      this.messageInfoService.showSuccess(success);
-    });
-  }
-
-  private sprintLogicSave(): void {
-    if (this.sprints().length) {
-      this.updateResultsToSave();
-    } else {
-      this.createResultsToSave();
-    }
-
-    this.sprintApiService.saveSprints(this.sprintsToSave).pipe(
-      takeUntil(this.destroy$),
-      catchError((error) => {
-        this.messageInfoService.showError(error, error);
-        console.error(error);
-        return EMPTY;
-      })
-    ).subscribe((success: string) => {
-      this.messageInfoService.showSuccess(success);
-    });
-  }
-
-  private async resultLogicSave(): Promise<void> {
-    if (this.results().length) {
-      this.updateResultsToSave();
-    } else {
-      this.createResultsToSave();
-    }
-
-    // Cada paso depende del anterior: si uno falla se muestra el error y se detiene la secuencia
-    // (sin avisos de éxito ni cálculos de Fantasy sobre unos resultados que no se guardaron).
-    const steps: (() => Observable<string>)[] = [
-      () => this.resultApiService.saveResults(this.resultsToSave),
-      () => this.fantasyApiService.saveDriverTeamPoints(this.resultsToSave[0].race.id),
-      () => this.fantasyApiService.saveDriverTeamPrices(this.resultsToSave[0].race.id),
-    ];
-
-    for (const step of steps) {
-      const response: string | undefined = await lastValueFrom(
-        step().pipe(
-          takeUntil(this.destroy$),
-          catchError((error) => {
-            this.messageInfoService.showError(error, error);
-            console.error(error);
-            return EMPTY;
-          })
-        ),
-        { defaultValue: undefined }
-      );
-
-      if (response === undefined) return;
-      this.messageInfoService.showSuccess(response);
-    }
-  }
-
   private getResultValidations(): { condition: boolean; message: string }[] {
     return [
       { condition: !!this.raceSelected, message: 'Necesitas poner alguna carrera' },
@@ -304,7 +282,7 @@ export class AdminResultsComponent {
     return true;
   }
 
-  private buildResultsToSave(selectedDrivers: Driver[]): Result[] {
+  private buildResultsToSave(selectedDrivers: Driver[], race: Race): Result[] {
     const resultsToSave: Result[] = [];
 
     selectedDrivers.forEach((driver, index) => {
@@ -312,9 +290,9 @@ export class AdminResultsComponent {
       const isPole = this.poleDriver()?.id === driver.id;
 
       resultsToSave.push(new Result(
-        this.raceSelected!,
+        race,
         driver,
-        new Position(index + 1, 0, 0),
+        new Position(index + 1, index + 1, 0),
         isFastlap ? 1 : 0,
         isPole ? 1 : 0
       ));
@@ -326,7 +304,7 @@ export class AdminResultsComponent {
         const isPole = this.poleDriver()?.id === driver.id;
 
         resultsToSave.push(new Result(
-          this.raceSelected!,
+          race,
           driver,
           null,
           isFastlap ? 1 : 0,
@@ -338,21 +316,21 @@ export class AdminResultsComponent {
     return resultsToSave;
   }
 
-  private buildSprintsToSave(selectedDrivers: Driver[]): Sprint[] {
+  private buildSprintsToSave(selectedDrivers: Driver[], race: Race): Sprint[] {
     const sprintsToSave: Sprint[] = [];
 
     selectedDrivers.forEach((driver, index) => {
       sprintsToSave.push(new Sprint(
-        this.raceSelected!,
+        race,
         driver,
-        new Position(index + 1, 0, 0)
+        new Position(index + 1, index + 1, 0)
       ));
     });
 
     this.allDrivers.forEach(driver => {
       if (!selectedDrivers.some(d => d.id === driver.id)) {
         sprintsToSave.push(new Sprint(
-          this.raceSelected!,
+          race,
           driver,
           null
         ));
@@ -363,36 +341,28 @@ export class AdminResultsComponent {
   }
 
 
-  private updateResultsToSave(): void {  
-    const selectedDrivers: Driver[] = [];
-    const finishedDrivers = this.isSprint ? this.sprints().filter(r => r.position != null).length : this.results().filter(r => r.position != null).length;
-    
-    for (let i = 0; i < finishedDrivers; i++) {
-      if (this.driversSelected[i]) {
-        selectedDrivers.push(this.driversSelected[i]);
-      }
-    }
-    
+  private updateResultsToSave(race: Race): void {
     if (this.isSprint) {
-      this.sprintsToSave = this.buildSprintsToSave(selectedDrivers);
+      this.sprintsToSave = this.sprints().map((row, index) => new Sprint(
+        race, this.driversSelected[index]!, row.position ? { ...row.position } : null,
+      ));
     } else {
-      this.resultsToSave = this.buildResultsToSave(selectedDrivers);
+      this.resultsToSave = this.results().map((row, index) => {
+        const driver = this.driversSelected[index]!;
+        return new Result(race, driver, row.position ? { ...row.position } : null,
+          this.fastlapDriver()?.id === driver.id ? 1 : 0,
+          this.poleDriver()?.id === driver.id ? 1 : 0);
+      });
     }
   }
 
-  private createResultsToSave(): void {
-    const selectedDrivers: Driver[] = [];
-    
-    for (let i = 0; i < 20; i++) {
-      if (this.driversSelected[i]) {
-        selectedDrivers.push(this.driversSelected[i]);
-      }
-    }
+  private createResultsToSave(race: Race): void {
+    const selectedDrivers = this.driversSelected.filter((driver): driver is Driver => driver !== null);
 
     if (this.isSprint) {
-      this.sprintsToSave = this.buildSprintsToSave(selectedDrivers);
+      this.sprintsToSave = this.buildSprintsToSave(selectedDrivers, race);
     } else {
-      this.resultsToSave = this.buildResultsToSave(selectedDrivers);
+      this.resultsToSave = this.buildResultsToSave(selectedDrivers, race);
     }
   }
 

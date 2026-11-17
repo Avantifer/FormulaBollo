@@ -37,6 +37,7 @@ export class ComparativeStatsComponent {
   @Input() seasonSelected: Season = environment.seasonActual;
   @Input() typeSelected!: string;
   
+  private comparisonGeneration = 0;
   private driversSelected: Driver[] | null[] = [null, null];
   private teamsSelected: Team[] | null[] = [null, null];
 
@@ -55,7 +56,11 @@ export class ComparativeStatsComponent {
   private readonly destroy$: Subject<void> = new Subject<void>();
 
   ngOnChanges(simpleChanges: SimpleChanges): void {
-    if (simpleChanges['seasonSelected']) {
+    if (simpleChanges['seasonSelected'] || simpleChanges['typeSelected']) {
+      this.comparisonGeneration++;
+      this.driversInfoState.set([]);
+      this.teamsInfoState.set([]);
+      this.comparisonChartState.set(undefined);
       this.driversSelected = [null, null];
       this.teamsSelected = [null, null];
     }
@@ -69,6 +74,7 @@ export class ComparativeStatsComponent {
   }
 
   async onTeamChange(newTeam: Team, index: number) {
+    const generation = ++this.comparisonGeneration;
     this.teamsSelected.splice(index, 1, newTeam);
 
     if (this.teamsSelected.every(team => team != null)) {
@@ -77,6 +83,7 @@ export class ComparativeStatsComponent {
         this.getInfoTeams(this.teamsSelected.at(1)!)
       ]);
 
+      if (generation !== this.comparisonGeneration) return;
       this.teamsInfoState.set([teamAInfo, teamBInfo]);
 
       this.generateComparisonChart(teamAInfo, teamBInfo);
@@ -84,6 +91,7 @@ export class ComparativeStatsComponent {
   }
 
   async onDriverChange(newDriver: Driver, index: number) {
+    const generation = ++this.comparisonGeneration;
     this.driversSelected.splice(index, 1, newDriver);
 
     if (this.driversSelected.every(driver => driver != null)) {
@@ -92,6 +100,7 @@ export class ComparativeStatsComponent {
         this.getInfoDrivers(this.driversSelected.at(1)!)
       ]);
 
+      if (generation !== this.comparisonGeneration) return;
       this.driversInfoState.set([driverAInfo, driverBInfo]);
 
       this.generateComparisonChart(driverAInfo, driverBInfo);

@@ -10,8 +10,8 @@ export const adminGuard: CanActivateFn = () => {
   const router = inject(Router);
   const token = localStorage.getItem('auth');
 
-  if (!token) {
-    router.navigate(['/login']);
+  if (!authJWTService.isLogged() || !token) {
+    router.navigate(['/fantasy/login']);
     return false;
   }
 

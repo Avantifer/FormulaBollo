@@ -1,6 +1,7 @@
 import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
-import { Observable, of, tap } from "rxjs";
+import { Observable, throwError } from "rxjs";
+import { AuthJWTService } from '../authJWT.service';
 import { environment } from '../../../enviroments/enviroment';
 import { BaseApiService } from "../baseApiService.service";
 import { CacheService } from "../cache.service";
@@ -18,157 +19,78 @@ export class FantasyApiService {
   private readonly httpClient: HttpClient = inject(HttpClient);
   private readonly baseApiService: BaseApiService = inject(BaseApiService);
   private readonly cacheService: CacheService = inject(CacheService);
+  private readonly auth: AuthJWTService = inject(AuthJWTService);
 
   private readonly endpoint: string = "/fantasy";
 
   getAllPricesDriver(raceId: number): Observable<FantasyPricesDriver[]> {
     const cacheKey: string = `fantasyAllPricesDriver-${raceId}`;
-    const cache = this.cacheService.getCache();
-
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as FantasyPricesDriver[]);
 
     const params = this.baseApiService.createParams({ raceId: raceId });
-    return this.httpClient.get<FantasyPricesDriver[]>(`${environment.apiUrl}${this.endpoint}/allDriverPrices`, { params }).pipe(
-      tap(data => {
-        cache.set(cacheKey, data);  
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<FantasyPricesDriver[]>(`${environment.apiUrl}${this.endpoint}/allDriverPrices`, { params }));
   }
 
   getAllPricesTeam(raceId: number): Observable<FantasyPricesTeam[]> {
     const cacheKey: string = `fantasyAllPricesTeam-${raceId}`;
-    const cache = this.cacheService.getCache();
-
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as FantasyPricesTeam[]);
 
     const params = this.baseApiService.createParams({ raceId: raceId });
-    return this.httpClient.get<FantasyPricesTeam[]>(`${environment.apiUrl}${this.endpoint}/allTeamPrices`, { params }).pipe(
-      tap(data => {
-        cache.set(cacheKey, data);  
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<FantasyPricesTeam[]>(`${environment.apiUrl}${this.endpoint}/allTeamPrices`, { params }));
   }
 
   getDriverPoints(driverId: number): Observable<FantasyPointsDriver[]> {
     const cacheKey: string = `driverPoints-${driverId}`;
-    const cache = this.cacheService.getCache();
-
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as FantasyPointsDriver[]);
 
     const params = this.baseApiService.createParams({ driverId: driverId });
-    return this.httpClient.get<FantasyPointsDriver[]>(`${environment.apiUrl}${this.endpoint}/driverPoints`, { params }).pipe(
-      tap(data => {
-        cache.set(cacheKey, data);  
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<FantasyPointsDriver[]>(`${environment.apiUrl}${this.endpoint}/driverPoints`, { params }));
   }
 
   getTeamPoints(teamId: number): Observable<FantasyPointsTeam[]> {
     const cacheKey: string = `teamPoints-${teamId}`;
-    const cache = this.cacheService.getCache();
-
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as FantasyPointsTeam[]);
 
     const params = this.baseApiService.createParams({ teamId: teamId });
-    return this.httpClient.get<FantasyPointsTeam[]>(`${environment.apiUrl}${this.endpoint}/teamPoints`, { params }).pipe(
-      tap(data => {
-        cache.set(cacheKey, data);  
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<FantasyPointsTeam[]>(`${environment.apiUrl}${this.endpoint}/teamPoints`, { params }));
   }
   
   getDriverPrices(driverId: number): Observable<FantasyPricesDriver[]> {
     const cacheKey: string = `driverPrices-${driverId}`;
-    const cache = this.cacheService.getCache();
-
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as FantasyPricesDriver[]);
 
     const params = this.baseApiService.createParams({ driverId: driverId });
-    return this.httpClient.get<FantasyPricesDriver[]>(`${environment.apiUrl}${this.endpoint}/driverPrice`, { params }).pipe(
-      tap(data => {
-        cache.set(cacheKey, data);  
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<FantasyPricesDriver[]>(`${environment.apiUrl}${this.endpoint}/driverPrice`, { params }));
   }
 
   getTeamPrices(teamId: number): Observable<FantasyPricesTeam[]> {
     const cacheKey: string = `teamPrices-${teamId}`;
-    const cache = this.cacheService.getCache();
-
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as FantasyPricesTeam[]);
 
     const params = this.baseApiService.createParams({ teamId: teamId });
-    return this.httpClient.get<FantasyPricesTeam[]>(`${environment.apiUrl}${this.endpoint}/teamPrice`, { params }).pipe(
-      tap(data => {
-        cache.set(cacheKey, data);  
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<FantasyPricesTeam[]>(`${environment.apiUrl}${this.endpoint}/teamPrice`, { params }));
   }
 
   getFantasyPointsSeason(season: number): Observable<FantasyPointsUser[]> {
     const cacheKey: string = `fantasyPointsSeason-${season}`;
-    const cache = this.cacheService.getCache();
-
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as FantasyPointsUser[]);
 
     const params = this.baseApiService.createParams({ numberSeason: season });
-    return this.httpClient.get<FantasyPointsUser[]>(`${environment.apiUrl}${this.endpoint}/getFantasyPointsSeason`, { params }).pipe(
-      tap(data => {
-        cache.set(cacheKey, data);  
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<FantasyPointsUser[]>(`${environment.apiUrl}${this.endpoint}/getFantasyPointsSeason`, { params }));
   }
 
   getFantasyPointsRace(raceId: number): Observable<FantasyPointsUser[]> {
     const cacheKey: string = `fantasyPointsRace-${raceId}`;
-    const cache = this.cacheService.getCache();
-
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as FantasyPointsUser[]);
 
     const params = this.baseApiService.createParams({ raceId: raceId });
-    return this.httpClient.get<FantasyPointsUser[]>(`${environment.apiUrl}${this.endpoint}/getFantasyPointsRace`, { params }).pipe(
-      tap(data => {
-        cache.set(cacheKey, data);  
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<FantasyPointsUser[]>(`${environment.apiUrl}${this.endpoint}/getFantasyPointsRace`, { params }));
   }
 
   getDriverPointsSpecificRace(driverId: number, raceId: number): Observable<FantasyPointsDriver> {
     const cacheKey: string = `fantasyDriverPointsSpecificRace-${driverId}-${raceId}`;
-    const cache = this.cacheService.getCache();
-
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as FantasyPointsDriver);
 
     const params = this.baseApiService.createParams({ driverId: driverId, raceId: raceId });
-    return this.httpClient.get<FantasyPointsDriver>(`${environment.apiUrl}${this.endpoint}/driverPointsSpecificRace`, { params }).pipe(
-      tap(data => {
-        cache.set(cacheKey, data);  
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<FantasyPointsDriver>(`${environment.apiUrl}${this.endpoint}/driverPointsSpecificRace`, { params }));
   }
 
   getTeamPointsSpecificRace(teamId: number, raceId: number): Observable<FantasyPointsTeam> {
     const cacheKey: string = `fantasyTeamPointsSpecificRace-${teamId}-${raceId}`;
-    const cache = this.cacheService.getCache();
-
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as FantasyPointsTeam);
 
     const params = this.baseApiService.createParams({ teamId: teamId, raceId: raceId });
-    return this.httpClient.get<FantasyPointsTeam>(`${environment.apiUrl}${this.endpoint}/teamsPointsSpecificRace`, { params }).pipe(
-      tap(data => {
-        cache.set(cacheKey, data);  
-        this.cacheService.saveCache();
-      })
-    );
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<FantasyPointsTeam>(`${environment.apiUrl}${this.endpoint}/teamsPointsSpecificRace`, { params }));
   }
 
   saveDriverTeamPoints(raceId: number): Observable<string> {
@@ -184,19 +106,15 @@ export class FantasyApiService {
     return this.httpClient.post<string>(`${environment.apiUrl}${this.endpoint}/saveDriverTeamPoints`, {}, { params, headers, responseType: "text" as "json" });
   }
 
-  getFantasyElection(raceId: number, userId: number): Observable<FantasyElection> {
-    const cacheKey: string = `fantasyElection-${userId}-${raceId}`;
-    const cache = this.cacheService.getCache();
+  getFantasyElection(raceId: number): Observable<FantasyElection> {
+    const token = localStorage.getItem('auth');
+    if (!this.auth.isLogged() || !token) return throwError(() => new Error('La sesión no es válida'));
+    const userId = this.auth.getIdFromToken(token);
+    const cacheKey: string = `fantasyElection-authenticated-${userId}-${raceId}`;
 
-    if (cache.has(cacheKey)) return of(cache.get(cacheKey) as FantasyElection);
-
-    const params = this.baseApiService.createParams({ raceId: raceId, userId: userId });
-    return this.httpClient.get<FantasyElection>(`${environment.apiUrl}${this.endpoint}/fantasyElection`, { params }).pipe(
-      tap(data => {
-        cache.set(cacheKey, data);  
-        this.cacheService.saveCache();
-      })
-    );
+    const params = this.baseApiService.createParams({ raceId: raceId });
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<FantasyElection>(`${environment.apiUrl}${this.endpoint}/fantasyElection`, { params, headers }));
   }
 
 

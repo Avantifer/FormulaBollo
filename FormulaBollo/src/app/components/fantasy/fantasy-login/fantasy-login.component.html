@@ -5,54 +5,68 @@
 			<h1 class="text-2xl font-bold italic uppercase mb-2 text-center mb-8">Iniciar sesión</h1>
 			<form [formGroup]="loginForm" class="space-y-6">
 				<div class="space-y-2">
-					<p class="text-gray-700 dark:text-white text-sm font-medium">Usuario</p>
+					<label for="fantasy-login-username" class="block text-gray-700 dark:text-white text-sm font-medium">Usuario</label>
 					<p-iconfield>
 						<p-inputicon class="pi pi-user text-gray-600! dark:text-gray-400!" />
-						<input type="text" pInputText formControlName="username" placeholder="Usuario" class="h-10 w-full text-white" />
+						<input
+							id="fantasy-login-username"
+							type="text"
+							pInputText
+							[attr.aria-invalid]="loginForm.get('username')?.invalid"
+							aria-describedby="fantasy-login-username-error"
+							formControlName="username"
+							placeholder="Usuario"
+							class="h-10 w-full text-white" />
 					</p-iconfield>
 					@if (loginForm.get('username')?.invalid && loginForm.get('username')?.dirty) {
-						<span class="text-xs sm:text-sm text-red-600 dark:text-red-400">Necesitas poner el nombre de usuario</span>
+						<span id="fantasy-login-username-error" class="text-xs sm:text-sm text-red-600 dark:text-red-400"
+							>Necesitas poner el nombre de usuario</span
+						>
 					}
 				</div>
 				<div class="space-y-2">
-					<p class="text-gray-700 dark:text-white text-sm font-medium">Contraseña</p>
+					<label for="fantasy-login-password" class="block text-gray-700 dark:text-white text-sm font-medium">Contraseña</label>
 					<p-iconfield>
 						<p-inputicon class="pi pi-lock text-gray-400" />
 						<input
+							id="fantasy-login-password"
 							[type]="showPassword ? 'text' : 'password'"
 							pInputText
+							[attr.aria-invalid]="loginForm.get('password')?.invalid"
+							aria-describedby="fantasy-login-password-error"
 							formControlName="password"
 							placeholder="Contraseña"
 							class="h-10 w-full text-white" />
-						@if (showPassword) {
-							<p-inputicon
-								class="pi pi-eye-slash text-gray-400 cursor-pointer"
-								(click)="showPassword = !showPassword"
-								onkeydown="showPassword = !showPassword" />
-						} @else {
-							<p-inputicon
-								class="pi pi-eye text-gray-400 cursor-pointer"
-								(click)="showPassword = !showPassword"
-								onkeydown="showPassword = !showPassword" />
-						}
+						<p-inputicon>
+							<button
+								type="button"
+								class="text-gray-400 cursor-pointer leading-none focus-visible:outline-2"
+								[attr.aria-label]="showPassword ? 'Ocultar contrase&#241;a' : 'Mostrar contrase&#241;a'"
+								[attr.aria-pressed]="showPassword"
+								(click)="showPassword = !showPassword">
+								<i [class]="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+							</button>
+						</p-inputicon>
 					</p-iconfield>
 					@if (loginForm.get('password')?.invalid && loginForm.get('password')?.dirty) {
-						<span class="text-xs sm:text-sm text-red-600 dark:text-red-400">Necesitas poner la contraseña</span>
+						<span id="fantasy-login-password-error" class="text-xs sm:text-sm text-red-600 dark:text-red-400"
+							>Necesitas poner la contraseña</span
+						>
 					}
 				</div>
 			</form>
-			<a
+			<button
+				type="button"
 				class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm transition-colors cursor-pointer"
-				(click)="recoveryPasswordDialog.set(true)"
-				>Recuperar contraseña</a
-			>
+				(click)="recoveryPasswordDialog.set(true)">
+				Recuperar contraseña
+			</button>
 			<div class="flex w-full">
 				<p-button
 					label="Iniciar Sesión"
 					[disabled]="loginForm.invalid"
 					class="loginFantasyButton text-white mt-6 w-full!"
-					(click)="login()"
-					onkeydown="login()" />
+					(click)="login()" />
 			</div>
 			<div class="text-center mt-6">
 				<p class="text-gray-600 dark:text-slate-300 text-sm">
@@ -66,14 +80,16 @@
 			</div>
 		</div>
 	</div>
-	<p-dialog [visible]="recoveryPasswordDialog()" (visibleChange)="recoveryPasswordDialog.set($event)" [modal]="true" [dismissableMask]="true" [closable]="false" [style]="{ width: '30rem' }">
+	<p-dialog
+		[visible]="recoveryPasswordDialog()"
+		(visibleChange)="recoveryPasswordDialog.set($event)"
+		[modal]="true"
+		[dismissableMask]="true"
+		[closable]="false"
+		[style]="{ width: '30rem' }">
 		<ng-template #header>
 			<h2 class="text-xl font-bold text-gray-900 dark:text-white flex-1">Recuperar Contraseña</h2>
-			<p-button
-				icon="pi pi-times"
-				(click)="recoveryPasswordDialog.set(false)"
-				onkeydown="recoveryPasswordDialog = false"
-				class="closeDialog" />
+			<p-button icon="pi pi-times" ariaLabel="Cerrar" (click)="recoveryPasswordDialog.set(false)" class="closeDialog" />
 		</ng-template>
 		<p class="text-gray-600 dark:text-slate-300 text-sm mb-4">
 			Introduce tu correo electrónico y te enviaremos un enlace a tu correo para restablecer tu contraseña.
@@ -82,18 +98,24 @@
 			<div class="space-y-2">
 				<p-iconfield>
 					<p-inputicon class="pi pi-user text-gray-600! dark:text-gray-400!" />
-					<input type="text" pInputText formControlName="mail" placeholder="tu@email.com" class="h-10 w-full text-white" />
+					<input
+						type="text"
+						pInputText
+						id="fantasy-login-mail"
+						aria-label="Correo electr&#243;nico"
+						[attr.aria-invalid]="mailForm.get('mail')?.invalid"
+						aria-describedby="fantasy-login-mail-error"
+						formControlName="mail"
+						placeholder="tu@email.com"
+						class="h-10 w-full text-white" />
 				</p-iconfield>
 				@if (mailForm.get('mail')?.invalid && mailForm.get('mail')?.dirty) {
-					<span class="text-xs sm:text-sm text-red-600 dark:text-red-400">Necesitas poner un correo correcto.</span>
+					<span id="fantasy-login-mail-error" class="text-xs sm:text-sm text-red-600 dark:text-red-400"
+						>Necesitas poner un correo correcto.</span
+					>
 				}
 			</div>
-			<p-button
-				label="Enviar enlace"
-				[disabled]="mailForm.invalid"
-				class="loginFantasyButton text-white"
-				(click)="recoverPassword()"
-				onkeydown="recoverPassword()" />
+			<p-button label="Enviar enlace" [disabled]="mailForm.invalid" class="loginFantasyButton text-white" (click)="recoverPassword()" />
 		</form>
 	</p-dialog>
 </div>

@@ -6,7 +6,7 @@ import { Season } from '../../../shared/models/season';
 import { Race } from '../../../shared/models/race';
 import { environment } from '../../../enviroments/enviroment';
 import { CommonModule } from '@angular/common';
-import { catchError, delay, Subject, takeUntil } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { ERROR_RACE_FETCH } from '../../constants';
 import { ButtonModule } from 'primeng/button';
 import { ImageService } from '../../../shared/services/image.service';
@@ -40,7 +40,9 @@ export class RacesComponent {
   protected seasonSelected: Season = environment.seasonActual;
 
   protected races: WritableSignal<Race[]> = signal<Race[]>([]);
-  private readonly destroy$ = new Subject<void>();
+  protected readonly loading = signal(true);
+  protected readonly loadError = signal(false);
+  private loadSubscription?: Subscription;
   protected readonly responsiveOptionsCarousel: CarouselResponsiveOptions[] = [
     {
       breakpoint: '1520px',
@@ -85,11 +87,29 @@ export class RacesComponent {
     this.getRaces(this.seasonSelected);
   }
 
+  protected retry(): void {
+    this.getRaces(this.seasonSelected);
+  }
+
   private getRaces(season: Season): void {
-    this.raceApiService.getAllRaces(season.number).pipe(
-      takeUntil(this.destroy$),
-      delay(100),
-      catchError((error) => this.utilsService.handleError(ERROR_RACE_FETCH, error, [])),
-    ).subscribe((races: Race[]) => this.races.set(races));
+    this.loadSubscription?.unsubscribe();
+    this.loading.set(true);
+    this.loadError.set(false);
+    this.races.set([]);
+    this.loadSubscription = this.raceApiService.getAllRaces(season.number).subscribe({
+      next: races => {
+        this.races.set(races);
+        this.loading.set(false);
+      },
+      error: error => {
+        this.loading.set(false);
+        this.loadError.set(true);
+        this.utilsService.handleError(ERROR_RACE_FETCH, error);
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.loadSubscription?.unsubscribe();
   }
 }

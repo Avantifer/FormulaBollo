@@ -34,7 +34,7 @@
 			<p-chart type="bar" [data]="comparisonChartData" [options]="comparisonChartOptionsMobile" class="block! lg:hidden!" />
 		</div>
 	</div>
-	@if (driversInfo.length === 2 || teamsInfo.length === 2) {
+	@if (typeSelected === 'Pilotos' ? driversInfo.length === 2 : teamsInfo.length === 2) {
 		<div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white">
 			<div class="flex items-center mb-4">
 				<i class="pi pi-star text-red-600 dark:text-red-400 mr-2" style="font-size: 18px"></i>

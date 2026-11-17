@@ -31,7 +31,7 @@
 						<select-drivers
 							(driverChanged)="onDriverChangeResult($event, $index)"
 							[season]="actualSeason"
-							[driverId]="result.driver.id"
+							[driverId]="driversSelected[$index]?.id"
 							class="flex-1" />
 					</div>
 				}
@@ -51,7 +51,7 @@
 						<select-drivers
 							(driverChanged)="onDriverChangeResult($event, $index)"
 							[season]="actualSeason"
-							[driverId]="result.driver.id"
+							[driverId]="driversSelected[$index]?.id"
 							class="flex-1" />
 					</div>
 				}
@@ -62,7 +62,7 @@
 			@for (i of emptyResults; track $index) {
 				<div class="flex items-center gap-2">
 					<p class="text-sm w-8 text-right font-semibold">P{{ $index + 1 }}</p>
-					<select-drivers (driverChanged)="onDriverChangeResult($event, $index)" [season]="actualSeason" class="flex-1" />
+					<select-drivers (driverChanged)="onDriverChangeResult($event, $index)" [season]="actualSeason" [driverId]="driversSelected[$index]?.id" class="flex-1" />
 				</div>
 			}
 		</div>
@@ -76,7 +76,7 @@
 						<select-drivers
 							(driverChanged)="onDriverChangeResult($event, $index)"
 							[season]="actualSeason"
-							[driverId]="sprint.driver.id"
+							[driverId]="driversSelected[$index]?.id"
 							class="flex-1" />
 					</div>
 				}
@@ -96,7 +96,7 @@
 						<select-drivers
 							(driverChanged)="onDriverChangeResult($event, $index)"
 							[season]="actualSeason"
-							[driverId]="sprint.driver.id"
+							[driverId]="driversSelected[$index]?.id"
 							class="flex-1" />
 					</div>
 				}
@@ -107,7 +107,7 @@
 			@for (i of emptyResults; track $index) {
 				<div class="flex items-center gap-2">
 					<p class="text-sm w-8 text-right font-semibold">P{{ $index + 1 }}</p>
-					<select-drivers (driverChanged)="onDriverChangeResult($event, $index)" [season]="actualSeason" class="flex-1" />
+					<select-drivers (driverChanged)="onDriverChangeResult($event, $index)" [season]="actualSeason" [driverId]="driversSelected[$index]?.id" class="flex-1" />
 				</div>
 			}
 		</div>
@@ -123,7 +123,7 @@
 					class="deleteResults text-white" />
 			}
 		</div>
-		<p-button [label]="'Guardar ' + (isSprint ? 'Sprints' : 'Resultados')" (onClick)="saveResults()" class="saveResults text-white" />
+		<p-button [label]="'Guardar ' + (isSprint ? 'Sprints' : 'Resultados')" [disabled]="!canSave()" (onClick)="saveResults()" class="saveResults text-white" />
 	</div>
 
 	<p-dialog [visible]="visible()" (visibleChange)="visible.set($event)" [modal]="true" [dismissableMask]="true" [closable]="false" [style]="{ width: '30rem' }">

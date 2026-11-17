@@ -5,17 +5,19 @@
 		</div>
 		<div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 content-center gap-4 px-6">
 			@for (team of teams(); track $index) {
-				<div
-					class="shadow-md flex h-36 rounded-2xl cursor-pointer animation-cubic-03 bg-white dark:bg-gray-800"
+				<a
+					class="focus-visible:outline-2 focus-visible:outline-red-600 shadow-md flex h-36 rounded-2xl cursor-pointer animation-cubic-03 bg-white dark:bg-gray-800"
 					[class]="'hover-bg-' + (team.name | SpaceToUnderscore)"
-					(click)="router.navigate(['/teams/' + teamNameSpaceToUnderScore(team.name)])"
-					(keydown.enter)="router.navigate(['/teams/' + teamNameSpaceToUnderScore(team.name)])">
+					[routerLink]="['/teams/' + teamNameSpaceToUnderScore(team.name)]">
 					<img
+						loading="lazy"
+						width="96"
+						height="96"
 						[src]="imageService.getImageUrl(team.logoImage)"
 						[alt]="team.name"
 						[class.reverse-color]="team.name === 'Alpine' || team.name === 'AlphaTauri' || team.name === 'Aston Martin'"
 						class="teams-schema-container-image m-auto w-24" />
-				</div>
+				</a>
 			}
 			@if (!cacheService.isVersionRetrieved() || !teams().length) {
 				@for (item of 10 | skeletonItems; track $index) {
@@ -24,7 +26,9 @@
 			}
 		</div>
 		<div class="mt-8 pb-8 text-center">
-			<a [routerLink]="['/teams']" class="inline-flex items-center text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition">
+			<a
+				[routerLink]="['/teams']"
+				class="inline-flex items-center text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition">
 				Ver todas las escuderías
 				<i class="pi pi-chevron-right ml-1 pt-1" style="font-size: 0.65rem"></i>
 			</a>

@@ -5,86 +5,118 @@
 			<h1 class="text-2xl font-bold italic uppercase mb-2 text-center mb-8">Registro</h1>
 			<form [formGroup]="registerForm" class="space-y-6">
 				<div class="space-y-2">
-					<p class="text-gray-700 dark:text-white text-sm font-medium">Usuario</p>
+					<label for="fantasy-register-username" class="block text-gray-700 dark:text-white text-sm font-medium">Usuario</label>
 					<p-iconfield>
 						<p-inputicon class="pi pi-user text-gray-600! dark:text-gray-400!" />
-						<input type="text" pInputText formControlName="username" placeholder="Usuario" class="h-10 w-full text-white" />
+						<input
+							id="fantasy-register-username"
+							type="text"
+							pInputText
+							[attr.aria-invalid]="registerForm.get('username')?.invalid"
+							aria-describedby="fantasy-register-username-error"
+							formControlName="username"
+							placeholder="Usuario"
+							class="h-10 w-full text-white" />
 					</p-iconfield>
 					@if (registerForm.get('username')?.invalid && registerForm.get('username')?.dirty) {
-						<span class="text-xs sm:text-sm text-red-600 dark:text-red-400">Necesitas poner el nombre de usuario</span>
+						<span id="fantasy-register-username-error" class="text-xs sm:text-sm text-red-600 dark:text-red-400"
+							>Necesitas poner el nombre de usuario</span
+						>
 					}
 				</div>
 				<div class="space-y-2">
-					<p class="text-gray-700 dark:text-white text-sm font-medium">Correo electrónico</p>
+					<label for="fantasy-register-mail" class="block text-gray-700 dark:text-white text-sm font-medium">Correo electrónico</label>
 					<p-iconfield>
 						<p-inputicon class="pi pi-envelope text-gray-600! dark:text-gray-400!" />
-						<input type="text" pInputText formControlName="mail" placeholder="Correo electrónico" class="h-10 w-full text-white" />
+						<input
+							id="fantasy-register-mail"
+							type="text"
+							pInputText
+							[attr.aria-invalid]="registerForm.get('mail')?.invalid"
+							aria-describedby="fantasy-register-mail-error"
+							formControlName="mail"
+							placeholder="Correo electrónico"
+							class="h-10 w-full text-white" />
 					</p-iconfield>
 					@if (registerForm.get('mail')?.invalid && registerForm.get('mail')?.dirty) {
-						<span class="text-xs sm:text-sm text-red-600 dark:text-red-400">Necesitas poner un correo correcto.</span>
+						<span id="fantasy-register-mail-error" class="text-xs sm:text-sm text-red-600 dark:text-red-400"
+							>Necesitas poner un correo correcto.</span
+						>
 					}
 				</div>
 				<div class="space-y-2">
-					<p class="text-gray-700 dark:text-white text-sm font-medium">Contraseña</p>
+					<label for="fantasy-register-password" class="block text-gray-700 dark:text-white text-sm font-medium">Contraseña</label>
 					<p-iconfield>
 						<p-inputicon class="pi pi-lock text-gray-400" />
 						<input
+							id="fantasy-register-password"
 							[type]="showPassword ? 'text' : 'password'"
 							pInputText
+							[attr.aria-invalid]="registerForm.get('password')?.invalid"
+							aria-describedby="fantasy-register-password-error"
 							formControlName="password"
 							placeholder="Contraseña"
 							class="h-10 w-full text-white" />
-						@if (showPassword) {
-							<p-inputicon
-								class="pi pi-eye-slash text-gray-400 cursor-pointer"
-								(click)="showPassword = !showPassword"
-								onkeydown="showPassword = !showPassword" />
-						} @else {
-							<p-inputicon
-								class="pi pi-eye text-gray-400 cursor-pointer"
-								(click)="showPassword = !showPassword"
-								onkeydown="showPassword = !showPassword" />
-						}
+						<p-inputicon>
+							<button
+								type="button"
+								class="text-gray-400 cursor-pointer leading-none focus-visible:outline-2"
+								[attr.aria-label]="showPassword ? 'Ocultar contrase&#241;a' : 'Mostrar contrase&#241;a'"
+								[attr.aria-pressed]="showPassword"
+								(click)="showPassword = !showPassword">
+								<i [class]="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+							</button>
+						</p-inputicon>
 					</p-iconfield>
 					@if (registerForm.get('password')?.invalid && registerForm.get('password')?.dirty) {
-						<span class="text-xs sm:text-sm text-red-600 dark:text-red-400">Necesitas poner la contraseña</span>
+						<span id="fantasy-register-password-error" class="text-xs sm:text-sm text-red-600 dark:text-red-400"
+							>Introduce una contrase&#241;a de hasta 72 bytes UTF-8.</span
+						>
 					}
 				</div>
 				<div class="space-y-2">
-					<p class="text-gray-700 dark:text-white text-sm font-medium">Repite la Contraseña</p>
+					<label for="fantasy-register-passwordRepeated" class="block text-gray-700 dark:text-white text-sm font-medium"
+						>Repite la Contraseña</label
+					>
 					<p-iconfield>
 						<p-inputicon class="pi pi-lock text-gray-400" />
 						<input
+							id="fantasy-register-passwordRepeated"
 							[type]="showPasswordRepeated ? 'text' : 'password'"
 							pInputText
+							[attr.aria-invalid]="registerForm.get('passwordRepeated')?.invalid || registerForm.hasError('passwordMismatch')"
+							aria-describedby="fantasy-register-passwordRepeated-error"
 							formControlName="passwordRepeated"
 							placeholder="Repita la Contraseña"
 							class="h-10 w-full text-white" />
-						@if (showPasswordRepeated) {
-							<p-inputicon
-								class="pi pi-eye-slash text-gray-400 cursor-pointer"
-								(click)="showPasswordRepeated = !showPasswordRepeated"
-								onkeydown="showPasswordRepeated = !showPasswordRepeated" />
-						} @else {
-							<p-inputicon
-								class="pi pi-eye text-gray-400 cursor-pointer"
-								(click)="showPasswordRepeated = !showPasswordRepeated"
-								onkeydown="showPasswordRepeated = !showPasswordRepeated" />
-						}
+						<p-inputicon>
+							<button
+								type="button"
+								class="text-gray-400 cursor-pointer leading-none focus-visible:outline-2"
+								[attr.aria-label]="showPasswordRepeated ? 'Ocultar contrase&#241;a' : 'Mostrar contrase&#241;a'"
+								[attr.aria-pressed]="showPasswordRepeated"
+								(click)="showPasswordRepeated = !showPasswordRepeated">
+								<i [class]="showPasswordRepeated ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+							</button>
+						</p-inputicon>
 					</p-iconfield>
 					@if (
 						registerForm.get('passwordRepeated')?.invalid &&
-						registerForm.get('passwordRepeated')?.dirty &&
+						(registerForm.get('passwordRepeated')?.dirty || registerForm.get('passwordRepeated')?.touched) &&
 						registerForm.get('password')?.value === registerForm.get('passwordRepeated')?.value
 					) {
-						<span class="text-xs sm:text-sm text-red-600 dark:text-red-400">Necesitas poner la contraseña</span>
+						<span id="fantasy-register-passwordRepeated-error" class="text-xs sm:text-sm text-red-600 dark:text-red-400"
+							>Necesitas poner la contraseña</span
+						>
 					}
 					@if (
-						registerForm.get('passwordRepeated')?.invalid &&
-						registerForm.get('passwordRepeated')?.dirty &&
+						registerForm.hasError('passwordMismatch') &&
+						(registerForm.get('passwordRepeated')?.dirty || registerForm.get('passwordRepeated')?.touched) &&
 						registerForm.get('passwordRepeated')?.value != registerForm.get('password')?.value
 					) {
-						<span class="text-xs sm:text-sm text-red-600 dark:text-red-400">La contraseña debe ser igual a la anterior</span>
+						<span id="fantasy-register-passwordRepeated-error" class="text-xs sm:text-sm text-red-600 dark:text-red-400"
+							>La contraseña debe ser igual a la anterior</span
+						>
 					}
 				</div>
 			</form>
@@ -93,8 +125,7 @@
 					label="Registrarme"
 					[disabled]="registerForm.invalid"
 					class="registerFantasyButton text-white mt-6 w-full!"
-					(click)="register()"
-					onkeydown="register()" />
+					(click)="register()" />
 			</div>
 			<div class="text-center mt-6">
 				<p class="text-gray-600 dark:text-slate-300 text-sm">

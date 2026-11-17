@@ -2,7 +2,7 @@ import { DriverPoints } from './../../../../shared/models/driverPoints';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, Input } from '@angular/core';
 import { Driver } from '../../../../shared/models/driver';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { SpaceToUnderscorePipe } from '../../../../shared/pipes/spaceToUnderscore.pipe';
 import { ImageService } from '../../../../shared/services/image.service';
 import { UtilsService } from '../../../../shared/services/utils.service';
@@ -10,7 +10,7 @@ import { UtilsService } from '../../../../shared/services/utils.service';
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-driver-card',
-  imports: [CommonModule, SpaceToUnderscorePipe],
+  imports: [CommonModule, SpaceToUnderscorePipe, RouterModule],
   templateUrl: './driver-card.component.html',
   styleUrl: './driver-card.component.scss'
 })
