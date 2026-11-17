@@ -182,6 +182,19 @@ WHERE r.finished = 1 GROUP BY r.id, r.name HAVING COUNT(x.id) = 0;
 
 Compáralo con la copia de seguridad del paso 1. Si algo no cuadra, restablece las contraseñas afectadas.
 
+Pendientes de la auditoría global:
+
+- [ ] **Revoca el token de SonarQube** que estuvo en `FormulaBollo/sonar-project.properties`: ya no está en el
+      archivo, pero sigue en el historial de git (repositorio público). En SonarQube: Mi cuenta → Seguridad →
+      revocar el token. Para analizar: `export SONAR_TOKEN=...` y `npm run sonar` (el scanner lo lee solo).
+- [ ] **Elección de Fantasy apagada a propósito.** El frontend no la guarda (`electionEnabled = false` en
+      `fantasy-team.component.ts`), pero el backend conserva `POST /fantasy/saveFantasyElection` con su
+      validación de presupuesto y plazo de 12 h y sus pruebas: cualquier cuenta registrada puede llamarlo. Para
+      reactivarla basta cambiar ese indicador; si se decide abandonarla, se elimina el endpoint con sus pruebas.
+- [ ] **CI ejecuta las migraciones.** El job `migrations` aplica `V002` y su vuelta atrás sobre un MariaDB real
+      con datos de prueba (`FormulaBolloApp/db/migration/test/run_v002.sh`). No sustituye probarlas sobre una copia
+      de la base real antes de producción.
+
 ## 6. Vuelta atrás
 
 - Aplicación: vuelve al `.jar` y a la configuración anteriores.

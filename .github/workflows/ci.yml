@@ -24,6 +24,30 @@ jobs:
       # mvnw está en git sin permiso de ejecución: se lanza con sh.
       - run: sh ./mvnw -B test
 
+  # Las migraciones SQL no las ejecuta ningún test con H2 (colación, claves únicas y DELETE con JOIN
+  # se comportan distinto): aquí se aplican V002 y su vuelta atrás sobre un MariaDB real.
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:10.6
+        env:
+          MARIADB_ROOT_PASSWORD: ci-solo-pruebas
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq mariadb-client
+      - run: bash FormulaBolloApp/db/migration/test/run_v002.sh
+        env:
+          MARIADB_HOST: 127.0.0.1
+          MARIADB_PWD: ci-solo-pruebas
+
   frontend:
     runs-on: ubuntu-latest
     defaults:

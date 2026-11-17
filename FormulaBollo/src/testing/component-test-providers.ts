@@ -2,7 +2,6 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { JWT_OPTIONS, JwtHelperService } from '@auth0/angular-jwt';
 import { MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 import { DriverPoints } from '../shared/models/driverPoints';
@@ -21,8 +20,6 @@ export function provideComponentTesting() {
     provideHttpClientTesting(),
     provideRouter([]),
     MessageService,
-    { provide: JWT_OPTIONS, useValue: {} },
-    JwtHelperService,
     {
       provide: ActivatedRoute,
       useValue: {

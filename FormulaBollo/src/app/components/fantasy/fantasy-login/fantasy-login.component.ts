@@ -1,4 +1,5 @@
 import { Account } from './../../../../shared/models/account';
+import { passwordPolicyValidator } from '../../../../shared/validators/password.validators';
 import { Component, inject, signal, WritableSignal } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -34,7 +35,7 @@ export class FantasyLoginComponent {
 
   protected loginForm: FormGroup = new FormGroup({
     username: new FormControl('', Validators.required),
-    password: new FormControl('', Validators.required)
+    password: new FormControl('', [Validators.required, passwordPolicyValidator])
   });
 
   protected mailForm: FormGroup = new FormGroup({

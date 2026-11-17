@@ -70,7 +70,7 @@
 					</p-iconfield>
 					@if (registerForm.get('password')?.invalid && registerForm.get('password')?.dirty) {
 						<span id="fantasy-register-password-error" class="text-xs sm:text-sm text-red-600 dark:text-red-400"
-							>Introduce una contrase&#241;a de hasta 72 bytes UTF-8.</span
+							>{{ registerForm.get('password')?.hasError('passwordMin') ? 'La contraseña debe tener al menos 8 caracteres' : 'Introduce una contraseña de hasta 72 bytes UTF-8.' }}</span
 						>
 					}
 				</div>
