@@ -37,9 +37,9 @@
 				</h3>
 				@for (navigation of informationRouters(); track $index) {
 					@if (isFantasy()) {
-						<a (click)="scrollToTop()" class="my-1 hover:text-gray-200 focus-visible:outline-none">
+						<button type="button" (click)="scrollToTop()" class="my-1 text-left hover:text-gray-200 focus-visible:outline-2 focus-visible:outline-white">
 							{{ navigation.label }}
-						</a>
+						</button>
 					} @else {
 						<a [routerLink]="[navigation.routerLink]" (click)="scrollToTop()" class="my-1 hover:text-gray-200 focus-visible:outline-none">
 							{{ navigation.label }}

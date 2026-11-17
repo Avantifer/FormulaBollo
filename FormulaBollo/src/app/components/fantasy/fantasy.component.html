@@ -32,13 +32,9 @@
 		<h2 class="text-3xl font-bold text-center text-gray-900 dark:text-white mb-12">Comienza tu aventura Fantasy</h2>
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 			@for (adventure of adventureFantasy; track $index) {
-				<div
-					class="rounded-lg border border-2 border-gray-300 dark:border-gray-700 shadow-2xs hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
-					(click)="router.navigate([adventure.routerLink])"
-					role="button"
-					tabindex="0"
-					(keydown.enter)="router.navigate([adventure.routerLink])"
-					(keydown.space)="$event.preventDefault(); router.navigate([adventure.routerLink])">
+				<a
+					class="block focus-visible:outline-2 focus-visible:outline-blue-600 rounded-lg border border-2 border-gray-300 dark:border-gray-700 shadow-2xs hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
+					[routerLink]="adventure.routerLink">
 					<div class="flex flex-col space-y-1.5 p-6">
 						<div class="flex gap-3">
 							<i [class]="adventure.icon" class="text-blue-600" style="font-size: 1.75rem"></i>
@@ -54,7 +50,7 @@
 							<span>{{ adventure.fragment }}</span>
 						</div>
 					</div>
-				</div>
+				</a>
 			}
 		</div>
 	</div>
