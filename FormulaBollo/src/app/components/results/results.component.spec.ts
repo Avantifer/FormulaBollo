@@ -58,6 +58,35 @@ describe('ResultsComponent', () => {
 
   afterEach(() => fixture.destroy());
 
+  it('renders driver result cells under their matching column headers', () => {
+    fixture.detectChanges();
+    const table: HTMLTableElement = fixture.nativeElement.querySelector('p-table table');
+    const headers = Array.from(table.querySelectorAll('thead th'), header => header.textContent!.trim());
+    const cells = table.querySelectorAll('tbody tr:first-child td');
+
+    expect(headers).toEqual(['POS', 'Piloto', 'Equipo', 'Puntos', 'Vuelta Rápida', 'Pole']);
+    expect(cells[headers.indexOf('Piloto')].textContent).toContain(driver.name);
+    expect(cells[headers.indexOf('Equipo')].textContent).toContain(driver.team.name);
+  });
+
+  it('renders team and both driver result cells under their matching column headers', () => {
+    const secondDriver = { ...driver, id: 2, name: 'Segundo piloto' };
+    results.getAllResultsPerRaceTeams.and.returnValue(of([{
+      ...teamResult,
+      results: [result, { ...result, driver: secondDriver }]
+    }]));
+    (component as any).typeSelected = 'Equipos';
+    fixture.detectChanges();
+    const table: HTMLTableElement = fixture.nativeElement.querySelector('p-table table');
+    const headers = Array.from(table.querySelectorAll('thead th'), header => header.textContent!.trim());
+    const cells = table.querySelectorAll('tbody tr:first-child td');
+
+    expect(headers).toEqual(['POS', 'Equipo', 'Piloto 1', 'Piloto 2', 'Puntos', 'Vuelta Rápida', 'Pole']);
+    expect(cells[headers.indexOf('Equipo')].textContent).toContain(driver.team.name);
+    expect(cells[headers.indexOf('Piloto 1')].textContent).toContain(driver.name);
+    expect(cells[headers.indexOf('Piloto 2')].textContent).toContain(secondDriver.name);
+  });
+
   it('decodes the route race name, selects the season by number and loads its race id', () => {
     fixture.detectChanges();
     expect(component.selectSeasonComponent.seasonForm.get('season')!.value).toBe(season);
