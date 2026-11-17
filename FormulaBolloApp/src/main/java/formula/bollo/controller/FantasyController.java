@@ -9,12 +9,14 @@ import java.util.Optional;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import formula.bollo.entity.FantasyPointsDriver;
 import formula.bollo.entity.FantasyPointsTeam;
@@ -95,11 +97,12 @@ public class FantasyController {
         if (principal == null) {
             return new ResponseEntity<>("Solo puedes guardar tu propia elección", HttpStatusCode.valueOf(403));
         }
-        log.info("Guardo la eleccion del fantasy de " + principal.getName());
+        log.info("Guardo la eleccion del fantasy del usuario autenticado");
         return this.fantasyService.saveFantasyElection(fantasyElectionDTO, principal.getName());
     }
 
     @Operation(summary = "Get all driver's fantasy points", tags = Constants.TAG_FANTASY)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/allDriverPoints", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<FantasyPointsDriverDTO> getAllDriverPoints(@RequestParam Integer raceId) {
         log.info("Coger todos los puntos del fantasy de los pilotos de la carrera " + raceId);
@@ -108,6 +111,7 @@ public class FantasyController {
     }
 
     @Operation(summary = "Get all team's fantasy points", tags = Constants.TAG_FANTASY)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/allTeamPoints", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<FantasyPointsTeamDTO> getAllTeamPoints(@RequestParam Integer raceId) {
         log.info("Coger todos los puntos del fantasy de los equipos de la carrera " + raceId);
@@ -116,6 +120,7 @@ public class FantasyController {
     }
 
     @Operation(summary = "Get fantasy points of a driver", tags = Constants.TAG_FANTASY)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/driverPointsSpecificRace", produces = MediaType.APPLICATION_JSON_VALUE)
     public FantasyPointsDriverDTO getDriverPointsSpecificRace(@RequestParam Integer driverId,
             @RequestParam Integer raceId) {
@@ -128,6 +133,7 @@ public class FantasyController {
     }
 
     @Operation(summary = "Get fantasy points of a team", tags = Constants.TAG_FANTASY)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/teamsPointsSpecificRace", produces = MediaType.APPLICATION_JSON_VALUE)
     public FantasyPointsTeamDTO teamsPointsSpecificRace(@RequestParam Integer teamId, @RequestParam Integer raceId) {
         log.info("Coger los puntos del fantasy del equipo " + teamId + " y la carrera " + raceId);
@@ -139,6 +145,7 @@ public class FantasyController {
     }
 
     @Operation(summary = "Get all drivers' prices", tags = Constants.TAG_FANTASY)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/allDriverPrices", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<FantasyPriceDriverDTO> getAllDriverPrices(@RequestParam Integer raceId) {
         log.info("Coger todos los precios del fantasy de los pilotos de la carrera " + raceId);
@@ -146,6 +153,7 @@ public class FantasyController {
     }
 
     @Operation(summary = "Get teams' prices", tags = Constants.TAG_FANTASY)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/allTeamPrices", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<FantasyPriceTeamDTO> getAllTeamPrices(@RequestParam Integer raceId) {
         log.info("Coger todos los precios del fantasy de los equipos de la carrera " + raceId);
@@ -153,13 +161,19 @@ public class FantasyController {
     }
 
     @Operation(summary = "Get fantasy election", tags = Constants.TAG_FANTASY)
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Transactional(readOnly = true)
     @GetMapping(path = "/fantasyElection", produces = MediaType.APPLICATION_JSON_VALUE)
-    public FantasyElectionDTO getFantasyElection(@RequestParam int raceId, @RequestParam int userId) {
-        log.info("Coger la eleccion del fantasy del usuario  " + userId + " y de la carrera " + raceId);
-        return this.fantasyService.getFantasyElection(raceId, userId);
+    public FantasyElectionDTO getFantasyElection(@RequestParam int raceId, Principal principal) {
+        if (principal == null) {
+            throw new ResponseStatusException(HttpStatusCode.valueOf(403));
+        }
+        log.info("Coger la eleccion del fantasy del usuario autenticado y de la carrera " + raceId);
+        return this.fantasyService.getFantasyElection(raceId, principal.getName());
     }
 
     @Operation(summary = "Get all fantasy points of season")
+    @Transactional(readOnly = true)
     @GetMapping(path = "/getFantasyPointsSeason", produces = MediaType.APPLICATION_JSON_VALUE)
     @Cacheable(cacheNames = Constants.CACHE_STATS, key = "'fantasyPointsSeason:' + #numberSeason")
     public List<FantasyPointsAccountDTO> getFantasyPointsSeason(@RequestParam Integer numberSeason) {
@@ -168,13 +182,15 @@ public class FantasyController {
     }
 
     @Operation(summary = "Get all fantasy points of reace", tags = Constants.TAG_FANTASY)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/getFantasyPointsRace", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<FantasyPointsAccountDTO> getFantasyPointsRace(@RequestParam Integer raceId) {
         log.info("Coger los puntos del fantasy de la carrera " + raceId);
-        return this.fantasyService.getFantasyPoints(raceId);
+        return this.fantasyService.getFantasyPointsRace(raceId);
     }
 
     @Operation(summary = "Get driver's prices", tags = Constants.TAG_FANTASY)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/driverPrice", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<FantasyPriceDriverDTO> getDriverPrices(@RequestParam Integer driverId) {
         log.info("Coger los precios del fantasy del piloto" + driverId);
@@ -183,6 +199,7 @@ public class FantasyController {
     }
 
     @Operation(summary = "Get driver's points", tags = Constants.TAG_FANTASY)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/driverPoints", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<FantasyPointsDriverDTO> getDriverPoints(@RequestParam Integer driverId) {
         log.info("Coger los puntos del fantasy del piloto " + driverId);
@@ -191,6 +208,7 @@ public class FantasyController {
     }
 
     @Operation(summary = "Get team's prices", tags = Constants.TAG_FANTASY)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/teamPrice", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<FantasyPriceTeamDTO> getTeamPrice(@RequestParam Integer teamId) {
         log.info("Coger los precios del fantasy del equipo " + teamId);
@@ -199,6 +217,7 @@ public class FantasyController {
     }
 
     @Operation(summary = "Get team's points", tags = Constants.TAG_FANTASY)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/teamPoints", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<FantasyPointsTeamDTO> getTeamPoints(@RequestParam Integer teamId) {
         log.info("Coger los puntos del fantasy del equipo " + teamId);

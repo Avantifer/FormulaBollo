@@ -42,7 +42,7 @@ public class EmailService {
 
             emailSender.send(message);
         } catch (MessagingException | MailException e) {
-            log.error("Hubo un error al enviar el email", e);
+            log.error("Hubo un error al enviar el email ({})", e.getClass().getSimpleName());
         }
     }
 }

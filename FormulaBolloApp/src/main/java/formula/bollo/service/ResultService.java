@@ -15,10 +15,13 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import formula.bollo.entity.Result;
+import formula.bollo.entity.Race;
 import formula.bollo.entity.Sprint;
 import formula.bollo.enums.PositionChange;
 import formula.bollo.impl.DriverImpl;
@@ -31,6 +34,7 @@ import formula.bollo.model.TeamDTO;
 import formula.bollo.repository.ResultRepository;
 import formula.bollo.repository.SprintRepository;
 import formula.bollo.utils.Constants;
+import formula.bollo.utils.ResultBatchValidator;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -127,7 +131,10 @@ public class ResultService {
                 .sorted(Comparator.comparingInt(DriverPointsDTO::getTotalPoints).reversed())
                 .toList();
 
-        this.getOverallPositionChanges(driverPointsDTOs, results.getLast().getRace().getId().intValue());
+        results.stream().map(Result::getRace)
+                .max(Comparator.comparing(Race::getDateStart, Comparator.nullsFirst(Comparator.naturalOrder()))
+                        .thenComparing(Race::getId))
+                .ifPresent(race -> this.getOverallPositionChanges(driverPointsDTOs, race.getId().intValue()));
 
         return driverPointsDTOs;
     }
@@ -142,6 +149,9 @@ public class ResultService {
      */
     @Cacheable(cacheNames = Constants.CACHE_STATS, key = "#root.methodName + T(java.util.Arrays).toString(#root.args)")
     public List<DriverPointsDTO> getTotalResultsPerDriver(Integer seasonNumber, Integer numResults) {
+        if (numResults != null && numResults < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El numero de resultados no puede ser negativo");
+        }
         List<Result> results;
 
         if (seasonNumber == 0) {
@@ -180,6 +190,7 @@ public class ResultService {
      *         points for the season.
      */
     @Cacheable(cacheNames = Constants.CACHE_STATS, key = "#root.methodName + T(java.util.Arrays).toString(#root.args)")
+    @Transactional
     public List<DriverPointsDTO> getTotalResultsSpecificPerDriver(Integer seasonNumber, List<Long> ids) {
         List<Result> results;
         List<Sprint> sprints;
@@ -323,10 +334,19 @@ public class ResultService {
     @Transactional
     @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public ResponseEntity<String> saveResults(List<ResultDTO> resultDTOs) {
-        if (resultDTOs.isEmpty()) {
+        if (resultDTOs == null || resultDTOs.isEmpty()) {
             log.error("Hubo un error al guardar los resultados por estan vacios");
-            return new ResponseEntity<>("No hay resultados", Constants.HEADERS_TEXT_PLAIN, HttpStatusCode.valueOf(500));
+            return new ResponseEntity<>("No hay resultados", Constants.HEADERS_TEXT_PLAIN, HttpStatusCode.valueOf(400));
         }
+
+        if (!ResultBatchValidator.isValid(resultDTOs, ResultDTO::getRace, ResultDTO::getDriver)
+                || resultDTOs.stream().anyMatch(result -> result.getPosition() != null
+                        && result.getPosition().getId() == null)) {
+            return ResponseEntity.badRequest().body("El lote de resultados no es valido");
+        }
+
+        List<Result> resultsToSave = this.resultImpl.convertResultsDTOToResults(resultDTOs);
+        resultsToSave.forEach(result -> result.setId(null));
 
         List<Result> existingResults = this.resultRepository
                 .findByRaceId(resultDTOs.get(0).getRace().getId().intValue());
@@ -336,8 +356,6 @@ public class ResultService {
         }
 
         // Las filas anteriores ya se borraron: se reinsertan como nuevas (con id, Hibernate 7 falla al fusionar filas borradas).
-        List<Result> resultsToSave = this.resultImpl.convertResultsDTOToResults(resultDTOs);
-        resultsToSave.forEach(result -> result.setId(null));
         resultRepository.saveAll(resultsToSave);
 
         return new ResponseEntity<>("Resultados guardados correctamente", Constants.HEADERS_TEXT_PLAIN,

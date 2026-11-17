@@ -1,11 +1,8 @@
 package formula.bollo;
 
-import org.springframework.cache.annotation.EnableCaching;
-
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 
-@EnableCaching
 @SpringBootApplication
 public class FormulaBolloApplication {
 

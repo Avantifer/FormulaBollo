@@ -294,7 +294,7 @@ class ResultServiceTest {
         SeasonDTO seasonDTO = new SeasonDTO(2L, "Temporada 3", 2, "2025");
         TeamDTO team = new TeamDTO(1L, "Ferrari", "", "", seasonDTO);
         DriverDTO driver = new DriverDTO(1L, "Avantifer", 0, "", seasonDTO, team);
-        RaceDTO race = new RaceDTO(1L, "Francia", "", "", LocalDateTime.now(), null, 0);
+        RaceDTO race = new RaceDTO(1L, "Francia", "", "", LocalDateTime.now(), seasonDTO, 0);
         PositionDTO pos = new PositionDTO(1L, 1, 25);
 
         ResultDTO result = new ResultDTO(1L, race, driver, pos, 1, 1);
@@ -314,7 +314,7 @@ class ResultServiceTest {
         SeasonDTO seasonDTO = new SeasonDTO(2L, "Temporada 3", 2, "2025");
         TeamDTO team = new TeamDTO(1L, "Ferrari", "", "", seasonDTO);
         DriverDTO driver = new DriverDTO(1L, "Avantifer", 0, "", seasonDTO, team);
-        RaceDTO race = new RaceDTO(1L, "Francia", "", "", LocalDateTime.now(), null, 0);
+        RaceDTO race = new RaceDTO(1L, "Francia", "", "", LocalDateTime.now(), seasonDTO, 0);
         ResultDTO result = new ResultDTO(7L, race, driver, new PositionDTO(1L, 1, 25), 1, 1);
 
         Result converted = new Result();
@@ -396,5 +396,24 @@ class ResultServiceTest {
         resultService.getOverallPositionChanges(list, 1);
 
         assertEquals(PositionChange.SAME, dp.getPositionChange());
+    }
+
+    @Test
+    void latestRaceUsesDateThenIdWithUnorderedResults() {
+        Season season = new Season(1L, "Season", 1, 2026);
+        Driver driver = new Driver(1L, "Driver", 1, "", season, null);
+        LocalDateTime date = LocalDateTime.of(2026, 2, 1, 0, 0);
+        Race latest = new Race(3L, "Latest", "", "", date, season, 1);
+        Race tied = new Race(2L, "Tied", "", "", date, season, 1);
+        Race older = new Race(99L, "Older", "", "", date.minusDays(1), season, 1);
+        SeasonDTO dtoSeason = new SeasonDTO(1L, "Season", 1, "2026");
+        when(driverImpl.driverToDriverDTO(driver)).thenReturn(new DriverDTO(1L, "Driver", 1, "", dtoSeason, null));
+        List<Result> unordered = List.of(new Result(1L, latest, driver, null, 0, 0),
+                new Result(2L, tied, driver, null, 0, 0), new Result(3L, older, driver, null, 0, 0));
+
+        resultService.setTotalPointsByDriver(unordered, List.of(), new HashMap<>());
+
+        Mockito.verify(resultRepository).findByRaceId(3);
+        Mockito.verify(sprintRepository).findByRaceId(3);
     }
 }

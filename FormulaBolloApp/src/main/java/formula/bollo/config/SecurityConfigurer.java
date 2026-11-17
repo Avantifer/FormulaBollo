@@ -30,6 +30,7 @@ public class SecurityConfigurer {
      * - Requires the ADMIN role for PUT, DELETE, GET /account/** and the
      * fantasy points/prices and cache update endpoints.
      * - Requires authentication for any other POST.
+     * - Requires authentication to read the current user's fantasy election.
      * - Permits all other GET requests without authentication.
      * - Configures the application to use stateless sessions, meaning no session
      * will be created
@@ -57,6 +58,7 @@ public class SecurityConfigurer {
                         // Con sesión (o con el token del correo de recuperación); el controlador comprueba que sea el propio usuario.
                         .requestMatchers(HttpMethod.POST, "/account/changePassword", "/fantasy/saveFantasyElection")
                         .authenticated()
+                        .requestMatchers(HttpMethod.GET, "/fantasy/fantasyElection").authenticated()
                         // Solo administradores: puntos y precios de Fantasy, versión de la caché, y todo PUT/DELETE.
                         .requestMatchers(HttpMethod.POST, "/fantasy/saveDriverTeamPoints",
                                 "/fantasy/saveDriverTeamPrices", "/cache/update")

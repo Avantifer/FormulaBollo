@@ -2,7 +2,10 @@ package formula.bollo.service;
 
 import org.springframework.cache.annotation.CacheEvict;
 
+import java.time.Clock;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -15,6 +18,9 @@ import java.util.stream.Collectors;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import formula.bollo.entity.FantasyElection;
 import formula.bollo.entity.Account;
@@ -29,12 +35,14 @@ import formula.bollo.impl.FantasyElectionImpl;
 import formula.bollo.impl.FantasyPriceImpl;
 import formula.bollo.impl.RaceImpl;
 import formula.bollo.model.AccountDTO;
+import formula.bollo.model.DriverDTO;
 import formula.bollo.model.FantasyElectionDTO;
 import formula.bollo.model.FantasyInfoDTO;
 import formula.bollo.model.FantasyPointsAccountDTO;
 import formula.bollo.model.FantasyPriceDriverDTO;
 import formula.bollo.model.FantasyPriceTeamDTO;
 import formula.bollo.model.RaceDTO;
+import formula.bollo.model.TeamDTO;
 import formula.bollo.repository.FantasyElectionRepository;
 import formula.bollo.repository.AccountRepository;
 import formula.bollo.repository.FantasyPointsDriverRepository;
@@ -49,6 +57,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class FantasyService {
+    private static final int LOW_PRICE_DRIVER_LIMIT = 10_000_000;
+    private static final int MEDIUM_PRICE_DRIVER_LIMIT = 20_000_000;
+
+    private final Clock clock;
     private AccountRepository accountRepository;
     private RaceRepository raceRepository;
     private ResultRepository resultRepository;
@@ -75,7 +87,8 @@ public class FantasyService {
             FantasyElectionImpl fantasyElectionImpl,
             FantasyPriceImpl fantasyPriceImpl,
             AccountImpl accountImpl,
-            RaceImpl raceImpl) {
+            RaceImpl raceImpl,
+            Clock clock) {
         this.accountRepository = accountRepository;
         this.raceRepository = raceRepository;
         this.resultRepository = resultRepository;
@@ -88,6 +101,48 @@ public class FantasyService {
         this.fantasyPriceImpl = fantasyPriceImpl;
         this.accountImpl = accountImpl;
         this.raceImpl = raceImpl;
+        this.clock = clock;
+    }
+
+    private void validateResults(List<Result> results) {
+        for (Result result : results) {
+            if (result == null || result.getRace() == null || result.getRace().getId() == null
+                    || result.getDriver() == null || result.getDriver().getId() == null
+                    || result.getDriver().getTeam() == null || result.getDriver().getTeam().getId() == null
+                    || !Objects.equals(results.getFirst().getRace().getId(), result.getRace().getId())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Resultados incompletos para Fantasy");
+            }
+        }
+    }
+
+    private Map<Long, FantasyPriceDriver> pricesByDriver(Race race) {
+        Map<Long, FantasyPriceDriver> prices = new HashMap<>();
+        for (FantasyPriceDriver price : fantasyPriceDriverRepository.findByRaceId(race.getId().intValue())) {
+            if (price == null || price.getDriver() == null || price.getDriver().getId() == null
+                    || price.getRace() == null || price.getRace().getId() == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Precios incompletos para Fantasy");
+            }
+            prices.putIfAbsent(price.getDriver().getId(), price);
+        }
+        return prices;
+    }
+
+    private Map<Long, FantasyPointsDriver> pointsByDriver(Race race) {
+        Map<Long, FantasyPointsDriver> points = new HashMap<>();
+        for (FantasyPointsDriver point : fantasyPointsDriverRepository.findByRaceId(race.getId().intValue())) {
+            if (point == null || point.getDriver() == null || point.getDriver().getId() == null
+                    || point.getRace() == null || point.getRace().getId() == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Puntos incompletos para Fantasy");
+            }
+            points.putIfAbsent(point.getDriver().getId(), point);
+        }
+        return points;
+    }
+
+    private int finishedRaces(Integer raceId) {
+        return raceRepository.findById(raceId.longValue())
+                .map(race -> raceRepository.findAllFinished(race.getSeason().getNumber()).size())
+                .orElse(0);
     }
 
     /**
@@ -97,8 +152,10 @@ public class FantasyService {
      * @return a ResponseEntity containing a success message or error message.
      */
     @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
+    @Transactional
     public ResponseEntity<String> saveDriverTeamPoints(int raceId) {
         List<Result> results = this.resultRepository.findByRaceId(raceId);
+        validateResults(results);
         List<FantasyPointsDriver> fantasyDriversPrevious = this.fantasyPointsDriverRepository.findByRaceId(raceId);
 
         List<FantasyPointsDriver> fantasyPointsDriver = this.createDriversPoints(results);
@@ -109,12 +166,11 @@ public class FantasyService {
                     Constants.HEADERS_TEXT_PLAIN, HttpStatusCode.valueOf(500));
         }
 
-        fantasyPointsDriverRepository.deleteAll(fantasyDriversPrevious);
-        fantasyPointsDriverRepository.saveAll(fantasyPointsDriver);
-
         List<FantasyPointsTeam> fantasyPointsTeams = this.createTeamsPoints(fantasyPointsDriver);
         List<FantasyPointsTeam> fantasyTeamsPrevious = this.fantasyPointsTeamRepository.findByRaceId(raceId);
 
+        fantasyPointsDriverRepository.deleteAll(fantasyDriversPrevious);
+        fantasyPointsDriverRepository.saveAll(fantasyPointsDriver);
         fantasyPointsTeamRepository.deleteAll(fantasyTeamsPrevious);
         fantasyPointsTeamRepository.saveAll(fantasyPointsTeams);
 
@@ -130,8 +186,10 @@ public class FantasyService {
      * @return a ResponseEntity containing a success message or error message.
      */
     @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
+    @Transactional
     public ResponseEntity<String> saveDriverTeamPrices(int raceId) {
         List<Result> results = this.resultRepository.findByRaceId(raceId);
+        validateResults(results);
         Optional<Race> nextRace = this.raceRepository.findById((long) (raceId + 1));
 
         if (!nextRace.isPresent()) {
@@ -148,12 +206,11 @@ public class FantasyService {
                     Constants.HEADERS_TEXT_PLAIN, HttpStatusCode.valueOf(500));
         }
 
-        fantasyPriceDriverRepository.deleteAll(fantasyDriversPrevious);
-        fantasyPriceDriverRepository.saveAll(fantasyPricesDriver);
-
         List<FantasyPriceTeam> fantasyTeamPrevious = this.fantasyPriceTeamRepository.findByRaceId(raceId + 1);
         List<FantasyPriceTeam> fantasyPricesTeam = this.createTeamsPrices(fantasyPricesDriver, nextRace.get());
 
+        fantasyPriceDriverRepository.deleteAll(fantasyDriversPrevious);
+        fantasyPriceDriverRepository.saveAll(fantasyPricesDriver);
         fantasyPriceTeamRepository.deleteAll(fantasyTeamPrevious);
         fantasyPriceTeamRepository.saveAll(fantasyPricesTeam);
 
@@ -170,18 +227,34 @@ public class FantasyService {
      *         saved correctly
      */
     @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
+    @Transactional
     public ResponseEntity<String> saveFantasyElection(FantasyElectionDTO fantasyElectionDTO, String username) {
+        if (fantasyElectionDTO == null || fantasyElectionDTO.getRace() == null
+                || fantasyElectionDTO.getRace().getId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debes indicar la carrera de tu equipo");
+        }
         List<Account> accounts = this.accountRepository.findByUsername(username);
         if (accounts.isEmpty()) {
             return new ResponseEntity<>("No se ha podido encontrar el usuario", HttpStatusCode.valueOf(403));
         }
         Account account = accounts.get(0);
+        Race race = this.raceRepository.findById(fantasyElectionDTO.getRace().getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "No se ha encontrado la carrera"));
+        // El frontend envía UTC y dateStart se persiste como LocalDateTime sin zona.
+        if (race.getFinished() == 1 || !clock.instant().isBefore(
+                race.getDateStart().toInstant(ZoneOffset.UTC).minusSeconds(12 * 3600))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "El plazo para guardar tu equipo ha terminado");
+        }
+        validateElectionBudget(fantasyElectionDTO, race);
         // El propietario y el id de la elección se resuelven en el servidor.
         fantasyElectionDTO.setAccount(this.accountImpl.accountToAccountDTO(account));
         fantasyElectionDTO.setId(null);
         FantasyElection fantasyElection = this.fantasyElectionImpl
                 .fantasyElectionDTOToFantasyElection(fantasyElectionDTO);
         fantasyElection.setAccount(account);
+        fantasyElection.setRace(race);
         Optional<FantasyElection> fantasyElectionPrevious = this.fantasyElectionRepository.findByUserIdAndRaceId(
                 account.getId().intValue(),
                 fantasyElectionDTO.getRace().getId().intValue());
@@ -191,6 +264,36 @@ public class FantasyService {
 
         return new ResponseEntity<>("Tu equipo ha sido guardado correctamente", Constants.HEADERS_TEXT_PLAIN,
                 HttpStatusCode.valueOf(200));
+    }
+
+    private void validateElectionBudget(FantasyElectionDTO election, Race race) {
+        List<DriverDTO> drivers = Arrays.asList(election.getDriverOne(), election.getDriverTwo(), election.getDriverThree());
+        List<TeamDTO> teams = Arrays.asList(election.getTeamOne(), election.getTeamTwo());
+        if (drivers.stream().anyMatch(driver -> driver == null || driver.getId() == null)
+                || teams.stream().anyMatch(team -> team == null || team.getId() == null)
+                || drivers.stream().map(DriverDTO::getId).distinct().count() != 3
+                || teams.stream().map(TeamDTO::getId).distinct().count() != 2) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Debes elegir 3 pilotos y 2 escuderías distintos y completos");
+        }
+
+        List<FantasyPriceDriver> driverPrices = fantasyPriceDriverRepository.findByRaceId(race.getId().intValue());
+        List<FantasyPriceTeam> teamPrices = fantasyPriceTeamRepository.findByRaceId(race.getId().intValue());
+        String missingPrice = "Todos los pilotos y escuderías deben tener precio para esta carrera";
+        long total = 0;
+        for (DriverDTO driver : drivers) {
+            total += driverPrices.stream().filter(price -> Objects.equals(price.getDriver().getId(), driver.getId()))
+                    .mapToLong(FantasyPriceDriver::getPrice).findFirst()
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, missingPrice));
+        }
+        for (TeamDTO team : teams) {
+            total += teamPrices.stream().filter(price -> Objects.equals(price.getTeam().getId(), team.getId()))
+                    .mapToLong(FantasyPriceTeam::getPrice).findFirst()
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, missingPrice));
+        }
+        if (total > Constants.FANTASY_BUDGET) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Te pasas del presupuesto");
+        }
     }
 
     /**
@@ -204,6 +307,9 @@ public class FantasyService {
      */
     public List<FantasyPointsDriver> createDriversPoints(List<Result> results) {
         List<FantasyPointsDriver> fantasyPoints = new ArrayList<>();
+        if (results.isEmpty())
+            return fantasyPoints;
+        Map<Long, FantasyPriceDriver> prices = pricesByDriver(results.getFirst().getRace());
         int sizeResults = results.stream().filter(result -> result.getPosition() != null).toList().size();
         boolean pointsProblem = false;
 
@@ -211,7 +317,7 @@ public class FantasyService {
             FantasyPointsDriver fantasyPoint = new FantasyPointsDriver();
             fantasyPoint.setDriver(result.getDriver());
             fantasyPoint.setRace(result.getRace());
-            fantasyPoint.setPoints(this.calculatePoints(result, sizeResults));
+            fantasyPoint.setPoints(this.calculatePoints(result, sizeResults, prices));
             if (fantasyPoint.getPoints() == -1)
                 pointsProblem = true;
             fantasyPoints.add(fantasyPoint);
@@ -231,6 +337,10 @@ public class FantasyService {
      * @return The calculated points for the fantasy race.
      */
     public int calculatePoints(Result result, int resultsSize) {
+        return calculatePoints(result, resultsSize, pricesByDriver(result.getRace()));
+    }
+
+    private int calculatePoints(Result result, int resultsSize, Map<Long, FantasyPriceDriver> prices) {
         int points = 0;
 
         // Get the pole position gives 3 points
@@ -253,25 +363,18 @@ public class FantasyService {
             goodPosition = true;
         }
 
-        List<FantasyPriceDriver> fantasyPrices = this.fantasyPriceDriverRepository
-                .findByRaceId(result.getRace().getId().intValue());
-
-        FantasyPriceDriver fantasyPrice = fantasyPrices.stream()
-                .filter(fp -> fp.getDriver().getId().equals(result.getDriver().getId()))
-                .findFirst()
-                .orElse(null);
+        FantasyPriceDriver fantasyPrice = prices.get(result.getDriver().getId());
 
         if (fantasyPrice == null)
             return -1;
 
         int priceDriver = fantasyPrice.getPrice();
 
-        // Get the driver with the lowest price (< 10) gives 8 points
-        if (priceDriver < 10 && goodPosition)
+        // Los precios se guardan en unidades monetarias, no en millones.
+        if (priceDriver < LOW_PRICE_DRIVER_LIMIT && goodPosition)
             points += 8;
 
-        // Get the medium drivers (between 20 and 10) gives 3 points
-        if (priceDriver <= 20 && priceDriver >= 10 && goodPosition)
+        if (priceDriver <= MEDIUM_PRICE_DRIVER_LIMIT && priceDriver >= LOW_PRICE_DRIVER_LIMIT && goodPosition)
             points += 3;
 
         // Depends on the number of drivers finished the race gives points
@@ -336,13 +439,17 @@ public class FantasyService {
      */
     public List<FantasyPriceDriver> createDriversPrices(List<Result> results, Race nextRace) {
         List<FantasyPriceDriver> fantasydriverPrices = new ArrayList<>();
+        if (results.isEmpty())
+            return fantasydriverPrices;
+        Map<Long, FantasyPriceDriver> prices = pricesByDriver(results.getFirst().getRace());
+        Map<Long, FantasyPointsDriver> points = pointsByDriver(results.getFirst().getRace());
 
         boolean pricesProblem = false;
         for (Result result : results) {
             FantasyPriceDriver fantasyPriceDriver = new FantasyPriceDriver();
             fantasyPriceDriver.setDriver(result.getDriver());
             fantasyPriceDriver.setRace(nextRace);
-            fantasyPriceDriver.setPrice(this.calculateDriverPrice(result));
+            fantasyPriceDriver.setPrice(this.calculateDriverPrice(result, prices, points));
 
             if (fantasyPriceDriver.getPrice() == -1)
                 pricesProblem = true;
@@ -366,24 +473,19 @@ public class FantasyService {
      *         calculation, returns BigDecimal.ZERO.
      */
     public int calculateDriverPrice(Result result) {
-        List<FantasyPriceDriver> fantasyPrices = this.fantasyPriceDriverRepository
-                .findByRaceId(result.getRace().getId().intValue());
-        FantasyPriceDriver fantasyPrice = fantasyPrices.stream()
-                .filter(fp -> Objects.equals(fp.getDriver().getId(), result.getDriver().getId()))
-                .findFirst()
-                .orElse(null);
+        return calculateDriverPrice(result, pricesByDriver(result.getRace()), pointsByDriver(result.getRace()));
+    }
+
+    private int calculateDriverPrice(Result result, Map<Long, FantasyPriceDriver> prices,
+            Map<Long, FantasyPointsDriver> pointsByDriver) {
+        FantasyPriceDriver fantasyPrice = prices.get(result.getDriver().getId());
 
         if (fantasyPrice == null)
             return -1;
 
         int price = fantasyPrice.getPrice();
 
-        List<FantasyPointsDriver> fantasyPoints = this.fantasyPointsDriverRepository
-                .findByRaceId(result.getRace().getId().intValue());
-        FantasyPointsDriver fantasyPoint = fantasyPoints.stream()
-                .filter(fp -> Objects.equals(fp.getDriver().getId(), result.getDriver().getId()))
-                .findFirst()
-                .orElse(null);
+        FantasyPointsDriver fantasyPoint = pointsByDriver.get(result.getDriver().getId());
 
         int maxPrice = 30000000;
         int minPrice = 1000000;
@@ -510,7 +612,7 @@ public class FantasyService {
         List<FantasyPriceDriverDTO> fantasyPriceDriverDTOs = this.fantasyPriceImpl
                 .convertFantasyPriceDriverToFantasyPriceDriverDTO(
                         this.fantasyPriceDriverRepository.findByRaceId(raceId));
-        int totalRacesFinished = this.raceRepository.findAllFinished(Constants.ACTUAL_SEASON).size();
+        int totalRacesFinished = finishedRaces(raceId);
         List<Long> driverIds = fantasyPriceDriverDTOs.stream().map(dto -> dto.getDriver().getId())
                 .toList();
 
@@ -534,7 +636,7 @@ public class FantasyService {
                     .stream().mapToInt(FantasyPointsDriver::getPoints).sum();
 
             fantasyPriceDriverDTO.getFantasyInfo()
-                    .setAveragePoints(totalPoints != 0 ? totalPoints / totalRacesFinished : 0);
+                    .setAveragePoints(totalRacesFinished != 0 ? totalPoints / totalRacesFinished : 0);
             fantasyPriceDriverDTO.getFantasyInfo().setTotalPoints(totalPoints);
 
             // Setting differencePrice
@@ -567,7 +669,7 @@ public class FantasyService {
     public List<FantasyPriceTeamDTO> getAllTeamPrices(Integer raceId) {
         List<FantasyPriceTeamDTO> fantasyPriceTeamDTOs = this.fantasyPriceImpl
                 .convertFantasyPriceTeamToFantasyPriceTeamDTO(this.fantasyPriceTeamRepository.findByRaceId(raceId));
-        int totalRacesFinished = this.raceRepository.findAllFinished(Constants.ACTUAL_SEASON).size();
+        int totalRacesFinished = finishedRaces(raceId);
         List<Long> teamIds = fantasyPriceTeamDTOs.stream().map(dto -> dto.getTeam().getId())
                 .toList();
 
@@ -588,7 +690,7 @@ public class FantasyService {
                     .stream().mapToInt(FantasyPointsTeam::getPoints).sum();
 
             fantasyPriceTeamDTO.getFantasyInfo()
-                    .setAveragePoints(totalPoints != 0 ? totalPoints / totalRacesFinished : 0);
+                    .setAveragePoints(totalRacesFinished != 0 ? totalPoints / totalRacesFinished : 0);
             fantasyPriceTeamDTO.getFantasyInfo().setTotalPoints(totalPoints);
 
             // Setting differencePrice
@@ -606,6 +708,17 @@ public class FantasyService {
                 .comparingInt((FantasyPriceTeamDTO dto) -> dto.getFantasyInfo().getTotalPoints()).reversed());
 
         return fantasyPriceTeamDTOs;
+    }
+
+    /**
+     * Exposes race rankings and elections only after the race has finished.
+     */
+    public List<FantasyPointsAccountDTO> getFantasyPointsRace(int raceId) {
+        Optional<Race> race = this.raceRepository.findById((long) raceId);
+        if (race.isEmpty() || race.get().getFinished() != 1) {
+            return Collections.emptyList();
+        }
+        return this.getFantasyPoints(raceId);
     }
 
     /**
@@ -707,12 +820,17 @@ public class FantasyService {
      * Get the Fantasy Election of a user and race.
      * 
      * @param raceId Race id.
-     * @param userId User ID.
+     * @param username Authenticated username.
      * @return Fantasy Election.
      */
-    public FantasyElectionDTO getFantasyElection(int raceId, int userId) {
-        Optional<FantasyElection> fantasyElection = this.fantasyElectionRepository.findByUserIdAndRaceId(userId,
-                raceId);
+    public FantasyElectionDTO getFantasyElection(int raceId, String username) {
+        List<Account> accounts = this.accountRepository.findByUsername(username);
+        if (accounts.isEmpty()) {
+            throw new ResponseStatusException(HttpStatusCode.valueOf(403));
+        }
+        Account account = accounts.getFirst();
+        Optional<FantasyElection> fantasyElection = this.fantasyElectionRepository.findByUserIdAndRaceId(
+                account.getId().intValue(), raceId);
         return fantasyElection.isPresent()
                 ? this.fantasyElectionImpl.fantasyElectionToFantasyElectionDTO(fantasyElection.get())
                 : null;

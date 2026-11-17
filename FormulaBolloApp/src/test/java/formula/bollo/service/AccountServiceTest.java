@@ -2,6 +2,7 @@ package formula.bollo.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
@@ -16,10 +17,16 @@ import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -64,7 +71,7 @@ class AccountServiceTest {
 
         when(accountRepository.findByUsername(anyString())).thenReturn(Arrays.asList(account));
 
-        ResponseEntity<String> response = accountService.login(accountDTO);
+        ResponseEntity<String> response = accountService.login(accountDTO, "192.0.2.1");
 
         assertEquals("Las credenciales no son válidas", response.getBody());
         assertEquals(401, response.getStatusCode().value());
@@ -76,7 +83,7 @@ class AccountServiceTest {
 
         when(accountRepository.findByUsername(anyString())).thenReturn(Collections.emptyList());
 
-        ResponseEntity<String> response = accountService.login(accountDTO);
+        ResponseEntity<String> response = accountService.login(accountDTO, "192.0.2.1");
 
         assertEquals(401, response.getStatusCode().value());
     }
@@ -88,7 +95,7 @@ class AccountServiceTest {
 
         when(accountRepository.findByUsername(anyString())).thenReturn(Arrays.asList(account));
 
-        ResponseEntity<String> response = accountService.login(accountDTO);
+        ResponseEntity<String> response = accountService.login(accountDTO, "192.0.2.1");
 
         assertEquals(200, response.getStatusCode().value());
     }
@@ -98,6 +105,7 @@ class AccountServiceTest {
         ResponseEntity<String> response = accountService.register(accountDTO);
 
         assertEquals("Tienes que poner contraseña", response.getBody());
+        assertEquals(400, response.getStatusCode().value());
     }
 
     @Test
@@ -110,6 +118,7 @@ class AccountServiceTest {
         ResponseEntity<String> response = accountService.register(accountDTO);
 
         assertEquals("El nombre de usuario ya ha sido utilizado", response.getBody());
+        assertEquals(409, response.getStatusCode().value());
     }
 
     @Test
@@ -123,6 +132,7 @@ class AccountServiceTest {
         ResponseEntity<String> response = accountService.register(accountDTO);
 
         assertEquals("El correo ya ha sido utilizado", response.getBody());
+        assertEquals(409, response.getStatusCode().value());
     }
 
     @Test
@@ -201,7 +211,7 @@ class AccountServiceTest {
     void recoverPasswordUserNotFound() {
         when(accountRepository.findByEmail(anyString())).thenReturn(Arrays.asList());
 
-        ResponseEntity<String> response = accountService.recoverPassword("email@mail");
+        ResponseEntity<String> response = accountService.recoverPassword("email@mail", "192.0.2.1");
 
         // No revela si el correo existe: misma respuesta, pero sin enviar nada.
         assertEquals(200, response.getStatusCode().value());
@@ -216,7 +226,7 @@ class AccountServiceTest {
         when(accountRepository.findByEmail(anyString())).thenReturn(Arrays.asList(account));
         when(accountImpl.accountToAccountDTO(any())).thenReturn(accountDTO);
 
-        ResponseEntity<String> response = accountService.recoverPassword("email@mail");
+        ResponseEntity<String> response = accountService.recoverPassword("email@mail", "192.0.2.1");
 
         assertEquals(200, response.getStatusCode().value());
         // El enlace del correo caduca a los 30 minutos (no a los 30 días de una sesión).
@@ -233,9 +243,95 @@ class AccountServiceTest {
         when(accountImpl.accountToAccountDTO(any())).thenReturn(accountDTO);
         when(jwtConfig.generateRecoveryToken(any())).thenReturn("tok");
 
-        accountService.recoverPassword("email@mail");
+        accountService.recoverPassword("email@mail", "192.0.2.1");
 
         verify(emailService).sendSimpleMessage(eq("email@mail.com"), anyString(),
                 contains("http://localhost:4200/fantasy/recoverPassword/tok"));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "\t", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "ééééééééééééééééééééééééééééééééééééé"})
+    void invalidPasswordIsRejectedByRegistrationAndChange(String password) {
+        AccountDTO input = new AccountDTO(null, "ana", password, 0, "ana@example.com");
+        assertEquals(400, accountService.register(input).getStatusCode().value());
+        assertEquals(400, accountService.changePassword(() -> "ana", password).getStatusCode().value());
+        verifyNoInteractions(accountRepository, accountImpl, jwtConfig);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "abcdefghijklmnopqrstuvwxyz"})
+    void invalidUsernameIsRejectedBeforePersistence(String username) {
+        assertEquals(400, accountService.register(new AccountDTO(null, username, "x", 0, "ana@example.com")).getStatusCode().value());
+        verifyNoInteractions(accountRepository, accountImpl, jwtConfig);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "invalid", "ana@", "@example.com", "ana a@example.com", "ana..a@example.com", ".ana@example.com", "ana@-example.com"})
+    void invalidEmailIsRejectedBeforePersistence(String email) {
+        assertEquals(400, accountService.register(new AccountDTO(null, "ana", "x", 0, email)).getStatusCode().value());
+        verifyNoInteractions(accountRepository, accountImpl, jwtConfig);
+    }
+
+    @Test
+    void emailLongerThanEntityColumnIsRejected() {
+        String email = "a".repeat(90) + "@example.com";
+        assertEquals(400, accountService.register(new AccountDTO(null, "ana", "x", 0, email)).getStatusCode().value());
+        verifyNoInteractions(accountRepository, accountImpl, jwtConfig);
+    }
+
+    @Test
+    void entityLengthBoundariesAndSeventyTwoUtf8BytesAreAccepted() {
+        String email = "a".repeat(64) + "@" + "b".repeat(31) + ".com";
+        assertEquals(100, email.length());
+        AccountDTO input = new AccountDTO(null, "a".repeat(25), "é".repeat(36), 0, email);
+        assertEquals(200, accountService.register(input).getStatusCode().value());
+        verify(accountRepository).save(any());
+    }
+
+    @Test
+    void oneCharacterPasswordRemainsCompatibleWithTheFrontend() {
+        assertEquals(200, accountService.register(new AccountDTO(null, "ana", "x", 0, "ana@example.com")).getStatusCode().value());
+    }
+
+    @Test
+    void concurrentUniqueConstraintViolationReturnsConflict() {
+        Account pending = new Account();
+        when(accountImpl.accountDTOToAccount(any())).thenReturn(pending);
+        when(accountRepository.save(pending)).thenThrow(new DataIntegrityViolationException("duplicate"));
+        assertEquals(409, accountService.register(new AccountDTO(null, "ana", "x", 0, "ana@example.com")).getStatusCode().value());
+        verifyNoInteractions(jwtConfig);
+    }
+
+    @Test
+    void recoveryNormalizesTheEmailBeforeLookingItUp() {
+        assertEquals(200, accountService.recoverPassword(" ANA@EXAMPLE.COM ", "ip").getStatusCode().value());
+        verify(accountRepository).findByEmail("ana@example.com");
+    }
+
+    @Test
+    @ExtendWith(OutputCaptureExtension.class)
+    void recoveryResponseAndLimitsAreUniformAndEmailIsNotLogged(CapturedOutput output) {
+        AccountDTO found = new AccountDTO(1L, "private@example.com", "hash", 0, "private@example.com");
+        Account entity = new Account(1L, "private@example.com", "hash", 0, "private@example.com");
+        when(accountRepository.findByEmail("private@example.com")).thenReturn(Arrays.asList(entity));
+        when(accountImpl.accountToAccountDTO(entity)).thenReturn(found);
+        ResponseEntity<String> known = null;
+        ResponseEntity<String> unknown = null;
+        for (int i = 0; i < 3; i++) {
+            known = accountService.recoverPassword("private@example.com", "ip");
+            unknown = accountService.recoverPassword("missing@example.com", "ip");
+            assertEquals(known.getStatusCode(), unknown.getStatusCode());
+            assertEquals(known.getBody(), unknown.getBody());
+        }
+        known = accountService.recoverPassword("private@example.com", "ip");
+        unknown = accountService.recoverPassword("missing@example.com", "ip");
+        assertEquals(429, known.getStatusCode().value());
+        assertEquals(known.getStatusCode(), unknown.getStatusCode());
+        assertEquals(known.getBody(), unknown.getBody());
+        assertFalse(output.getAll().contains("private@example.com"));
+        assertFalse(output.getAll().contains("missing@example.com"));
     }
 }

@@ -232,4 +232,34 @@ class DriverServiceTest {
 
         assertNotNull(driverPointsEvolutionDTOs);
     }
+
+    @Test
+    void evolutionIncludesSprintInRacePointBeforeAccumulatingNextRace() {
+        Season season = new Season(1L, "Season", 1, 2026);
+        Driver driver = new Driver(1L, "Driver", 1, "", season, null);
+        Race first = new Race(1L, "First", "", "", LocalDateTime.of(2026, 1, 1, 0, 0), season, 1);
+        Race second = new Race(2L, "Second", "", "", first.getDateStart().plusDays(7), season, 1);
+        // The sprint can contain a different entity instance for the same persisted race.
+        Race sprintRace = new Race(1L, "First sprint", "", "", first.getDateStart(), season, 1);
+        when(resultRepository.findByDriverIds(List.of(1L))).thenReturn(List.of(
+                new Result(2L, second, driver, new Position(2L, 2, 18), 0, 0),
+                new Result(1L, first, driver, new Position(1L, 1, 25), 0, 0)));
+        when(sprintRepository.findByDriverIds(List.of(1L))).thenReturn(List.of(
+                new Sprint(1L, sprintRace, new Driver(1L, "Driver", 1, "other instance", season, null),
+                        new SprintPosition(1L, 1, 8))));
+
+        DriverPointsEvolutionDTO evolution = driverService.getAllPointsEvolutionDriver(Set.of(1)).getFirst();
+
+        assertEquals(List.of(33, 51), evolution.getAccumulatedPoints());
+        assertEquals(2, evolution.getRaces().size());
+    }
+
+    @Test
+    void recordsOmitEmptyCategoriesAndReturnEmptyForEmptyDatabase() {
+        // Empty categories are omitted, so an empty database returns an empty list.
+        assertEquals(List.of(), driverService.getAllRecords());
+        RecordDTO pole = new RecordDTO("Poles", 1, null, null, null);
+        when(resultRepository.recordPoleDriver()).thenReturn(List.of(pole));
+        assertEquals(List.of(pole), driverService.getAllRecords());
+    }
 }

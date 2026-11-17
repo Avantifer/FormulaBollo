@@ -11,7 +11,7 @@ import formula.bollo.service.CacheService;
 import formula.bollo.utils.Constants;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @RestController
@@ -27,6 +27,7 @@ public class CacheController {
     }
 
     @Operation(summary = "Get current cache version", tags = Constants.TAG_CACHE)
+    @Transactional(readOnly = true)
     @GetMapping("/current")
     public Integer getCurrentVersion() {
         return cacheService.getCurrentVersion();

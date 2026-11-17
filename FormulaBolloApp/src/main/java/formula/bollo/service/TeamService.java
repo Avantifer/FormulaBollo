@@ -39,6 +39,7 @@ import formula.bollo.repository.ConstructorRepository;
 import formula.bollo.repository.DriverRepository;
 import formula.bollo.repository.ResultRepository;
 import formula.bollo.repository.SprintRepository;
+import formula.bollo.repository.TeamRepository;
 
 @Service
 public class TeamService {
@@ -46,6 +47,7 @@ public class TeamService {
     private SprintRepository sprintRepository;
     private DriverRepository driverRepository;
     private ConstructorRepository constructorRepository;
+    private TeamRepository teamRepository;
 
     private TeamImpl teamImpl;
     private DriverImpl driverImpl;
@@ -59,6 +61,7 @@ public class TeamService {
             SprintRepository sprintRepository,
             DriverRepository driverRepository,
             ConstructorRepository constructorRepository,
+            TeamRepository teamRepository,
             TeamImpl teamImpl,
             DriverImpl driverImpl,
             ResultImpl resultImpl,
@@ -68,6 +71,7 @@ public class TeamService {
         this.sprintRepository = sprintRepository;
         this.driverRepository = driverRepository;
         this.constructorRepository = constructorRepository;
+        this.teamRepository = teamRepository;
         this.teamImpl = teamImpl;
         this.driverImpl = driverImpl;
         this.resultImpl = resultImpl;
@@ -108,8 +112,10 @@ public class TeamService {
                 .toList();
 
         if (!allResults.isEmpty()) {
-            this.getOverallTeamPositionChanges(teamWithDriversDTOs,
-                    allResults.get(allResults.size() - 1).getRace().getId().intValue());
+            Race latest = allResults.stream().map(Result::getRace)
+                    .max(Comparator.comparing(Race::getDateStart, Comparator.nullsFirst(Comparator.naturalOrder()))
+                            .thenComparing(Race::getId)).orElseThrow();
+            this.getOverallTeamPositionChanges(teamWithDriversDTOs, latest.getId().intValue());
         }
 
         return teamWithDriversDTOs;
@@ -233,6 +239,47 @@ public class TeamService {
 
             return new TeamInfoDTO(teamDTO, constructors, driverInfo, resultsGrouped);
         }
+    }
+
+    /** One DTO per team, in input order, with all database reads performed in bulk. */
+    public List<TeamInfoDTO> getAllInfoTeams(List<Team> teams) {
+        if (teams.isEmpty())
+            return List.of();
+
+        List<Long> teamIds = teams.stream().map(Team::getId).toList();
+        // Fetch seasons separately so joins cannot change the original team ordering.
+        Map<Long, Team> loadedTeams = this.teamRepository.findWithSeasonByIdIn(teamIds).stream()
+                .collect(Collectors.toMap(Team::getId, team -> team));
+        Map<Long, Integer> constructors = new HashMap<>();
+        this.constructorRepository.countByTeam(teamIds).forEach(row ->
+                constructors.put(((Number) row[0]).longValue(), ((Number) row[1]).intValue()));
+        List<Driver> drivers = this.driverRepository.findByTeamIdIn(teamIds);
+        List<Result> results = drivers.isEmpty() ? List.of() : this.resultRepository.findForTeamInfoByDriverIds(
+                drivers.stream().map(Driver::getId).toList());
+        Map<Long, DriverInfoDTO> driverInfoByTeam = this.driverService.getAllInfoDriversByTeam(drivers, results);
+        Map<Long, List<Result>> resultsByTeam = results.stream()
+                .collect(Collectors.groupingBy(result -> result.getDriver().getTeam().getId()));
+
+        return teams.stream().map(team -> {
+            TeamDTO teamDTO = this.teamImpl.teamToTeamDTO(loadedTeams.get(team.getId()));
+            int titles = constructors.getOrDefault(team.getId(), 0);
+            DriverInfoDTO driverInfo = driverInfoByTeam.get(team.getId());
+            if (driverInfo == null)
+                return new TeamInfoDTO(teamDTO, titles);
+
+            List<Result> teamResults = resultsByTeam.getOrDefault(team.getId(), List.of());
+            Set<Long> finishedRaceIds = teamResults.stream().filter(result -> result.getPosition() != null)
+                    .map(result -> result.getRace().getId()).collect(Collectors.toSet());
+            // Match last5ResultsByTeamIds for a singleton team: include retirements only
+            // in races with a finisher, then apply the 15-row limit BEFORE grouping.
+            List<Result> lastResults = teamResults.stream()
+                    .filter(result -> finishedRaceIds.contains(result.getRace().getId()))
+                    .sorted(Comparator.comparing((Result result) -> result.getRace().getDateStart())
+                            .thenComparing(Result::getId).reversed())
+                    .limit(15).toList();
+            List<ResultTeamDTO> grouped = this.groupResultsByRace(this.resultImpl.convertResultsToResultsDTO(lastResults));
+            return new TeamInfoDTO(teamDTO, titles, driverInfo, grouped.subList(0, Math.min(5, grouped.size())));
+        }).toList();
     }
 
     /**

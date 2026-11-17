@@ -113,6 +113,31 @@ class JwtHttpSecurityTest {
     }
 
     @Test
+    void fantasyElectionRequiresAuthentication() throws Exception {
+        mvc.perform(route("GET", "/fantasy/fantasyElection").param("userId", "999"))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(fantasy);
+    }
+
+    @Test
+    void fantasyElectionAcceptsSessionWithoutClientUserId() throws Exception {
+        mvc.perform(route("GET", "/fantasy/fantasyElection")
+                .header("Authorization", "Bearer " + session(user)))
+                .andExpect(status().isOk());
+        verify(fantasy).getFantasyElection(1, "ana");
+        verifyNoMoreInteractions(fantasy);
+    }
+
+    @Test
+    void fantasyElectionIgnoresClientUserId() throws Exception {
+        mvc.perform(route("GET", "/fantasy/fantasyElection").param("userId", "999")
+                .header("Authorization", "Bearer " + session(user)))
+                .andExpect(status().isOk());
+        verify(fantasy).getFantasyElection(1, "ana");
+        verifyNoMoreInteractions(fantasy);
+    }
+
+    @Test
     void passwordRequiresAuthenticationAndJson() throws Exception {
         mvc.perform(route("POST", "/account/changePassword").content("{\"password\":\"new\"}"))
                 .andExpect(status().isForbidden());

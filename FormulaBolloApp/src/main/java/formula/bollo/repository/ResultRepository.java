@@ -39,6 +39,12 @@ public interface ResultRepository extends JpaRepository<Result, Long> {
     List<Result> findWithRaceAndPositionByDriverIds(List<Long> driverIds);
 
     @Query("""
+            SELECT r FROM Result r JOIN FETCH r.race race LEFT JOIN FETCH race.season
+            LEFT JOIN FETCH r.position WHERE r.driver.id IN :driverIds
+            """)
+    List<Result> findForTeamInfoByDriverIds(List<Long> driverIds);
+
+    @Query("""
             SELECT r
             FROM Result r
             WHERE r.driver.team.id IN :teamIds

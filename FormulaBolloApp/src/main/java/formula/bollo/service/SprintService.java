@@ -17,6 +17,7 @@ import formula.bollo.impl.SprintImpl;
 import formula.bollo.model.SprintDTO;
 import formula.bollo.repository.SprintRepository;
 import formula.bollo.utils.Constants;
+import formula.bollo.utils.ResultBatchValidator;
 
 @Service
 public class SprintService {
@@ -50,6 +51,13 @@ public class SprintService {
     @Transactional
     @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public ResponseEntity<String> saveSprints(List<SprintDTO> sprintDTOs) {
+        if (!ResultBatchValidator.isValid(sprintDTOs, SprintDTO::getRace, SprintDTO::getDriver)
+                || sprintDTOs.stream().anyMatch(sprint -> sprint.getPosition() != null
+                        && sprint.getPosition().getId() == null)) {
+            return ResponseEntity.badRequest().body("El lote de sprints no es valido");
+        }
+        List<Sprint> sprintsToSave = this.sprintImpl.convertSprintsDTOToSprints(sprintDTOs);
+        sprintsToSave.forEach(sprint -> sprint.setId(null));
         List<Sprint> existingSprints = this.sprintRepository
                 .findByRaceId(sprintDTOs.get(0).getRace().getId().intValue());
 
@@ -58,8 +66,6 @@ public class SprintService {
         }
 
         // Las filas anteriores ya se borraron: se reinsertan como nuevas.
-        List<Sprint> sprintsToSave = this.sprintImpl.convertSprintsDTOToSprints(sprintDTOs);
-        sprintsToSave.forEach(sprint -> sprint.setId(null));
         sprintRepository.saveAll(sprintsToSave);
 
         return new ResponseEntity<>("Resultados de la sprint guardados correctamente", Constants.HEADERS_TEXT_PLAIN,

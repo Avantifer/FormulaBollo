@@ -1,9 +1,11 @@
 package formula.bollo.controller;
 
 import java.security.Principal;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -42,15 +44,15 @@ public class AccountController {
 
     @Operation(summary = "Login account", tags = Constants.TAG_ACCOUNT)
     @PostMapping(path = "/login", produces = MediaType.TEXT_PLAIN_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> login(@RequestBody AccountDTO accountDTO) {
-        log.info("Va a hacer login de " + accountDTO.getUsername());
-        return this.accountService.login(accountDTO);
+    public ResponseEntity<String> login(@RequestBody AccountDTO accountDTO, HttpServletRequest request) {
+        log.info("Solicitud de login");
+        return this.accountService.login(accountDTO, request.getRemoteAddr());
     }
 
     @Operation(summary = "Register account", tags = Constants.TAG_ACCOUNT)
     @PostMapping(path = "/register", produces = MediaType.TEXT_PLAIN_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> register(@RequestBody AccountDTO accountDTO) {
-        log.info("Va a hacer el registro de " + accountDTO.getUsername());
+        log.info("Solicitud de registro");
         return this.accountService.register(accountDTO);
     }
 
@@ -61,7 +63,7 @@ public class AccountController {
         if (request.password() == null || request.password().isBlank()) {
             return ResponseEntity.badRequest().body("Tienes que poner contraseña");
         }
-        log.info("Se va a cambiar la contraseña de " + principal.getName());
+        log.info("Solicitud de cambio de contraseña");
         return this.accountService.changePassword(principal, request.password());
     }
 
@@ -69,12 +71,13 @@ public class AccountController {
 
     @Operation(summary = "Recover Password", tags = Constants.TAG_ACCOUNT)
     @PostMapping(path = "/recoverPassword", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> recoverPassword(@RequestParam String email) {
-        log.info("se va a recuperar la contraseña de " + email);
-        return this.accountService.recoverPassword(email);
+    public ResponseEntity<String> recoverPassword(@RequestParam String email, HttpServletRequest request) {
+        log.info("Solicitud de recuperacion de contraseña");
+        return this.accountService.recoverPassword(email, request.getRemoteAddr());
     }
 
     @Operation(summary = "Get account by id", tags = Constants.TAG_ACCOUNT)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/id", produces = MediaType.APPLICATION_JSON_VALUE)
     public AccountDTO getUserById(@RequestParam Integer id) {
         log.info("Se va a coge el usuario del id " + id);

@@ -3,6 +3,7 @@ package formula.bollo.controller;
 import java.util.List;
 
 import org.springframework.http.MediaType;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,6 +33,7 @@ public class PenaltySeverityController {
     }
 
     @Operation(summary = "Get all penalties severities", tags = Constants.TAG_PENALTY_SEVERITY)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<PenaltySeverityDTO> getAllPenaltiesSeverity() {
         log.info("Coger todas las severidades de las penalizaciones");

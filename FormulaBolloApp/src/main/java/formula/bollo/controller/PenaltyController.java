@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import formula.bollo.entity.Penalty;
 import formula.bollo.impl.PenaltyImpl;
 import formula.bollo.model.PenaltyDTO;
 import formula.bollo.repository.PenaltyRepository;
@@ -47,37 +47,19 @@ public class PenaltyController {
     @PutMapping(path = "/save", produces = MediaType.TEXT_PLAIN_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> savePenalty(@RequestBody List<PenaltyDTO> penaltyDTOs, @RequestParam int driverId,
             @RequestParam int raceId) {
-        if (penaltyDTOs == null || penaltyDTOs.isEmpty()) {
-            log.info("Se va a borrar todas las penalizaciones del piloto " + driverId + " en la carrera " + raceId);
-            List<Penalty> existingPenalties = penaltyRepository.findByDriverAndRace(driverId, raceId);
+        penaltyService.savePenalties(penaltyDTOs, driverId, raceId);
 
-            if (!existingPenalties.isEmpty()) {
-                penaltyRepository.deleteAll(existingPenalties);
-            }
+        if (penaltyDTOs.isEmpty()) {
             return new ResponseEntity<>("Penalizaciones eliminadas correctamente",
                     Constants.HEADERS_TEXT_PLAIN, HttpStatus.OK);
         }
-
-        log.info("Se va a guardar las siguientes penalizaciones " + penaltyDTOs);
-        Penalty firstPenalty = penaltyImpl.penaltyDTOToPenalty(penaltyDTOs.get(0));
-
-        List<Penalty> existingPenalties = penaltyRepository.findByDriverAndRaceAndSeverity(
-                firstPenalty.getDriver().getId().intValue(),
-                firstPenalty.getRace().getId().intValue(),
-                firstPenalty.getPenaltySeverity().getId().intValue(),
-                Constants.ACTUAL_SEASON);
-
-        if (!existingPenalties.isEmpty()) {
-            penaltyRepository.deleteAll(existingPenalties);
-        }
-
-        penaltyService.savePenalties(penaltyDTOs);
 
         return new ResponseEntity<>("Penalización guardada correctamente",
                 Constants.HEADERS_TEXT_PLAIN, HttpStatus.OK);
     }
 
     @Operation(summary = "Get penalties per race", tags = Constants.TAG_PENALTY)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/totalPerRace", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<PenaltyDTO> getPenaltiesByRace(@RequestParam Integer raceId) {
         log.info("Se recoge las penalizaciones de la carrera " + raceId);
@@ -85,6 +67,7 @@ public class PenaltyController {
     }
 
     @Operation(summary = "Get penalties per driver", tags = Constants.TAG_PENALTY)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/totalPerDriver", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<PenaltyDTO> getPenaltiesByDriver() {
         log.info("Se recoge todas las penalizaciones");
@@ -95,6 +78,7 @@ public class PenaltyController {
     }
 
     @Operation(summary = "Get a penalty for a driver and circuit", tags = Constants.TAG_PENALTY)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/perDriverPerRace", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<PenaltyDTO> getPenaltyByDriverAndRace(@RequestParam Integer driverId,
             @RequestParam Integer raceId, @RequestParam Integer severityId) {

@@ -1,10 +1,13 @@
 package formula.bollo.controller;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Optional;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,6 +44,7 @@ public class RaceController {
     }
 
     @Operation(summary = "Get all races", tags = Constants.TAG_RACE)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<RaceDTO> getAllRaces(@RequestParam Integer season) {
         log.info("Coger todas las carreras de la temporada " + season);
@@ -48,6 +52,7 @@ public class RaceController {
     }
 
     @Operation(summary = "Get all races finished ", tags = Constants.TAG_RACE)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/allFinished", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<RaceDTO> getAllFinished(@RequestParam Integer season) {
         log.info("Coger todas las carreras terminadas de la temporada " + season);
@@ -55,20 +60,23 @@ public class RaceController {
     }
 
     @Operation(summary = "Get all races finished and the next one", tags = Constants.TAG_RACE)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/allFinishedAndActual", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<RaceDTO> getAllFinishedAndActual(@RequestParam Integer season) {
         log.info("Coger todas las carreras terminadas y la siguiente de la temporada " + season);
-        List<Race> races = this.raceRepository.findAllFinished(season);
-        Optional<Race> raceActual = this.raceRepository.findActual();
+        List<Race> races = new ArrayList<>(this.raceRepository.findAllFinished(season));
+        Optional<Race> raceActual = this.raceRepository.findActualBySeason(season);
 
         if (raceActual.isPresent()) {
             races.add(raceActual.get());
         }
+        races.sort(Comparator.comparing(Race::getDateStart).thenComparing(Race::getId));
 
         return this.raceImpl.convertRacesToRacesDTO(races);
     }
 
     @Operation(summary = "Get actual race", tags = Constants.TAG_RACE)
+    @Transactional(readOnly = true)
     @GetMapping(path = "/actual", produces = MediaType.APPLICATION_JSON_VALUE)
     public RaceDTO getActualRace() {
         log.info("Coger la carrera actual");
