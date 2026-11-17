@@ -1,6 +1,6 @@
 <div class="rounded-lg shadow-sm p-6 dark:bg-slate-700 bg-white dark:border dark:border-gray-700 my-6">
 	@if (typeSelected === 'Pilotos') {
-		<h3 class="text-lg font-semibold">Seleccionar pilotos para mostrar en la evolución:</h3>
+		<h2 class="text-lg font-semibold">Seleccionar pilotos para mostrar en la evolución:</h2>
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 my-3">
 			@for (1 of [1, 2, 3, 4]; track $index) {
 				<div>
@@ -10,7 +10,7 @@
 			}
 		</div>
 	} @else {
-		<h3 class="text-lg font-semibold">Seleccionar escuderías para mostrar en la evolución:</h3>
+		<h2 class="text-lg font-semibold">Seleccionar escuderías para mostrar en la evolución:</h2>
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 my-3">
 			@for (1 of [1, 2, 3, 4]; track $index) {
 				<div>

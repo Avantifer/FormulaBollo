@@ -72,3 +72,14 @@
 .dark .p-dialog .closeDialog .p-button:hover {
   background: var(--color-slate-900) !important;
 }
+
+@media (max-width: 767px) {
+  .selection-remove::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}

@@ -1,7 +1,10 @@
-<div class="p-3 sm:p-8 bg-slate-100 dark:bg-slate-800">
+<div class="py-3 sm:py-8 bg-slate-100 dark:bg-slate-800">
 	<div class="my-container">
+		@if (!driverInfo()) {
+			<h1 class="sr-only">{{ driverName }}</h1>
+		}
 		<div class="mb-6 flex justify-between items-center p-4 rounded-lg bg-white dark:bg-slate-700 shadow-sm">
-			<a class="inline-flex items-center text-red-400 hover:text-red-300 transition cursor-pointer" [routerLink]="['/drivers']">
+			<a class="inline-flex min-h-11 md:min-h-0 items-center text-red-700 hover:text-red-800 dark:text-red-300 dark:hover:text-red-200 transition cursor-pointer" [routerLink]="['/drivers']">
 				<i class="pi pi-chevron-left ml-1 pt-0.5" style="font-size: 0.65rem"></i>Volver a la clasificación</a
 			>
 			<select-seasons (seasonChanged)="onSeasonChange($event)" [driverName]="driverName" />
@@ -25,12 +28,12 @@
 											alt="Piloto" />
 									</div>
 									<div
-										class="absolute -bottom-1 -right-1 size-12 rounded-full flex items-center justify-center text-2xl font-bold shadow-md text-black dark:text-white"
-										[class]="'bg-' + (driverInfo()!.driver.team.name | SpaceToUnderscore)">
+										class="absolute -bottom-1 -right-1 size-12 rounded-full flex items-center justify-center text-2xl font-bold shadow-md"
+										[class]="'bg-' + (driverInfo()!.driver.team.name | SpaceToUnderscore) + ' on-' + (driverInfo()!.driver.team.name | SpaceToUnderscore)">
 										{{ driverInfo()!.driver.number }}
 									</div>
 								</div>
-								<h2 class="text-3xl font-bold text-center text-black dark:text-white">{{ driverInfo()!.driver.name }}</h2>
+								<h1 class="text-3xl font-bold text-center text-black dark:text-white">{{ driverInfo()!.driver.name }}</h1>
 							</div>
 						</div>
 					</div>
@@ -40,7 +43,7 @@
 								@for (stat of driverStatsArray(); track $index) {
 									<div
 										class="rounded-lg p-4 flex flex-col items-center justify-center bg-slate-200 dark:bg-slate-600 transition-all duration-300 hover:bg-slate-100 hover:dark:bg-slate-500">
-										<div class="text-sm mb-1 flex items-center text-gray-700 dark:text-gray-300">
+										<div class="text-sm mb-1 flex items-center text-gray-700 dark:text-white">
 											<span>
 												<i [class]="stat.icon + ' ' + stat.color" style="font-size: 0.75rem" class=""></i>
 												{{ stat.key }}
@@ -54,8 +57,8 @@
 					</div>
 				</div>
 				<div class="p-6 bg-white dark:bg-slate-700 text-white rounded-lg">
-					<h3 class="text-black dark:text-white text-xl font-bold mb-1">Últimas 5 carreras</h3>
-					<div class="flex items-center mb-5 text-gray-500 dark:text-gray-400">
+					<h2 class="text-black dark:text-white text-xl font-bold mb-1">Últimas 5 carreras</h2>
+					<div class="flex items-center mb-5 text-gray-500 dark:text-gray-300">
 						<div class="text-xs flex items-center">
 							<i class="pi pi-info-circle mr-1" style="font-size: 0.65rem"></i>
 							Solo se muestran carreras principales, no incluye carreras sprint
@@ -120,16 +123,16 @@
 									<td
 										class="dark:bg-slate-700 text-sm dark:border-gray-500!"
 										[ngClass]="{
-											'text-gray-400 dark:text-gray-500': result.fastlap === 0,
-											'text-green-500 dark:text-green-400 font-medium': result.fastlap === 1
+											'text-gray-600 dark:text-gray-300': result.fastlap === 0,
+											'text-green-800 dark:text-green-300 font-medium': result.fastlap === 1
 										}">
 										{{ result.fastlap === 0 ? 'No' : 'Si' }}
 									</td>
 									<td
 										class="dark:bg-slate-700 text-sm dark:border-gray-500! font-semibold"
 										[ngClass]="{
-											'text-gray-400 dark:text-gray-500': result.pole === 0,
-											'text-green-500 dark:text-green-400 font-medium': result.pole === 1
+											'text-gray-600 dark:text-gray-300': result.pole === 0,
+											'text-green-800 dark:text-green-300 font-medium': result.pole === 1
 										}">
 										{{ result.pole === 0 ? 'No' : 'Si' }}
 									</td>
@@ -137,8 +140,8 @@
 										<span
 											class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium text-white"
 											[ngClass]="{
-												'bg-yellow-500': result.position.positionNumber === 1,
-												'bg-gray-400': result.position.positionNumber === 2,
+												'bg-yellow-700': result.position.positionNumber === 1,
+												'bg-gray-500': result.position.positionNumber === 2,
 												'bg-amber-700': result.position.positionNumber === 3,
 												'bg-gray-600':
 													result.position.positionNumber !== 1 &&
@@ -148,10 +151,10 @@
 											>{{ result.position.positionNumber }}</span
 										>
 									</td>
-									<td class="dark:bg-slate-700 text-sm dark:border-gray-500! font-semibold text-green-500 dark:text-green-400">
+									<td class="dark:bg-slate-700 text-sm dark:border-gray-500! font-semibold text-green-800 dark:text-green-300">
 										+{{ result.position.points }}
 									</td>
-									<td class="dark:bg-slate-700 text-sm dark:border-gray-500! text-gray-700 dark:text-gray-400">
+									<td class="dark:bg-slate-700 text-sm dark:border-gray-500! text-gray-700 dark:text-gray-300">
 										{{ result.race.dateStart | date: 'dd/MM/yyyy' }}
 									</td>
 									<td class="dark:bg-slate-700 text-sm dark:border-gray-500! font-bold">

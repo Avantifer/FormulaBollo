@@ -16,7 +16,7 @@
 							aria-describedby="fantasy-register-username-error"
 							formControlName="username"
 							placeholder="Usuario"
-							class="h-10 w-full text-white" />
+							class="h-10 w-full text-slate-900 dark:text-white" />
 					</p-iconfield>
 					@if (registerForm.get('username')?.invalid && registerForm.get('username')?.dirty) {
 						<span id="fantasy-register-username-error" class="text-xs sm:text-sm text-red-600 dark:text-red-400"
@@ -36,7 +36,7 @@
 							aria-describedby="fantasy-register-mail-error"
 							formControlName="mail"
 							placeholder="Correo electrónico"
-							class="h-10 w-full text-white" />
+							class="h-10 w-full text-slate-900 dark:text-white" />
 					</p-iconfield>
 					@if (registerForm.get('mail')?.invalid && registerForm.get('mail')?.dirty) {
 						<span id="fantasy-register-mail-error" class="text-xs sm:text-sm text-red-600 dark:text-red-400"
@@ -47,7 +47,7 @@
 				<div class="space-y-2">
 					<label for="fantasy-register-password" class="block text-gray-700 dark:text-white text-sm font-medium">Contraseña</label>
 					<p-iconfield>
-						<p-inputicon class="pi pi-lock text-gray-400" />
+						<p-inputicon aria-hidden="true" class="pi pi-lock text-gray-400" />
 						<input
 							id="fantasy-register-password"
 							[type]="showPassword ? 'text' : 'password'"
@@ -56,11 +56,11 @@
 							aria-describedby="fantasy-register-password-error"
 							formControlName="password"
 							placeholder="Contraseña"
-							class="h-10 w-full text-white" />
+							class="h-10 w-full text-slate-900 dark:text-white" />
 						<p-inputicon>
 							<button
 								type="button"
-								class="text-gray-400 cursor-pointer leading-none focus-visible:outline-2"
+								class="text-gray-600 dark:text-gray-300 cursor-pointer leading-none focus-visible:outline-2"
 								[attr.aria-label]="showPassword ? 'Ocultar contrase&#241;a' : 'Mostrar contrase&#241;a'"
 								[attr.aria-pressed]="showPassword"
 								(click)="showPassword = !showPassword">
@@ -79,7 +79,7 @@
 						>Repite la Contraseña</label
 					>
 					<p-iconfield>
-						<p-inputicon class="pi pi-lock text-gray-400" />
+						<p-inputicon aria-hidden="true" class="pi pi-lock text-gray-400" />
 						<input
 							id="fantasy-register-passwordRepeated"
 							[type]="showPasswordRepeated ? 'text' : 'password'"
@@ -88,11 +88,11 @@
 							aria-describedby="fantasy-register-passwordRepeated-error"
 							formControlName="passwordRepeated"
 							placeholder="Repita la Contraseña"
-							class="h-10 w-full text-white" />
+							class="h-10 w-full text-slate-900 dark:text-white" />
 						<p-inputicon>
 							<button
 								type="button"
-								class="text-gray-400 cursor-pointer leading-none focus-visible:outline-2"
+								class="text-gray-600 dark:text-gray-300 cursor-pointer leading-none focus-visible:outline-2"
 								[attr.aria-label]="showPasswordRepeated ? 'Ocultar contrase&#241;a' : 'Mostrar contrase&#241;a'"
 								[attr.aria-pressed]="showPasswordRepeated"
 								(click)="showPasswordRepeated = !showPasswordRepeated">

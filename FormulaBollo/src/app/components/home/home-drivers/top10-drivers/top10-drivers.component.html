@@ -4,9 +4,9 @@
 			class="drivers-top10-container mx-0 my-1 xl:mx-16 py-3 px-3 xs:px-4 animation-cubic-03 shadow-md rounded-xl flex items-center justify-between bg-gray-50 hover:bg-gray-200 dark:bg-slate-950 dark:hover:bg-slate-800 cursor-pointer dark:text-white focus-visible:outline-2 focus-visible:outline-red-600"
 			[routerLink]="['/drivers/' + utilsService.spaceToUnderScore(driverPoint.driver.name)]">
 			<div class="drivers-top10-start flex items-center">
-				<h4 class="my-0 font-bold">{{ $index + 1 }}</h4>
+				<span class="my-0 font-bold">{{ $index + 1 }}</span>
 				<div class="drivers-top10-line mx-2 h-4 w-1" [class]="'bg-' + (driverPoint.driver.team.name | SpaceToUnderscore)"></div>
-				<h4 class="text-sm xs:text-base my-0 font-bold">{{ driverPoint.driver.name }}</h4>
+				<span class="text-sm xs:text-base my-0 font-bold">{{ driverPoint.driver.name }}</span>
 				<p class="my-0 ml-4 hidden md:block">{{ driverPoint.driver.team.name }}</p>
 			</div>
 			<div class="drivers-top10-end flex items-center">
@@ -19,7 +19,7 @@
 	}
 </div>
 <div class="mt-8 pb-8 text-center">
-	<a [routerLink]="['/drivers']" class="inline-flex items-center text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition">
+	<a [routerLink]="['/drivers']" class="inline-flex min-h-11 md:min-h-0 items-center text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition">
 		Ver clasificación completa
 		<i class="pi pi-chevron-right ml-1 pt-1" style="font-size: 0.65rem"></i>
 	</a>

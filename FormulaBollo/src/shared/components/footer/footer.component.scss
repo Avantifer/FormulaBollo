@@ -11,3 +11,14 @@
 .fantasyFooter {
   --footer-accent: var(--color-fantasy-principal);
 }
+
+footer a,
+footer button {
+  display: inline-flex;
+  align-items: center;
+  padding-block: 0.5rem;
+
+  @media (max-width: 767px) {
+    min-height: 2.75rem;
+  }
+}

@@ -1,4 +1,4 @@
-<div class="my-container mx-auto py-12 px-4">
+<div class="my-container mx-auto py-12">
 	<h2 class="AudioWide uppercase text-2xl xs:text-3xl font-bold mb-8 text-center text-red-600 dark:text-white">Configuraciones</h2>
 	@if (cacheService.isVersionRetrieved() && configurations().length) {
 		<div class="bg-gray-200/30 dark:bg-gray-900 rounded-xl overflow-hidden shadow-xl p-6">
@@ -64,7 +64,7 @@
 						class="pi pi-info-circle bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-2 rounded-full mr-2"
 						style="font-size: 1.25rem"></i>
 					<div>
-						<h4 class="font-semibold text-lg">Información importante</h4>
+						<h3 class="font-semibold text-lg">Información importante</h3>
 						<p class="text-gray-600 dark:text-gray-300 mt-1">
 							Estas configuraciones se aplican a todas las carreras de la temporada actual. Los administradores pueden modificar estos
 							ajustes antes de cada Gran Premio.

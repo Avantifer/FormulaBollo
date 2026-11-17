@@ -35,3 +35,10 @@
 .p-select-label {
   font-size: 14px !important;
 }
+
+@media (max-width: 767px) {
+  .p-select,
+  .p-select-option {
+    min-height: 2.75rem;
+  }
+}

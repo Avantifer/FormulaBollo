@@ -25,4 +25,14 @@ describe('StatisticsComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('keeps exactly one Spanish h1 across all tabs', () => {
+    for (const button of fixture.nativeElement.querySelectorAll('p-button button')) {
+      button.click();
+      fixture.detectChanges();
+      const headings = fixture.nativeElement.querySelectorAll('h1');
+      expect(headings.length).withContext(button.textContent).toBe(1);
+      expect(headings[0].textContent.trim()).toBe('Estadísticas');
+    }
+  });
 });

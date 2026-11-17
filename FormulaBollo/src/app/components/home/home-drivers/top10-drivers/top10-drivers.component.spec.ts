@@ -42,4 +42,19 @@ describe('Top10DriversComponent', () => {
     expect(link.listeners.filter(listener => listener.name === 'click').length).toBe(1);
     expect(link.listeners.some(listener => listener.name.startsWith('keydown'))).toBeFalse();
   });
+
+  it('renders every row as a link without headings', () => {
+    fixture.componentRef.setInput('top10', [driverPointsFixture, {
+      ...driverPointsFixture,
+      driver: { ...driverPointsFixture.driver, id: 2, name: 'Segundo piloto' },
+    }]);
+    fixture.detectChanges();
+
+    const rows = fixture.nativeElement.querySelectorAll('.drivers-top10-container');
+    expect(rows.length).toBe(2);
+    for (const row of rows) {
+      expect(row.matches('a[href]')).toBeTrue();
+      expect(row.querySelector('h1, h2, h3, h4, h5, h6')).toBeNull();
+    }
+  });
 });
