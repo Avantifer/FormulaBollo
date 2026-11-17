@@ -1,8 +1,7 @@
-<div
-	class="group overflow-hidden rounded-lg border-t-8 border-b-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer transition-all duration-500 hover:bg-slate-500"
+<a
+	class="block focus-visible:outline-2 focus-visible:outline-red-600 group overflow-hidden rounded-lg border-t-8 border-b-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer transition-all duration-500 hover:bg-slate-500"
 	[class]="'border-' + (teamPoints.team.name | SpaceToUnderscore)"
-	(click)="router.navigate(['/teams/' + utilsService.spaceToUnderScore(teamPoints.team.name)])"
-	(keydown.enter)="router.navigate(['/teams/' + utilsService.spaceToUnderScore(teamPoints.team.name)])">
+	[routerLink]="['/teams/' + utilsService.spaceToUnderScore(teamPoints.team.name)]">
 	<div class="flex flex-col h-full">
 		<div class="flex items-center p-3 xs:p-4 bg-white dark:bg-gray-900">
 			<div
@@ -103,4 +102,4 @@
 			</div>
 		</div>
 	</div>
-</div>
+</a>

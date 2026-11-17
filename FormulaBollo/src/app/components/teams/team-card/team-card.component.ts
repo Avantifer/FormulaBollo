@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, Input } from '@angular/core';
-import { Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { ImageService } from '../../../../shared/services/image.service';
 import { SpaceToUnderscorePipe } from "../../../../shared/pipes/spaceToUnderscore.pipe";
 import { ChipModule } from 'primeng/chip';
@@ -14,6 +14,7 @@ import { SkeletonModule } from 'primeng/skeleton';
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-team-card',
   imports: [
+    RouterLink,
     CommonModule,
     ChipModule,
     SkeletonModule,
@@ -25,7 +26,6 @@ import { SkeletonModule } from 'primeng/skeleton';
   styleUrl: './team-card.component.scss'
 })
 export class TeamCardComponent {
-  protected router: Router = inject(Router);
   protected imageService: ImageService = inject(ImageService);
   protected utilsService: UtilsService = inject(UtilsService);
 
