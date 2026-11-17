@@ -244,18 +244,18 @@
 									</td>
 									<td class="dark:bg-slate-700 text-sm dark:border-gray-500!">
 										<div class="flex items-center">
-											<div class="h-2 w-2 mr-1 rounded-full" [class]="'bg-' + (result.driver.team.name | SpaceToUnderscore)"></div>
-											<p>{{ result.driver.team.name }}</p>
+											<img
+												[src]="imageService.getImageUrl(utilsService.spaceToUnderScore(result.driver.driverImage))"
+												alt=""
+												class="size-8 bg-gray-400 rounded-full border-1 shadow-lg"
+												[class]="'border-' + (result.driver.team.name | SpaceToUnderscore)" />
+											<span class="text-sm font-medium text-gray-900 dark:text-white ml-2">{{ result.driver.name }}</span>
 										</div>
 									</td>
 									<td class="dark:bg-slate-700 text-sm dark:border-gray-500!">
 										<div class="flex items-center">
-											<img
-												[src]="imageService.getImageUrl(utilsService.spaceToUnderScore(result.driver.driverImage))"
-												alt="Logo equipo"
-												class="size-8 bg-gray-400 rounded-full border-1 shadow-lg"
-												[class]="'border-' + (result.driver.team.name | SpaceToUnderscore)" />
-											<span class="text-sm font-medium text-gray-900 dark:text-white ml-2">{{ result.driver.name }}</span>
+											<div class="h-2 w-2 mr-1 rounded-full" [class]="'bg-' + (result.driver.team.name | SpaceToUnderscore)"></div>
+											<p>{{ result.driver.team.name }}</p>
 										</div>
 									</td>
 									<td class="dark:bg-slate-700 text-sm dark:border-gray-500! font-bold">
@@ -267,7 +267,7 @@
 											'text-gray-600 dark:text-gray-300': result.fastlap === 0,
 											'text-green-800 dark:text-green-300 font-medium': result.fastlap === 1
 										}">
-										{{ result.fastlap === 0 ? 'No' : 'Si' }}
+										{{ result.fastlap === 0 ? 'No' : 'Sí' }}
 									</td>
 									<td
 										class="dark:bg-slate-700 text-sm dark:border-gray-500! font-semibold"
@@ -275,7 +275,7 @@
 											'text-gray-600 dark:text-gray-300': result.pole === 0,
 											'text-green-800 dark:text-green-300 font-medium': result.pole === 1
 										}">
-										{{ result.pole === 0 ? 'No' : 'Si' }}
+										{{ result.pole === 0 ? 'No' : 'Sí' }}
 									</td>
 								</tr>
 							</ng-template>
@@ -343,7 +343,7 @@
 										<div class="flex items-center">
 											<img
 												[src]="imageService.getImageUrl(utilsService.spaceToUnderScore(result.results[0].driver.driverImage))"
-												alt="Logo equipo"
+												alt=""
 												class="size-8 bg-gray-400 rounded-full border-1 shadow-lg"
 												[class]="'border-' + (result.results[0].driver.team.name | SpaceToUnderscore)" />
 											<span class="text-sm font-medium text-gray-900 dark:text-white ml-2">{{ result.results[0].driver.name }}</span>
@@ -353,7 +353,7 @@
 										<div class="flex items-center">
 											<img
 												[src]="imageService.getImageUrl(utilsService.spaceToUnderScore(result.results[1].driver.driverImage))"
-												alt="Logo equipo"
+												alt=""
 												class="size-8 bg-gray-400 rounded-full border-1 shadow-lg"
 												[class]="'border-' + (result.results[1].driver.team.name | SpaceToUnderscore)" />
 											<span class="text-sm font-medium text-gray-900 dark:text-white ml-2">{{ result.results[1].driver.name }}</span>
@@ -368,7 +368,7 @@
 											'text-gray-600 dark:text-gray-300': result.hasFastLap === 0,
 											'text-green-800 dark:text-green-300 font-medium': result.hasFastLap === 1
 										}">
-										{{ result.hasFastLap === 0 ? 'No' : 'Si' }}
+										{{ result.hasFastLap === 0 ? 'No' : 'Sí' }}
 									</td>
 									<td
 										class="dark:bg-slate-700 text-sm dark:border-gray-500! font-semibold"
@@ -376,7 +376,7 @@
 											'text-gray-600 dark:text-gray-300': result.hasPole === 0,
 											'text-green-800 dark:text-green-300 font-medium': result.hasPole === 1
 										}">
-										{{ result.hasPole === 0 ? 'No' : 'Si' }}
+										{{ result.hasPole === 0 ? 'No' : 'Sí' }}
 									</td>
 								</tr>
 							</ng-template>
