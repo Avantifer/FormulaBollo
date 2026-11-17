@@ -1,7 +1,7 @@
-import { passwordPolicyValidator, passwordsMatchValidator } from '../../../../shared/validators/password.validators';
+import { newPasswordValidator, passwordsMatchValidator } from '../../../../shared/validators/password.validators';
 import { Component, inject } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
@@ -29,7 +29,7 @@ export class FantasyRecoverPasswordComponent {
   private readonly accountApiService: AccountApiService = inject(AccountApiService);
   private readonly messageInfoService: MessageInfoService = inject(MessageInfoService);
 
-  private readonly token: string = this.router.url.split("/")[3];
+  private readonly token = inject(ActivatedRoute).snapshot.paramMap.get('token') ?? '';
   protected showPassword1: boolean = false;
   protected showPassword2: boolean = false;
   private readonly destroy$: Subject<void> = new Subject<void>();
@@ -40,7 +40,7 @@ export class FantasyRecoverPasswordComponent {
   }
 
   protected recoverPasswordForm: FormGroup = new FormGroup({
-    password1: new FormControl('', [Validators.required, passwordPolicyValidator]),
+    password1: new FormControl('', [Validators.required, newPasswordValidator]),
     password2: new FormControl('', Validators.required),
   }, { validators: passwordsMatchValidator('password1', 'password2') });
 

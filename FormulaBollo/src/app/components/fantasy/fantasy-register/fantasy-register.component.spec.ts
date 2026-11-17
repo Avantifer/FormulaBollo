@@ -25,4 +25,18 @@ describe('FantasyRegisterComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('shows the minimum password length inline', () => {
+    const input = fixture.nativeElement.querySelector('[formControlName="password"]');
+    input.value = '1234567';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#fantasy-register-password-error').textContent)
+      .toContain('La contraseña debe tener al menos 8 caracteres');
+    expect(fixture.nativeElement.querySelector('p-button button').disabled).toBeTrue();
+    input.value = '12345678';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#fantasy-register-password-error')).toBeNull();
+  });
 });

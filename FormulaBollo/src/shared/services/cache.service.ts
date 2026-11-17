@@ -7,6 +7,7 @@ export class CacheService {
   private cache: Map<string, any>;
   private readonly inFlight = new Map<string, Observable<unknown>>();
   private generation = 0;
+  private saveTimer: ReturnType<typeof setTimeout> | undefined;
   readonly isVersionRetrieved = signal(false);
   
   constructor() {
@@ -39,14 +40,44 @@ export class CacheService {
   }
 
   saveCache(): void {
-    localStorage.setItem('apiCache', JSON.stringify(Array.from(this.cache.entries())));
+    if (this.saveTimer !== undefined) return;
+    this.saveTimer = setTimeout(() => {
+      this.saveTimer = undefined;
+      try {
+        const serialized = JSON.stringify(Array.from(this.cache.entries()));
+        if (serialized.length > 2_000_000) {
+          this.removePersistedCache();
+          return;
+        }
+        localStorage.setItem('apiCache', serialized);
+      } catch {
+        this.removePersistedCache();
+      }
+    }, 300);
+  }
+
+  private removePersistedCache(): void {
+    try {
+      localStorage.removeItem('apiCache');
+    } catch {
+      // Storage can be unavailable; the in-memory cache remains usable.
+    }
+  }
+
+  removeByPrefix(prefix: string): void {
+    for (const key of this.cache.keys()) {
+      if (key.startsWith(prefix)) this.cache.delete(key);
+    }
+    this.saveCache();
   }
 
   clearCache(): void {
+    clearTimeout(this.saveTimer);
+    this.saveTimer = undefined;
     this.generation++;
     this.cache.clear();
     this.inFlight.clear();
-    localStorage.removeItem('apiCache');
+    this.removePersistedCache();
   }
 
   getOrLoad<T>(key: string, request: () => Observable<T>): Observable<T> {

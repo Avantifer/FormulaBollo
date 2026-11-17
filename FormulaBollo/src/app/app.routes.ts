@@ -17,34 +17,42 @@ export const routes: Routes = [
   },
   {
     path: 'drivers',
+    data: { preload: true },
     loadComponent: () => import('./components/drivers/drivers.component').then(m => m.DriversComponent)
   },
   {
     path: 'drivers/:name',
+    data: { preload: true },
     loadComponent: () => import('./components/drivers/drivers-info/drivers-info.component').then(m => m.DriversInfoComponent)
   },
   {
     path: 'teams',
+    data: { preload: true },
     loadComponent: () => import('./components/teams/teams.component').then(m => m.TeamsComponent)
   },
   {
     path: 'teams/:name',
+    data: { preload: true },
     loadComponent: () => import('./components/teams/teams-info/teams-info.component').then(m => m.TeamsInfoComponent)
   },
   {
     path: 'results',
+    data: { preload: true },
     loadComponent: () => import('./components/races/races.component').then(m => m.RacesComponent)
   },
   {
     path: 'results/:name/:season',
+    data: { preload: true },
     loadComponent: () => import('./components/results/results.component').then(m => m.ResultsComponent)
   },
   {
     path: 'statute',
+    data: { preload: true },
     loadComponent: () => import('./components/statute/statute.component').then(m => m.StatuteComponent)
   },
   {
     path: 'statistics',
+    data: { preload: true },
     loadComponent: () => import('./components/statistics/statistics.component').then(m => m.StatisticsComponent)
   },
   {

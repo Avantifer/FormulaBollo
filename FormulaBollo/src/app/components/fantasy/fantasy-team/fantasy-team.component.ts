@@ -1,9 +1,9 @@
 import { FantasyApiService } from './../../../../shared/services/api/fantasy-api.service';
 import { ButtonModule } from 'primeng/button';
-import { Component, effect, inject, Signal, ChangeDetectorRef } from '@angular/core';
+import { Component, computed, effect, inject, signal, Signal, untracked } from '@angular/core';
 import { SelectRacesComponent } from "../../../../shared/components/select-races/select-races.component";
 import { Race } from '../../../../shared/models/race';
-import { catchError, lastValueFrom, Subject, takeUntil } from 'rxjs';
+import { catchError, forkJoin, lastValueFrom, Observable, Subject, takeUntil } from 'rxjs';
 import { FantasyPricesDriver } from '../../../../shared/models/fantasyPricesDriver';
 import { UtilsService } from '../../../../shared/services/utils.service';
 import { colorsMappings, ERROR_FANTASY_ELECTION_NOT_FOUND, ERROR_PRICE_FETCH, ERROR_RACE_FETCH, getLineChartOptions, WARNING_ELECTION_NOT_COMPLETED, WARNING_FANTASY_SAVE_LATE, WARNING_MONEY_NEGATIVE } from '../../../constants';
@@ -18,12 +18,10 @@ import { ThemeService } from '../../../../shared/services/theme.service';
 import { ChartData } from 'chart.js';
 import { ChartModule } from 'primeng/chart';
 import { DialogModule } from 'primeng/dialog';
-import { FantasyPointsDriver } from '../../../../shared/models/fantasyPointsDriver';
 import { FantasyElection } from '../../../../shared/models/fantasyElection';
 import { Driver } from '../../../../shared/models/driver';
 import { Team } from '../../../../shared/models/team';
 import { FantasyPricesTeam } from '../../../../shared/models/fantasyPricesTeam';
-import { FantasyPointsTeam } from '../../../../shared/models/fantasyPointsTeam';
 import { MessageInfoService } from '../../../../shared/services/toastInfo.service';
 import { Account } from '../../../../shared/models/account';
 import { AuthJWTService } from '../../../../shared/services/authJWT.service';
@@ -62,8 +60,6 @@ export class FantasyTeamComponent {
   private readonly themeService: ThemeService = inject(ThemeService);
   private readonly messageInfoService: MessageInfoService = inject(MessageInfoService)
   private readonly authJWTService: AuthJWTService = inject(AuthJWTService);
-  // Este componente mantiene mucho estado mutable: tras cada respuesta asíncrona se avisa a Angular (sin zone.js).
-  private readonly cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
   
   protected readonly listOptions: any[] = [
     { icon: 'pi pi-users', value: 'Pilotos' },
@@ -71,50 +67,66 @@ export class FantasyTeamComponent {
   ];
   optionSelected: string = 'Pilotos';
 
-  lineChartOptions = getLineChartOptions(this.themeService.isDarkTheme(), false)
+  readonly lineChartOptions = computed(() => getLineChartOptions(this.themeService.isDarkTheme(), false));
 
-  totalMoney: number = 80000000;
+  readonly isLastRace = signal(true);
+  private readonly selectedRace = signal<Race | undefined>(undefined);
 
-  isLastRace: boolean = true;
-  raceSelected: Race | undefined;
+  get raceSelected(): Race | undefined {
+    return this.selectedRace();
+  }
 
-  fantasyPricesDrivers: FantasyPricesDriver[] = [];
-  fantasyPricesDriversFiltered: FantasyPricesDriver[] = [];
+  set raceSelected(race: Race | undefined) {
+    this.selectedRace.set(race);
+  }
 
-  fantasyPricesTeams: FantasyPricesTeam[] = [];
-  fantasyPricesTeamsFiltered: FantasyPricesTeam[] = [];
+  readonly fantasyPricesDrivers = signal<FantasyPricesDriver[]>([]);
+  readonly fantasyPricesDriversFiltered = signal<FantasyPricesDriver[]>([]);
+  readonly fantasyPricesTeams = signal<FantasyPricesTeam[]>([]);
+  readonly fantasyPricesTeamsFiltered = signal<FantasyPricesTeam[]>([]);
 
-  dataDriversEvolutionPrice!: ChartData;
-  showDriverPricesData: boolean = false;
-  driverPriceData!: FantasyPricesDriver;
-  showDriverMaxPriceData!: number;
-  showDriverStartPriceData!: number;
+  readonly dataDriversEvolutionPrice = signal<ChartData<'line'>>({ datasets: [] });
+  readonly showDriverPricesData = signal(false);
+  readonly driverPriceData = signal<FantasyPricesDriver>(undefined!);
+  readonly showDriverMaxPriceData = signal(0);
+  readonly showDriverStartPriceData = signal(0);
 
-  dataTeamsEvolutionPrice!: ChartData;
-  showTeamPricesData: boolean = false;
-  teamPriceData!: FantasyPricesTeam;
-  showTeamMaxPriceData!: number;
-  showTeamStartPriceData!: number;
+  readonly dataTeamsEvolutionPrice = signal<ChartData<'line'>>({ datasets: [] });
+  readonly showTeamPricesData = signal(false);
+  readonly teamPriceData = signal<FantasyPricesTeam>(undefined!);
+  readonly showTeamMaxPriceData = signal(0);
+  readonly showTeamStartPriceData = signal(0);
 
-  dataDriversEvolutionPoints!: ChartData;
-  showDriverPointsData: boolean = false;
-  driverPointData!: FantasyPricesDriver;
-  showDriverBestPointsData!: number;
-  showDriverMedianPointsData!: number;
+  readonly dataDriversEvolutionPoints = signal<ChartData<'line'>>({ datasets: [] });
+  readonly showDriverPointsData = signal(false);
+  readonly driverPointData = signal<FantasyPricesDriver>(undefined!);
+  readonly showDriverBestPointsData = signal(0);
+  readonly showDriverMedianPointsData = signal(0);
 
-  dataTeamsEvolutionPoints!: ChartData;
-  showTeamPointsData: boolean = false;
-  teamPointData!: FantasyPricesTeam;
-  showTeamBestPointsData!: number;
-  showTeamMedianPointsData!: number;
+  readonly dataTeamsEvolutionPoints = signal<ChartData<'line'>>({ datasets: [] });
+  readonly showTeamPointsData = signal(false);
+  readonly teamPointData = signal<FantasyPricesTeam>(undefined!);
+  readonly showTeamBestPointsData = signal(0);
+  readonly showTeamMedianPointsData = signal(0);
 
-  fantasyElection: FantasyElection = new FantasyElection();
-
-  driversSelected: (Driver | undefined)[] = [undefined, undefined, undefined];
-  fantasydriversSelected: (FantasyPricesDriver | undefined)[] = [undefined, undefined, undefined];
-
-  teamsSelected: (Team | undefined)[] = [undefined, undefined];
-  fantasyTeamsSelected: (FantasyPricesTeam | undefined)[] = [undefined, undefined];
+  readonly fantasyElection = signal(new FantasyElection());
+  readonly driversSelected = computed(() => {
+    const election = this.fantasyElection();
+    return [election.driverOne, election.driverTwo, election.driverThree];
+  });
+  readonly teamsSelected = computed(() => {
+    const election = this.fantasyElection();
+    return [election.teamOne, election.teamTwo];
+  });
+  readonly fantasydriversSelected = signal<(FantasyPricesDriver | undefined)[]>([undefined, undefined, undefined]);
+  readonly fantasyTeamsSelected = signal<(FantasyPricesTeam | undefined)[]>([undefined, undefined]);
+  readonly totalMoney = computed(() => {
+    const driversValue = this.driversSelected().reduce((total, driver) => total +
+      (driver ? this.fantasydriversSelected().find(price => price?.driver.id === driver.id)?.price ?? 0 : 0), 0);
+    const teamsValue = this.teamsSelected().reduce((total, team) => total +
+      (team ? this.fantasyTeamsSelected().find(price => price?.team.id === team.id)?.price ?? 0 : 0), 0);
+    return 80000000 - driversValue - teamsValue;
+  });
 
   filtroString: string = '';
 
@@ -134,21 +146,18 @@ export class FantasyTeamComponent {
 
   constructor() {
     effect(() => {
-      this.lineChartOptions = getLineChartOptions(this.themeService.isDarkTheme(), false);
-    });
-    effect(() => {
       const race = this.lastRace();
       if (race && !this.raceSelected) {
         this.raceSelected = race;
-        this.getDriversTeamPrices();
+        untracked(() => this.getDriversTeamPrices());
       }
     });
   }
 
   changeOptions(): void {
     this.filtroString = '';
-    this.fantasyPricesDriversFiltered = [...this.fantasyPricesDrivers];
-    this.fantasyPricesTeamsFiltered = [...this.fantasyPricesTeams];
+    this.fantasyPricesDriversFiltered.set([...this.fantasyPricesDrivers()]);
+    this.fantasyPricesTeamsFiltered.set([...this.fantasyPricesTeams()]);
     this.orderSelected = new OrderBy("pi pi-star", "Puntos", "DESC");
     this.orders = [
       new OrderBy("pi pi-star", "Puntos", "DESC"),
@@ -178,56 +187,54 @@ export class FantasyTeamComponent {
 
   private orderByName(orderDirection: string): void {
     if (this.optionSelected === "Pilotos") {
-      this.fantasyPricesDriversFiltered.sort((a: FantasyPricesDriver, b: FantasyPricesDriver) =>
+      this.fantasyPricesDriversFiltered.update(items => [...items].sort((a: FantasyPricesDriver, b: FantasyPricesDriver) =>
         orderDirection === "ASC"
           ? a.driver.name.localeCompare(b.driver.name)
           : b.driver.name.localeCompare(a.driver.name),
-      );
+      ));
     } else {
-      this.fantasyPricesTeamsFiltered.sort((a: FantasyPricesTeam, b: FantasyPricesTeam) =>
+      this.fantasyPricesTeamsFiltered.update(items => [...items].sort((a: FantasyPricesTeam, b: FantasyPricesTeam) =>
         orderDirection === "ASC"
           ? a.team.name.localeCompare(b.team.name)
           : b.team.name.localeCompare(a.team.name),
-      );
+      ));
     }
   }
 
   private orderByPrice(orderDirection: string): void {
     if (this.optionSelected === "Pilotos") {
-      this.fantasyPricesDriversFiltered.sort((a: FantasyPricesDriver, b: FantasyPricesDriver) =>
+      this.fantasyPricesDriversFiltered.update(items => [...items].sort((a: FantasyPricesDriver, b: FantasyPricesDriver) =>
         orderDirection === "ASC" ? a.price - b.price : b.price - a.price,
-      );
+      ));
     } else {
-      this.fantasyPricesTeamsFiltered.sort((a: FantasyPricesTeam, b: FantasyPricesTeam) =>
+      this.fantasyPricesTeamsFiltered.update(items => [...items].sort((a: FantasyPricesTeam, b: FantasyPricesTeam) =>
         orderDirection === "ASC" ? a.price - b.price : b.price - a.price,
-      );
+      ));
     }
   }
 
   private orderByTotalPoints(orderDirection: string): void {
     if (this.optionSelected === "Pilotos") {
-      this.fantasyPricesDriversFiltered.sort((a: FantasyPricesDriver, b: FantasyPricesDriver) =>
+      this.fantasyPricesDriversFiltered.update(items => [...items].sort((a: FantasyPricesDriver, b: FantasyPricesDriver) =>
         orderDirection === "ASC"
           ? a.fantasyInfo.totalPoints - b.fantasyInfo.totalPoints
           : b.fantasyInfo.totalPoints - a.fantasyInfo.totalPoints,
-      );
+      ));
     } else {
-      this.fantasyPricesTeamsFiltered.sort((a: FantasyPricesTeam, b: FantasyPricesTeam) =>
+      this.fantasyPricesTeamsFiltered.update(items => [...items].sort((a: FantasyPricesTeam, b: FantasyPricesTeam) =>
         orderDirection === "ASC"
           ? a.fantasyInfo.totalPoints - b.fantasyInfo.totalPoints
           : b.fantasyInfo.totalPoints - a.fantasyInfo.totalPoints,
-      );
+      ));
     }
   }
 
 
   filterItems(filter: string) {
     if (this.optionSelected === 'Pilotos') {
-      this.fantasyPricesDriversFiltered = [...this.fantasyPricesDrivers];
-      this.fantasyPricesDriversFiltered = this.fantasyPricesDrivers.filter((fpd) => fpd.driver.name.toLowerCase().includes(filter.toLowerCase()));
+      this.fantasyPricesDriversFiltered.set(this.fantasyPricesDrivers().filter((fpd) => fpd.driver.name.toLowerCase().includes(filter.toLowerCase())));
     } else {
-      this.fantasyPricesTeamsFiltered = [...this.fantasyPricesTeams];
-      this.fantasyPricesTeamsFiltered = this.fantasyPricesTeams.filter((fpt) => fpt.team.name.toLowerCase().includes(filter.toLowerCase()));
+      this.fantasyPricesTeamsFiltered.set(this.fantasyPricesTeams().filter((fpt) => fpt.team.name.toLowerCase().includes(filter.toLowerCase())));
     }
   }
 
@@ -237,330 +244,168 @@ export class FantasyTeamComponent {
     this.optionSelected = 'Pilotos';
 
     if (this.lastRace()?.id !== this.raceSelected.id)  {
-      this.isLastRace = false;
+      this.isLastRace.set(false);
       this.fantasyApiService.getFantasyElection(this.raceSelected.id).pipe(
         takeUntil(this.destroy$),
         catchError((error) => this.utilsService.handleError<FantasyElection>(ERROR_FANTASY_ELECTION_NOT_FOUND, error))
       ).subscribe((fantasyElection: FantasyElection) => {
         this.setFantasyElection(fantasyElection);
-        this.cdr.markForCheck();
       });
     } else {
-      this.isLastRace = true;
+      this.isLastRace.set(true);
       this.resetFantasyElection();
     }
   }
 
   async getDriversTeamPrices(): Promise<void> {
-    this.fantasyPricesDrivers = await lastValueFrom(this.fantasyApiService.getAllPricesDriver(this.raceSelected!.id).pipe(
-      takeUntil(this.destroy$),
-      catchError((error) => this.utilsService.handleError(ERROR_PRICE_FETCH, error, []))
-    ));
-
-    this.fantasyPricesDriversFiltered = [...this.fantasyPricesDrivers]
-    this.cdr.markForCheck();
-
-    this.fantasyPricesTeams = await lastValueFrom(this.fantasyApiService.getAllPricesTeam(this.raceSelected!.id).pipe(
-      takeUntil(this.destroy$),
-      catchError((error) => this.utilsService.handleError(ERROR_PRICE_FETCH, error, []))
-    ));
-
-    this.fantasyPricesTeamsFiltered = [...this.fantasyPricesTeams]
-    this.cdr.markForCheck();
+    const raceId = this.raceSelected!.id;
+    const prices = await lastValueFrom(forkJoin({
+      drivers: this.fantasyApiService.getAllPricesDriver(raceId).pipe(
+        catchError(error => this.utilsService.handleError<FantasyPricesDriver[]>(ERROR_PRICE_FETCH, error, []))
+      ),
+      teams: this.fantasyApiService.getAllPricesTeam(raceId).pipe(
+        catchError(error => this.utilsService.handleError<FantasyPricesTeam[]>(ERROR_PRICE_FETCH, error, []))
+      )
+    }).pipe(takeUntil(this.destroy$)), { defaultValue: undefined });
+    if (!prices) return;
+    this.fantasyPricesDrivers.set(prices.drivers);
+    this.fantasyPricesDriversFiltered.set([...prices.drivers]);
+    this.fantasyPricesTeams.set(prices.teams);
+    this.fantasyPricesTeamsFiltered.set([...prices.teams]);
   }
 
   isDriverSelected(driver: Driver): boolean  {
-    return this.driversSelected.some((d: Driver | undefined) => d?.name === driver.name);
+    return this.driversSelected().some((d: Driver | undefined) => d?.name === driver.name);
   }
 
   isTeamSelected(team: Team): boolean  {
-    return this.teamsSelected.some((t: Team | undefined) => t?.name === team.name);
+    return this.teamsSelected().some((t: Team | undefined) => t?.name === team.name);
   }
 
   selectedDriversCount(): number {
-    return this.driversSelected.filter((d: Driver | undefined) => d !== undefined).length;
+    return this.driversSelected().filter((d: Driver | undefined) => d !== undefined).length;
   }
 
   selectedTeamsCount(): number {
-    return this.teamsSelected.filter((t: Team | undefined) => t !== undefined).length;
+    return this.teamsSelected().filter((t: Team | undefined) => t !== undefined).length;
   }
 
   addDriverToSelection(fantasyDriver: FantasyPricesDriver): void {
-    if (!this.fantasyElection.driverOne) {
-      this.fantasyElection.driverOne = fantasyDriver.driver;
-      this.fantasydriversSelected[0] = fantasyDriver;
-    } else if (!this.fantasyElection.driverTwo) {
-      this.fantasyElection.driverTwo = fantasyDriver.driver;
-      this.fantasydriversSelected[1] = fantasyDriver;
-    } else {
-      this.fantasyElection.driverThree = fantasyDriver.driver;
-      this.fantasydriversSelected[2] = fantasyDriver;
-    }
-
-    this.syncDriversSelected();
-    this.calculateTotalPrice();
+    const election = this.fantasyElection();
+    const index = !election.driverOne ? 0 : !election.driverTwo ? 1 : 2;
+    const key = (['driverOne', 'driverTwo', 'driverThree'] as const)[index];
+    this.fantasyElection.update(current => ({ ...current, [key]: fantasyDriver.driver }));
+    this.fantasydriversSelected.update(prices => prices.map((price, i) => i === index ? fantasyDriver : price));
   }
 
   addTeamToSelection(fantasyTeam: FantasyPricesTeam): void {
-    if (!this.fantasyElection.teamOne) {
-      this.fantasyElection.teamOne = fantasyTeam.team;
-      this.fantasyTeamsSelected[0] = fantasyTeam;
-    } else {
-      this.fantasyElection.teamTwo = fantasyTeam.team;
-      this.fantasyTeamsSelected[1] = fantasyTeam;
-    }
-
-    this.syncTeamSelected();
-    this.calculateTotalPrice();
+    const index = !this.fantasyElection().teamOne ? 0 : 1;
+    const key = (['teamOne', 'teamTwo'] as const)[index];
+    this.fantasyElection.update(current => ({ ...current, [key]: fantasyTeam.team }));
+    this.fantasyTeamsSelected.update(prices => prices.map((price, i) => i === index ? fantasyTeam : price));
   }
 
   deleteDriverFromSelection(index: number): void {
-    if (index === 0) {
-      this.fantasyElection.driverOne = undefined;
-    } else if (index === 1) {
-      this.fantasyElection.driverTwo = undefined;
-    } else {
-      this.fantasyElection.driverThree = undefined;
-    }
-
-    this.syncDriversSelected();
-    this.calculateTotalPrice();
+    const key = index === 0 ? 'driverOne' : index === 1 ? 'driverTwo' : 'driverThree';
+    this.fantasyElection.update(current => ({ ...current, [key]: undefined }));
   }
 
   deleteTeamFromSelection(index: number): void {
-    if (index === 0) {
-      this.fantasyElection.teamOne = undefined;
-    } else {
-      this.fantasyElection.teamTwo = undefined;
-    }
-
-    this.syncTeamSelected();
-    this.calculateTotalPrice();
-  }
-
-  private syncDriversSelected(): void {
-    this.driversSelected = [
-      this.fantasyElection.driverOne,
-      this.fantasyElection.driverTwo,
-      this.fantasyElection.driverThree
-    ];    
-  }
-
-  private syncTeamSelected(): void {
-    this.teamsSelected = [
-      this.fantasyElection.teamOne,
-      this.fantasyElection.teamTwo
-    ];
-  }
-
-  private calculateTotalPrice(): void {
-    this.totalMoney = 80000000;
-    this.calculateDriversValue();
-    this.calculateTeamsValue();
-  }
-
-  private calculateDriversValue(): void {
-    if (this.fantasyElection.driverOne) {
-      const driverOne = this.fantasydriversSelected.filter((d): d is FantasyPricesDriver => !!d).find(d => d.driver.id === this.fantasyElection.driverOne!.id);
-      this.totalMoney -= driverOne!.price;
-    }
-
-    if (this.fantasyElection.driverTwo) {
-      const driverTwo = this.fantasydriversSelected.filter((d): d is FantasyPricesDriver => !!d).find(d => d.driver.id === this.fantasyElection.driverTwo!.id);
-      this.totalMoney -= driverTwo!.price;
-    }
-
-    if (this.fantasyElection.driverThree) {
-       const driverThree = this.fantasydriversSelected.filter((d): d is FantasyPricesDriver => !!d).find(d => d.driver.id === this.fantasyElection.driverThree!.id);
-      this.totalMoney -= driverThree!.price;
-    }
-  }
-
-  private calculateTeamsValue(): void {
-    if (this.fantasyElection.teamOne) {
-      const teamOne = this.fantasyTeamsSelected.filter((t): t is FantasyPricesTeam => !!t).find(t => t.team.id === this.fantasyElection.teamOne!.id);
-      this.totalMoney -= teamOne!.price;
-    }
-
-    if (this.fantasyElection.teamTwo) {
-      const teamTwo = this.fantasyTeamsSelected.filter((t): t is FantasyPricesTeam => !!t).find(t => t.team.id === this.fantasyElection.teamTwo!.id);
-      this.totalMoney -= teamTwo!.price;
-    }
+    const key = index === 0 ? 'teamOne' : 'teamTwo';
+    this.fantasyElection.update(current => ({ ...current, [key]: undefined }));
   }
 
   private resetFantasyElection(): void {
-    this.fantasyElection = new FantasyElection();
-    this.driversSelected = [undefined, undefined, undefined];
-    this.fantasydriversSelected = [undefined, undefined, undefined];
-    this.teamsSelected = [undefined, undefined];
-    this.fantasyTeamsSelected = [undefined, undefined];
-    this.calculateTotalPrice()
+    this.fantasyElection.set(new FantasyElection());
+    this.fantasydriversSelected.set([undefined, undefined, undefined]);
+    this.fantasyTeamsSelected.set([undefined, undefined]);
   }
 
   private setFantasyElection(fantasyElection: FantasyElection): void {
-    this.fantasyElection = fantasyElection;
-    this.driversSelected = [fantasyElection.driverOne, fantasyElection.driverTwo, fantasyElection.driverThree];
-    this.teamsSelected = [fantasyElection.teamOne, fantasyElection.teamTwo];
+    this.fantasyElection.set(fantasyElection);
+  }
+
+  private loadEvolutionChart<T extends { race: Race }>(
+    request: Observable<T[]>,
+    value: (entry: T) => number,
+    team: (entry: T) => string,
+    update: (chart: ChartData<'line'>, entries: T[]) => void
+  ): void {
+    request.pipe(
+      takeUntil(this.destroy$),
+      catchError(error => this.utilsService.handleError<T[]>(ERROR_PRICE_FETCH, error, []))
+    ).subscribe(entries => {
+      if (!entries.length) return;
+      const color = colorsMappings[team(entries[0])] || '#888888';
+      update({
+        labels: entries.map(entry => entry.race.name),
+        datasets: [{
+          data: entries.map(value),
+          borderColor: color,
+          backgroundColor: color,
+          pointBackgroundColor: color,
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          fill: false,
+          tension: 0.3,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      }, entries);
+    });
   }
 
   generateEvolutionDriverPriceChart(data: FantasyPricesDriver): void {
-    this.showDriverPricesData = true;
-    this.driverPriceData = data;
-
-    this.fantasyApiService.getDriverPrices(data.driver.id).pipe(
-      takeUntil(this.destroy$),
-      catchError((error) => this.utilsService.handleError(ERROR_PRICE_FETCH, error, []))
-    ).subscribe((fantasyPricesDriverArray: FantasyPricesDriver[]) => {
-      if (!fantasyPricesDriverArray.length) return;
-      this.cdr.markForCheck();
-
-      this.showDriverMaxPriceData = Math.max(...fantasyPricesDriverArray.map((fp: FantasyPricesDriver) => fp.price));
-      this.showDriverStartPriceData = fantasyPricesDriverArray[0].price;
-
-      const labels = fantasyPricesDriverArray.map(fp => fp.race.name);
-      const data = fantasyPricesDriverArray.map(fp => parseFloat(fp.price.toFixed(2)));
-
-      const colorKey = fantasyPricesDriverArray[0].driver.team.name;
-      const color = colorsMappings[colorKey] || '#888888';
-
-      this.dataDriversEvolutionPrice = {
-        labels,
-        datasets: [
-          {
-            data,
-            borderColor: color,
-            backgroundColor: color,
-            pointBackgroundColor: color,
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2,
-            fill: false,
-            tension: 0.3,
-            pointRadius: 4,
-            pointHoverRadius: 6
-          }
-        ]
-      }
-    });
+    this.showDriverPricesData.set(true);
+    this.driverPriceData.set(data);
+    this.loadEvolutionChart(this.fantasyApiService.getDriverPrices(data.driver.id),
+      entry => parseFloat(entry.price.toFixed(2)), entry => entry.driver.team.name,
+      (chart, entries) => {
+        this.dataDriversEvolutionPrice.set(chart);
+        this.showDriverMaxPriceData.set(Math.max(...entries.map(entry => entry.price)));
+        this.showDriverStartPriceData.set(entries[0].price);
+      });
   }
 
   generateEvolutionTeamPriceChart(data: FantasyPricesTeam): void {
-    this.showTeamPricesData = true;
-    this.teamPriceData = data;
-
-    this.fantasyApiService.getTeamPrices(data.team.id).pipe(
-      takeUntil(this.destroy$),
-      catchError((error) => this.utilsService.handleError(ERROR_PRICE_FETCH, error, []))
-    ).subscribe((fantasyPricesTeamArray: FantasyPricesTeam[]) => {
-      if (!fantasyPricesTeamArray.length) return;
-      this.cdr.markForCheck();
-
-      this.showTeamMaxPriceData = Math.max(...fantasyPricesTeamArray.map((fp: FantasyPricesTeam) => fp.price));
-      this.showTeamStartPriceData = fantasyPricesTeamArray[0].price;
-
-      const labels = fantasyPricesTeamArray.map(fp => fp.race.name);
-      const data = fantasyPricesTeamArray.map(fp => parseFloat(fp.price.toFixed(2)));
-
-      const colorKey = fantasyPricesTeamArray[0].team.name;
-      const color = colorsMappings[colorKey] || '#888888';
-
-      this.dataTeamsEvolutionPrice = {
-        labels,
-        datasets: [
-          {
-            data,
-            borderColor: color,
-            backgroundColor: color,
-            pointBackgroundColor: color,
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2,
-            fill: false,
-            tension: 0.3,
-            pointRadius: 4,
-            pointHoverRadius: 6
-          }
-        ]
-      }
-    });
+    this.showTeamPricesData.set(true);
+    this.teamPriceData.set(data);
+    this.loadEvolutionChart(this.fantasyApiService.getTeamPrices(data.team.id),
+      entry => parseFloat(entry.price.toFixed(2)), entry => entry.team.name,
+      (chart, entries) => {
+        this.dataTeamsEvolutionPrice.set(chart);
+        this.showTeamMaxPriceData.set(Math.max(...entries.map(entry => entry.price)));
+        this.showTeamStartPriceData.set(entries[0].price);
+      });
   }
 
   generateEvolutionPointDriverChart(data: FantasyPricesDriver): void {
-    this.showDriverPointsData = true;
-    this.driverPointData = data;
-
-    this.fantasyApiService.getDriverPoints(data.driver.id).pipe(
-      takeUntil(this.destroy$),
-      catchError((error) => this.utilsService.handleError(ERROR_PRICE_FETCH, error, []))
-    ).subscribe((fantasyPointsDriverArray: FantasyPointsDriver[]) => {
-      if (!fantasyPointsDriverArray.length) return;
-      this.cdr.markForCheck();
-
-      this.showDriverBestPointsData = Math.max(...fantasyPointsDriverArray.map((fp: FantasyPointsDriver) => fp.points));
-      this.showDriverMedianPointsData = fantasyPointsDriverArray.reduce((acc, fp) => acc + fp.points, 0) / fantasyPointsDriverArray.length;
-
-      const labels = fantasyPointsDriverArray.map(fp => fp.race.name);
-      const data = fantasyPointsDriverArray.map(fp => fp.points);
-
-      const colorKey = fantasyPointsDriverArray[0].driver.team.name;
-      const color = colorsMappings[colorKey] || '#888888';
-
-      this.dataDriversEvolutionPoints = {
-        labels,
-        datasets: [
-          {
-            data,
-            borderColor: color,
-            backgroundColor: color,
-            pointBackgroundColor: color,
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2,
-            fill: false,
-            tension: 0.3,
-            pointRadius: 4,
-            pointHoverRadius: 6
-          }
-        ]
-      }
-    });
+    this.showDriverPointsData.set(true);
+    this.driverPointData.set(data);
+    this.loadEvolutionChart(this.fantasyApiService.getDriverPoints(data.driver.id),
+      entry => entry.points, entry => entry.driver.team.name,
+      (chart, entries) => {
+        this.dataDriversEvolutionPoints.set(chart);
+        this.showDriverBestPointsData.set(Math.max(...entries.map(entry => entry.points)));
+        this.showDriverMedianPointsData.set(entries.reduce((total, entry) => total + entry.points, 0) / entries.length);
+      });
   }
 
   generateEvolutionPointTeamChart(data: FantasyPricesTeam): void {
-    this.showTeamPointsData = true;
-    this.teamPointData = data;
+    this.showTeamPointsData.set(true);
+    this.teamPointData.set(data);
+    this.loadEvolutionChart(this.fantasyApiService.getTeamPoints(data.team.id),
+      entry => entry.points, entry => entry.team.name,
+      (chart, entries) => {
+        this.dataTeamsEvolutionPoints.set(chart);
+        this.showTeamBestPointsData.set(Math.max(...entries.map(entry => entry.points)));
+        this.showTeamMedianPointsData.set(entries.reduce((total, entry) => total + entry.points, 0) / entries.length);
+      });
+  }
 
-    this.fantasyApiService.getTeamPoints(data.team.id).pipe(
-      takeUntil(this.destroy$),
-      catchError((error) => this.utilsService.handleError(ERROR_PRICE_FETCH, error, []))
-    ).subscribe((fantasyPointsTeamArray: FantasyPointsTeam[]) => {
-      if (!fantasyPointsTeamArray.length) return;
-      this.cdr.markForCheck();
-
-      this.showTeamBestPointsData = Math.max(...fantasyPointsTeamArray.map((fp: FantasyPointsTeam) => fp.points));
-      this.showTeamMedianPointsData = fantasyPointsTeamArray.reduce((acc, fp) => acc + fp.points, 0) / fantasyPointsTeamArray.length;
-
-      const labels = fantasyPointsTeamArray.map(fp => fp.race.name);
-      const data = fantasyPointsTeamArray.map(fp => fp.points);
-
-      const colorKey = fantasyPointsTeamArray[0].team.name;
-      const color = colorsMappings[colorKey] || '#888888';
-
-      this.dataTeamsEvolutionPoints = {
-        labels,
-        datasets: [
-          {
-            data,
-            borderColor: color,
-            backgroundColor: color,
-            pointBackgroundColor: color,
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2,
-            fill: false,
-            tension: 0.3,
-            pointRadius: 4,
-            pointHoverRadius: 6
-          }
-        ]
-      }
-    });
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   readonly electionEnabled = false;
@@ -581,22 +426,21 @@ export class FantasyTeamComponent {
     }
 
     if (
-      this.fantasyElection.driverOne &&
-      this.fantasyElection.driverTwo &&
-      this.fantasyElection.driverThree &&
-      this.fantasyElection.teamOne &&
-      this.fantasyElection.teamTwo
+      this.fantasyElection().driverOne &&
+      this.fantasyElection().driverTwo &&
+      this.fantasyElection().driverThree &&
+      this.fantasyElection().teamOne &&
+      this.fantasyElection().teamTwo
     ) {
-      if (this.totalMoney < 0)
+      if (this.totalMoney() < 0)
         return this.messageInfoService.showWarn(WARNING_MONEY_NEGATIVE);
 
-      this.fantasyElection.race = this.raceSelected;
-      this.fantasyElection.season = this.raceSelected?.season;
-      this.fantasyElection.user = new Account(
-        parseInt(
-          this.authJWTService.getIdFromToken(localStorage.getItem("auth")!),
-        ),
-      );
+      this.fantasyElection.update(election => ({
+        ...election,
+        race: this.raceSelected,
+        season: this.raceSelected?.season,
+        user: new Account(parseInt(this.authJWTService.getIdFromToken(localStorage.getItem('auth')!)))
+      }));
 
       this.messageInfoService.showWarn('No esta habilitado el fantasy.');
     } else {
