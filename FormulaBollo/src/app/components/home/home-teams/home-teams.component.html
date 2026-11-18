@@ -1,12 +1,12 @@
-<div class="bg-gray-100 dark:bg-gray-900">
+<div class="bg-panel-alt text-ink">
 	<div class="my-container teams position-relative">
-		<div class="ml-0 md:ml-7">
-			<h2 class="AudioWide uppercase text-2xl xs:text-3xl font-bold mb-8 pt-8 text-center text-red-600 dark:text-white">Escuderías</h2>
+		<div>
+			<h2 class="font-display uppercase tracking-wide text-display-md font-bold mb-8 pt-8 text-left text-ink after:mt-3 after:block after:h-[3px] after:w-12 after:bg-accent after:content-['']">Escuderías</h2>
 		</div>
-		<div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 content-center gap-4 px-6">
+		<div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 content-center gap-4">
 			@for (team of teams(); track $index) {
 				<a
-					class="focus-visible:outline-2 focus-visible:outline-red-600 shadow-md flex h-36 rounded-2xl cursor-pointer animation-cubic-03 bg-white dark:bg-gray-800"
+					class="focus-visible:outline-2 focus-visible:outline-offset-2 flex h-36 rounded-panel border border-rule cursor-pointer animation-cubic-03 bg-panel"
 					[class]="'hover-bg-' + (team.name | SpaceToUnderscore)"
 					[routerLink]="['/teams/' + teamNameSpaceToUnderScore(team.name)]">
 					<img
@@ -21,7 +21,7 @@
 			}
 			@if (loading()) {
 				@for (item of 10 | skeletonItems; track $index) {
-					<p-skeleton height="9rem" styleClass="rounded-4 border-round-2xl" />
+					<p-skeleton height="9rem" styleClass="rounded-panel" />
 				}
 			}
 		</div>
@@ -36,7 +36,7 @@
 		<div class="mt-8 pb-8 text-center">
 			<a
 				[routerLink]="['/teams']"
-				class="inline-flex min-h-11 md:min-h-0 items-center text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition">
+				class="inline-flex min-h-11 md:min-h-0 items-center text-accent-text hover:underline transition">
 				Ver todas las escuderías
 				<i class="pi pi-chevron-right ml-1 pt-1" style="font-size: 0.65rem"></i>
 			</a>

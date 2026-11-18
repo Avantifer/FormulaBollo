@@ -4,14 +4,12 @@ import { DriverPoints } from '../../../../../shared/models/driverPoints';
 import { RouterLink } from '@angular/router';
 import { UtilsService } from '../../../../../shared/services/utils.service';
 import { SpaceToUnderscorePipe } from '../../../../../shared/pipes/spaceToUnderscore.pipe';
-import { ChipModule } from 'primeng/chip';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-top10-drivers',
   imports: [
     SpaceToUnderscorePipe,
-    ChipModule,
     RouterLink
   ],
   templateUrl: './top10-drivers.component.html',

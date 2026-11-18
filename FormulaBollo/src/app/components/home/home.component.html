@@ -1,11 +1,13 @@
-<div class="principal-image relative h-60 md:h-80 lg:h-[600px]">
-	<h1
-		class="Ethnocentric_Regular absolute text-white text-center tracking-wide uppercase top-1/2 left-1/2 z-10 text-4xl sm:text-6xl md:text-7xl lg:text-8xl">
-		Formula Bollo
-	</h1>
-	<img [ngSrc]="imageService.getImageUrl('intro/introImage.avif')" alt="principal" class="brightness-70 object-cover" fill priority />
+<div class="principal-image relative flex h-56 md:h-72 lg:h-[360px] items-center justify-center border-b-3 border-accent bg-pit">
+	<div class="relative z-10 w-full px-4 text-center">
+		<h1 class="font-display font-bold text-on-pit tracking-wide uppercase text-5xl sm:text-display-lg lg:text-display-xl">
+			Formula Bollo
+		</h1>
+		<p class="mx-auto mt-3 max-w-3xl text-base lg:text-lg text-on-pit/90">Clasificaciones, resultados, estadísticas y Fantasy de nuestra liga de Fórmula 1.</p>
+	</div>
+	<img [ngSrc]="imageService.getImageUrl('intro/introImage.avif')" alt="" class="brightness-70 object-cover" fill priority />
 </div>
-<div class="bg-gradient-to-b from-slate-100 to-white dark:from-slate-900 dark:to-slate-800 text-slate-900 dark:text-white">
+<div class="bg-canvas text-ink">
 	<app-home-drivers />
 	<app-home-teams />
 	<app-home-configuration />
