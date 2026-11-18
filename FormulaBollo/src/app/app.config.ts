@@ -20,9 +20,20 @@ const palette = {
 const FormulaBolloPreset = definePreset(Aura, {
   semantic: {
     primary: palette.primary,
+    focusRing: {
+      width: '2px',
+      style: 'solid',
+      color: '{primary.600}',
+      offset: '2px'
+    },
+    formField: { borderRadius: '0.25rem' },
+    content: { borderRadius: '0.5rem' },
     colorScheme: {
       light: { surface: palette.surface },
-      dark: { surface: palette.surface }
+      dark: {
+        surface: palette.surface,
+        focusRing: { color: '{primary.400}' }
+      }
     }
   }
 });
