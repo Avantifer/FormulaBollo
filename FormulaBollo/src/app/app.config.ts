@@ -9,7 +9,7 @@ import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeuix/themes/aura';
 import { definePreset } from '@primeuix/themes';
 import type { ComponentsDesignTokens } from '@primeuix/themes/types';
-import { provideRouter, withPreloading } from '@angular/router';
+import { provideRouter, withInMemoryScrolling, withPreloading } from '@angular/router';
 import { SelectivePreloadStrategy } from '../shared/services/selective-preload.strategy';
 
 
@@ -114,7 +114,7 @@ export const FormulaBolloPreset = definePreset(Aura, {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZonelessChangeDetection(),
-    provideRouter(routes, withPreloading(SelectivePreloadStrategy)),
+    provideRouter(routes, withPreloading(SelectivePreloadStrategy), withInMemoryScrolling({ scrollPositionRestoration: 'enabled' })),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     providePrimeNG({
       translation: {

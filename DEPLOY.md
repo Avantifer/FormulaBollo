@@ -121,10 +121,6 @@ Esto es infraestructura: no se arregla con código y lo tienes que hacer tú en 
 - [ ] **Temporada 3**: el frontend la usa como actual (`environment.seasonActual`) y la base solo tiene la 1 y la 2.
       Sin ella la portada sale vacía y guardar sanciones falla por una clave foránea. Hay un `INSERT` comentado al
       final de V001; el `id` que se cree debe ser el que usa el frontend (3).
-- [ ] **Configuraciones por temporada**: `GET /configurations/all?season=N` ya filtra por `configuration.season_id`
-      (antes devolvía todas las temporadas mezcladas). Para la temporada 3 hay que insertar sus filas en
-      `configuration` con `season_id` = 3; sin ellas la sección «Configuraciones» de la portada sale vacía. Las filas
-      con `season_id` nulo solo se devuelven si se llama sin `season`.
 - [ ] **V002: claves únicas (auditoría del backend).** Sin ellas un doble envío podía duplicar resultados (hay
       duplicados reales en la copia local) y sumar puntos de más. Con la aplicación parada y copia hecha
       (`mariadb-dump --single-transaction <bd> > antes_V002.sql`):

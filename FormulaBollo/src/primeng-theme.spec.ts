@@ -102,12 +102,13 @@ describe('PrimeNG shared control theme', () => {
         const button = fixture.nativeElement.querySelector(`.${hook} .p-button`);
         expect(getComputedStyle(button).backgroundColor).toBe(tokenColor(background));
         expect(getComputedStyle(button).color).toBe(tokenColor(foreground));
+        expect(getComputedStyle(button).boxShadow).toBe('none');
       }
       const whiteButton = fixture.nativeElement.querySelector('p-button.text-white .p-button');
       expect(getComputedStyle(whiteButton).color).toBe(tokenColor('color-white'));
       const themeButton = fixture.nativeElement.querySelector('.header-button .p-button');
-      expect(getComputedStyle(themeButton).backgroundColor).toBe(tokenColor('panel-alt'));
-      expect(getComputedStyle(themeButton).color).toBe(tokenColor('ink'));
+      expect(getComputedStyle(themeButton).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+      expect(getComputedStyle(themeButton).color).toBe(tokenColor('on-pit'));
     }
   });
 });
