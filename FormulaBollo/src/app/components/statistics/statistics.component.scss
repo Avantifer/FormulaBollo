@@ -1,9 +1,11 @@
 ::ng-deep .buttonStatisticsSelected .p-button {
-  background: var(--color-principal) !important;
-  color: #fff !important;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
 }
 
 ::ng-deep .buttonStatisticsSelected .p-button:hover {
-  background: var(--color-principal-dark) !important;
-  color: #fff !important;
+  background: color-mix(in srgb, var(--accent) 85%, black);
+  border-color: color-mix(in srgb, var(--accent) 85%, black);
+  color: var(--on-accent);
 }

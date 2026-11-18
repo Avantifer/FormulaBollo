@@ -1,30 +1,30 @@
 <div class="flex items-center mb-6">
-	<h2 class="text-xl font-bold">Récords históricos</h2>
+	<h2 class="font-display uppercase tracking-wide text-ink text-xl font-bold">Récords históricos</h2>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-10">
 	@for (record of records(); track $index) {
-		<div class="flex items-start space-x-4 p-4 shadow rounded-lg dark:bg-slate-600 bg-slate-300/50 overflow-hidden">
+		<div class="flex min-w-0 items-start space-x-4 bg-panel border border-rule rounded-panel p-4 overflow-hidden">
 			<div class="flex-shrink-0">
-				<div class="h-10 w-10 rounded-full bg-gradient-to-tr from-yellow-500 to-orange-400 flex items-center justify-center shadow-lg">
-					<i class="pi pi-trophy"></i>
+				<div class="size-10 rounded-row bg-pit text-on-pit flex items-center justify-center">
+					<i class="pi pi-trophy text-sector-best"></i>
 				</div>
 			</div>
 			<div class="flex-1 min-w-0 relative">
-				<h3 class="text-sm font-medium dark:text-gray-200 text-gray-800 mb-1">{{ record.title }}</h3>
+				<h3 class="text-sm font-medium text-ink-soft mb-1">{{ record.title }}</h3>
 				<div class="flex items-baseline gap-2 mb-1">
-					<p class="text-2xl font-bold mb-1">
+					<p class="font-display tabular-nums text-4xl font-bold text-ink mb-1">
 						{{ record.title.includes('porcentaje') ? record.value.toFixed(2) : record.value }}
 						{{ record.title.includes('porcentaje') ? '%' : '' }}
 					</p>
 				</div>
-				<p class="text-sm text-gray-600 dark:text-gray-300">
+				<p class="text-sm text-ink-soft break-words">
 					<a
-						class="cursor-pointer hover:underline focus-visible:underline focus-visible:outline-none"
+						class="cursor-pointer text-ink hover:underline focus-visible:underline focus-visible:outline-none"
 						[routerLink]="['/drivers/' + utilsService.spaceToUnderScore(record.driver.name)]">
 						{{ record.driver.name }}
 					</a>
 					<a
-						class="cursor-pointer hover:underline focus-visible:underline focus-visible:outline-none"
+						class="cursor-pointer text-ink hover:underline focus-visible:underline focus-visible:outline-none"
 						[routerLink]="['/teams/' + utilsService.spaceToUnderScore(record.team.name)]">
 						({{ record.team.name }})
 					</a>

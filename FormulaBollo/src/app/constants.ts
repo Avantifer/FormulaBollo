@@ -69,6 +69,17 @@ export const colorsMappings: { [key: string]: string } = {
   "Kick Sauber": "#52e252"
 };
 
+const CHART_LABEL_COLORS = { light: '#4A525C', dark: '#C3C8CF' };
+const CHART_GRID_COLORS = { light: '#DEE1E5', dark: '#2F353D' };
+
+export function chartLabelColor(isDarkMode: boolean): string {
+  return isDarkMode ? CHART_LABEL_COLORS.dark : CHART_LABEL_COLORS.light;
+}
+
+export function chartGridColor(isDarkMode: boolean): string {
+  return isDarkMode ? CHART_GRID_COLORS.dark : CHART_GRID_COLORS.light;
+}
+
 export function getBarChartOptions(isDarkMode: boolean): any {
   return {
     maintainAspectRatio: false,
@@ -87,7 +98,7 @@ export function getBarChartOptions(isDarkMode: boolean): any {
           display: false
         },
         ticks: {
-          color: isDarkMode ? 'rgb(220, 220, 220)' : 'rgb(150, 150, 150)',
+          color: chartLabelColor(isDarkMode),
           font: {
             size: 12,
             weight: '500'
@@ -96,10 +107,10 @@ export function getBarChartOptions(isDarkMode: boolean): any {
       },
       y: {
         grid: {
-          color: "rgba(200, 200, 200, 0.2)"
+          color: chartGridColor(isDarkMode)
         },
         ticks: {
-          color: isDarkMode ? 'rgb(220, 220, 220) ' : 'rgb(150, 150, 150)',
+          color: chartLabelColor(isDarkMode),
         }
       },
     }
@@ -123,10 +134,10 @@ export function getBarMobileChartOptions(isDarkMode: boolean): any {
     scales: {
       x: {
         grid: {
-          color: 'rgba(200, 200, 200, 0.2)'
+          color: chartGridColor(isDarkMode)
         },
         ticks: {
-          color: isDarkMode ? 'rgb(220, 220, 220)' : 'rgb(150, 150, 150)',
+          color: chartLabelColor(isDarkMode),
           font: {
             size: 12,
             weight: '500'
@@ -138,7 +149,7 @@ export function getBarMobileChartOptions(isDarkMode: boolean): any {
           display: false
         },
         ticks: {
-          color: isDarkMode ? 'rgb(220, 220, 220) ' : 'rgb(150, 150, 150)',
+          color: chartLabelColor(isDarkMode),
           font: {
             size: 12,
             weight: '500'
@@ -161,7 +172,7 @@ export function getPieChartOptions(isDarkMode: boolean): any {
       legend: {
         position: 'right',
         labels: {
-          color: isDarkMode ? 'rgb(220, 220, 220) ' : 'rgb(150, 150, 150)'
+          color: chartLabelColor(isDarkMode)
         }
       },
     },
@@ -180,7 +191,7 @@ export function getLineChartOptions(isDarkMode: boolean, displayLegend: boolean 
         display: displayLegend,
         position: 'top',
         labels: {
-          color: isDarkMode ? 'rgb(220, 220, 220) ' : 'rgb(150, 150, 150)',
+          color: chartLabelColor(isDarkMode),
           usePointStyle: true,
           boxWidth: 10,
           padding: 20
@@ -194,26 +205,26 @@ export function getLineChartOptions(isDarkMode: boolean, displayLegend: boolean 
     scales: {
       x: {
         ticks: {
-          color: isDarkMode ? 'rgb(220, 220, 220) ' : 'rgb(150, 150, 150)'
+          color: chartLabelColor(isDarkMode)
         },
         grid: {
-          color: "rgba(200, 200, 200, 0.2)"
+          color: chartGridColor(isDarkMode)
         }
       },
       y: {
         beginAtZero: true,
         ticks: {
-          color: isDarkMode ? 'rgb(220, 220, 220) ' : 'rgb(150, 150, 150)'
+          color: chartLabelColor(isDarkMode)
         },
         grid: {
-          color: "rgba(200, 200, 200, 0.2)"
+          color: chartGridColor(isDarkMode)
         }
       }
     }
   }
 };
 function createComparisonChartOptions(isDarkMode: boolean, isMobile: boolean = false): any {
-  const labelColor = isDarkMode ? 'rgb(220, 220, 220)' : 'rgb(150, 150, 150)';
+  const labelColor = chartLabelColor(isDarkMode);
 
   const baseOptions: any = {
     maintainAspectRatio: false,
@@ -245,7 +256,7 @@ function createComparisonChartOptions(isDarkMode: boolean, isMobile: boolean = f
       y: {
         beginAtZero: true,
         grid: {
-          color: "rgba(200, 200, 200, 0.2)"
+          color: chartGridColor(isDarkMode)
         },
         ticks: {
           color: labelColor,
