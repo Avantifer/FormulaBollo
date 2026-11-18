@@ -13,7 +13,4 @@ public interface ConfigurationRepository extends JpaRepository<Configuration, Lo
     @Override
     @Query("SELECT c FROM Configuration c ORDER BY c.id")
     List<Configuration> findAll();
-
-    @Query("SELECT c FROM Configuration c WHERE c.season.number = :seasonNumber ORDER BY c.id")
-    List<Configuration> findBySeason(int seasonNumber);
 }

@@ -1,70 +1,80 @@
 package formula.bollo.controller;
 
-import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.List;
-
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.json.JsonCompareMode;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import formula.bollo.entity.Configuration;
-import formula.bollo.entity.Season;
 import formula.bollo.impl.ConfigurationImpl;
 import formula.bollo.mapper.ConfigurationMapper;
-import formula.bollo.repository.ConfigurationRepository;
+import jakarta.persistence.EntityManager;
 
+@DataJpaTest(properties = {
+        "spring.datasource.url=jdbc:h2:mem:configuration-controller;MODE=MariaDB;DB_CLOSE_DELAY=-1;NON_KEYWORDS=YEAR",
+        "spring.datasource.driver-class-name=org.h2.Driver",
+        "spring.datasource.username=sa",
+        "spring.datasource.password=",
+        "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
+        "spring.jpa.hibernate.ddl-auto=create-drop",
+        "spring.sql.init.mode=never"
+}, showSql = false)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Import({ ConfigurationController.class, ConfigurationImpl.class, ConfigurationControllerTest.Config.class })
 class ConfigurationControllerTest {
-    @Test
-    void requestedSeasonUsesFilteredRepositoryAndPreservesJson() throws Exception {
-        ConfigurationRepository configurations = mock(ConfigurationRepository.class);
-        when(configurations.findBySeason(2)).thenReturn(List.of(configuration()));
-        MockMvc mvc = mvc(configurations);
+    private static final String ALL_CONFIGURATIONS = """
+            [
+                {"id":10,"setting":"first","settingValue":"10"},
+                {"id":20,"setting":"second","settingValue":null},
+                {"id":30,"setting":"third","settingValue":"30"}
+            ]
+            """;
 
-        mvc.perform(get("/configurations/all").param("season", "2"))
-                .andExpect(status().isOk())
-                .andExpect(content().json("""
-                        [{"id":7,"setting":"Qualifying","settingValue":"Short"}]
-                        """, JsonCompareMode.STRICT));
+    @Autowired EntityManager em;
+    @Autowired ConfigurationController controller;
 
-        verify(configurations).findBySeason(2);
-        verify(configurations, never()).findAll();
-        verifyNoMoreInteractions(configurations);
+    MockMvc mvc;
+
+    @BeforeEach
+    void setUp() {
+        em.createNativeQuery("""
+                INSERT INTO configuration (id, setting, setting_value) VALUES
+                (30, 'third', '30'), (10, 'first', '10'), (20, 'second', NULL)
+                """).executeUpdate();
+        em.clear();
+        mvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
     @Test
-    void omittedSeasonUsesFindAll() throws Exception {
-        ConfigurationRepository configurations = mock(ConfigurationRepository.class);
-        when(configurations.findAll()).thenReturn(List.of(configuration()));
-        MockMvc mvc = mvc(configurations);
-
+    void getAllReturnsAllGlobalConfigurationsOrderedById() throws Exception {
         mvc.perform(get("/configurations/all"))
                 .andExpect(status().isOk())
-                .andExpect(content().json("""
-                        [{"id":7,"setting":"Qualifying","settingValue":"Short"}]
-                        """, JsonCompareMode.STRICT));
-
-        verify(configurations).findAll();
-        verify(configurations, never()).findBySeason(anyInt());
-        verifyNoMoreInteractions(configurations);
+                .andExpect(content().json(ALL_CONFIGURATIONS, JsonCompareMode.STRICT));
     }
 
-    private MockMvc mvc(ConfigurationRepository configurations) {
-        ConfigurationImpl mapper = new ConfigurationImpl(Mappers.getMapper(ConfigurationMapper.class));
-        return MockMvcBuilders.standaloneSetup(new ConfigurationController(configurations, mapper)).build();
+    @Test
+    void getAllIgnoresSeasonAndReturnsAllGlobalConfigurationsOrderedById() throws Exception {
+        mvc.perform(get("/configurations/all").param("season", "3"))
+                .andExpect(status().isOk())
+                .andExpect(content().json(ALL_CONFIGURATIONS, JsonCompareMode.STRICT));
     }
 
-    private Configuration configuration() {
-        Configuration configuration = new Configuration();
-        configuration.setId(7L);
-        configuration.setSetting("Qualifying");
-        configuration.setSettingValue("Short");
-        configuration.setSeason(new Season(42L, "Season 2", 2, 2026));
-        return configuration;
+    @TestConfiguration
+    static class Config {
+        @Bean
+        ConfigurationMapper configurationMapper() {
+            return Mappers.getMapper(ConfigurationMapper.class);
+        }
     }
 }
