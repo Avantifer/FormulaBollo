@@ -13,8 +13,7 @@ import { catchError } from 'rxjs';
 @Component({
     selector: 'select-races',
     imports: [ReactiveFormsModule, SelectModule],
-    templateUrl: './select-races.component.html',
-    styleUrl: './select-races.component.scss'
+    templateUrl: './select-races.component.html'
 })
 export class SelectRacesComponent {
   private readonly raceService: RaceApiService = inject(RaceApiService);

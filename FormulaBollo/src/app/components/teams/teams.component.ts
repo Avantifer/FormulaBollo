@@ -26,8 +26,7 @@ import { DriversGridTableComponent } from "../../../shared/components/drivers-te
     TeamsFiltersComponent,
     DriversGridTableComponent
 ],
-  templateUrl: './teams.component.html',
-  styleUrl: './teams.component.scss'
+  templateUrl: './teams.component.html'
 })
 export class TeamsComponent {
   protected readonly listOptions: any[] = [

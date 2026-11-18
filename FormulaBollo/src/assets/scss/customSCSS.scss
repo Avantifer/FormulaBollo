@@ -1,11 +1,9 @@
 @forward "settings/colors.scss";
-@forward "settings/fonts.scss";
 
 @forward "generic/container.scss";
 @forward "generic/animations.scss";
 @forward "generic/general.scss";
 
-@forward "objects/table.scss";
 @forward "objects/timingTower.scss";
 @forward "objects/toast.scss";
 @forward "objects/teamsColors.scss";
@@ -15,7 +13,6 @@
 @forward "objects/datepicker.scss";
 @forward "objects/dialog.scss";
 @forward "objects/card.scss";
-@forward "objects/textarea.scss";
 @forward "objects/header.scss";
 @forward "objects/inputtext.scss";
 @forward "objects/tooltip.scss";

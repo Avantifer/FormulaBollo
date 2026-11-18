@@ -31,8 +31,7 @@ import { DriverPoints } from '../../../../shared/models/driverPoints';
     SpaceToUnderscorePipe,
     SelectSeasonsComponent
   ],
-  templateUrl: './teams-info.component.html',
-  styleUrl: './teams-info.component.scss'
+  templateUrl: './teams-info.component.html'
 })
 export class TeamsInfoComponent {
   protected readonly activatedRoute: ActivatedRoute = inject(ActivatedRoute);
@@ -83,16 +82,16 @@ export class TeamsInfoComponent {
 
   private _mapTeamStats(teamInfo: TeamInfo): void {
     const stats = [
-      { icon: 'pi pi-trophy', color: 'text-yellow-400', key: 'Victorias', value: teamInfo.victories },
-      { icon: 'pi pi-flag', color: 'text-blue-400', key: 'Poles', value: teamInfo.poles },
-      { icon: 'pi pi-star', color: 'text-yellow-400', key: 'Podios', value: teamInfo.podiums },
-      { icon: 'pi pi-bolt', color: 'text-purple-400', key: 'Vueltas Rápidas', value: teamInfo.fastlaps },
-      { icon: 'pi pi-percentage', color: 'text-red-400', key: 'Posición Media', value: teamInfo.averagePosition.toFixed(2) },
-      { icon: 'pi pi-calendar', color: 'text-gray-400', key: 'Carreras Terminadas', value: teamInfo.racesFinished },
-      { icon: 'pi pi-chart-bar', color: 'text-green-400', key: 'Puntos Totales', value: teamInfo.totalPoints },
-      { icon: 'pi pi-exclamation-triangle', color: 'text-red-400', key: 'Penalizaciones', value: teamInfo.penalties },
-      { icon: 'pi pi-chart-line', color: 'text-blue-400', key: 'Mejor posición', value: teamInfo.bestPosition },
-      { icon: 'pi pi-shield', color: 'text-orange-400', key: 'Constructores', value: teamInfo.constructors }
+      { icon: 'pi pi-trophy', color: 'text-ink-soft', key: 'Victorias', value: teamInfo.victories },
+      { icon: 'pi pi-flag', color: 'text-ink-soft', key: 'Poles', value: teamInfo.poles },
+      { icon: 'pi pi-star', color: 'text-ink-soft', key: 'Podios', value: teamInfo.podiums },
+      { icon: 'pi pi-bolt', color: 'text-ink-soft', key: 'Vueltas Rápidas', value: teamInfo.fastlaps },
+      { icon: 'pi pi-percentage', color: 'text-ink-soft', key: 'Posición Media', value: teamInfo.averagePosition.toFixed(2) },
+      { icon: 'pi pi-calendar', color: 'text-ink-soft', key: 'Carreras Terminadas', value: teamInfo.racesFinished },
+      { icon: 'pi pi-chart-bar', color: 'text-ink-soft', key: 'Puntos Totales', value: teamInfo.totalPoints },
+      { icon: 'pi pi-exclamation-triangle', color: 'text-ink-soft', key: 'Penalizaciones', value: teamInfo.penalties },
+      { icon: 'pi pi-chart-line', color: 'text-ink-soft', key: 'Mejor posición', value: teamInfo.bestPosition },
+      { icon: 'pi pi-shield', color: 'text-ink-soft', key: 'Constructores', value: teamInfo.constructors }
     ];
   
     this.teamStatsArray.set(stats);

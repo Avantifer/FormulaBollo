@@ -21,8 +21,7 @@ import { Top10DriversComponent } from "./top10-drivers/top10-drivers.component";
     Top3DriversComponent,
     Top10DriversComponent
 ],
-  templateUrl: './home-drivers.component.html',
-  styleUrl: './home-drivers.component.scss'
+  templateUrl: './home-drivers.component.html'
 })
 export class HomeDriversComponent {
   private readonly driverApiService: DriverApiService = inject(DriverApiService);

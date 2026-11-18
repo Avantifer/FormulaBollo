@@ -12,8 +12,7 @@ import { ERROR_DRIVER_NAME_NOT_FOUND, ERROR_TEAM_NAME_NOT_FOUND } from '../../..
 @Component({
     selector: 'select-seasons',
     imports: [ReactiveFormsModule, SelectModule],
-    templateUrl: './select-seasons.component.html',
-    styleUrl: './select-seasons.component.scss'
+    templateUrl: './select-seasons.component.html'
 })
 export class SelectSeasonsComponent {
   private readonly seasonApiService: SeasonApiService = inject(SeasonApiService);

@@ -19,8 +19,7 @@ import { SkeletonItemsPipe } from '../../../../shared/pipes/skeletonItems.pipe';
     SkeletonItemsPipe,
     SpaceToUnderscorePipe
 ],
-  templateUrl: './home-teams.component.html',
-  styleUrl: './home-teams.component.scss'
+  templateUrl: './home-teams.component.html'
 })
 export class HomeTeamsComponent {
   private readonly teamApiService: TeamApiService = inject(TeamApiService);

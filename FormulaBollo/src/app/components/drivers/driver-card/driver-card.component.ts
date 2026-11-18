@@ -11,8 +11,7 @@ import { UtilsService } from '../../../../shared/services/utils.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-driver-card',
   imports: [CommonModule, SpaceToUnderscorePipe, RouterModule],
-  templateUrl: './driver-card.component.html',
-  styleUrl: './driver-card.component.scss'
+  templateUrl: './driver-card.component.html'
 })
 export class DriverCardComponent {
   protected readonly router: Router = inject(Router);

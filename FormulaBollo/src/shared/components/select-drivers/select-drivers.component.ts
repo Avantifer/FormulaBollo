@@ -18,8 +18,7 @@ import { SpaceToUnderscorePipe } from '../../pipes/spaceToUnderscore.pipe';
     SelectModule,
     SpaceToUnderscorePipe
   ],
-  templateUrl: './select-drivers.component.html',
-  styleUrls: ['./select-drivers.component.scss']
+  templateUrl: './select-drivers.component.html'
 })
 export class SelectDriversComponent {
   private readonly driverApiService: DriverApiService = inject(DriverApiService);

@@ -15,6 +15,7 @@ import { FormulaBolloPreset } from './app/app.config';
     <p-selectbutton [options]="options" [(ngModel)]="selected" />
     <p-button class="fantasyHeaderButton" label="Fantasy" />
     <p-button class="bolloHeaderButton" label="Bollo" />
+    <p-button class="header-button text-ink" icon="pi pi-sun" ariaLabel="Cambiar tema" />
     <p-button class="text-white" label="Guardar" />
   `
 })
@@ -55,7 +56,7 @@ describe('PrimeNG shared control theme', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     // Measure the final theme colors without waiting for decorative transitions.
-    fixture.nativeElement.querySelectorAll('.p-select, .p-togglebutton, .p-togglebutton-content')
+    fixture.nativeElement.querySelectorAll('.p-select, .p-togglebutton, .p-togglebutton-content, .p-button')
       .forEach((control: HTMLElement) => control.style.transition = 'none');
   });
 
@@ -104,6 +105,9 @@ describe('PrimeNG shared control theme', () => {
       }
       const whiteButton = fixture.nativeElement.querySelector('p-button.text-white .p-button');
       expect(getComputedStyle(whiteButton).color).toBe(tokenColor('color-white'));
+      const themeButton = fixture.nativeElement.querySelector('.header-button .p-button');
+      expect(getComputedStyle(themeButton).backgroundColor).toBe(tokenColor('panel-alt'));
+      expect(getComputedStyle(themeButton).color).toBe(tokenColor('ink'));
     }
   });
 });

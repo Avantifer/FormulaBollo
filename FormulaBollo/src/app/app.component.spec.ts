@@ -7,6 +7,15 @@ import { WebSocketService } from '../shared/services/websocket.service';
 import { provideComponentTesting } from '../testing/component-test-providers';
 
 describe('Cache version synchronization', () => {
+  it('reserves space for routed content before it loads', () => {
+    TestBed.configureTestingModule({ providers: provideComponentTesting() });
+    const fixture = TestBed.createComponent(AppComponent);
+    const main: HTMLElement = fixture.nativeElement.querySelector('main');
+
+    expect(main.classList.contains('min-h-screen')).toBeTrue();
+    fixture.destroy();
+  });
+
   it('rechecks existing cache at startup, recovery and visibility, surviving failed checks', () => {
     const connected$ = new Subject<void>();
     const messages$ = new Subject<number>();

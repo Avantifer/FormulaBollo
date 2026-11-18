@@ -12,8 +12,7 @@ import { SpaceToUnderscorePipe } from '../../../../../shared/pipes/spaceToUnders
     SpaceToUnderscorePipe,
     RouterLink
   ],
-  templateUrl: './top10-drivers.component.html',
-  styleUrls: ['./top10-drivers.component.scss']
+  templateUrl: './top10-drivers.component.html'
 })
 export class Top10DriversComponent {
   protected utilsService: UtilsService = inject(UtilsService);

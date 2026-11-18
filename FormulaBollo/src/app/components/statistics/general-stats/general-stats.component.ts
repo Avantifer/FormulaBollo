@@ -17,8 +17,7 @@ Chart.register(ChartDataLabels);
 @Component({
   selector: 'app-general-stats',
   imports: [ChartModule],
-  templateUrl: './general-stats.component.html',
-  styleUrl: './general-stats.component.scss'
+  templateUrl: './general-stats.component.html'
 })
 export class GeneralStatsComponent {
   private readonly driverApiService: DriverApiService = inject(DriverApiService);

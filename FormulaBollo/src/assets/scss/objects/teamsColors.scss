@@ -171,6 +171,8 @@ $teamTextColors: (
   background: colors.$colorRB;
 }
 
+// Sin capa y con !important: PrimeNG fija border-color en su capa CSS,
+// que gana a las utilidades de Tailwind; estos bordes conservan la prioridad de equipo.
 .border-Red_Bull {
   border-color: colors.$colorRedBull !important;
 }
