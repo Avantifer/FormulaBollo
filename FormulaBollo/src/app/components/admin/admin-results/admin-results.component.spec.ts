@@ -71,6 +71,14 @@ describe('AdminResultsComponent', () => {
     spyOn(console, 'error');
   });
 
+  it('associates the race date label with its input', () => {
+    const label = fixture.nativeElement.querySelector('label[for="race-date"]');
+    const input = fixture.nativeElement.querySelector('input#race-date');
+
+    expect(label?.textContent.trim()).toBe('Fecha y Hora de la carrera');
+    expect(input).not.toBeNull();
+  });
+
   afterEach(() => fixture?.destroy());
 
   async function settle(): Promise<void> {

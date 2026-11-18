@@ -6,8 +6,8 @@
 			<select-races [season]="actualSeason" class="w-full" (raceChanged)="onRaceChange($event)" />
 		</div>
 		<div>
-			<p class="text-sm font-medium mb-2 text-ink-soft">Fecha y Hora de la carrera</p>
-			<p-datepicker [(ngModel)]="raceDate" [showTime]="true" showIcon class="w-full" />
+			<label for="race-date" class="block text-sm font-medium mb-2 text-ink-soft">Fecha y Hora de la carrera</label>
+			<p-datepicker [(ngModel)]="raceDate" [showTime]="true" showIcon inputId="race-date" class="w-full" />
 		</div>
 		@if (!isSprint) {
 			<div>
