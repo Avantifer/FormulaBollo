@@ -1,10 +1,10 @@
-<div class="bg-slate-100 dark:bg-slate-800">
-	<div class="flex-1 bg-slate-100 dark:bg-slate-800">
-		<div class="my-container mx-auto py-8">
+<div class="bg-canvas text-ink">
+	<div class="flex-1 bg-canvas text-ink">
+		<div class="my-container min-w-0 mx-auto py-8">
 			<h1 class="sr-only">Estadísticas</h1>
-			<div class="rounded-lg shadow-sm p-4 mb-6 bg-white dark:bg-slate-700">
+			<div class="bg-panel border border-rule rounded-panel p-4 mb-6">
 				<div class="mb-4">
-					<div class="flex flex-nowrap overflow-x-auto md:justify-center gap-2 md:p-2">
+					<div class="flex min-w-0 flex-nowrap overflow-x-auto md:justify-center gap-2 md:p-2">
 						@for (tab of tabs; track $index) {
 							<p-button
 								[label]="tab.label"
@@ -14,14 +14,14 @@
 									buttonStatisticsSelected: selectedTab === tab.value,
 									buttonStatistics: selectedTab !== tab.value
 								}"
-								class="text-sm rounded-md cursor-pointer justify-center" />
+								class="shrink-0 text-sm rounded-row cursor-pointer justify-center" />
 						}
 					</div>
 				</div>
 				<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 					<div class="w-full md:w-auto">
 						@if (selectedTab != 'records') {
-							<p-selectbutton [options]="listOptions" [(ngModel)]="typeSelected" class="shadow-md md:h-9" allowEmpty="false">
+							<p-selectbutton [options]="listOptions" [(ngModel)]="typeSelected" class="md:h-9" allowEmpty="false">
 								<ng-template #item let-item>
 									<i [class]="item.icon" style="font-size: 1rem"></i>
 									<span class="text-sm font-medium">{{ item.value }}</span>
