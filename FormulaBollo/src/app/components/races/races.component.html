@@ -1,9 +1,9 @@
-<div class="bg-slate-100 dark:bg-slate-800">
-	<div class="flex-1 bg-slate-100 dark:bg-slate-800">
+<div class="bg-canvas text-ink">
+	<div class="flex-1 bg-canvas text-ink">
 		<div class="my-container mx-auto py-8">
-			<div class="mb-6 flex flex-row justify-between items-center p-4 rounded-lg bg-white dark:bg-slate-700 shadow-sm">
+			<div class="mb-6 flex flex-wrap justify-between items-center gap-4 p-4 bg-panel border border-rule rounded-panel">
 				<div class="flex items-center gap-2">
-					<h1 class="text-xl font-bold">Resultados</h1>
+					<h1 class="font-display uppercase tracking-wide text-ink text-2xl font-bold">Resultados</h1>
 				</div>
 				<div class="flex flex-wrap items-center gap-4">
 					<select-seasons (seasonChanged)="onSeasonChange($event)" />
@@ -18,42 +18,44 @@
 				<p role="status" class="p-4 text-center">No hay carreras para esta temporada.</p>
 			}
 			<div class="carousel relative">
-				<div class="h-12 flex justify-between items-center mb-4">
-					<h2 class="text-base xs:text-xl font-bold">Calendario de Carreras</h2>
+				<div class="min-h-12 flex justify-between items-center mb-4 pr-24">
+					<h2 class="font-display uppercase tracking-wide text-ink text-base xs:text-xl font-bold">Calendario de Carreras</h2>
 				</div>
 				@if (races().length) {
 					<p-carousel [value]="races()" [numVisible]="5" [numScroll]="5" [responsiveOptions]="responsiveOptionsCarousel">
 						<ng-template let-race #item>
 							<div
-								class="rounded-lg h-60 w-full max-w-full sm:size-57 lg:size-74 overflow-hidden bg-white hover:bg-gray-300 dark:bg-slate-700 dark:hover:bg-slate-600 transition-all duration-300 shadow-md hover:shadow-lg relative group cursor-pointer">
+								class="rounded-panel border border-rule hover:border-ink-soft h-60 w-full max-w-full sm:size-57 lg:size-74 overflow-hidden bg-panel transition-colors duration-300 relative group">
 								<div class="relative h-35 lg:h-46 overflow-hidden">
 									<img
 										[alt]="race.name"
 										loading="lazy"
 										class="object-cover transition-transform duration-500 group-hover:scale-110 absolute size-full inset-0"
 										[src]="imageService.getImageUrl(race.circuitImage)" />
-									<div class="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
+									<div class="absolute inset-0 bg-gradient-to-t from-pit to-transparent"></div>
 									<div class="absolute bottom-0 left-0 right-0 p-4">
 										<div class="flex items-center">
-											<span class="text-white text-lg font-bold mr-2">{{ race.name }}</span>
+											<span class="text-on-pit font-display uppercase text-xl font-bold mr-2">{{ race.name }}</span>
 										</div>
 									</div>
 								</div>
 
 								<div class="p-2 lg:p-4">
 									<div class="flex items-center mb-3">
-										<i class="pi pi-calendar text-gray-600 dark:text-gray-300 mr-1" style="font-size: 14px"></i>
-										<span class="text-sm text-gray-600 dark:text-gray-300">{{ race.dateStart | date: 'dd/MM/yyyy' }}</span>
+										<i class="pi pi-calendar text-ink-soft mr-1" style="font-size: 14px"></i>
+										<span class="text-sm text-ink-soft tabular-nums">{{ race.dateStart | date: 'dd/MM/yyyy' }}</span>
 									</div>
 									<p-button
 										label="Ver resultados"
 										icon="pi pi-angle-right"
-										class="buttonRace text-sm rounded-md w-full text-white cursor-pointer"
+										class="buttonRace text-sm rounded-row w-full cursor-pointer"
 										iconPos="right"
 										[routerLink]="['/results/' + (race.name | SpaceToUnderscore) + '/' + race.season.number]" />
 								</div>
 								@if (race.finished) {
-									<div class="absolute top-2 right-2 px-2 py-1 text-xs rounded-full bg-green-900/70 text-green-400">Completada</div>
+									<div class="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-1 text-xs rounded-row bg-pit text-on-pit">
+										<i class="pi pi-check text-sector-up" aria-hidden="true"></i>Completada
+									</div>
 								}
 							</div>
 						</ng-template>
@@ -64,32 +66,32 @@
 					</div>
 				}
 			</div>
-			<div class="rounded-lg shadow-lg mt-8 bg-white dark:bg-slate-700">
+			<div class="mt-8 bg-panel border border-rule rounded-panel">
 				<div class="p-6">
 					@if (races().length) {
 						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
 							@for (race of races(); track $index) {
-								<div
-									class="flex items-center p-3 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-600 dark:hover:bg-slate-500 transition-colors cursor-pointer"
+								<a
+									class="flex min-w-0 items-center p-3 bg-panel-alt border border-rule rounded-row hover:bg-rule focus-visible:outline-2 focus-visible:outline-offset-2 text-ink transition-colors cursor-pointer"
 									[routerLink]="['/results/' + (race.name | SpaceToUnderscore) + '/' + race.season.number]">
-									<div class="mr-3 size-12 rounded-full overflow-hidden relative">
+									<div class="mr-3 size-12 shrink-0 rounded-full overflow-hidden relative">
 										<img
 											[alt]="race.name"
 											loading="lazy"
 											class="object-cover absolute size-full"
 											[src]="imageService.getImageUrl(race.flagImage)" />
 									</div>
-									<div class="flex-grow">
+									<div class="flex-grow min-w-0 break-words">
 										<div class="flex items-center">
 											<span class="font-medium">{{ race.name }}</span>
 										</div>
 										<div class="flex items-center mb-3">
-											<i class="pi pi-calendar text-gray-600 dark:text-gray-300 mr-1" style="font-size: 14px"></i>
-											<span class="text-sm text-gray-600 dark:text-gray-300">{{ race.dateStart | date: 'dd/MM/yyyy' }}</span>
+											<i class="pi pi-calendar text-ink-soft mr-1" style="font-size: 14px"></i>
+											<span class="text-sm text-ink-soft tabular-nums">{{ race.dateStart | date: 'dd/MM/yyyy' }}</span>
 										</div>
 									</div>
-									<i class="pi pi-chevron-right ml-1 pt-0.5"></i>
-								</div>
+									<i class="pi pi-chevron-right text-ink-soft ml-1 pt-0.5"></i>
+								</a>
 							}
 						</div>
 					} @else if (loading()) {

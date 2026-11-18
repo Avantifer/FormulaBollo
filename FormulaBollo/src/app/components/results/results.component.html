@@ -1,20 +1,20 @@
-<div class="bg-slate-100 dark:bg-slate-800">
-	<div class="flex-1 bg-slate-100 dark:bg-slate-800">
-		<div class="my-container mx-auto py-8">
+<div class="bg-canvas text-ink">
+	<div class="flex-1 bg-canvas text-ink">
+		<div class="my-container min-w-0 mx-auto py-8">
 			@if (!raceSelected) {
 				<h1 class="sr-only">Resultados de la carrera</h1>
 			}
-			<div class="mb-6 flex flex-col xl:flex-row justify-between xl:items-center p-4 rounded-lg bg-white dark:bg-slate-700 shadow-sm">
+			<div class="mb-6 flex flex-col xl:flex-row justify-between xl:items-center gap-4 p-4 bg-panel border border-rule rounded-panel">
 				<div class="flex xl:items-center gap-2 mb-2 xl:mb-0">
-					<a class="inline-flex min-h-11 md:min-h-0 items-center text-red-700 hover:text-red-800 dark:text-red-300 dark:hover:text-red-200 transition cursor-pointer" [routerLink]="['/results']">
+					<a class="inline-flex min-h-11 md:min-h-0 items-center text-accent-text hover:underline transition cursor-pointer" [routerLink]="['/results']">
 						<i class="pi pi-chevron-left ml-1 pt-0.5" style="font-size: 0.65rem"></i>Volver a los resultados</a
 					>
 				</div>
-				<div class="flex flex-wrap items-center gap-4">
+				<div class="flex min-w-0 flex-wrap items-center gap-4">
 					<p-selectbutton
 						[options]="listOptions"
 						[(ngModel)]="typeSelected"
-						class="shadow-md md:h-9"
+						class="md:h-9"
 						allowEmpty="false"
 						(onChange)="onTypeChange()">
 						<ng-template #item let-item>
@@ -27,19 +27,19 @@
 					<p-button
 						label="Penalizaciones"
 						icon="pi pi-exclamation-triangle"
-						class="penaltiesButton text-sm rounded-md text-white cursor-pointer"
+						class="penaltiesButton text-sm rounded-row cursor-pointer"
 						(onClick)="showPenalties = !showPenalties" />
 				</div>
 			</div>
-			<div class="shadow-lg mb-8 rounded-lg bg-white dark:bg-slate-700 text-white">
-				<div class="p-6">
+			<div class="mb-8 min-w-0 bg-panel border border-rule rounded-panel">
+				<div class="min-w-0 p-4 sm:p-6">
 					<div class="flex justify-between items-center mb-6">
 						@if (raceSelected) {
-							<div class="flex items-center">
-								<h1 class="text-2xl font-bold dark:text-white text-black">Resultados de {{ raceSelected.name }}</h1>
-								<div class="ml-4 flex items-center text-sm text-gray-500 dark:text-gray-300">
-									<i class="pi pi-calendar text-gray-600 dark:text-gray-300 mr-1" style="font-size: 14px"></i>
-									<span class="text-sm text-gray-600 dark:text-gray-300">{{ raceSelected.dateStart | date: 'dd/MM/yyyy' }}</span>
+							<div class="flex min-w-0 flex-wrap items-center gap-3">
+								<h1 class="font-display uppercase tracking-wide text-ink text-display-md font-bold">Resultados de {{ raceSelected.name }}</h1>
+								<div class="flex items-center text-sm text-ink-soft tabular-nums">
+									<i class="pi pi-calendar text-ink-soft mr-1" style="font-size: 14px"></i>
+									<span class="text-sm text-ink-soft">{{ raceSelected.dateStart | date: 'dd/MM/yyyy' }}</span>
 								</div>
 							</div>
 						}
@@ -47,11 +47,11 @@
 					<div class="mb-6">
 						@if (showPenalties) {
 							<div class="flex items-center mb-3">
-								<i class="pi pi-exclamation-triangle mr-1.5 text-red-500"></i>
-								<h2 class="text-lg font-semibold text-slate-900 dark:text-white">Penalizaciones</h2>
+								<i class="pi pi-exclamation-triangle mr-1.5 text-warn"></i>
+								<h2 class="text-lg font-display uppercase tracking-wide font-semibold text-ink">Penalizaciones</h2>
 							</div>
 							<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-								<div class="p-3 rounded-lg flex items-center bg-red-900/20 border border-red-800">
+								<div class="p-3 rounded-row flex items-center bg-panel-alt border border-rule border-l-4 border-l-sector-down">
 									<svg
 										xmlns="http://www.w3.org/2000/svg"
 										width="18"
@@ -62,331 +62,304 @@
 										stroke-width="2"
 										stroke-linecap="round"
 										stroke-linejoin="round"
-										class="lucide lucide-octagon-alert text-red-400 mr-2">
+										class="lucide lucide-octagon-alert text-sector-down mr-2">
 										<polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
 										<line x1="12" x2="12" y1="8" y2="12"></line>
 										<line x1="12" x2="12.01" y1="16" y2="16"></line>
 									</svg>
 									<div>
-										<span class="text-sm font-medium text-red-800 dark:text-red-200">Graves</span>
-										<p class="text-xs text-gray-700 dark:text-gray-200">Penalizaciones severas que afectan significativamente.</p>
+										<span class="text-sm font-semibold text-ink">Graves</span>
+										<p class="text-xs text-ink-soft">Penalizaciones severas que afectan significativamente.</p>
 									</div>
 								</div>
-								<div class="p-3 rounded-lg flex items-center bg-amber-900/20 border border-amber-800">
-									<i class="pi pi-exclamation-triangle mr-1.5 text-yellow-500"></i>
+								<div class="p-3 rounded-row flex items-center bg-panel-alt border border-rule border-l-4 border-l-warn">
+									<i class="pi pi-exclamation-triangle mr-1.5 text-warn"></i>
 									<div>
-										<span class="text-sm font-medium text-amber-800 dark:text-amber-200">Leves</span>
-										<p class="text-xs text-gray-700 dark:text-gray-200">Penalizaciones moderadas por infracciones importantes.</p>
+										<span class="text-sm font-semibold text-ink">Leves</span>
+										<p class="text-xs text-ink-soft">Penalizaciones moderadas por infracciones importantes.</p>
 									</div>
 								</div>
-								<div class="p-3 rounded-lg flex items-center bg-blue-900/20 border border-blue-800">
-									<i class="pi pi-info-circle mr-1.5 text-blue-500"></i>
+								<div class="p-3 rounded-row flex items-center bg-panel-alt border border-rule border-l-4 border-l-fantasy-text">
+									<i class="pi pi-info-circle mr-1.5 text-fantasy-text"></i>
 									<div>
-										<span class="text-sm font-medium text-blue-800 dark:text-blue-200">Aviso</span>
-										<p class="text-xs text-gray-700 dark:text-gray-200">Penalizaciones menores por infracciones leves.</p>
+										<span class="text-sm font-semibold text-ink">Aviso</span>
+										<p class="text-xs text-ink-soft">Penalizaciones menores por infracciones leves.</p>
 									</div>
 								</div>
 							</div>
 							@if (penalties().length) {
-								<p-table [value]="penalties()" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }" class="mb-4 penaltiesTable">
+								<p-table styleClass="timing-tower" [value]="penalties()" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }" class="mb-4 penaltiesTable">
 									<ng-template #header>
-										<tr class="border-b border-solid">
-											<th
-												class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500! min-w-[100px]"
-												scope="col">
+										<tr>
+											<th scope="col">
 												Piloto
 											</th>
-											<th
-												class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-												scope="col">
+											<th scope="col">
 												Equipo
 											</th>
-											<th
-												class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-												scope="col">
+											<th scope="col">
 												Tipo
 											</th>
-											<th
-												class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-												scope="col">
+											<th scope="col">
 												Motivo
 											</th>
 										</tr>
 									</ng-template>
 									<ng-template #body let-penalty let-index="rowIndex">
-										<tr class="border-b border-solid">
-											<td class="dark:bg-slate-700 text-sm border-l-4! dark:border-gray-500!">
-												<div class="text-slate-700 dark:text-white">
+										<tr>
+											<td class="border-l-4" [class]="'border-' + (penalty.driver.team.name | SpaceToUnderscore)">
+												<div class="text-ink">
 													{{ penalty.driver.name }}
 												</div>
 											</td>
-											<td class="dark:bg-slate-700 text-sm dark:border-gray-500!">
+											<td>
 												<div class="flex items-center">
 													<div class="h-2 w-2 mr-1 rounded-full" [class]="'bg-' + (penalty.driver.team.name | SpaceToUnderscore)"></div>
-													<p>{{ penalty.driver.team.name }}</p>
+													<p class="text-ink">{{ penalty.driver.team.name }}</p>
 												</div>
 											</td>
-											<td class="dark:bg-slate-700 text-sm dark:border-gray-500!">
+											<td>
 												<p-chip
-													class="px-2.5! py-0.5! cursor-pointer select-none gap-2!"
-													[ngClass]="{
-														'bg-blue-900/20! text-blue-400!': penalty.penaltySeverity.severity === 'Aviso',
-														'bg-amber-900/20! text-amber-400!': penalty.penaltySeverity.severity === 'Leve',
-														'bg-red-900/20! text-red-400!': penalty.penaltySeverity.severity === 'Grave'
-													}">
-													@if (penalty.penaltySeverity.severity === 'Grave') {
-														<svg
-															xmlns="http://www.w3.org/2000/svg"
-															width="14"
-															height="14"
-															viewBox="0 0 24 24"
-															fill="none"
-															stroke="currentColor"
-															stroke-width="2"
-															stroke-linecap="round"
-															stroke-linejoin="round"
-															class="lucide lucide-octagon-alert text-red-400">
-															<polygon
-																_ngcontent-ng-c3252729811=""
-																points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
-															<line _ngcontent-ng-c3252729811="" x1="12" x2="12" y1="8" y2="12"></line>
-															<line _ngcontent-ng-c3252729811="" x1="12" x2="12.01" y1="16" y2="16"></line>
-														</svg>
-													}
-													@if (penalty.penaltySeverity.severity === 'Leve') {
-														<i class="pi pi-exclamation-triangle" style="font-size: 14px"></i>
-													}
-													@if (penalty.penaltySeverity.severity === 'Aviso') {
-														<i class="pi pi-info-circle" style="font-size: 14px"></i>
-													}
-													<span class="text-xs"> {{ penalty.penaltySeverity.severity }} </span>
+													class="px-2.5! py-0.5! cursor-pointer select-none gap-2! bg-panel-alt! border border-rule">
+													<span
+														class="inline-flex items-center gap-2"
+														[ngClass]="{
+															'text-fantasy-text': penalty.penaltySeverity.severity === 'Aviso',
+															'text-warn': penalty.penaltySeverity.severity === 'Leve',
+															'text-sector-down': penalty.penaltySeverity.severity === 'Grave'
+														}">
+														@if (penalty.penaltySeverity.severity === 'Grave') {
+															<svg
+																xmlns="http://www.w3.org/2000/svg"
+																width="14"
+																height="14"
+																viewBox="0 0 24 24"
+																fill="none"
+																stroke="currentColor"
+																stroke-width="2"
+																stroke-linecap="round"
+																stroke-linejoin="round"
+																class="lucide lucide-octagon-alert text-sector-down">
+																<polygon
+																	_ngcontent-ng-c3252729811=""
+																	points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
+																<line _ngcontent-ng-c3252729811="" x1="12" x2="12" y1="8" y2="12"></line>
+																<line _ngcontent-ng-c3252729811="" x1="12" x2="12.01" y1="16" y2="16"></line>
+															</svg>
+														}
+														@if (penalty.penaltySeverity.severity === 'Leve') {
+															<i class="pi pi-exclamation-triangle" style="font-size: 14px"></i>
+														}
+														@if (penalty.penaltySeverity.severity === 'Aviso') {
+															<i class="pi pi-info-circle" style="font-size: 14px"></i>
+														}
+														<span class="text-xs"> {{ penalty.penaltySeverity.severity }} </span>
+													</span>
 												</p-chip>
 											</td>
-											<td class="dark:bg-slate-700 text-sm dark:border-gray-500!">
+											<td>
 												{{ penalty.reason }}
 											</td>
 										</tr>
 									</ng-template>
 								</p-table>
 							} @else {
-								<div class="flex flex-col items-center justify-center p-8 rounded-lg border bg-gray-800/50 border-gray-700">
-									<div class="size-20 mb-5 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-600">
-										<i class="pi pi-flag text-green-600 dark:text-green-300" style="font-size: 2.5rem"></i>
+								<div class="flex flex-col items-center justify-center p-4 sm:p-8 bg-panel-alt border border-rule rounded-panel">
+									<div class="size-12 mb-5 rounded-row flex items-center justify-center bg-panel">
+										<i class="pi pi-flag text-sector-up" style="font-size: 1.5rem"></i>
 									</div>
-									<h3 class="text-lg font-medium mb-2 text-slate-900 dark:text-white">Carrera limpia</h3>
-									<p class="text-center max-w-md text-sm text-gray-900 dark:text-gray-200">
+									<h3 class="text-lg font-display uppercase font-medium mb-2 text-ink">Carrera limpia</h3>
+									<p class="text-center max-w-md text-sm text-ink-soft">
 										No se registraron penalizaciones en esta carrera. Todos los pilotos mantuvieron una conducción deportiva siguiendo el
 										reglamento.
 									</p>
-									<div class="mt-4 flex gap-2 noPenaltiesButton">
+									<div class="mt-4 flex flex-wrap justify-center gap-2 noPenaltiesButton">
 										<p-button
 											label="Cerrar"
-											class="text-sm rounded-md text-white cursor-pointer"
+											class="text-sm rounded-row cursor-pointer"
 											(onClick)="showPenalties = !showPenalties" />
 										<p-button
 											label="Ver reglamento"
 											icon="pi pi-chevron-right"
-											class="text-sm rounded-md text-white cursor-pointer"
+											class="text-sm rounded-row cursor-pointer"
 											iconPos="right"
 											[routerLink]="['/statute']" />
 									</div>
 								</div>
 							}
 							<p-divider layout="horizontal" align="center" class="mt-4">
-								<span class="text-md text-gray-300">Resultados</span>
+								<span class="text-md text-ink-soft">Resultados</span>
 							</p-divider>
 						}
 					</div>
 					@if (resultsDrivers().length) {
-						<p-table [value]="resultsDrivers()" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }">
+						<p-table styleClass="timing-tower" [value]="resultsDrivers()" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }">
 							<ng-template #header>
-								<tr class="border-b border-solid">
-									<th
-										class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-										scope="col">
+								<tr>
+									<th scope="col">
 										POS
 									</th>
-									<th
-										class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-										scope="col">
+									<th scope="col">
 										Piloto
 									</th>
-									<th
-										class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-										scope="col">
+									<th scope="col">
 										Equipo
 									</th>
-									<th
-										class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-										scope="col">
+									<th scope="col" class="tt-points">
 										Puntos
 									</th>
-									<th
-										class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-										scope="col">
+									<th scope="col">
 										Vuelta Rápida
 									</th>
-									<th
-										class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-										scope="col">
+									<th scope="col">
 										Pole
 									</th>
 								</tr>
 							</ng-template>
 							<ng-template #body let-result let-index="rowIndex">
-								<tr class="border-b border-solid">
-									<td class="dark:bg-slate-700 text-sm border-l-4! dark:border-gray-500!">
+								<tr>
+									<td class="border-l-4" [class]="'border-' + (result.driver.team.name | SpaceToUnderscore)">
 										<div
-											class="size-8 font-bold text-slate-700 dark:text-white mr-2 xs:mr-4 rounded-full flex justify-center items-center shadow"
-											[class]="'bg-' + (result.driver.team.name | SpaceToUnderscore)">
+											class="inline-flex min-w-8 h-8 items-center justify-center rounded-row font-display tabular-nums font-bold"
+											[ngClass]="index === 0 ? 'bg-accent text-on-accent' : 'bg-pit text-on-pit'">
 											{{ index + 1 }}
 										</div>
 									</td>
-									<td class="dark:bg-slate-700 text-sm dark:border-gray-500!">
+									<td>
 										<div class="flex items-center">
 											<img
 												[src]="imageService.getImageUrl(utilsService.spaceToUnderScore(result.driver.driverImage))"
 												alt=""
-												class="size-8 bg-gray-400 rounded-full border-1 shadow-lg"
+												class="size-8 shrink-0 rounded-full border"
 												[class]="'border-' + (result.driver.team.name | SpaceToUnderscore)" />
-											<span class="text-sm font-medium text-gray-900 dark:text-white ml-2">{{ result.driver.name }}</span>
+											<span class="text-sm font-medium text-ink ml-2">{{ result.driver.name }}</span>
 										</div>
 									</td>
-									<td class="dark:bg-slate-700 text-sm dark:border-gray-500!">
+									<td>
 										<div class="flex items-center">
 											<div class="h-2 w-2 mr-1 rounded-full" [class]="'bg-' + (result.driver.team.name | SpaceToUnderscore)"></div>
-											<p>{{ result.driver.team.name }}</p>
+											<p class="text-ink">{{ result.driver.team.name }}</p>
 										</div>
 									</td>
-									<td class="dark:bg-slate-700 text-sm dark:border-gray-500! font-bold">
+									<td class="tt-points">
 										{{ result.position !== null ? result.position?.points : 'DNF' }}
 									</td>
-									<td
-										class="dark:bg-slate-700 text-sm dark:border-gray-500! font-semibold"
-										[ngClass]="{
-											'text-gray-600 dark:text-gray-300': result.fastlap === 0,
-											'text-green-800 dark:text-green-300 font-medium': result.fastlap === 1
-										}">
-										{{ result.fastlap === 0 ? 'No' : 'Sí' }}
+									<td>
+										<span
+											[ngClass]="{
+												'text-ink-soft': result.fastlap === 0,
+												'text-sector-up font-semibold': result.fastlap === 1
+											}">
+											{{ result.fastlap === 0 ? 'No' : 'Sí' }}
+										</span>
 									</td>
-									<td
-										class="dark:bg-slate-700 text-sm dark:border-gray-500! font-semibold"
-										[ngClass]="{
-											'text-gray-600 dark:text-gray-300': result.pole === 0,
-											'text-green-800 dark:text-green-300 font-medium': result.pole === 1
-										}">
-										{{ result.pole === 0 ? 'No' : 'Sí' }}
+									<td>
+										<span
+											[ngClass]="{
+												'text-ink-soft': result.pole === 0,
+												'text-sector-up font-semibold': result.pole === 1
+											}">
+											{{ result.pole === 0 ? 'No' : 'Sí' }}
+										</span>
 									</td>
 								</tr>
 							</ng-template>
 						</p-table>
 					} @else if (resultsTeams().length) {
-						<p-table [value]="resultsTeams()" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }">
+						<p-table styleClass="timing-tower" [value]="resultsTeams()" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }">
 							<ng-template #header>
-								<tr class="border-b border-solid">
-									<th
-										class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-										scope="col">
+								<tr>
+									<th scope="col">
 										POS
 									</th>
-									<th
-										class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-										scope="col">
+									<th scope="col">
 										Equipo
 									</th>
-									<th
-										class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-										scope="col">
+									<th scope="col">
 										Piloto 1
 									</th>
-									<th
-										class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-										scope="col">
+									<th scope="col">
 										Piloto 2
 									</th>
-									<th
-										class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-										scope="col">
+									<th scope="col" class="tt-points">
 										Puntos
 									</th>
 
-									<th
-										class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-										scope="col">
+									<th scope="col">
 										Vuelta Rápida
 									</th>
-									<th
-										class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-										scope="col">
+									<th scope="col">
 										Pole
 									</th>
 								</tr>
 							</ng-template>
 							<ng-template #body let-result let-index="rowIndex">
-								<tr class="border-b border-solid">
-									<td class="dark:bg-slate-700 text-sm border-l-4! dark:border-gray-500!">
+								<tr>
+									<td class="border-l-4" [class]="'border-' + (result.results[0].driver.team.name | SpaceToUnderscore)">
 										<div
-											class="size-8 font-bold text-slate-700 dark:text-white mr-2 xs:mr-4 rounded-full flex justify-center items-center shadow"
-											[class]="'bg-' + (result.results[0].driver.team.name | SpaceToUnderscore)">
+											class="inline-flex min-w-8 h-8 items-center justify-center rounded-row font-display tabular-nums font-bold"
+											[ngClass]="index === 0 ? 'bg-accent text-on-accent' : 'bg-pit text-on-pit'">
 											{{ index + 1 }}
 										</div>
 									</td>
-									<td class="dark:bg-slate-700 text-sm dark:border-gray-500!">
+									<td>
 										<div class="flex items-center">
 											<div
 												class="h-2 w-2 mr-1 rounded-full"
 												[class]="'bg-' + (result.results[0].driver.team.name | SpaceToUnderscore)"></div>
-											<p>{{ result.results[0].driver.team.name }}</p>
+											<p class="text-ink">{{ result.results[0].driver.team.name }}</p>
 										</div>
 									</td>
-									<td class="dark:bg-slate-700 text-sm dark:border-gray-500!">
+									<td>
 										<div class="flex items-center">
 											<img
 												[src]="imageService.getImageUrl(utilsService.spaceToUnderScore(result.results[0].driver.driverImage))"
 												alt=""
-												class="size-8 bg-gray-400 rounded-full border-1 shadow-lg"
+												class="size-8 shrink-0 rounded-full border"
 												[class]="'border-' + (result.results[0].driver.team.name | SpaceToUnderscore)" />
-											<span class="text-sm font-medium text-gray-900 dark:text-white ml-2">{{ result.results[0].driver.name }}</span>
+											<span class="text-sm font-medium text-ink ml-2">{{ result.results[0].driver.name }}</span>
 										</div>
 									</td>
-									<td class="dark:bg-slate-700 text-sm dark:border-gray-500!">
+									<td>
 										<div class="flex items-center">
 											<img
 												[src]="imageService.getImageUrl(utilsService.spaceToUnderScore(result.results[1].driver.driverImage))"
 												alt=""
-												class="size-8 bg-gray-400 rounded-full border-1 shadow-lg"
+												class="size-8 shrink-0 rounded-full border"
 												[class]="'border-' + (result.results[1].driver.team.name | SpaceToUnderscore)" />
-											<span class="text-sm font-medium text-gray-900 dark:text-white ml-2">{{ result.results[1].driver.name }}</span>
+											<span class="text-sm font-medium text-ink ml-2">{{ result.results[1].driver.name }}</span>
 										</div>
 									</td>
-									<td class="dark:bg-slate-700 text-sm dark:border-gray-500! font-bold">
+									<td class="tt-points">
 										{{ result.totalPoints }}
 									</td>
-									<td
-										class="dark:bg-slate-700 text-sm dark:border-gray-500! font-semibold"
-										[ngClass]="{
-											'text-gray-600 dark:text-gray-300': result.hasFastLap === 0,
-											'text-green-800 dark:text-green-300 font-medium': result.hasFastLap === 1
-										}">
-										{{ result.hasFastLap === 0 ? 'No' : 'Sí' }}
+									<td>
+										<span
+											[ngClass]="{
+												'text-ink-soft': result.hasFastLap === 0,
+												'text-sector-up font-semibold': result.hasFastLap === 1
+											}">
+											{{ result.hasFastLap === 0 ? 'No' : 'Sí' }}
+										</span>
 									</td>
-									<td
-										class="dark:bg-slate-700 text-sm dark:border-gray-500! font-semibold"
-										[ngClass]="{
-											'text-gray-600 dark:text-gray-300': result.hasPole === 0,
-											'text-green-800 dark:text-green-300 font-medium': result.hasPole === 1
-										}">
-										{{ result.hasPole === 0 ? 'No' : 'Sí' }}
+									<td>
+										<span
+											[ngClass]="{
+												'text-ink-soft': result.hasPole === 0,
+												'text-sector-up font-semibold': result.hasPole === 1
+											}">
+											{{ result.hasPole === 0 ? 'No' : 'Sí' }}
+										</span>
 									</td>
 								</tr>
 							</ng-template>
 						</p-table>
 					} @else {
-						<div class="flex flex-col items-center justify-center py-12 px-4 text-gray-600 dark:text-gray-300">
-							<div class="size-20 mb-5 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-600">
-								<i class="pi pi-calendar text-gray-600 dark:text-gray-300" style="font-size: 3rem"></i>
+						<div class="flex flex-col items-center justify-center py-12 px-4 text-ink-soft">
+							<div class="size-20 mb-5 rounded-full flex items-center justify-center bg-panel-alt">
+								<i class="pi pi-calendar text-ink-soft" style="font-size: 3rem"></i>
 							</div>
-							<h2 class="text-xl font-medium mb-2 text-gray-300">No hay resultados disponibles</h2>
+							<h2 class="text-xl font-display uppercase font-medium mb-2 text-ink-soft">No hay resultados disponibles</h2>
 							<p class="text-md text-center max-w-md">
 								No se encontraron resultados para la carrera de {{ raceSelected?.name }} en la {{ seasonSelected.name }}. Por favor,
 								selecciona otra temporada o vuelve más tarde.

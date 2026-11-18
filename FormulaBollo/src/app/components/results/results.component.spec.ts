@@ -58,6 +58,38 @@ describe('ResultsComponent', () => {
 
   afterEach(() => fixture.destroy());
 
+  it('renders driver timing tower rows with team borders, points and lap and pole labels', () => {
+    results.getAllResultsPerRacePilots.and.returnValue(of([
+      { ...result, fastlap: 1, pole: 0 },
+      { ...result, fastlap: 0, pole: 1, position: null },
+    ]));
+    fixture.detectChanges();
+
+    const tower: HTMLElement = fixture.nativeElement.querySelector('p-table.timing-tower');
+    expect(tower).not.toBeNull();
+    const rows = tower.querySelectorAll('tbody tr');
+    expect(rows.length).toBe(2);
+    rows.forEach((row, index) => {
+      const cells = row.querySelectorAll('td');
+      expect(cells[0].classList).toContain('border-Ferrari');
+      expect(row.querySelectorAll('td.tt-points').length).toBe(1);
+      expect(cells[3].classList).toContain('tt-points');
+      expect(cells[3].textContent!.trim()).toBe(index === 0 ? '25' : 'DNF');
+      expect(cells[4].textContent!.trim()).toBe(index === 0 ? 'Sí' : 'No');
+      expect(cells[5].textContent!.trim()).toBe(index === 0 ? 'No' : 'Sí');
+    });
+  });
+
+  it('renders the penalty severity in a timing tower when penalties are shown', () => {
+    (component as any).showPenalties = true;
+    fixture.detectChanges();
+
+    const tower: HTMLElement = fixture.nativeElement.querySelector('p-table.penaltiesTable.timing-tower');
+    expect(tower).not.toBeNull();
+    expect(tower.querySelector('tbody td:first-child')!.classList).toContain('border-Ferrari');
+    expect(tower.querySelector('tbody p-chip')!.textContent!.trim()).toBe('Leve');
+  });
+
   it('renders driver result cells under their matching column headers', () => {
     fixture.detectChanges();
     const table: HTMLTableElement = fixture.nativeElement.querySelector('p-table table');
