@@ -1,15 +1,16 @@
 .bolloFooter,
 .fantasyFooter {
-  background: var(--color-slate-950);
+  background: var(--pit);
+  color: var(--on-pit);
   border-top: 2px solid var(--footer-accent);
 }
 
 .bolloFooter {
-  --footer-accent: var(--color-principal);
+  --footer-accent: var(--accent);
 }
 
 .fantasyFooter {
-  --footer-accent: var(--color-fantasy-principal);
+  --footer-accent: var(--fantasy);
 }
 
 footer a,
@@ -17,6 +18,16 @@ footer button {
   display: inline-flex;
   align-items: center;
   padding-block: 0.5rem;
+
+  &:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
 
   @media (max-width: 767px) {
     min-height: 2.75rem;

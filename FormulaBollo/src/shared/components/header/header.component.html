@@ -12,7 +12,7 @@
 	<ng-template #item let-item let-root="root">
 		<a
 			pRipple
-			class="flex items-center p-menubar-item-link hover:bg-red-500/50 hover:rounded-lg text-sm text-white/90! hover:text-white! font-medium"
+			class="flex items-center p-menubar-item-link font-display uppercase tracking-wide font-semibold text-base text-on-pit/90!"
 			[routerLink]="item.routerLink"
 			[class.p-menubar-active]="isActive(item.routerLink)">
 			<span [class]="item.icon"></span>
@@ -30,7 +30,7 @@
 				(click)="toggleDarkMode()" />
 			<p-button
 				[label]="!isFantasy() ? 'Fantasy' : 'F1Bollo'"
-				class="text-white"
+				class="text-on-pit"
 				[class]="!isFantasy() ? 'fantasyHeaderButton' : 'bolloHeaderButton'"
 				(click)="!isFantasy() ? router.navigate(['/fantasy']) : router.navigate(['/'])" />
 		</div>

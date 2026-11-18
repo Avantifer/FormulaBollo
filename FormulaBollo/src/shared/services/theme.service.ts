@@ -24,6 +24,19 @@ export class ThemeService {
   }
 
   private getInitialTheme(): boolean {
-    return localStorage.getItem('theme') === 'dark';
+    try {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark' || savedTheme === 'light') {
+        return savedTheme === 'dark';
+      }
+    } catch {
+      // Si el almacenamiento no está disponible, consulta el tema del sistema.
+    }
+
+    try {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } catch {
+      return false;
+    }
   }
 }

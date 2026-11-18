@@ -134,11 +134,7 @@
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  background: var(--color-slate-50);
-}
-
-.dark body {
-  background: var(--color-slate-950);
+  background: var(--canvas);
 }
 
 /* Cifras de tiempos y puntos alineadas en columna */
