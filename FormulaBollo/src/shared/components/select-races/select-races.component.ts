@@ -63,8 +63,9 @@ export class SelectRacesComponent {
       )
       .subscribe((races: Race[]) => {
         this.races.set(races);
-        console.log()
-        this.racesForm.get('race')?.setValue(this.races()[this.races().length - 1]);
+        if (races.length > 0) {
+          this.racesForm.get('race')?.setValue(races[races.length - 1]);
+        }
       });
   }
 
