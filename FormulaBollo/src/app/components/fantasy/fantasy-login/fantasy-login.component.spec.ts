@@ -26,6 +26,13 @@ describe('FantasyLoginComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('gives the password visibility button a minimum touch target', () => {
+    const button: HTMLButtonElement = fixture.nativeElement.querySelector('p-inputicon button');
+    expect(button.classList).toContain('min-w-6');
+    expect(button.classList).toContain('min-h-6');
+    expect(button.classList).toContain('md:-m-1');
+  });
+
   it('accepts a three-character password for a legacy account', () => {
     const username = fixture.nativeElement.querySelector('[formControlName="username"]');
     const password = fixture.nativeElement.querySelector('[formControlName="password"]');

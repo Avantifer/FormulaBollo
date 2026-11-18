@@ -34,6 +34,7 @@ describe('StatuteComponent', () => {
     const pdf: HTMLObjectElement = fixture.nativeElement.querySelector('object');
     expect(pdf.getAttribute('data')).toBe('/assets/archives/estatutoF1Bollo.pdf');
     expect(pdf.getAttribute('type')).toBe('application/pdf');
+    expect(pdf.getAttribute('aria-label')).toBe('Estatuto de la liga en PDF');
     const fallback = pdf.querySelector('a')!;
     expect(fallback.getAttribute('href')).toBe(pdf.getAttribute('data'));
     expect(fallback.target).toBe('_blank');

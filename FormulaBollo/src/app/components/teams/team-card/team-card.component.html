@@ -65,6 +65,8 @@
 					<div class="flex items-center mt-0.5">
 						<p-progressbar
 							[value]="progressPercentage(teamPoints.driver1.totalPoints)"
+							[attr.aria-level]="null"
+							[attr.aria-label]="'Puntos de ' + teamPoints.driver1.driver.name"
 							class="min-w-0 flex-1"
 							showValue="false"
 							[class]="'progress-' + (teamPoints.team.name | SpaceToUnderscore)" />
@@ -90,6 +92,8 @@
 					<div class="flex items-center mt-0.5">
 						<p-progressbar
 							[value]="progressPercentage(teamPoints.driver2.totalPoints)"
+							[attr.aria-level]="null"
+							[attr.aria-label]="'Puntos de ' + teamPoints.driver2.driver.name"
 							class="min-w-0 flex-1"
 							showValue="false"
 							[class]="'progress-' + (teamPoints.team.name | SpaceToUnderscore)" />
