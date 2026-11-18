@@ -9,6 +9,19 @@
 }
 
 @theme {
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --text-display-md: 2rem;
+  --text-display-md--line-height: 1.1;
+  --text-display-md--letter-spacing: 0.01em;
+  --text-display-lg: 3rem;
+  --text-display-lg--line-height: 1.1;
+  --text-display-lg--letter-spacing: 0.01em;
+  --text-display-xl: 4.5rem;
+  --text-display-xl--line-height: 1.1;
+  --text-display-xl--letter-spacing: 0.01em;
+  --radius-row: 0.25rem;
+  --radius-panel: 0.5rem;
   --text-xs: 0.8125rem;
   --text-xs--line-height: calc(1.25 / 0.8125);
   --color-slate-50: #F6F7F8;
@@ -47,10 +60,79 @@
   --breakpoint-xs: 23.438rem;
 }
 
+:root {
+  --canvas: #EEF0F2;
+  --panel: #FFFFFF;
+  --panel-alt: #F6F7F8;
+  --rule: #DEE1E5;
+  --ink: #14171B;
+  --ink-soft: #4A525C;
+  --pit: #14171B;
+  --on-pit: #FFFFFF;
+  --accent: #E10600;
+  --on-accent: #FFFFFF;
+  --accent-text: #B80500;
+  --fantasy: #2563EB;
+  --on-fantasy: #FFFFFF;
+  --fantasy-text: #1D4ED8;
+  --sector-up: #157A43;
+  --sector-down: #B80500;
+  --sector-best: #7A2FC7;
+  --sector-flat: #646D79;
+  --warn: #92400E;
+  --focus: #E10600;
+}
+
+.dark {
+  --canvas: #0E1013;
+  --panel: #1D2127;
+  --panel-alt: #14171B;
+  --rule: #2F353D;
+  --ink: #F6F7F8;
+  --ink-soft: #C3C8CF;
+  --pit: #08090B;
+  --on-pit: #FFFFFF;
+  --accent: #E10600;
+  --on-accent: #FFFFFF;
+  --accent-text: #FF5D52;
+  --fantasy: #2563EB;
+  --on-fantasy: #FFFFFF;
+  --fantasy-text: #6EA0FF;
+  --sector-up: #4ADE80;
+  --sector-down: #FF5D52;
+  --sector-best: #C084FC;
+  --sector-flat: #8E96A1;
+  --warn: #FBBF24;
+  --focus: #FF5D52;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-panel: var(--panel);
+  --color-panel-alt: var(--panel-alt);
+  --color-rule: var(--rule);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-pit: var(--pit);
+  --color-on-pit: var(--on-pit);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-accent-text: var(--accent-text);
+  --color-fantasy: var(--fantasy);
+  --color-on-fantasy: var(--on-fantasy);
+  --color-fantasy-text: var(--fantasy-text);
+  --color-sector-up: var(--sector-up);
+  --color-sector-down: var(--sector-down);
+  --color-sector-best: var(--sector-best);
+  --color-sector-flat: var(--sector-flat);
+  --color-warn: var(--warn);
+  --color-focus: var(--focus);
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 body {
-  font-family: "Geist", sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   background: var(--color-slate-50);
 }
@@ -71,7 +153,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-red-600);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
