@@ -1,4 +1,4 @@
-<footer class="text-white" [class]="isFantasy() ? 'fantasyFooter' : 'bolloFooter'">
+<footer class="text-on-pit" [class]="isFantasy() ? 'fantasyFooter' : 'bolloFooter'">
 	<div class="container mx-auto max-w-screen-xl p-4 lg:p-8">
 		<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
 			<div>
@@ -6,11 +6,11 @@
 					<img src="/assets/images/logo/logo.png" alt="Logo" class="w-10 mr-2" />
 					<h2 class="text-2xl font-bold">FORMULA BOLLO</h2>
 				</div>
-				<p class="text-gray-200 text-sm">{{ textMainFooter() }}</p>
+				<p class="text-on-pit/80 text-sm">{{ textMainFooter() }}</p>
 			</div>
 
 			<div class="flex flex-col">
-				<h3 class="text-lg font-semibold border-b pb-2 mb-4" [class]="isFantasy() ? 'border-blue-500/50' : 'border-red-500/50'">
+				<h3 class="font-display uppercase tracking-wide text-lg font-semibold border-b pb-2 mb-4" [class]="isFantasy() ? 'border-fantasy/50' : 'border-accent/50'">
 					Navegación
 				</h3>
 				@for (navigation of navigationRouters(); track $index) {
@@ -19,11 +19,11 @@
 							<button
 								type="button"
 								(click)="navigation.command({}); scrollToTop()"
-								class="my-1 text-left hover:text-gray-200 focus-visible:outline-2">
+								class="my-1 text-left">
 								{{ navigation.label }}
 							</button>
 						} @else {
-							<a [routerLink]="[navigation.routerLink]" (click)="scrollToTop()" class="my-1 hover:text-gray-200 focus-visible:outline-none">
+							<a [routerLink]="[navigation.routerLink]" (click)="scrollToTop()" class="my-1">
 								{{ navigation.label }}
 							</a>
 						}
@@ -32,23 +32,23 @@
 			</div>
 
 			<div class="flex flex-col">
-				<h3 class="text-lg font-semibold border-b pb-2 mb-2" [class]="isFantasy() ? 'border-blue-500/50' : 'border-red-500/50'">
+				<h3 class="font-display uppercase tracking-wide text-lg font-semibold border-b pb-2 mb-2" [class]="isFantasy() ? 'border-fantasy/50' : 'border-accent/50'">
 					Información
 				</h3>
 				@for (navigation of informationRouters(); track $index) {
 					@if (isFantasy()) {
-						<button type="button" (click)="scrollToTop()" class="my-1 text-left hover:text-gray-200 focus-visible:outline-2 focus-visible:outline-white">
+						<button type="button" (click)="scrollToTop()" class="my-1 text-left">
 							{{ navigation.label }}
 						</button>
 					} @else {
-						<a [routerLink]="[navigation.routerLink]" (click)="scrollToTop()" class="my-1 hover:text-gray-200 focus-visible:outline-none">
+						<a [routerLink]="[navigation.routerLink]" (click)="scrollToTop()" class="my-1">
 							{{ navigation.label }}
 						</a>
 					}
 				}
 			</div>
 			<div>
-				<h3 class="text-lg font-semibold border-b pb-2 mb-3" [class]="isFantasy() ? 'border-blue-500/50' : 'border-red-500/50'">
+				<h3 class="font-display uppercase tracking-wide text-lg font-semibold border-b pb-2 mb-3" [class]="isFantasy() ? 'border-fantasy/50' : 'border-accent/50'">
 					Contacto
 				</h3>
 				@for (navigation of contactRouters; track $index) {
@@ -63,7 +63,7 @@
 		</div>
 		<div
 			class="border-t py-6 mt-6 flex flex-col lg:flex-row justify-between items-center text-sm"
-			[class]="isFantasy() ? 'border-blue-500/50' : 'border-red-500/50'">
+			[class]="isFantasy() ? 'border-fantasy/50' : 'border-accent/50'">
 			<p class="w-full lg:w-auto">© 2025 Formula Bollo. Todos los derechos reservados.</p>
 			<span class="flex items-center gap-2">
 				<i class="pi pi-code text-xl"></i>
