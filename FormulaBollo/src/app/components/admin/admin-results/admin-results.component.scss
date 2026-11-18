@@ -1,10 +1,12 @@
 :host ::ng-deep {
+  // Sin capa para que PrimeNG no prevalezca sobre los botones de esta pantalla.
   .saveResults .p-button {
-    background: var(--color-principal) !important;
+    background: var(--accent);
+    color: var(--on-accent);
   }
 
   .saveResults .p-button:hover {
-    background: var(--color-principal-dark) !important;
+    background: color-mix(in srgb, var(--accent) 85%, black);
   }
 
   .p-divider-horizontal {
@@ -12,18 +14,22 @@
   }
 
   .deleteResults .p-button {
-    background: var(--color-black) !important;
-    color: var(--color-red-400);
-    border: 1px var(--color-red-400) solid; 
+    background: transparent;
+    color: var(--sector-down);
+    border: 1px solid var(--sector-down);
+    box-shadow: none;
   }
 
   .deleteResults .p-button:hover {
-    background: var(--color-principal) !important;
-    color: var(--color-white);
-    border: 1px var(--color-red-400) solid; 
+    background: var(--sector-down);
+    color: var(--panel);
   }
-}
 
-::ng-deep.p-divider-content {
-  background: transparent !important;
+  .p-divider-content {
+    background: var(--panel);
+  }
+
+  .p-dialog {
+    box-shadow: none;
+  }
 }
