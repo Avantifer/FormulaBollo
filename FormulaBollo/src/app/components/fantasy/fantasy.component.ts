@@ -19,32 +19,28 @@ export class FantasyComponent {
       label: 'Escoge tu equipo favorito de 3 pilotos y 2 escuderías, manteniéndote debajo del presupuesto ficticio de 80 millones. Los tendrás que rellenar por cada temporada. El equipo NO se guarda automáticamente, se tendrá que guardar y crear cada jornada. Puedes guardar el equipo hasta 12 horas antes de la carrera, después no dejará.',
       badge: 'fantasy/fantasyHowToPlay1.avif',
       target: 'fantasyComoJugar1',
-      styleClass: 'flex-col lg:flex-row',
-      fragment: 'bg-gray-50 dark:bg-gray-800'
+      styleClass: 'flex-col lg:flex-row'
     },
     {
       title: 'Precios dinámicos',
       label: 'Los precios van cambiando cada jornada dependiendo del rendimiento del jugador en la carrera. De esta manera vas a poder variar tu equipo y analizar cuál puede ser el mejor equipo para la jornada que viene. Al igual también va cambiando el precio de los equipos teniendo en cuenta los pilotos de la escudería en específico.',
       badge: 'fantasy/fantasyHowToPlay2.avif',
       target: 'fantasyComoJugar2',
-      styleClass: 'flex-col-reverse lg:flex-row-reverse',
-      fragment: 'bg-gray-200 dark:bg-gray-700'
+      styleClass: 'flex-col-reverse lg:flex-row-reverse'
     },
     {
       title: 'Sistema de puntuación',
       label: 'Los puntos de los pilotos se definirán dependiendo de su rendimiento en la carrera. Cuanto más arriba quede el piloto más puntos obtendrán al igual que si tiene la vuelta rápida o haya obtenido una pole. No obtendrá puntos si consiguió hacer un DNF o si ni siquiera participó.',
       badge: 'fantasy/fantasyHowToPlay3.avif',
       target: 'fantasyComoJugar3',
-      styleClass: 'flex-col lg:flex-row',
-      fragment: 'bg-gray-50 dark:bg-gray-800'
+      styleClass: 'flex-col lg:flex-row'
     },
     {
       title: 'Clasificación',
       label: 'Compite con tus amigos o compañeros de F1 Bollo para ver quién es el mejor jugador del Fantasy Bollo. Todos estarán en la misma liga y aunque no juegues al F1 Bollo puedes seguir jugando al Fantasy Bollo y estar pendiente de la competición. También podrás ver el equipo que escogieron para obtener inspiración.',
       badge: 'fantasy/fantasyHowToPlay4.avif',
       target: 'fantasyComoJugar4',
-      styleClass: 'flex-col-reverse lg:flex-row-reverse',
-      fragment: 'bg-gray-200 dark:bg-gray-700'
+      styleClass: 'flex-col-reverse lg:flex-row-reverse'
     }
   ];
 

@@ -32,6 +32,11 @@
     border-bottom-color: var(--rule) !important;
   }
 
+  // Sustituye a border-<equipo> en Fantasy porque PrimeNG gana a las utilidades de Tailwind.
+  td.tt-tab-fantasy {
+    border-left-color: var(--fantasy);
+  }
+
   th.tt-points,
   td.tt-points {
     text-align: right;
