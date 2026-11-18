@@ -1,21 +1,19 @@
 :host ::ng-deep {
+  // Sin capa y limitado al botón de guardado para prevalecer sobre PrimeNG.
   .savePenalties .p-button {
-    background: var(--color-principal) !important;
+    background: var(--accent);
+    color: var(--on-accent);
   }
 
   .savePenalties .p-button:hover {
-    background: var(--color-principal-dark) !important;
+    background: color-mix(in srgb, var(--accent) 85%, black);
   }
 
-  .p-button {
-    color: var(--color-white);
+  .p-dialog {
+    box-shadow: none;
   }
+}
 
-  .p-button:hover {
-    background: var(--color-blue-600) !important;
-  }
-
-  .p-dialog .p-button {
-    background: var(--color-blue-500) !important;
-  }
+button:focus-visible {
+  outline-color: var(--focus);
 }

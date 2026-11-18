@@ -1,24 +1,24 @@
-<div class="flex-1 bg-white dark:bg-slate-700 border-2 border-gray-400 dark:border-gray-600 rounded-lg p-4">
-	<h2 class="text-2xl md:text-3xl font-bold mb-8">Gestión de Penalizaciones</h2>
+<div class="flex-1 min-w-0 bg-panel border border-rule rounded-panel p-4">
+	<h2 class="font-display uppercase tracking-wide text-ink text-display-md mb-8">Gestión de Penalizaciones</h2>
 	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
 		<div>
-			<p class="text-sm font-medium mb-2">Circuito</p>
+			<p class="text-sm font-medium mb-2 text-ink-soft">Circuito</p>
 			<select-races [season]="actualSeason" class="w-full" (raceChanged)="onRaceChange($event)" />
 		</div>
 		<div>
-			<p class="text-sm font-medium mb-2">Piloto</p>
+			<p class="text-sm font-medium mb-2 text-ink-soft">Piloto</p>
 			<select-drivers (driverChanged)="onDriverChange($event)" [season]="actualSeason" />
 		</div>
 		<div>
-			<p class="text-sm font-medium mb-2">Gravedad de la Penalización</p>
+			<p class="text-sm font-medium mb-2 text-ink-soft">Gravedad de la Penalización</p>
 			<select-penalty-severities (penaltySeverityChanged)="onPenaltySeverityChange($event)" />
 		</div>
 	</div>
 	<div>
 		<div class="flex items-center mb-2">
-			<p class="text-sm font-medium mr-0.25">Razón de la penalización</p>
+			<p class="text-sm font-medium mr-0.25 text-ink-soft">Razón de la penalización</p>
 			<button
-				class="min-h-11 min-w-11 md:min-h-0 md:min-w-0 py-0.5 px-1.75 rounded-full transition-all duration-200 text-blue-400 hover:bg-blue-400/20 hover:text-blue-300 cursor-pointer"
+				class="min-h-11 min-w-11 md:min-h-0 md:min-w-0 py-0.5 px-1.75 rounded-row text-fantasy-text hover:bg-panel-alt focus-visible:outline-2 focus-visible:outline-offset-2 cursor-pointer"
 				aria-label="Información sobre múltiples penalizaciones"
 				(click)="visible = true">
 				<i class="pi pi-info-circle" style="font-size: 14px"></i>
@@ -35,44 +35,45 @@
 			class="w-full"></textarea>
 	</div>
 	<div class="flex justify-end mt-8">
-		<p-button label="Guardar Penalizaciones" (click)="savePenalties()" class="savePenalties text-white" />
+		<p-button label="Guardar Penalizaciones" (click)="savePenalties()" class="savePenalties" />
 	</div>
 	<p-divider />
-	<h2 class="text-2xl font-bold mt-7">Penalizaciones Existentes</h2>
-	<p-table [value]="penaltiesTable()" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }" class="mb-4 penaltiesTable">
+	<h2 class="font-display uppercase tracking-wide text-ink text-display-md mt-7">Penalizaciones Existentes</h2>
+	<p-table styleClass="timing-tower" [value]="penaltiesTable()" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }" class="mb-4 penaltiesTable">
 		<ng-template #header>
-			<tr class="border-b border-solid">
-				<th
-					class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500! min-w-[100px]"
-					scope="col">
+			<tr>
+				<th scope="col">
 					Piloto
 				</th>
-				<th class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!" scope="col">
+				<th scope="col">
 					Carrera
 				</th>
-				<th class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!" scope="col">
+				<th scope="col">
 					Gravedad
 				</th>
-				<th class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!" scope="col">
+				<th scope="col">
 					Motivo
 				</th>
 			</tr>
 		</ng-template>
 		<ng-template #body let-penalty>
-			<tr class="border-b border-solid">
-				<td class="dark:bg-slate-700 text-sm border-l-4! dark:border-gray-500!">
-					<div class="flex items-center">
-						<div class="h-2 w-2 mr-1 rounded-full" [class]="'bg-' + (penalty.driver.team.name | SpaceToUnderscore)"></div>
-						{{ penalty.driver.name }}
-					</div>
+			<tr>
+				<td class="border-l-4" [class]="'border-' + (penalty.driver.team.name | SpaceToUnderscore)">
+					{{ penalty.driver.name }}
 				</td>
-				<td class="dark:bg-slate-700 text-sm dark:border-gray-500!">
+				<td>
 					<p>{{ penalty.race.name }}</p>
 				</td>
-				<td class="dark:bg-slate-700 text-sm dark:border-gray-500!">
-					{{ penalty.penaltySeverity.severity }}
+				<td>
+					<span
+						class="inline-flex items-center px-2.5 py-0.5 text-xs rounded-row bg-panel-alt border border-rule"
+						[class.text-fantasy-text]="penalty.penaltySeverity.severity === 'Aviso'"
+						[class.text-warn]="penalty.penaltySeverity.severity === 'Leve'"
+						[class.text-sector-down]="penalty.penaltySeverity.severity === 'Grave'">
+						{{ penalty.penaltySeverity.severity }}
+					</span>
 				</td>
-				<td class="dark:bg-slate-700 text-sm dark:border-gray-500!">
+				<td>
 					{{ penalty.reason }}
 				</td>
 			</tr>
@@ -82,26 +83,26 @@
 	<p-dialog [(visible)]="visible" [modal]="true" [dismissableMask]="true" [closable]="false" [style]="{ width: '35rem' }">
 		<ng-template #header>
 			<div class="flex items-center gap-3 mb-4">
-				<div class="size-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-					<i class="pi pi-exclamation-triangle text-blue-600 dark:text-blue-400" style="font-size: 22px"></i>
+				<div class="size-12 shrink-0 rounded-row bg-panel-alt flex items-center justify-center">
+					<i class="pi pi-exclamation-triangle text-fantasy-text" style="font-size: 22px"></i>
 				</div>
 				<div>
-					<h3 class="text-lg font-semibold dark:text-white">Múltiples Penalizaciones</h3>
-					<p class="text-sm dark:text-gray-300">Cómo agregar varias penalizaciones a la vez</p>
+					<h3 class="text-lg font-display uppercase text-ink">Múltiples Penalizaciones</h3>
+					<p class="text-sm text-ink-soft">Cómo agregar varias penalizaciones a la vez</p>
 				</div>
 			</div>
 		</ng-template>
-		<div class="rounded-lg p-4 mb-4 bg-blue-50 dark:bg-gray-700/50">
-			<span class="text-surface-500 dark:text-surface-400">
+		<div class="rounded-row p-4 mb-4 bg-panel-alt border border-rule">
+			<span class="text-ink-soft">
 				Puedes agregar múltiples penalizaciones en el campo de razón separándolas con un
-				<strong class="dark:text-surface-200">punto (.)</strong>
+				<strong class="text-ink">punto (.)</strong>
 			</span>
 			<p-card>
-				<p class="text-xs font-medium mb-2 text-black dark:text-gray-300">Ejemplo:</p>
-				<p class="m-0 text-black dark:text-gray-300">Se ha estrellado contra otro piloto. Se ha saltado una curva.</p>
+				<p class="text-xs font-medium mb-2 text-ink">Ejemplo:</p>
+				<p class="m-0 text-ink">Se ha estrellado contra otro piloto. Se ha saltado una curva.</p>
 			</p-card>
-			<span class="text-xs dark:text-gray-300">
-				<i class="pi pi-lightbulb mr-1 text-yellow-300"></i>
+			<span class="text-xs text-ink-soft">
+				<i class="pi pi-lightbulb mr-1 text-warn"></i>
 				<strong>Tip:</strong> Cada frase separada por punto se considerará una penalización independiente para el mismo piloto.
 			</span>
 		</div>

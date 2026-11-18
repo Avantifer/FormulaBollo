@@ -118,6 +118,31 @@ describe('AdminResultsComponent', () => {
 
   it('should create', () => expect(component).toBeTruthy());
 
+  for (const sprint of [false, true]) {
+    it(`shows save, conditionally shows delete and opens its dialog for ${sprint ? 'sprints' : 'results'}`, async () => {
+      component.isSprint = sprint;
+      await settle();
+      expect(saveButton()).not.toBeNull();
+      expect(fixture.nativeElement.querySelector('p-button.deleteResults')).toBeNull();
+      expect(fixture.nativeElement.querySelector('[role="dialog"]')).toBeNull();
+
+      selectLoadedRace(sprint);
+      await settle();
+      const deleteButton: HTMLButtonElement = fixture.nativeElement.querySelector('p-button.deleteResults button');
+      expect(deleteButton).not.toBeNull();
+      expect(deleteButton.textContent).toContain(sprint ? 'Borrar Sprints' : 'Borrar Resultados');
+      expect(saveButton().textContent).toContain(sprint ? 'Guardar Sprints' : 'Guardar Resultados');
+      deleteButton.click();
+      await settle();
+
+      const dialog: HTMLElement = fixture.nativeElement.querySelector('[role="dialog"]');
+      expect(component.visible()).toBeTrue();
+      expect(dialog).not.toBeNull();
+      expect(dialog.textContent).toContain('Confirmar Borrado');
+      expect(dialog.textContent).toContain('¿Estás seguro de que quieres borrar todos los resultados?');
+    });
+  }
+
   it('marks the race finished only after results have been saved successfully', async () => {
     selectNewRace();
     const savingResults = new Subject<string>();

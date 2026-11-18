@@ -1,31 +1,31 @@
-<div class="bg-slate-100 dark:bg-slate-800">
-	<div class="flex-1 bg-slate-100 dark:bg-slate-800">
+<div class="bg-canvas">
+	<div class="flex-1 bg-canvas">
 		<div class="my-container mx-auto py-8">
 			<div class="flex">
-				<p-button class="block lg:hidden menuButton pr-3" ariaLabel="Menú de administración" (click)="isAdminMenuOpen = !isAdminMenuOpen">
+				<p-button class="block shrink-0 lg:hidden menuButton pr-3" ariaLabel="Menú de administración" (click)="isAdminMenuOpen = !isAdminMenuOpen">
 					@if (isAdminMenuOpen) {
 						<i class="pi pi-chevron-left"></i>
 					} @else {
 						<i class="pi pi-bars"></i>
 					}
 				</p-button>
-				<h1 class="text-2xl md:text-3xl font-bold mb-8 mt-1">Panel de administración</h1>
+				<h1 class="font-display uppercase tracking-wide text-ink text-display-md mb-8 mt-1">Panel de administración</h1>
 			</div>
-			<div class="flex">
-				<div class="max-w-[220px] lg:max-w-[320px] w-full h-full" [class]="isAdminMenuOpen ? 'block' : 'hidden'">
-					<p-menu [model]="items" class="flex justify-center border-2 border-gray-400 dark:border-gray-600 rounded-lg" styleClass="w-full">
+			<div class="flex flex-col gap-y-4 lg:flex-row">
+				<div class="lg:max-w-[220px] xl:max-w-[320px] w-full h-full shrink-0" [class]="isAdminMenuOpen ? 'block' : 'hidden'">
+					<p-menu [model]="items" class="flex justify-center bg-panel border border-rule rounded-panel" styleClass="w-full">
 						<ng-template #item let-item>
 							<a
-								class="flex items-center w-full rounded-xl cursor-pointer transition-all duration-200 ease-out hover:bg-gray-100 dark:hover:bg-gray-500/50 text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:scale-102 group"
+								class="flex items-center w-full rounded-row cursor-pointer text-ink-soft hover:bg-panel-alt hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2"
 								[class.menu-item-selected]="isActive(item.routerLink)"
 								[routerLink]="item.routerLink">
-								<span [class]="item.icon" class="transition-transform duration-200 group-hover:text-[18px]!"></span>
+								<span [class]="item.icon"></span>
 								<span class="ml-2">{{ item.label }}</span>
 							</a>
 						</ng-template>
 					</p-menu>
 				</div>
-				<div class="flex-1" [class]="isAdminMenuOpen ? 'ml-4' : ''">
+				<div class="flex-1 min-w-0" [class]="isAdminMenuOpen ? 'lg:ml-4' : ''">
 					<router-outlet />
 				</div>
 			</div>

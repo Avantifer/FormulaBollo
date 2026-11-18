@@ -1,4 +1,8 @@
 .menu-item-selected {
-  background-image: linear-gradient(to right, var(--color-principal), var(--color-principal-dark));
-  color: white;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+a:focus-visible {
+  outline-color: var(--focus);
 }
