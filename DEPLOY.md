@@ -184,9 +184,6 @@ Compáralo con la copia de seguridad del paso 1. Si algo no cuadra, restablece l
 
 Pendientes de la auditoría global:
 
-- [ ] **Revoca el token de SonarQube** que estuvo en `FormulaBollo/sonar-project.properties`: ya no está en el
-      archivo, pero sigue en el historial de git (repositorio público). En SonarQube: Mi cuenta → Seguridad →
-      revocar el token. Para analizar: `export SONAR_TOKEN=...` y `npm run sonar` (el scanner lo lee solo).
 - [ ] **Elección de Fantasy apagada a propósito.** El frontend no la guarda (`electionEnabled = false` en
       `fantasy-team.component.ts`), pero el backend conserva `POST /fantasy/saveFantasyElection` con su
       validación de presupuesto y plazo de 12 h y sus pruebas: cualquier cuenta registrada puede llamarlo. Para
