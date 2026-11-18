@@ -100,8 +100,8 @@ describe('FantasyClasificationComponent', () => {
       for (const dark of [false, true]) {
         mobileDocument.documentElement.classList.toggle('dark', dark);
         const scrollContainer = table.querySelector('.p-datatable-table-container')!;
-        expect(mobileDocument.documentElement.clientWidth).toBe(375);
-        expect(mobileDocument.documentElement.scrollWidth).toBeLessThanOrEqual(375);
+        expect(frame.contentWindow!.innerWidth).toBe(375);
+        expect(mobileDocument.documentElement.scrollWidth).toBeLessThanOrEqual(mobileDocument.documentElement.clientWidth);
         expect(scrollContainer.scrollWidth).toBeLessThanOrEqual(scrollContainer.clientWidth);
       }
     } finally {
