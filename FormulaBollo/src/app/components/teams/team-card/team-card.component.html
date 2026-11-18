@@ -1,72 +1,74 @@
 <a
-	class="block focus-visible:outline-2 focus-visible:outline-red-600 group overflow-hidden rounded-lg border-t-8 border-b-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer transition-all duration-500 hover:bg-slate-500"
-	[class]="'border-' + (teamPoints.team.name | SpaceToUnderscore)"
+	class="group block min-w-0 overflow-hidden rounded-panel border border-rule bg-panel focus-visible:outline-2 focus-visible:outline-offset-2"
 	[routerLink]="['/teams/' + utilsService.spaceToUnderScore(teamPoints.team.name)]">
+	<div aria-hidden="true" class="h-1" [class]="'bg-' + (teamPoints.team.name | SpaceToUnderscore)"></div>
 	<div class="flex flex-col h-full">
-		<div class="flex items-center p-3 xs:p-4 bg-white dark:bg-gray-900">
+		<div class="flex items-center gap-2 p-3 xs:p-4">
 			<div
-				class="size-10 font-bold mr-2 xs:mr-4 rounded-full flex justify-center items-center shadow"
-				[class]="'bg-' + (teamPoints.team.name | SpaceToUnderscore) + ' on-' + (teamPoints.team.name | SpaceToUnderscore)">
+				class="inline-flex min-w-8 h-8 shrink-0 items-center justify-center rounded-row font-display tabular-nums font-bold mr-2 xs:mr-4"
+				[class]="index === 0 ? 'bg-accent text-on-accent' : 'bg-pit text-on-pit'">
 				{{ index + 1 }}
 			</div>
-			<div class="flex-1">
+			<div class="min-w-0 flex-1">
 				<div class="flex items-center">
 					<img
 						[src]="imageService.getImageUrl(teamPoints.team.logoImage | SpaceToUnderscore)"
 						[alt]="teamPoints.team.name"
-						class="size-10 object-cover object-center mr-2"
+						class="size-8 shrink-0 object-contain object-center mr-2"
 						[class.reverse-color]="
 							teamPoints.team.name === 'Alpine' || teamPoints.team.name === 'AlphaTauri' || teamPoints.team.name === 'Aston Martin'
 						" />
-					<div class="flex flex-col" [class]="teamPoints.positionChangeAmount === 0 ? 'justify-center' : ''">
-						<h3 class="font-bold text-slate-800 dark:text-white">{{ teamPoints.team.name }}</h3>
+					<div class="min-w-0 flex flex-col" [class]="teamPoints.positionChangeAmount === 0 ? 'justify-center' : ''">
+						<h3 class="font-display uppercase text-xl font-bold text-ink break-words">
+							<span aria-hidden="true" class="inline-block size-1.5 rounded-full mr-1" [class]="'bg-' + (teamPoints.team.name | SpaceToUnderscore)"></span>
+							{{ teamPoints.team.name }}
+						</h3>
 						@if (teamPoints.positionChangeAmount != 0) {
 							<div class="flex items-center">
-								<i
-									style="font-size: 0.55rem"
-									class="pi"
-									[ngClass]="{
-										'pi-arrow-up text-green-700 dark:text-green-400': teamPoints.positionChange === 'ADVANCED',
-										'pi-arrow-down text-red-700 dark:text-red-300': teamPoints.positionChange === 'DROPPED'
-									}"></i>
-								<p
-									class="text-xs ml-0.5"
-									[ngClass]="{
-										'text-green-700 dark:text-green-400': teamPoints.positionChange === 'ADVANCED',
-										'text-red-700 dark:text-red-300': teamPoints.positionChange === 'DROPPED'
-									}">
-									{{ teamPoints.positionChangeAmount }}
-								</p>
+								@if (teamPoints.positionChange === 'ADVANCED') {
+									<span class="inline-flex items-center gap-1 text-xs tabular-nums text-sector-up">
+										<i class="pi pi-arrow-up" aria-hidden="true"></i>
+										<span aria-hidden="true">{{ teamPoints.positionChangeAmount }}</span>
+										<span class="sr-only">Sube {{ teamPoints.positionChangeAmount }} {{ teamPoints.positionChangeAmount === 1 ? 'puesto' : 'puestos' }}</span>
+									</span>
+								} @else if (teamPoints.positionChange === 'DROPPED') {
+									<span class="inline-flex items-center gap-1 text-xs tabular-nums text-sector-down">
+										<i class="pi pi-arrow-down" aria-hidden="true"></i>
+										<span aria-hidden="true">{{ teamPoints.positionChangeAmount }}</span>
+										<span class="sr-only">Baja {{ teamPoints.positionChangeAmount }} {{ teamPoints.positionChangeAmount === 1 ? 'puesto' : 'puestos' }}</span>
+									</span>
+								}
 							</div>
 						}
 					</div>
 				</div>
 			</div>
 
-			<div class="flex flex-col items-end">
-				<div class="font-bold text-slate-800 dark:text-white">{{ teamPoints.totalPoints }}</div>
-				<div class="text-xs text-slate-500 dark:text-slate-300">PTS</div>
+			<div class="flex shrink-0 flex-col items-end">
+				<div class="font-display tabular-nums text-display-md font-bold text-ink">{{ teamPoints.totalPoints }}</div>
+				<div class="text-xs text-ink-soft">PTS</div>
 			</div>
 		</div>
 
-		<div class="bg-slate-100 dark:bg-slate-800 flex flex-col lg:flex-row p-3">
+		<div class="bg-panel-alt flex flex-col lg:flex-row p-3">
 			<div class="flex items-center space-x-2 w-full lg:w-1/2 pr-2">
 				<div class="flex-shrink-0">
 					<img
 						[src]="imageService.getImageUrl(teamPoints.driver1.driver.driverImage | SpaceToUnderscore)"
 						[alt]="teamPoints.driver1.driver.name"
-						class="size-8 bg-gray-300 dark:bg-gray-600 rounded-full shadow-lg"
+						class="size-8 rounded-full border"
+						[class]="'border-' + (teamPoints.team.name | SpaceToUnderscore)"
 						loading="lazy" />
 				</div>
 				<div class="min-w-0 flex-1">
-					<span class="text-xs font-medium truncate block">{{ teamPoints.driver1.driver.name }}</span>
+					<span class="text-xs font-medium truncate block text-ink">{{ teamPoints.driver1.driver.name }}</span>
 					<div class="flex items-center mt-0.5">
 						<p-progressbar
 							[value]="progressPercentage(teamPoints.driver1.totalPoints)"
-							class="w-95 lg:w-35"
+							class="min-w-0 flex-1"
 							showValue="false"
 							[class]="'progress-' + (teamPoints.team.name | SpaceToUnderscore)" />
-						<span class="ml-1.5 text-xs font-medium">{{ teamPoints.driver1.totalPoints }}</span>
+						<span class="ml-1.5 shrink-0 text-xs font-medium tabular-nums text-ink">{{ teamPoints.driver1.totalPoints }}</span>
 					</div>
 				</div>
 			</div>
@@ -79,26 +81,27 @@
 					<img
 						[src]="imageService.getImageUrl(teamPoints.driver2.driver.driverImage | SpaceToUnderscore)"
 						[alt]="teamPoints.driver2.driver.name"
-						class="size-8 bg-gray-300 dark:bg-gray-600 rounded-full shadow-lg"
+						class="size-8 rounded-full border"
+						[class]="'border-' + (teamPoints.team.name | SpaceToUnderscore)"
 						loading="lazy" />
 				</div>
 				<div class="min-w-0 flex-1">
-					<span class="text-xs font-medium truncate block">{{ teamPoints.driver2.driver.name }}</span>
+					<span class="text-xs font-medium truncate block text-ink">{{ teamPoints.driver2.driver.name }}</span>
 					<div class="flex items-center mt-0.5">
 						<p-progressbar
 							[value]="progressPercentage(teamPoints.driver2.totalPoints)"
-							class="w-95 lg:w-35"
+							class="min-w-0 flex-1"
 							showValue="false"
 							[class]="'progress-' + (teamPoints.team.name | SpaceToUnderscore)" />
-						<span class="ml-1.5 text-xs font-medium">{{ teamPoints.driver2.totalPoints }}</span>
+						<span class="ml-1.5 shrink-0 text-xs font-medium tabular-nums text-ink">{{ teamPoints.driver2.totalPoints }}</span>
 					</div>
 				</div>
 			</div>
 		</div>
 		<div
-			class="flex-1 bg-slate-200 group-hover:bg-slate-300 dark:bg-slate-600 group-hover:dark:bg-slate-500 transition-all duration-300 pt-4 flex items-end justify-between">
+			class="flex-1 bg-panel-alt group-hover:bg-rule pt-4 flex items-end justify-between">
 			<div class="w-full flex justify-center">
-				<img [src]="imageService.getImageUrl(teamPoints.team.carImage)" [alt]="teamPoints.team.name" loading="lazy" decoding="async" />
+				<img class="min-w-0 max-w-full object-contain" [src]="imageService.getImageUrl(teamPoints.team.carImage)" [alt]="teamPoints.team.name" loading="lazy" decoding="async" />
 			</div>
 		</div>
 	</div>

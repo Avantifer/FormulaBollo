@@ -1,18 +1,18 @@
-<div class="py-3 sm:py-8 bg-slate-100 dark:bg-slate-800">
+<div class="py-3 sm:py-8 bg-canvas">
 	<div class="my-container">
 		@if (!driverInfo()) {
 			<h1 class="sr-only">{{ driverName }}</h1>
 		}
-		<div class="mb-6 flex justify-between items-center p-4 rounded-lg bg-white dark:bg-slate-700 shadow-sm">
-			<a class="inline-flex min-h-11 md:min-h-0 items-center text-red-700 hover:text-red-800 dark:text-red-300 dark:hover:text-red-200 transition cursor-pointer" [routerLink]="['/drivers']">
+		<div class="mb-6 flex flex-col sm:flex-row justify-between sm:items-center gap-3 p-4 bg-panel border border-rule rounded-panel">
+			<a class="inline-flex min-h-11 md:min-h-0 items-center text-accent-text hover:underline transition cursor-pointer" [routerLink]="['/drivers']">
 				<i class="pi pi-chevron-left ml-1 pt-0.5" style="font-size: 0.65rem"></i>Volver a la clasificación</a
 			>
 			<select-seasons (seasonChanged)="onSeasonChange($event)" [driverName]="driverName" />
 		</div>
 		@if (driverInfo()) {
-			<div class="rounded-lg mt-8">
+			<div class="min-w-0 mt-8">
 				<div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-					<div class="rounded-lg border-0 overflow-hidden col-span-1 bg-white dark:bg-slate-700 text-white">
+					<div class="min-w-0 overflow-hidden col-span-1 bg-panel border border-rule rounded-panel">
 						<div class="p-6">
 							<div class="flex flex-col items-center">
 								<div class="relative mb-5">
@@ -24,140 +24,113 @@
 										}">
 										<img
 											[src]="imageService.getImageUrl(driverInfo()!.driver.driverImage | SpaceToUnderscore)"
-											class="rounded-lg"
+											class="rounded-panel"
 											alt="Piloto" />
 									</div>
 									<div
-										class="absolute -bottom-1 -right-1 size-12 rounded-full flex items-center justify-center text-2xl font-bold shadow-md"
+										class="absolute -bottom-1 -right-1 size-12 rounded-row flex items-center justify-center font-display tabular-nums text-2xl font-bold"
 										[class]="'bg-' + (driverInfo()!.driver.team.name | SpaceToUnderscore) + ' on-' + (driverInfo()!.driver.team.name | SpaceToUnderscore)">
 										{{ driverInfo()!.driver.number }}
 									</div>
 								</div>
-								<h1 class="text-3xl font-bold text-center text-black dark:text-white">{{ driverInfo()!.driver.name }}</h1>
+								<h1 class="font-display uppercase tracking-wide text-ink text-display-md font-bold text-center break-words">{{ driverInfo()!.driver.name }}</h1>
 							</div>
 						</div>
 					</div>
-					<div class="rounded-lg border-0 shadow-lg col-span-1 lg:col-span-3 bg-white dark:bg-slate-700 text-white">
+					<div class="min-w-0 col-span-1 lg:col-span-3 bg-panel border border-rule rounded-panel">
 						<div class="p-6">
 							<div class="grid grid-cols-2 md:grid-cols-5 gap-4">
 								@for (stat of driverStatsArray(); track $index) {
 									<div
-										class="rounded-lg p-4 flex flex-col items-center justify-center bg-slate-200 dark:bg-slate-600 transition-all duration-300 hover:bg-slate-100 hover:dark:bg-slate-500">
-										<div class="text-sm mb-1 flex items-center text-gray-700 dark:text-white">
+										class="min-w-0 bg-panel-alt border border-rule rounded-row p-4 flex flex-col items-center justify-center">
+										<div class="text-sm mb-1 flex items-center text-ink-soft">
 											<span>
 												<i [class]="stat.icon + ' ' + stat.color" style="font-size: 0.75rem" class=""></i>
 												{{ stat.key }}
 											</span>
 										</div>
-										<div class="text-3xl font-bold text-black dark:text-white">{{ stat.value }}</div>
+										<div class="font-display tabular-nums text-4xl font-bold text-ink">{{ stat.value }}</div>
 									</div>
 								}
 							</div>
 						</div>
 					</div>
 				</div>
-				<div class="p-6 bg-white dark:bg-slate-700 text-white rounded-lg">
-					<h2 class="text-black dark:text-white text-xl font-bold mb-1">Últimas 5 carreras</h2>
-					<div class="flex items-center mb-5 text-gray-500 dark:text-gray-300">
+				<div class="min-w-0 p-4 sm:p-6 bg-panel border border-rule rounded-panel">
+					<h2 class="font-display uppercase tracking-wide text-ink text-xl font-bold mb-1">Últimas 5 carreras</h2>
+					<div class="flex items-center mb-5 text-ink-soft">
 						<div class="text-xs flex items-center">
 							<i class="pi pi-info-circle mr-1" style="font-size: 0.65rem"></i>
 							Solo se muestran carreras principales, no incluye carreras sprint
 						</div>
 					</div>
 					@if (driverInfo()!.last5Results.length) {
-						<p-table [value]="driverInfo()!.last5Results" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }">
+						<p-table styleClass="timing-tower" [value]="driverInfo()!.last5Results" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }">
 							<ng-template #header>
-								<tr class="border-b border-solid">
-									<th
-										class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-										scope="col"
-										style="width: 17%">
+								<tr>
+									<th scope="col" style="width: 17%">
 										Circuito
 									</th>
-									<th
-										class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-										scope="col"
-										style="width: 12%">
+									<th scope="col" style="width: 12%">
 										Vuelta Rápida
 									</th>
-									<th
-										class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-										scope="col"
-										style="width: 12%">
+									<th scope="col" style="width: 12%">
 										Pole
 									</th>
-									<th
-										class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-										scope="col"
-										style="width: 12%">
+									<th scope="col" style="width: 12%">
 										Posición
 									</th>
-									<th
-										class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-										scope="col"
-										style="width: 15%">
+									<th class="tt-points" scope="col" style="width: 15%">
 										Puntos
 									</th>
-									<th
-										class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-										scope="col"
-										style="width: 16%">
+									<th scope="col" style="width: 16%">
 										Fecha
 									</th>
-									<th
-										class="dark:bg-slate-700! text-xs uppercase font-medium! text-gray-500! dark:text-gray-300! dark:border-gray-500!"
-										scope="col"
-										style="width: 10%">
+									<th class="tt-actions" scope="col" style="width: 10%">
 										Acciones
 									</th>
 								</tr>
 							</ng-template>
 							<ng-template #body let-result let-index="rowIndex">
-								<tr class="border-b border-solid">
-									<td class="dark:bg-slate-700 text-sm border-l-4! dark:border-gray-500!">
-										<div class="inline-flex font-medium text-slate-700 dark:text-white">
+								<tr>
+									<td class="border-l-4" [class]="'border-' + (driverInfo()!.driver.team.name | SpaceToUnderscore)">
+										<div class="inline-flex items-center font-medium text-ink">
 											<img [src]="imageService.getImageUrl(result.race.flagImage)" alt="Bandera País" class="w-8 mr-2" loading="lazy" decoding="async" />
 											{{ result.race.name }}
 										</div>
 									</td>
-									<td
-										class="dark:bg-slate-700 text-sm dark:border-gray-500!"
-										[ngClass]="{
-											'text-gray-600 dark:text-gray-300': result.fastlap === 0,
-											'text-green-800 dark:text-green-300 font-medium': result.fastlap === 1
-										}">
-										{{ result.fastlap === 0 ? 'No' : 'Si' }}
-									</td>
-									<td
-										class="dark:bg-slate-700 text-sm dark:border-gray-500! font-semibold"
-										[ngClass]="{
-											'text-gray-600 dark:text-gray-300': result.pole === 0,
-											'text-green-800 dark:text-green-300 font-medium': result.pole === 1
-										}">
-										{{ result.pole === 0 ? 'No' : 'Si' }}
-									</td>
-									<td class="dark:bg-slate-700 text-sm dark:border-gray-500! font-semibold">
+									<td>
 										<span
-											class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium text-white"
 											[ngClass]="{
-												'bg-yellow-700': result.position.positionNumber === 1,
-												'bg-gray-500': result.position.positionNumber === 2,
-												'bg-amber-700': result.position.positionNumber === 3,
-												'bg-gray-600':
-													result.position.positionNumber !== 1 &&
-													result.position.positionNumber !== 2 &&
-													result.position.positionNumber !== 3
-											}"
+												'text-ink-soft': result.fastlap === 0,
+												'text-sector-up font-semibold': result.fastlap === 1
+											}">
+											{{ result.fastlap === 0 ? 'No' : 'Sí' }}
+										</span>
+									</td>
+									<td>
+										<span
+											[ngClass]="{
+												'text-ink-soft': result.pole === 0,
+												'text-sector-up font-semibold': result.pole === 1
+											}">
+											{{ result.pole === 0 ? 'No' : 'Sí' }}
+										</span>
+									</td>
+									<td>
+										<span
+											class="inline-flex min-w-8 h-8 items-center justify-center rounded-row font-display tabular-nums font-bold"
+											[class]="result.position.positionNumber === 1 ? 'bg-accent text-on-accent' : 'bg-pit text-on-pit'"
 											>{{ result.position.positionNumber }}</span
 										>
 									</td>
-									<td class="dark:bg-slate-700 text-sm dark:border-gray-500! font-semibold text-green-800 dark:text-green-300">
-										+{{ result.position.points }}
+									<td class="tt-points">
+										<span class="text-sector-up">+{{ result.position.points }}</span>
 									</td>
-									<td class="dark:bg-slate-700 text-sm dark:border-gray-500! text-gray-700 dark:text-gray-300">
-										{{ result.race.dateStart | date: 'dd/MM/yyyy' }}
+									<td>
+										<span class="text-ink-soft">{{ result.race.dateStart | date: 'dd/MM/yyyy' }}</span>
 									</td>
-									<td class="dark:bg-slate-700 text-sm dark:border-gray-500! font-bold">
+									<td class="tt-actions">
 										<p-button
 											label="Resultados"
 											icon="pi pi-angle-right"
@@ -169,7 +142,7 @@
 							</ng-template>
 						</p-table>
 					} @else {
-						<p class="text-center text-2xl mt-8">No hay resultados disponibles</p>
+						<p class="text-center text-2xl text-ink-soft mt-8">No hay resultados disponibles</p>
 					}
 				</div>
 			</div>
