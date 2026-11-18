@@ -26,16 +26,39 @@ describe('Top3DriversComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('keeps the expected text color on all three position badges', () => {
+  it('keeps the podium order and readable position contrast in both themes', () => {
     fixture.componentRef.setInput('top3', [driverPointsFixture, driverPointsFixture, driverPointsFixture]);
     fixture.detectChanges();
 
-    const badges: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.rounded-l-lg'));
+    const luminance = (color: string): number => {
+      const channels = color.match(/[\d.]+/g)!.map(Number);
+      expect(channels.length).toBeGreaterThanOrEqual(3);
+      expect(channels[3] ?? 1).withContext(`opaque color: ${color}`).toBe(1);
+      const [r, g, b] = channels.slice(0, 3).map(channel => {
+        const value = channel / 255;
+        return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+
+    const badges: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('[data-testid="podium-position"]'));
     expect(badges.length).toBe(3);
-    badges.forEach((badge, index) => {
-      expect(badge.textContent?.trim()).toBe(['2º', '1º', '3º'][index]);
-      expect(badge.classList.contains('text-slate-900')).withContext(`badge ${index}`).toBe(index !== 2);
-      expect(badge.classList.contains('text-white')).withContext(`badge ${index}`).toBe(index === 2);
-    });
+    const root = document.documentElement;
+    const wasDark = root.classList.contains('dark');
+    try {
+      for (const dark of [false, true]) {
+        root.classList.toggle('dark', dark);
+        badges.forEach((badge, index) => {
+          expect(badge.textContent?.trim()).toBe(['2º', '1º', '3º'][index]);
+          const style = getComputedStyle(badge);
+          const foreground = luminance(style.color);
+          const background = luminance(style.backgroundColor);
+          const contrast = (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
+          expect(contrast).withContext(`badge ${index}, ${dark ? 'dark' : 'light'} theme`).toBeGreaterThanOrEqual(4.5);
+        });
+      }
+    } finally {
+      root.classList.toggle('dark', wasDark);
+    }
   });
 });

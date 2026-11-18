@@ -43,6 +43,25 @@ describe('Top10DriversComponent', () => {
     expect(link.listeners.some(listener => listener.name.startsWith('keydown'))).toBeFalse();
   });
 
+  it('renders accessible position changes only for advanced and dropped drivers', () => {
+    fixture.componentRef.setInput('top10', [{
+      ...driverPointsFixture,
+      positionChange: 'ADVANCED',
+      positionChangeAmount: 2,
+    }, {
+      ...driverPointsFixture,
+      positionChange: 'DROPPED',
+      positionChangeAmount: 1,
+    }, driverPointsFixture]);
+    fixture.detectChanges();
+
+    const rows = fixture.nativeElement.querySelectorAll('.drivers-top10-container');
+    expect(rows[0].querySelector('.sr-only').textContent).toBe('Sube 2 puestos');
+    expect(rows[1].querySelector('.sr-only').textContent).toBe('Baja 1 puesto');
+    expect(rows[2].querySelector('.sr-only')).toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('.sr-only').length).toBe(2);
+  });
+
   it('renders every row as a link without headings', () => {
     fixture.componentRef.setInput('top10', [driverPointsFixture, {
       ...driverPointsFixture,

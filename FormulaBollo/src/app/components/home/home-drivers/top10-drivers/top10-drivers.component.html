@@ -1,25 +1,36 @@
 <div class="drivers-top10 mt-8">
 	@for (driverPoint of displayTop10; track $index) {
 		<a
-			class="drivers-top10-container mx-0 my-1 xl:mx-16 py-3 px-3 xs:px-4 animation-cubic-03 shadow-md rounded-xl flex items-center justify-between bg-gray-50 hover:bg-gray-200 dark:bg-slate-950 dark:hover:bg-slate-800 cursor-pointer dark:text-white focus-visible:outline-2 focus-visible:outline-red-600"
+			class="drivers-top10-container relative mx-0 my-1 py-3 px-3 xs:px-4 animation-cubic-03 rounded-row border border-rule flex items-center justify-between gap-2 bg-panel hover:bg-panel-alt text-ink cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2"
 			[routerLink]="['/drivers/' + utilsService.spaceToUnderScore(driverPoint.driver.name)]">
-			<div class="drivers-top10-start flex items-center">
-				<span class="my-0 font-bold">{{ $index + 1 }}</span>
-				<div class="drivers-top10-line mx-2 h-4 w-1" [class]="'bg-' + (driverPoint.driver.team.name | SpaceToUnderscore)"></div>
-				<span class="text-sm xs:text-base my-0 font-bold">{{ driverPoint.driver.name }}</span>
-				<p class="my-0 ml-4 hidden md:block">{{ driverPoint.driver.team.name }}</p>
+			<div aria-hidden="true" class="drivers-top10-line absolute inset-y-0 left-0 w-1 border-l-4 rounded-l-row" [class]="'border-' + (driverPoint.driver.team.name | SpaceToUnderscore)"></div>
+			<div class="drivers-top10-start flex min-w-0 flex-1 items-center gap-2">
+				<span class="flex min-w-8 h-8 shrink-0 items-center justify-center rounded-row font-display tabular-nums font-bold" [class]="$index === 0 ? 'bg-accent text-on-accent' : 'bg-pit text-on-pit'">{{ $index + 1 }}</span>
+				<span class="min-w-0 truncate text-sm xs:text-base font-bold" [title]="driverPoint.driver.name">{{ driverPoint.driver.name }}</span>
+				<p class="ml-2 hidden md:block truncate text-ink-soft">{{ driverPoint.driver.team.name }}</p>
 			</div>
-			<div class="drivers-top10-end flex items-center">
-				<p-chip
-					class="text-sm badge mx-1 xs:me-3 w-[100px] p-1! xs:p-2! rounded-pill font-bold text-white! bg-gray-600! justify-center!"
-					[label]="driverPoint.totalPoints + ' Puntos'" />
-				<i class="pi pi-chevron-right ml-1 pt-1 text-red-500/80" style="font-size: 0.85rem"></i>
+			<div class="drivers-top10-end flex shrink-0 items-center gap-2">
+				<span class="whitespace-nowrap font-display tabular-nums text-lg font-bold">{{ driverPoint.totalPoints }} Puntos</span>
+				@if (driverPoint.positionChange === 'ADVANCED') {
+					<span class="inline-flex items-center gap-1 text-sm tabular-nums text-sector-up">
+						<i class="pi pi-arrow-up" aria-hidden="true"></i>
+						<span aria-hidden="true">{{ driverPoint.positionChangeAmount }}</span>
+						<span class="sr-only">Sube {{ driverPoint.positionChangeAmount }} {{ driverPoint.positionChangeAmount === 1 ? 'puesto' : 'puestos' }}</span>
+					</span>
+				} @else if (driverPoint.positionChange === 'DROPPED') {
+					<span class="inline-flex items-center gap-1 text-sm tabular-nums text-sector-down">
+						<i class="pi pi-arrow-down" aria-hidden="true"></i>
+						<span aria-hidden="true">{{ driverPoint.positionChangeAmount }}</span>
+						<span class="sr-only">Baja {{ driverPoint.positionChangeAmount }} {{ driverPoint.positionChangeAmount === 1 ? 'puesto' : 'puestos' }}</span>
+					</span>
+				}
+				<i class="pi pi-chevron-right text-ink-soft text-sm" aria-hidden="true"></i>
 			</div>
 		</a>
 	}
 </div>
 <div class="mt-8 pb-8 text-center">
-	<a [routerLink]="['/drivers']" class="inline-flex min-h-11 md:min-h-0 items-center text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition">
+	<a [routerLink]="['/drivers']" class="inline-flex min-h-11 md:min-h-0 items-center text-accent-text hover:underline transition">
 		Ver clasificación completa
 		<i class="pi pi-chevron-right ml-1 pt-1" style="font-size: 0.65rem"></i>
 	</a>
