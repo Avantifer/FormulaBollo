@@ -4,7 +4,7 @@
 		[options]="teams()"
 		optionLabel="name"
 		dataKey="id"
-		class="rounded-lg text-sm bg-slate-100! dark:bg-slate-600! w-full lg:max-w-auto md:w-[184px] lg:w-full border-0! shadow-md!">
+		class="text-sm w-full lg:max-w-auto md:w-[184px] lg:w-full">
 		<ng-template #selectedItem let-team>
 			<div class="flex items-center gap-2">
 				<div class="size-2 rounded-full" [class]="'bg-' + team.name | SpaceToUnderscore"></div>
