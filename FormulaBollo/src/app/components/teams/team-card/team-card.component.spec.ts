@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
+import { providePrimeNG } from 'primeng/config';
+import { FormulaBolloPreset } from '../../../app.config';
 import { provideComponentTesting, teamPointsFixture } from '../../../../testing/component-test-providers';
 import { TeamCardComponent } from './team-card.component';
 
@@ -11,7 +13,10 @@ describe('TeamCardComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [TeamCardComponent],
-      providers: provideComponentTesting(),
+      providers: [
+        ...provideComponentTesting(),
+        providePrimeNG({ theme: { preset: FormulaBolloPreset } }),
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TeamCardComponent);
@@ -27,6 +32,16 @@ describe('TeamCardComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('renders progress bars with a computed height of 6px', async () => {
+    await fixture.whenStable();
+    const bars: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.p-progressbar');
+    expect(bars.length).toBe(2);
+    bars.forEach(bar => {
+      const height = parseFloat(getComputedStyle(bar).height);
+      expect(Math.abs(height - 6)).toBeLessThanOrEqual(0.5);
+    });
   });
 
   it('names each driver progress bar and omits aria-level', () => {

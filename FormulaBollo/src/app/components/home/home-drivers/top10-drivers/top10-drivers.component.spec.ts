@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpTestingController } from '@angular/common/http/testing';
 import { provideComponentTesting, driverPointsFixture } from '../../../../../testing/component-test-providers';
 import { By } from '@angular/platform-browser';
 import { Top10DriversComponent } from './top10-drivers.component';
