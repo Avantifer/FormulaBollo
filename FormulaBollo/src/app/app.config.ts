@@ -8,6 +8,7 @@ import { providePrimeNG } from 'primeng/config';
 
 import Aura from '@primeuix/themes/aura';
 import { definePreset } from '@primeuix/themes';
+import type { ComponentsDesignTokens } from '@primeuix/themes/types';
 import { provideRouter, withPreloading } from '@angular/router';
 import { SelectivePreloadStrategy } from '../shared/services/selective-preload.strategy';
 
@@ -17,7 +18,40 @@ const palette = {
   surface: { 0: '#ffffff', 50: '#F6F7F8', 100: '#EEF0F2', 200: '#DEE1E5', 300: '#C3C8CF', 400: '#8E96A1', 500: '#646D79', 600: '#4A525C', 700: '#2F353D', 800: '#1D2127', 900: '#14171B', 950: '#0E1013' }
 };
 
-const FormulaBolloPreset = definePreset(Aura, {
+const inputFieldTokens = {
+  background: 'var(--panel)',
+  borderColor: 'var(--rule)',
+  hoverBorderColor: 'var(--ink-soft)',
+  focusBorderColor: 'var(--fantasy)',
+  color: 'var(--ink)',
+  placeholderColor: 'var(--ink-soft)',
+  shadow: 'none'
+};
+
+const toggleButtonColors = {
+  root: {
+    background: 'var(--panel-alt)',
+    borderColor: 'var(--rule)',
+    color: 'var(--ink-soft)',
+    hoverBackground: 'var(--panel)',
+    hoverColor: 'var(--ink)',
+    checkedBackground: 'var(--pit)',
+    checkedColor: 'var(--on-pit)',
+    checkedBorderColor: 'var(--pit)'
+  },
+  content: { checkedBackground: 'transparent' },
+  icon: { color: 'inherit', hoverColor: 'inherit', checkedColor: 'inherit' }
+} satisfies ComponentsDesignTokens['togglebutton'];
+
+const toastColors = {
+  root: { blur: '0' },
+  success: { background: 'var(--panel)', color: 'var(--ink)', borderColor: 'var(--sector-up)', detailColor: 'var(--ink-soft)', shadow: 'none' },
+  error: { background: 'var(--panel)', color: 'var(--ink)', borderColor: 'var(--sector-down)', detailColor: 'var(--ink-soft)', shadow: 'none' },
+  warn: { background: 'var(--panel)', color: 'var(--ink)', borderColor: 'var(--warn)', detailColor: 'var(--ink-soft)', shadow: 'none' },
+  info: { background: 'var(--panel)', color: 'var(--ink)', borderColor: 'var(--fantasy-text)', detailColor: 'var(--ink-soft)', shadow: 'none' }
+} satisfies ComponentsDesignTokens['toast'];
+
+export const FormulaBolloPreset = definePreset(Aura, {
   semantic: {
     primary: palette.primary,
     focusRing: {
@@ -35,7 +69,46 @@ const FormulaBolloPreset = definePreset(Aura, {
         focusRing: { color: '{primary.400}' }
       }
     }
-  }
+  },
+  components: {
+    select: {
+      root: {
+        background: 'var(--panel)',
+        borderColor: 'var(--rule)',
+        hoverBorderColor: 'var(--ink-soft)',
+        focusBorderColor: 'var(--focus)',
+        color: 'var(--ink)',
+        placeholderColor: 'var(--ink-soft)',
+        shadow: 'none',
+        borderRadius: '0.25rem'
+      },
+      dropdown: { color: 'var(--ink-soft)' },
+      overlay: { background: 'var(--panel)', borderColor: 'var(--rule)', color: 'var(--ink)', borderRadius: '0.5rem', shadow: 'none' },
+      option: {
+        color: 'var(--ink)',
+        focusColor: 'var(--ink)',
+        focusBackground: 'var(--panel-alt)',
+        selectedBackground: 'transparent',
+        selectedColor: 'var(--ink)',
+        selectedFocusBackground: 'var(--panel-alt)',
+        selectedFocusColor: 'var(--ink)'
+      }
+    },
+    inputtext: { root: inputFieldTokens },
+    textarea: { root: inputFieldTokens },
+    togglebutton: {
+      root: { borderRadius: '0.25rem' },
+      content: { borderRadius: '0.25rem', checkedShadow: 'none' },
+      // Aura defines these colors per scheme, so override both with the same CSS tokens.
+      colorScheme: { light: toggleButtonColors, dark: toggleButtonColors }
+    },
+    dialog: {
+      root: { background: 'var(--panel)', borderColor: 'var(--rule)', color: 'var(--ink)', borderRadius: '0.5rem', shadow: '0 8px 24px rgb(0 0 0 / 0.12)' }
+    },
+    divider: { root: { borderColor: 'var(--rule)' } },
+    toast: { colorScheme: { light: toastColors, dark: toastColors } },
+    card: { root: { background: 'var(--panel)', color: 'var(--ink)', borderRadius: '0.5rem', shadow: 'none' } }
+  } satisfies ComponentsDesignTokens
 });
 
 export const appConfig: ApplicationConfig = {

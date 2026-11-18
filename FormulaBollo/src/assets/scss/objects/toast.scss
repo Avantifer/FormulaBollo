@@ -1,68 +1,20 @@
-.dark .p-toast-message-error .p-toast-message-content, .dark .p-toast-message-error .p-toast-detail {
-  color: var(--p-red-300) !important;
-}
-
-.p-toast-message-error .p-toast-message-content, .p-toast-message-error .p-toast-detail {
-  color: var(--p-red-500) !important;
-}
-
-.p-toast .p-toast-message.p-toast-message-error {
-  border: solid var(--p-red-500) !important;
-  border-width: 0 0 0 6px !important;
-}
-
-.dark .p-toast-message-info .p-toast-message-content, .dark .p-toast-message-info .p-toast-detail {
-  color: var(--p-blue-300) !important;
-}
-
-.p-toast-message-info .p-toast-message-content, .p-toast-message-info .p-toast-detail {
-  color: var(--p-blue-500) !important;
-}
-
-.p-toast .p-toast-message.p-toast-message-info {
-  border: solid var(--p-blue-500) !important;
-  border-width: 0 0 0 6px !important;
-}
-
-.dark .p-toast-message-warn .p-toast-message-content, .dark .p-toast-message-warn .p-toast-detail {
-  color: var(--p-yellow-300) !important;
-}
-
-.p-toast-message-warn .p-toast-message-content, .p-toast-message-warn .p-toast-detail {
-  color: var(--p-yellow-500) !important;
-}
-
-.p-toast .p-toast-message.p-toast-message-warn {
-  border: solid var(--p-yellow-500) !important;
-  border-width: 0 0 0 6px !important;
-}
-
-.dark .p-toast-message-success .p-toast-message-content, .dark .p-toast-message-success .p-toast-detail {
-  color: var(--p-green-300) !important;
-}
-
-.p-toast-message-success .p-toast-message-content, .p-toast-message-success .p-toast-detail {
-  color: var(--p-green-500) !important;
-}
-
-.p-toast .p-toast-message.p-toast-message-success {
-  border: solid var(--p-green-500) !important;
-  border-width: 0 0 0 6px !important;
+.p-toast .p-toast-message {
+  border-width: 0 0 0 6px;
 }
 
 .p-toast-message-icon, .p-toast-message-icon .p-icon {
-  width: 2rem !important;
-  height: 2rem !important;
-  margin-right: 1rem !important;
+  width: 2rem;
+  height: 2rem;
+  margin-right: 1rem;
 }
 
 .p-toast-message-content {
-  align-items: center !important;
+  align-items: center;
 }
 
 @media (max-width: 426px) {
   .p-toast-top-right {
-    width: 90% !important;
+    width: 90%;
   }
 
   .p-toast-detail {
