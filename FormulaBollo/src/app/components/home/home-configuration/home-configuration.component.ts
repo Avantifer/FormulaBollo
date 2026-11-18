@@ -19,8 +19,7 @@ import { SkeletonItemsPipe } from '../../../../shared/pipes/skeletonItems.pipe';
     SkeletonItemsPipe,
     SkeletonModule
 ],
-  templateUrl: './home-configuration.component.html',
-  styleUrls: ['./home-configuration.component.scss']
+  templateUrl: './home-configuration.component.html'
 })
 export class HomeConfigurationComponent {
   private readonly configurationApiService: ConfigurationApiService = inject(ConfigurationApiService);

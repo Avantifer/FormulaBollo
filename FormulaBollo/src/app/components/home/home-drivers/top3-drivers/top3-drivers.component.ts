@@ -13,8 +13,7 @@ import { ImageService } from '../../../../../shared/services/image.service';
     CommonModule,
     SpaceToUnderscorePipe
   ],
-  templateUrl: './top3-drivers.component.html',
-  styleUrls: ['./top3-drivers.component.scss']
+  templateUrl: './top3-drivers.component.html'
 })
 export class Top3DriversComponent {
   protected readonly utilsService: UtilsService = inject(UtilsService);

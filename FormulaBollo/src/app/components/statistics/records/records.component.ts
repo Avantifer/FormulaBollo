@@ -12,8 +12,7 @@ import { ImageService } from '../../../../shared/services/image.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-records',
   imports: [RouterLink],
-  templateUrl: './records.component.html',
-  styleUrls: ['./records.component.scss']
+  templateUrl: './records.component.html'
 })
 export class RecordsComponent  {
   private readonly driverApiService: DriverApiService = inject(DriverApiService);

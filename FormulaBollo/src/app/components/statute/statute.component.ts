@@ -4,8 +4,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-statute',
   imports: [],
-  templateUrl: './statute.component.html',
-  styleUrl: './statute.component.scss'
+  templateUrl: './statute.component.html'
 })
 export class StatuteComponent {
 

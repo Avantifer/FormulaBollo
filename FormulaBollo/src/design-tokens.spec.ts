@@ -66,10 +66,13 @@ describe('Design tokens', () => {
         }
       });
 
-      it('preserves legacy color tokens', () => {
+      it('does not define obsolete brand color tokens', () => {
         const styles = getComputedStyle(document.documentElement);
-        for (const token of ['--color-principal', '--color-fantasy-principal']) {
-          expect(styles.getPropertyValue(token).trim()).withContext(token).not.toBe('');
+        for (const name of ['principal', 'fantasy-principal']) {
+          for (const shade of ['', '-dark', '-darkest']) {
+            const token = `--color-${name}${shade}`;
+            expect(styles.getPropertyValue(token).trim()).withContext(token).toBe('');
+          }
         }
       });
     });

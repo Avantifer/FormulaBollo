@@ -13,6 +13,7 @@
 							<p-selectbutton [options]="listOptions" [(ngModel)]="listValue" class="md:h-9 mr-2 xs:mx-1 md:mx-2" allowEmpty="false">
 								<ng-template #item let-item>
 									<i [class]="item.icon" style="font-size: 1rem"></i>
+									<span class="sr-only">{{ item.value === 'grid' ? 'Cuadrícula' : 'Lista' }}</span>
 								</ng-template>
 							</p-selectbutton>
 							<p-button label="Filtros" icon="pi pi-filter" class="rounded-md" (onClick)="showFilters = !showFilters" />

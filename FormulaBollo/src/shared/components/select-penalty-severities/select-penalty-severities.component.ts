@@ -9,8 +9,7 @@ import { ERROR_PENALTIES_FETCH } from '../../../app/constants';
 @Component({
   selector: 'select-penalty-severities',
   imports: [ReactiveFormsModule, SelectModule],
-  templateUrl: './select-penalty-severities.component.html',
-  styleUrl: './select-penalty-severities.component.scss'
+  templateUrl: './select-penalty-severities.component.html'
 })
 export class SelectPenaltySeveritiesComponent {
   private readonly penaltySeverityApiService: PenaltySeverityApiService = inject(PenaltySeverityApiService);

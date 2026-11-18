@@ -11,8 +11,7 @@ import { UtilsService } from '../../services/utils.service';
 @Component({
   selector: 'race-details',
   imports: [],
-  templateUrl: './race-details.component.html',
-  styleUrl: './race-details.component.scss'
+  templateUrl: './race-details.component.html'
 })
 export class RaceDetailsComponent {
   private readonly raceApiService: RaceApiService = inject(RaceApiService);

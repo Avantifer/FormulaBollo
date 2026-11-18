@@ -17,8 +17,7 @@ import { TeamApiService } from '../../services/api/team-api.service';
     SelectModule,
     SpaceToUnderscorePipe
 ],
-  templateUrl: './select-teams.component.html',
-  styleUrls: ['./select-teams.component.scss']
+  templateUrl: './select-teams.component.html'
 })
 export class SelectTeamsComponent {
   private readonly teamApiService: TeamApiService = inject(TeamApiService);

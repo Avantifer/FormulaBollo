@@ -45,22 +45,21 @@
 }
 
 .fantasyHeaderButton .p-button {
-  // Los fondos globales de .dark .p-button también usan !important.
-  background: var(--fantasy) !important;
+  background: var(--fantasy);
   color: var(--on-fantasy);
 }
 
 .fantasyHeaderButton .p-button:hover {
-  background: color-mix(in srgb, var(--fantasy) 85%, black) !important;
+  background: color-mix(in srgb, var(--fantasy) 85%, black);
 }
 
 .bolloHeaderButton .p-button {
-  background: var(--accent) !important;
+  background: var(--accent);
   color: var(--on-accent);
 }
 
 .bolloHeaderButton .p-button:hover {
-  background: color-mix(in srgb, var(--accent) 85%, black) !important;
+  background: color-mix(in srgb, var(--accent) 85%, black);
 }
 
 .fantasyHeader.p-menubar,
@@ -98,7 +97,7 @@
 }
 
 .dark .header-button .p-button  {
-	background: var(--color-slate-900) !important;
+	background: var(--panel-alt);
 }
 
 .header-button .p-button  {

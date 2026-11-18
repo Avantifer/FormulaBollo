@@ -26,8 +26,7 @@ import { ButtonModule } from 'primeng/button';
     DatePipe,
     SelectSeasonsComponent
   ],
-  templateUrl: './drivers-info.component.html',
-  styleUrl: './drivers-info.component.scss'
+  templateUrl: './drivers-info.component.html'
 })
 export class DriversInfoComponent {
   protected readonly activatedRoute: ActivatedRoute = inject(ActivatedRoute);
@@ -75,16 +74,16 @@ export class DriversInfoComponent {
 
   private _mapDriverStats(driverInfo: DriverInfo): void {
     const stats = [
-      { icon: 'pi pi-trophy', color: 'text-yellow-400', key: 'Victorias', value: driverInfo.victories },
-      { icon: 'pi pi-flag', color: 'text-blue-400', key: 'Poles', value: driverInfo.poles },
-      { icon: 'pi pi-star', color: 'text-yellow-400', key: 'Podios', value: driverInfo.podiums },
-      { icon: 'pi pi-bolt', color: 'text-purple-400', key: 'Vueltas Rápidas', value: driverInfo.fastlaps },
-      { icon: 'pi pi-percentage', color: 'text-red-400', key: 'Posición Media', value: driverInfo.averagePosition.toFixed(2) },
-      { icon: 'pi pi-calendar', color: 'text-gray-400', key: 'Carreras Terminadas', value: driverInfo.racesFinished },
-      { icon: 'pi pi-chart-bar', color: 'text-green-400', key: 'Puntos Totales', value: driverInfo.totalPoints },
-      { icon: 'pi pi-exclamation-triangle', color: 'text-red-400', key: 'Penalizaciones', value: driverInfo.penalties },
-      { icon: 'pi pi-chart-line', color: 'text-blue-400', key: 'Mejor posición', value: driverInfo.bestPosition },
-      { icon: 'pi pi-shield', color: 'text-orange-400', key: 'Campeonatos', value: driverInfo.championships }
+      { icon: 'pi pi-trophy', color: 'text-ink-soft', key: 'Victorias', value: driverInfo.victories },
+      { icon: 'pi pi-flag', color: 'text-ink-soft', key: 'Poles', value: driverInfo.poles },
+      { icon: 'pi pi-star', color: 'text-ink-soft', key: 'Podios', value: driverInfo.podiums },
+      { icon: 'pi pi-bolt', color: 'text-ink-soft', key: 'Vueltas Rápidas', value: driverInfo.fastlaps },
+      { icon: 'pi pi-percentage', color: 'text-ink-soft', key: 'Posición Media', value: driverInfo.averagePosition.toFixed(2) },
+      { icon: 'pi pi-calendar', color: 'text-ink-soft', key: 'Carreras Terminadas', value: driverInfo.racesFinished },
+      { icon: 'pi pi-chart-bar', color: 'text-ink-soft', key: 'Puntos Totales', value: driverInfo.totalPoints },
+      { icon: 'pi pi-exclamation-triangle', color: 'text-ink-soft', key: 'Penalizaciones', value: driverInfo.penalties },
+      { icon: 'pi pi-chart-line', color: 'text-ink-soft', key: 'Mejor posición', value: driverInfo.bestPosition },
+      { icon: 'pi pi-shield', color: 'text-ink-soft', key: 'Campeonatos', value: driverInfo.championships }
     ];
   
     this.driverStatsArray.set(stats);

@@ -5,8 +5,7 @@ import { SelectModule } from 'primeng/select';
 @Component({
   selector: 'select-type',
   imports: [ReactiveFormsModule, SelectModule],
-  templateUrl: './select-types.component.html',
-  styleUrl: './select-types.component.scss'
+  templateUrl: './select-types.component.html'
 })
 export class SelectTypeComponent {
   @Output() typeChanged = new EventEmitter<string>();

@@ -17,8 +17,7 @@ import { environment } from '../../../enviroments/enviroment';
     ChipModule,
     SpaceToUnderscorePipe
   ],
-  templateUrl: './teams-filters.component.html',
-  styleUrl: './teams-filters.component.scss'
+  templateUrl: './teams-filters.component.html'
 })
 export class TeamsFiltersComponent {
   private readonly teamApiService: TeamApiService = inject(TeamApiService);
