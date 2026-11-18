@@ -47,6 +47,7 @@
 .fantasyHeaderButton .p-button {
   background: var(--fantasy);
   color: var(--on-fantasy);
+  box-shadow: none;
 }
 
 .fantasyHeaderButton .p-button:hover {
@@ -56,6 +57,7 @@
 .bolloHeaderButton .p-button {
   background: var(--accent);
   color: var(--on-accent);
+  box-shadow: none;
 }
 
 .bolloHeaderButton .p-button:hover {
@@ -96,12 +98,15 @@
   color: color-mix(in srgb, var(--on-pit) 90%, transparent);
 }
 
-.dark .header-button .p-button  {
-	background: var(--panel-alt);
-}
-
 .header-button .p-button  {
 	min-width: auto;
+	background: transparent;
+	color: var(--on-pit);
+	box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.25);
+}
+
+.header-button .p-button:hover {
+	background: rgb(255 255 255 / 0.1);
 }
 
 .fantasyHeader .p-menubar-item-link:hover,
