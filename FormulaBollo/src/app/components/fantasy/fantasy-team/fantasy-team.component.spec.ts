@@ -38,8 +38,7 @@ describe('FantasyTeamComponent', () => {
       providers: [
         ...provideComponentTesting(),
         { provide: FantasyApiService, useValue: api },
-        // TODO: onRaceChange lee .id sin admitir el undefined que emite el selector vacío.
-        // Estas pruebas de gráficas mantienen el selector sin respuesta; seleccionan carreras cuando lo necesitan.
+        // Estas pruebas mantienen el selector sin respuesta; seleccionan carreras cuando lo necesitan.
         { provide: RaceApiService, useValue: { getActualRace: () => EMPTY, getAllRacesFinishedAndActual: () => EMPTY } }
       ],
     }).compileComponents();
@@ -55,6 +54,11 @@ describe('FantasyTeamComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('ignores an undefined race without requesting an election', () => {
+    expect(() => component.onRaceChange(undefined as any)).not.toThrow();
+    expect(api.getFantasyElection).not.toHaveBeenCalled();
   });
 
   it('uses sector colours for negative and positive remaining budgets', async () => {

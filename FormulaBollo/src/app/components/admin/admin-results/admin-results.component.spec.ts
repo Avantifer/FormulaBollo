@@ -118,6 +118,17 @@ describe('AdminResultsComponent', () => {
 
   it('should create', () => expect(component).toBeTruthy());
 
+  it('renders no native onkeydown attributes, including in the delete dialog', async () => {
+    selectLoadedRace(false);
+    await settle();
+    const deleteButton: HTMLButtonElement = fixture.nativeElement.querySelector('p-button.deleteResults button');
+    deleteButton.click();
+    await settle();
+
+    expect(fixture.nativeElement.querySelector('[role="dialog"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('[onkeydown]').length).toBe(0);
+  });
+
   for (const sprint of [false, true]) {
     it(`shows save, conditionally shows delete and opens its dialog for ${sprint ? 'sprints' : 'results'}`, async () => {
       component.isSprint = sprint;

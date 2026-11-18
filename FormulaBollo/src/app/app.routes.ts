@@ -105,5 +105,9 @@ export const routes: Routes = [
     path: "fantasy/team",
     loadComponent: () => import('./components/fantasy/fantasy-team/fantasy-team.component').then(m => m.FantasyTeamComponent),
     canActivate: [fantasyTeamGuard]
+  },
+  {
+    path: '**',
+    loadComponent: () => import('./components/not-found/not-found.component').then(m => m.NotFoundComponent)
   }
 ];

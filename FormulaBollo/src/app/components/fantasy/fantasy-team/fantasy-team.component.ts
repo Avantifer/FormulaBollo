@@ -240,6 +240,7 @@ export class FantasyTeamComponent {
 
 
   onRaceChange(newRace: Race) {
+    if (!newRace) return;
     this.raceSelected = newRace;
     this.optionSelected = 'Pilotos';
 

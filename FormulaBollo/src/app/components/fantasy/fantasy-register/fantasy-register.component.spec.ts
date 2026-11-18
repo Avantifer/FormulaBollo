@@ -26,6 +26,16 @@ describe('FantasyRegisterComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('gives both password visibility buttons a minimum touch target', () => {
+    const buttons: NodeListOf<HTMLButtonElement> = fixture.nativeElement.querySelectorAll('p-inputicon button');
+    expect(buttons.length).toBe(2);
+    buttons.forEach(button => {
+      expect(button.classList).toContain('min-w-6');
+      expect(button.classList).toContain('min-h-6');
+      expect(button.classList).toContain('md:-m-1');
+    });
+  });
+
   it('shows the minimum password length inline', () => {
     const input = fixture.nativeElement.querySelector('[formControlName="password"]');
     input.value = '1234567';

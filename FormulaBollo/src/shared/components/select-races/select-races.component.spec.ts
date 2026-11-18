@@ -68,6 +68,7 @@ describe('SelectRacesComponent', () => {
     fixture.detectChanges();
     expect(api.getAllRaces).not.toHaveBeenCalled();
     expect(api.getAllRacesFinishedAndActual).toHaveBeenCalledOnceWith(2);
+    expect(component.racesForm.get('race')!.value).toBe(last);
     expect(emit).toHaveBeenCalledOnceWith(last);
   });
 
@@ -88,14 +89,19 @@ describe('SelectRacesComponent', () => {
   });
 
   for (const fantasyTeam of [false, true]) {
-    it(`selects and emits undefined for an empty list (fantasyTeam=${fantasyTeam})`, () => {
+    it(`handles an empty list (fantasyTeam=${fantasyTeam})`, () => {
       api.getAllRaces.and.returnValue(of([]));
       api.getAllRacesFinishedAndActual.and.returnValue(of([]));
       fixture.componentRef.setInput('fantasyTeam', fantasyTeam);
       fixture.detectChanges();
       expect(component.races()).toEqual([]);
-      expect(component.racesForm.get('race')!.value).toBeUndefined();
-      expect(emit).toHaveBeenCalledOnceWith(undefined);
+      if (fantasyTeam) {
+        expect(component.racesForm.get('race')!.value).toBeNull();
+        expect(emit).not.toHaveBeenCalled();
+      } else {
+        expect(component.racesForm.get('race')!.value).toBeUndefined();
+        expect(emit).toHaveBeenCalledOnceWith(undefined);
+      }
     });
 
     it(`reports an API error and supports another load (fantasyTeam=${fantasyTeam})`, () => {

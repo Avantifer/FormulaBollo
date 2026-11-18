@@ -26,4 +26,9 @@ describe('ComparativeStatsComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('labels the bar chart as a comparison of statistics', () => {
+    expect(fixture.nativeElement.querySelector('h2').textContent.trim())
+      .toBe('Comparativa de estadísticas');
+  });
 });

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, Input } from '@angular/core';
+import { AfterViewChecked, ChangeDetectionStrategy, Component, ElementRef, inject, Input, QueryList, ViewChildren } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ImageService } from '../../../../shared/services/image.service';
 import { SpaceToUnderscorePipe } from "../../../../shared/pipes/spaceToUnderscore.pipe";
@@ -25,12 +25,19 @@ import { SkeletonModule } from 'primeng/skeleton';
   templateUrl: './team-card.component.html',
   styleUrl: './team-card.component.scss'
 })
-export class TeamCardComponent {
+export class TeamCardComponent implements AfterViewChecked {
   protected imageService: ImageService = inject(ImageService);
   protected utilsService: UtilsService = inject(UtilsService);
 
   @Input() teamPoints!: TeamWithDrivers;
   @Input() index!: number;
+
+  @ViewChildren(ProgressBar, { read: ElementRef }) private progressBars!: QueryList<ElementRef<HTMLElement>>;
+
+  ngAfterViewChecked(): void {
+    // PrimeNG reapplies its invalid aria-level host binding when the value changes.
+    this.progressBars.forEach(bar => bar.nativeElement.removeAttribute('aria-level'));
+  }
 
   protected teamNameSpaceToUnderScore(teamName: string) {
     return teamName.replaceAll(" ", "_");

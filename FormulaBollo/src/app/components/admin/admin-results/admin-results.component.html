@@ -119,7 +119,6 @@
 					[label]="'Borrar ' + (isSprint ? 'Sprints' : 'Resultados')"
 					icon="pi pi-trash"
 					(click)="visible.set(true)"
-					onkeydown="visible = true"
 					class="deleteResults" />
 			}
 		</div>
@@ -141,8 +140,8 @@
 		<span class="text-ink-soft block mb-8">¿Estás seguro de que quieres borrar todos los resultados?</span>
 		<p-divider />
 		<ng-template #footer>
-			<p-button label="Cancelar" (click)="visible.set(false)" onkeydown="visible = flase" class="flex-1 min-w-0" />
-			<p-button label="Borrar todo" icon="pi pi-trash" (click)="deleteResults()" onkeydown="deleteResults()" class="deleteResults flex-1 min-w-0" />
+			<p-button label="Cancelar" (click)="visible.set(false)" class="flex-1 min-w-0" />
+			<p-button label="Borrar todo" icon="pi pi-trash" (click)="deleteResults()" class="deleteResults flex-1 min-w-0" />
 		</ng-template>
 	</p-dialog>
 </div>
