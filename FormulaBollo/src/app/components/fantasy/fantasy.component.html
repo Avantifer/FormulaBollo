@@ -1,24 +1,24 @@
-<div class="principal-image relative h-60 md:h-80 lg:h-[600px]">
+<div class="principal-image relative flex h-56 md:h-72 lg:h-[360px] items-center justify-center border-b-3 border-fantasy bg-pit">
 	<h1
-		class="Ethnocentric_Regular absolute text-white text-center tracking-wide uppercase top-1/2 left-1/2 z-10 text-4xl sm:text-6xl md:text-7xl lg:text-8xl">
+		class="relative z-10 w-full px-4 text-center font-display font-bold uppercase tracking-wide text-on-pit text-5xl sm:text-display-lg lg:text-display-xl">
 		Fantasy Bollo
 	</h1>
-	<img [ngSrc]="imageService.getImageUrl('fantasy/fantasyImage.avif')" alt="principal" class="brightness-70" fill priority />
+	<img [ngSrc]="imageService.getImageUrl('fantasy/fantasyImage.avif')" alt="" class="brightness-70 object-cover" fill priority />
 </div>
 <div>
 	@for (howToPlay of howToPlayList; track $index) {
-		<div [class]="howToPlay.fragment">
+		<div class="border-y border-rule" [class.bg-panel]="$even" [class.bg-panel-alt]="$odd">
 			<div class="container mx-auto px-4 py-16">
 				<div class="flex lg:flex-row items-center gap-12" [class]="howToPlay.styleClass">
-					<div class="flex-1">
-						<h2 class="text-4xl font-bold text-gray-900 dark:text-white mb-6">{{ howToPlay.title }}</h2>
-						<p class="text-lg text-gray-600 dark:text-gray-300">{{ howToPlay.label }}</p>
+					<div class="flex-1 min-w-0">
+						<h2 class="font-display uppercase tracking-wide text-display-md text-ink mb-6">{{ howToPlay.title }}</h2>
+						<p class="text-lg text-ink-soft">{{ howToPlay.label }}</p>
 					</div>
-					<div class="flex-1 flex justify-center">
+					<div class="flex-1 min-w-0 w-full lg:w-auto flex justify-center">
 						<img
 							[src]="imageService.getImageUrl(howToPlay.badge!)"
 							[alt]="howToPlay.target"
-							class="rounded-lg shadow-lg"
+							class="max-w-full rounded-panel border border-rule"
 							loading="lazy"
 							decoding="async" />
 					</div>
@@ -27,25 +27,25 @@
 		</div>
 	}
 </div>
-<div class="bg-white dark:bg-gray-900 py-16">
+<div class="bg-canvas py-16">
 	<div class="container mx-auto px-4">
-		<h2 class="text-3xl font-bold text-center text-gray-900 dark:text-white mb-12">Comienza tu aventura Fantasy</h2>
+		<h2 class="font-display uppercase tracking-wide text-display-md text-center text-ink mb-12">Comienza tu aventura Fantasy</h2>
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 			@for (adventure of adventureFantasy; track $index) {
 				<a
-					class="block focus-visible:outline-2 focus-visible:outline-blue-600 rounded-lg border border-2 border-gray-300 dark:border-gray-700 shadow-2xs hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
+					class="block bg-panel border border-rule rounded-panel hover:border-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2"
 					[routerLink]="adventure.routerLink">
 					<div class="flex flex-col space-y-1.5 p-6">
 						<div class="flex gap-3">
-							<i [class]="adventure.icon" class="text-blue-600" style="font-size: 1.75rem"></i>
-							<h3 class="text-2xl font-semibold leading-none tracking-tight flex items-center gap-3 text-blue-600">
+							<i [class]="adventure.icon" class="text-fantasy-text" style="font-size: 1.75rem"></i>
+							<h3 class="font-display uppercase text-2xl font-semibold leading-none tracking-tight flex items-center gap-3 text-fantasy-text">
 								{{ adventure.title }}
 							</h3>
 						</div>
 					</div>
 					<div class="p-6 pt-0">
-						<p class="text-gray-600 dark:text-gray-300 mb-4">{{ adventure.label }}</p>
-						<div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+						<p class="text-ink-soft mb-4">{{ adventure.label }}</p>
+						<div class="flex items-center gap-2 text-sm text-ink-soft tabular-nums">
 							<i [class]="adventure.badge"></i>
 							<span>{{ adventure.fragment }}</span>
 						</div>

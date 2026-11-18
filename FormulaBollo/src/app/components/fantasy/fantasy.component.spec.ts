@@ -3,7 +3,7 @@ import { HttpTestingController } from '@angular/common/http/testing';
 import { provideComponentTesting } from '../../../testing/component-test-providers';
 import { FantasyComponent } from './fantasy.component';
 import { By } from '@angular/platform-browser';
-import { ActivatedRoute, provideRouter, Router } from '@angular/router';
+import { ActivatedRoute, provideRouter, Router, RouterLink } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
 describe('FantasyComponent', () => {
@@ -31,6 +31,40 @@ describe('FantasyComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('renders a single h1 with the Fantasy Bollo title', () => {
+    const headings = fixture.debugElement.queryAll(By.css('h1'));
+
+    expect(headings.length).toBe(1);
+    expect(headings[0].nativeElement.textContent.trim()).toBe('Fantasy Bollo');
+  });
+
+  it('alternates the how-to-play section backgrounds', () => {
+    const sections = fixture.debugElement.queryAll(By.css('div.border-y'));
+
+    expect(sections.length).toBe(component.howToPlayList.length);
+    expect(sections.length).toBe(4);
+    sections.forEach((section, index) => {
+      const element: HTMLElement = section.nativeElement;
+      expect(element.classList.contains('bg-panel')).toBe(index % 2 === 0);
+      expect(element.classList.contains('bg-panel-alt')).toBe(index % 2 === 1);
+      expect(element.querySelector('h2')?.textContent?.trim()).toBe(component.howToPlayList[index].title);
+    });
+  });
+
+  it('keeps the adventure cards as block anchors with their router links', () => {
+    const cards = fixture.debugElement.queryAll(By.directive(RouterLink));
+
+    expect(cards.length).toBe(3);
+    expect(cards.map(card => card.injector.get(RouterLink).href)).toEqual([
+      '/fantasy/team', '/fantasy/clasification', '/fantasy/login',
+    ]);
+    for (const card of cards) {
+      const element: HTMLAnchorElement = card.nativeElement;
+      expect(element.tagName).toBe('A');
+      expect(element.classList.contains('block')).toBeTrue();
+    }
   });
 
   it('renders focusable links with absolute destinations from the Fantasy route', async () => {

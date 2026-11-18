@@ -1,58 +1,44 @@
-::ng-deep .fantasyClasificationButton .p-button {
-  background: var(--color-fantasy-principal) !important;
-}
-
-::ng-deep .fantasyClasificationButton .p-button:hover {
-  background: var(--color-fantasy-principal-dark) !important;
-}
-
-::ng-deep .p-dialog {
+::ng-deep .fantasy-dialog {
   overflow: hidden;
-  border: none;
 }
 
-::ng-deep .p-dialog-header {
-  background: var(--color-fantasy-principal);
+::ng-deep .fantasy-dialog .p-dialog-header {
+  background: var(--pit);
+  color: var(--on-pit);
+  border-bottom: 2px solid var(--fantasy);
 }
 
-::ng-deep .p-dialog-header .p-button {
-  color: var(--color-white);
+::ng-deep .fantasy-dialog .closeDialog .p-button {
+  color: var(--on-pit);
 }
 
-::ng-deep .p-dialog-header .closeDialog .p-button:hover {
-  background: var(--color-blue-400) !important;
-}
-
-.p-datatable-thead > tr > th {
-  border-width: 1px 0;
-}
-
-.p-datatable-thead > tr > th:first-child {
-  border-width: 1px 0 1px 4px;
-}
-
-.p-datatable-thead > tr:last-child {
-  background-color: red !important;
-}
-
-::ng-deep .p-dialog .closeDialog .p-button {
-  background: transparent !important;
-  padding: 0.1rem 0.45rem;
-  border-radius: 50%;
-}
-
-::ng-deep .p-dialog .closeDialog .p-button:hover {
-  background: var(--color-slate-100) !important;
-}
-
-::ng-deep .dark .p-dialog .closeDialog .p-button:hover {
-  background: var(--color-slate-900) !important;
+::ng-deep .fantasy-dialog .closeDialog .p-button:hover {
+  background: color-mix(in srgb, var(--on-pit) 15%, transparent);
 }
 
 /* En móvil la tabla debe caber entera: la columna de puntos es la importante. */
 @media (max-width: 640px) {
+  :host ::ng-deep .p-datatable-table {
+    table-layout: fixed;
+    width: 100%;
+  }
+
   :host ::ng-deep .p-datatable-table th,
   :host ::ng-deep .p-datatable-table td {
     padding-inline: 0.5rem;
+    overflow-wrap: anywhere;
+  }
+
+  :host ::ng-deep .p-datatable-table th:first-child {
+    width: 18%;
+  }
+
+  :host ::ng-deep .fantasyClasificationButton .p-button {
+    max-width: 100%;
+    padding-inline: 0.5rem;
+  }
+
+  :host ::ng-deep .fantasyClasificationButton .p-button-label {
+    white-space: normal;
   }
 }

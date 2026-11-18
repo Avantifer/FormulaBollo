@@ -10,3 +10,20 @@
 .p-dialog .p-button {
   width: 100%;
 }
+
+.p-dialog .closeDialog .p-button {
+  background: transparent;
+  padding: 0.35rem;
+  border-radius: 50%;
+  width: auto;
+  color: var(--ink);
+}
+
+.p-dialog .closeDialog .p-button:hover {
+  background: var(--panel-alt);
+}
+
+.p-dialog .closeDialog .p-button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}

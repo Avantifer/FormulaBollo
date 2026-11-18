@@ -1,25 +1,9 @@
 ::ng-deep .loginFantasyButton .p-button {
-  background: var(--color-fantasy-principal) !important;
   width: 100%;
+  background: var(--fantasy);
+  color: var(--on-fantasy);
 }
 
 ::ng-deep .loginFantasyButton .p-button:hover {
-  background: var(--color-fantasy-principal-dark) !important;
-}
-::ng-deep .p-dialog .closeDialog .p-button {
-  background: transparent !important;
-  padding: 0.35rem;
-  border-radius: 50%;
-}
-
-::ng-deep .p-dialog .closeDialog .p-button:focus-visible {
-  outline: transparent;
-}
-
-::ng-deep .p-dialog .closeDialog .p-button:hover {
-  background: var(--color-slate-100) !important;
-}
-
-::ng-deep .dark .p-dialog .closeDialog .p-button:hover {
-  background: var(--color-slate-900) !important;
+  background: color-mix(in srgb, var(--fantasy) 85%, black);
 }
