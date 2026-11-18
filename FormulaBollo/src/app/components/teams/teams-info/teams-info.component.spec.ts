@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpTestingController } from '@angular/common/http/testing';
 import { provideComponentTesting, teamPointsFixture } from '../../../../testing/component-test-providers';
 import { TeamInfo } from '../../../../shared/models/teamInfo';
 import { TeamsInfoComponent } from './teams-info.component';

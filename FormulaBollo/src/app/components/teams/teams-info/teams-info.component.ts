@@ -146,10 +146,6 @@ export class TeamsInfoComponent {
     return podiums >= 2 ? 'Si' : 'No';
   }
 
-  protected driverNameSpaceToUnderScore(driverName: string): string {
-    return driverName.replaceAll(" ", "_");
-  }
-
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();

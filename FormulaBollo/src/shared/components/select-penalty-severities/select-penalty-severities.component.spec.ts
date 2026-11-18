@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpTestingController } from '@angular/common/http/testing';
 import { provideComponentTesting } from '../../../testing/component-test-providers';
 import { SelectPenaltySeveritiesComponent } from './select-penalty-severities.component';
 

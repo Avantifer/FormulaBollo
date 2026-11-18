@@ -3,3 +3,5 @@
 # Carpetas que generan herramientas locales (grafo de código, ajustes de sesión)
 graphify-out/
 .claude/
+.serena/
+.impeccable/
