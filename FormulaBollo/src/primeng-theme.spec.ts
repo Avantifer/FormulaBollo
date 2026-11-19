@@ -13,8 +13,6 @@ import { FormulaBolloPreset } from './app/app.config';
   template: `
     <p-select [options]="options" [(ngModel)]="selected" />
     <p-selectbutton [options]="options" [(ngModel)]="selected" />
-    <p-button class="fantasyHeaderButton" label="Fantasy" />
-    <p-button class="bolloHeaderButton" label="Bollo" />
     <p-button class="header-button text-ink" icon="pi pi-sun" ariaLabel="Cambiar tema" />
     <p-button class="text-white" label="Guardar" />
   `
@@ -95,15 +93,6 @@ describe('PrimeNG shared control theme', () => {
   it('preserves header button colors and explicit white text on the host', () => {
     for (const dark of [false, true]) {
       document.documentElement.classList.toggle('dark', dark);
-      for (const [hook, background, foreground] of [
-        ['fantasyHeaderButton', 'fantasy', 'on-fantasy'],
-        ['bolloHeaderButton', 'accent', 'on-accent']
-      ]) {
-        const button = fixture.nativeElement.querySelector(`.${hook} .p-button`);
-        expect(getComputedStyle(button).backgroundColor).toBe(tokenColor(background));
-        expect(getComputedStyle(button).color).toBe(tokenColor(foreground));
-        expect(getComputedStyle(button).boxShadow).toBe('none');
-      }
       const whiteButton = fixture.nativeElement.querySelector('p-button.text-white .p-button');
       expect(getComputedStyle(whiteButton).color).toBe(tokenColor('color-white'));
       const themeButton = fixture.nativeElement.querySelector('.header-button .p-button');

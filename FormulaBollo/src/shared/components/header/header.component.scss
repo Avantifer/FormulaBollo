@@ -1,18 +1,183 @@
-:host ::ng-deep nav {
-  .p-menubar-button,
-  .p-button {
-    min-height: 2.25rem;
+:host {
+  display: block;
+}
+
+.bolloHeader {
+  --header-accent: var(--accent);
+  // La cabecera es oscura en ambos temas; el texto activo necesita estos tonos claros.
+  --header-accent-text: #FF5D52;
+}
+
+.fantasyHeader {
+  --header-accent: var(--fantasy);
+  --header-accent-text: #6EA0FF;
+}
+
+header {
+  --header-control: 2.75rem;
+  background: var(--pit);
+  border-bottom: 2px solid var(--header-accent);
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -3px;
+}
+
+.header-logo {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.header-link {
+  min-height: 36px;
+  padding: 0 12px;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--on-pit) 75%, transparent);
+  border-radius: var(--radius-row);
+
+  .pi { font-size: 16px; }
+
+  span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  @media (max-width: 767px) {
-    .p-menubar-button,
-    .p-button {
-      min-height: 2.75rem;
-      min-width: 2.75rem;
-    }
+  &:hover {
+    color: var(--on-pit);
+    background: rgb(255 255 255 / 0.08);
+  }
 
-    .p-menubar-item-link {
-      min-height: 2.75rem;
+  &[aria-current="page"] {
+    color: var(--on-pit);
+    background: rgb(255 255 255 / 0.10);
+  }
+}
+
+.mode-switch {
+  position: relative;
+  height: var(--header-control);
+  border-radius: 4px;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px solid rgb(255 255 255 / 0.25);
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  a {
+    min-width: 44px;
+    padding: 0 14px;
+    color: color-mix(in srgb, var(--on-pit) 85%, transparent);
+
+    + a { border-left: 1px solid rgb(255 255 255 / 0.25); }
+
+    &:hover { background: rgb(255 255 255 / 0.08); }
+
+    &[aria-current="page"] {
+      background: var(--header-accent);
+      color: var(--on-accent);
     }
   }
+}
+
+.fantasyHeader .mode-switch a[aria-current="page"] {
+  color: var(--on-fantasy);
+}
+
+.header-bottom {
+  box-sizing: border-box;
+  left: 8px;
+  right: 8px;
+  bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  height: 60px;
+  padding-block: 3px;
+  background: var(--pit);
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: 0.375rem;
+}
+
+.header-tab {
+  position: relative;
+  isolation: isolate;
+  min-height: 44px;
+  padding: 0;
+  color: color-mix(in srgb, var(--on-pit) 70%, transparent);
+
+  .pi { font-size: 22px; }
+
+  .tab-label {
+    font-size: 11px;
+    line-height: 1.2;
+    letter-spacing: 0;
+  }
+
+  // El relleno tiene inset, pero el objetivo táctil conserva todo el ancho.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 4px;
+    z-index: -1;
+    border-radius: 4px;
+    pointer-events: none;
+  }
+
+  &:hover::before { background: rgb(255 255 255 / 0.08); }
+
+  &[aria-current="page"] {
+    color: var(--header-accent-text);
+
+    &::before {
+      background: rgb(255 255 255 / 0.10);
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  .header-bottom {
+    transform: none;
+    transition: transform 200ms ease-out;
+
+    &.header-bottom--hidden {
+      transform: translateY(calc(100% + 8px + env(safe-area-inset-bottom, 0px)));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .header-bottom { transition: none; }
+  }
+
+  header {
+    padding: 8px;
+    background: transparent;
+    border: 0;
+  }
+
+  .header-top {
+    height: 60px;
+    padding-inline: 8px;
+    background: var(--pit);
+    border: 1px solid rgb(255 255 255 / 0.18);
+    border-bottom: 2px solid var(--header-accent);
+    border-radius: 0.375rem;
+  }
+}
+
+// Seis pestañas deben caber incluso con la fuente de respaldo en pantallas estrechas.
+@media (max-width: 390px) {
+  .header-bottom:has(li:nth-child(6)) .tab-label { letter-spacing: -0.06em; }
+}
+
+@media (min-width: 768px) {
+  header { --header-control: 2.25rem; }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .header-top { gap: 4px; padding-inline: 8px; }
+  .header-link { padding-inline: 3px; gap: 4px; letter-spacing: 0; }
+  .mode-switch a { padding-inline: 8px; }
 }

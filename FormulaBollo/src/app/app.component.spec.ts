@@ -13,6 +13,8 @@ describe('Cache version synchronization', () => {
     const main: HTMLElement = fixture.nativeElement.querySelector('main');
 
     expect(main.classList.contains('min-h-screen')).toBeTrue();
+    expect(main.parentElement!.classList.contains('pb-[76px]')).toBeTrue();
+    expect(main.parentElement!.classList.contains('md:pb-0')).toBeTrue();
     fixture.destroy();
   });
 
