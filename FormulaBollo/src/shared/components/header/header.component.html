@@ -1,40 +1,66 @@
-<header>
-<nav aria-label="Navegación principal">
-<p-menubar [model]="items()" class="m-0" [class]="!isFantasy() ? 'bolloHeader' : 'fantasyHeader'">
-	<ng-template #start>
-		<img
-			src="assets/images/logo/logo-cronometro.png"
-			alt="Logo FormulaBollo"
-			class="h-11 w-11 cursor-pointer ml-2"
-			[routerLink]="isFantasy() ? '/fantasy' : '/home'" />
-	</ng-template>
-
-	<ng-template #item let-item let-root="root">
-		<a
-			pRipple
-			class="flex items-center p-menubar-item-link font-display uppercase tracking-wide font-semibold text-base text-on-pit/90!"
-			[routerLink]="item.routerLink"
-			[class.p-menubar-active]="isActive(item.routerLink)">
-			<span [class]="item.icon"></span>
-			<span>{{ item.label }}</span>
-		</a>
-	</ng-template>
-
-	<ng-template pTemplate="end">
-		<div class="flex items-center">
-			<p-button
-				[icon]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'"
-				[ariaLabel]="isDarkTheme() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
-				class="header-button text-ink rounded-md p-1.5"
-				iconPos="right"
-				(click)="toggleDarkMode()" />
-			<p-button
-				[label]="!isFantasy() ? 'Fantasy' : 'F1Bollo'"
-				class="text-on-pit"
-				[class]="!isFantasy() ? 'fantasyHeaderButton' : 'bolloHeaderButton'"
-				(click)="!isFantasy() ? router.navigate(['/fantasy']) : router.navigate(['/'])" />
-		</div>
-	</ng-template>
-</p-menubar>
-</nav>
+<header class="h-[76px] md:h-16" [class.bolloHeader]="!isFantasy()" [class.fantasyHeader]="isFantasy()">
+  <div class="header-top flex h-full items-center justify-between gap-2 px-3 md:px-6">
+    <a class="header-logo flex shrink-0 items-center justify-center" [routerLink]="isFantasy() ? '/fantasy' : '/home'">
+      <img src="assets/images/logo/logo-fb.svg" alt="Logo FormulaBollo" width="86" height="44" class="h-10 w-auto shrink-0 md:h-11" />
+    </a>
+    <nav aria-label="Navegación principal" class="hidden min-w-0 md:block">
+      <ul class="flex items-center gap-1">
+        @for (item of items(); track item.label) {
+          @if (item.visible !== false) {
+            <li class="min-w-0">
+              @if (item.routerLink) {
+                <a class="header-link flex items-center justify-center gap-2 font-display text-base font-semibold uppercase tracking-wide"
+                  [routerLink]="item.routerLink" [attr.aria-current]="isActive(item.routerLink) ? 'page' : null">
+                  <span [class]="item.icon" aria-hidden="true"></span>
+                  <span>{{ item.label }}</span>
+                </a>
+              } @else {
+                <button type="button" class="header-link flex items-center justify-center gap-2 font-display text-base font-semibold uppercase tracking-wide" (click)="item.command?.()">
+                  <span [class]="item.icon" aria-hidden="true"></span>
+                  <span>{{ item.label }}</span>
+                </button>
+              }
+            </li>
+          }
+        }
+      </ul>
+    </nav>
+    <div class="flex shrink-0 items-center gap-2">
+      <div class="mode-switch flex overflow-hidden font-display text-sm font-bold uppercase tracking-wide" role="group" aria-label="Modo de la web">
+        <a routerLink="/" class="flex items-center justify-center" [attr.aria-current]="!isFantasy() ? 'page' : null">
+          <span class="md:hidden">Liga</span><span class="hidden md:inline">F1Bollo</span>
+        </a>
+        <a routerLink="/fantasy" class="flex items-center justify-center" [attr.aria-current]="isFantasy() ? 'page' : null">Fantasy</a>
+      </div>
+      <p-button
+        [icon]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'"
+        [ariaLabel]="isDarkTheme() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+        class="header-button text-ink"
+        iconPos="right"
+        (click)="toggleDarkMode()" />
+    </div>
+  </div>
+  <nav aria-label="Navegación inferior" class="header-bottom fixed z-40 md:hidden"
+    [class.header-bottom--hidden]="bottomDockHidden()" (focusin)="showBottomDock()">
+    <ul class="flex h-full">
+      @for (item of items(); track item.label) {
+        @if (item.visible !== false) {
+          <li class="flex min-w-0 flex-1">
+            @if (item.routerLink) {
+              <a class="header-tab flex min-w-0 flex-1 flex-col items-center justify-center gap-1 font-display font-semibold uppercase"
+                [routerLink]="item.routerLink" [attr.aria-label]="item.label" [attr.aria-current]="isActive(item.routerLink) ? 'page' : null">
+                <span [class]="item.icon" aria-hidden="true"></span>
+                <span class="tab-label block w-full truncate text-center" style="font-size: min(11px, 2.8vw)">{{ visibleCount() >= 6 ? (item.shortLabel ?? item.label) : item.label }}</span>
+              </a>
+            } @else {
+              <button type="button" class="header-tab flex min-w-0 flex-1 flex-col items-center justify-center gap-1 font-display font-semibold uppercase" (click)="item.command?.()">
+                <span [class]="item.icon" aria-hidden="true"></span>
+                <span class="tab-label block w-full truncate text-center" style="font-size: min(11px, 2.8vw)">{{ visibleCount() >= 6 ? (item.shortLabel ?? item.label) : item.label }}</span>
+              </button>
+            }
+          </li>
+        }
+      }
+    </ul>
+  </nav>
 </header>
