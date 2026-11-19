@@ -1,11 +1,10 @@
 <div class="principal-image relative flex h-56 md:h-72 lg:h-[360px] items-center justify-center border-b-3 border-accent bg-pit">
-	<div class="relative z-10 w-full px-4 text-center">
-		<h1 class="font-display font-bold text-on-pit tracking-wide uppercase text-5xl sm:text-display-lg lg:text-display-xl">
+	<div class="my-container w-full relative z-10 text-left">
+		<h1 class="font-display font-bold text-on-pit uppercase border-l-[7px] sm:border-l-[10px] lg:border-l-[12px] border-accent pl-3.5 sm:pl-5 lg:pl-7 leading-[0.92] m-0 tracking-wide text-[3.4rem] sm:text-[4.5rem] lg:text-[6.2rem]">
 			Formula Bollo
 		</h1>
-		<p class="mx-auto mt-3 max-w-3xl text-base lg:text-lg text-on-pit/90">Clasificaciones, resultados, estadísticas y Fantasy de nuestra liga de Fórmula 1.</p>
 	</div>
-	<img [ngSrc]="imageService.getImageUrl('intro/introImage.avif')" alt="" class="brightness-70 object-cover" fill priority />
+	<img [ngSrc]="imageService.getImageUrl('intro/introImage-v3.avif')" alt="" class="object-cover" fill priority />
 </div>
 <div class="bg-canvas text-ink">
 	<app-home-drivers />

@@ -24,4 +24,11 @@ describe('HomeComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should align the title using the shared container and accent border', () => {
+    const title: HTMLHeadingElement = fixture.nativeElement.querySelector('h1');
+
+    expect(title.parentElement?.classList.contains('my-container')).toBeTrue();
+    expect(title.classList.contains('border-accent')).toBeTrue();
+  });
 });
