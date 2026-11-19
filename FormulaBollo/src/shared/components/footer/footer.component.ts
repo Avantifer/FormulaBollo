@@ -19,7 +19,7 @@ export class FooterComponent {
   readonly isFantasy: WritableSignal<boolean> = signal(false);
   protected readonly textMainFooter: Signal<string> = computed(() => this.isFantasy()
     ? 'La experiencia Fantasy definitiva para los fanáticos de Formula Bollo.'
-    : 'La mejor liga de Formula 1 creada y organizada por un grupo de amigos.');
+    : 'Una liga de Fórmula 1 entre amigos. Aquí vive cada carrera, cada sanción y cada récord.');
 
   protected readonly contactRouters: MenuItem[] = [
     { label: 'Discord', routerLink: 'https://discord.gg/43XHdBEDfV', icon: 'pi pi-discord' },
