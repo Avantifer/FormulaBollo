@@ -47,7 +47,7 @@
 						<div class="stat classification-stat relative min-w-0 p-4 sm:p-6">
 							<span class="points-bar absolute bottom-4 left-0 top-4 w-[3px]" [class]="'bg-' + teamClass" aria-hidden="true"></span>
 							<dt class="flex items-start justify-between gap-2 font-display text-sm font-bold uppercase text-ink-soft"><span>Clasificación</span><i class="pi pi-list" aria-hidden="true"></i></dt>
-							<dd class="m-0 mt-2 font-display text-5xl font-bold tabular-nums sm:text-6xl">
+							<dd class="m-0 mt-2 font-display text-5xl font-bold tabular-nums sm:text-6xl md:text-5xl lg:text-6xl">
 								<span class="classification-value" aria-hidden="true" [class.text-podium-1]="ranking.position === 1" [class.text-podium-2]="ranking.position === 2" [class.text-podium-3]="ranking.position === 3">{{ ranking.position }}<sup class="text-[0.5em]">.º</sup></span>
 								<span class="sr-only">Puesto {{ ranking.position }} de {{ ranking.total }} en la clasificación@if (ranking.tied) { empatado}</span>
 								<span class="classification-total block font-sans text-sm font-normal text-ink-soft" aria-hidden="true">de {{ ranking.total }}</span>
@@ -58,7 +58,7 @@
 						<div class="stat relative min-w-0 p-4 sm:p-6">
 							@if ($first && !championshipPosition()) {<span class="points-bar absolute bottom-4 left-0 top-4 w-[3px]" [class]="'bg-' + teamClass" aria-hidden="true"></span>}
 							<dt class="flex items-start justify-between gap-2 font-display text-sm font-bold uppercase text-ink-soft"><span>{{ stat.key }}</span><i [class]="stat.icon" aria-hidden="true"></i></dt>
-							<dd class="m-0 mt-2 font-display text-5xl font-bold tabular-nums sm:text-6xl">{{ stat.value }}</dd>
+							<dd class="m-0 mt-2 font-display text-5xl font-bold tabular-nums sm:text-6xl md:text-5xl lg:text-6xl">{{ stat.value }}</dd>
 						</div>
 					}
 				</dl>
