@@ -76,6 +76,16 @@ El backend no trae secretos en el repositorio; deben llegar por ficheros de perf
   Tras la última carrera responde 200 «Era la última carrera de la temporada…» (antes 404); 404 solo si la carrera no
   existe. Los precios de la carrera 31 que ya estaban guardados no coinciden con los que se regeneran desde la 30 (ni
   siquiera con el código anterior): vienen de datos editados después de calcularlos. No se ha tocado ningún dato.
+- Endpoint nuevo `GET /drivers/teamHistory?driverName=<nombre>`: lista, ordenada por temporada y luego por `id`, de
+  pares `{season, team}` con el equipo del piloto en cada registro. La ficha del piloto lo usa en la pestaña «Total»
+  para mostrar el recorrido de equipos. Si el frontend nuevo se publica antes que el backend, la ficha sigue
+  funcionando pero muestra un solo equipo; por eso conviene desplegar los dos a la vez.
+- **Equipo principal de un piloto.** Un piloto puede tener dos registros en la misma temporada (cambio de equipo a
+  mitad de temporada: hoy solo Robe en la temporada 3, Kick Sauber y Ferrari). Su equipo principal es el del
+  **primer registro** (`id` menor) de esa temporada, y en «Total» el principal de la última temporada. Lo usan
+  `GET /results/totalPerDriver` (lista de pilotos y portada) y `GET /drivers/infoDriverByName` (campo `driver`). Antes
+  se quedaba con el que devolviera el `HashMap`, sin ningún criterio. Las estadísticas siguen sumando todos los
+  registros. No hay cambios de esquema ni de datos.
 - CI: `.github/workflows/ci.yml` ejecuta los tests del backend (con H2, sin Docker) y del frontend, y compila el
   frontend, en cada PR. Los tests de repositorio usan H2 y no sustituyen a la prueba con MariaDB real del paso 4.
 
@@ -149,6 +159,7 @@ Sustituye `$B` por la URL del backend.
 |---|---|
 | `curl -s -o /dev/null -w "%{http_code}" $B/seasons/all` | 200 |
 | `curl -s -o /dev/null -w "%{http_code}" "$B/drivers/allInfoDriver?season=3"` | 200 |
+| `curl -s "$B/drivers/teamHistory?driverName=Robe"` | lista de 4 entradas: T1 Ferrari, T2 Alpine, T3 Kick Sauber, T3 Ferrari |
 | `curl -s -o /dev/null -w "%{http_code}" -X DELETE "$B/results/delete?raceId=1"` | **403** (sin token) |
 | `curl -s -o /dev/null -w "%{http_code}" -X POST "$B/cache/update"` | **403** |
 | `curl -s -o /dev/null -w "%{http_code}" "$B/account/id?id=1"` | **403** |

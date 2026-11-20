@@ -120,6 +120,16 @@ class JwtHttpSecurityTest {
     }
 
     @Test
+    void driverTeamHistoryIsPublicWithOrWithoutRealSessionTokens() throws Exception {
+        mvc.perform(route("GET", "/drivers/teamHistory").param("driverName", "Driver With Spaces"))
+                .andExpect(status().isOk());
+        for (Account account : List.of(user, admin)) {
+            mvc.perform(route("GET", "/drivers/teamHistory").param("driverName", "Driver With Spaces")
+                    .header("Authorization", "Bearer " + session(account))).andExpect(status().isOk());
+        }
+    }
+
+    @Test
     void fantasyElectionAcceptsSessionWithoutClientUserId() throws Exception {
         mvc.perform(route("GET", "/fantasy/fantasyElection")
                 .header("Authorization", "Bearer " + session(user)))
@@ -251,6 +261,9 @@ class JwtHttpSecurityTest {
         }
         @Bean CacheController cacheController() {
             return new CacheController(mock(CacheService.class), mock(CacheNotifier.class));
+        }
+        @Bean DriverController driverController() {
+            return new DriverController(mock(DriverRepository.class), mock(DriverImpl.class), mock(DriverService.class));
         }
         @Bean FantasyController fantasyController(FantasyService service) {
             return new FantasyController(mock(FantasyPointsDriverRepository.class), mock(FantasyPriceDriverRepository.class),

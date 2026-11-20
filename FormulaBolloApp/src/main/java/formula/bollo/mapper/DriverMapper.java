@@ -7,11 +7,16 @@ import org.springframework.data.domain.Page;
 
 import formula.bollo.entity.Driver;
 import formula.bollo.model.DriverDTO;
+import formula.bollo.model.DriverTeamHistoryDTO;
 
 @Mapper(componentModel = "spring")
 public interface DriverMapper {
 
     DriverDTO driverToDriverDTO(Driver driver);
+
+    DriverTeamHistoryDTO driverToTeamHistoryDTO(Driver driver);
+
+    List<DriverTeamHistoryDTO> convertDriversToTeamHistoryDTO(List<Driver> drivers);
 
     Driver driverDTOToDriver(DriverDTO driver);
 

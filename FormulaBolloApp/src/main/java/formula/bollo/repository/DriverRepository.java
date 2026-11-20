@@ -31,6 +31,10 @@ public interface DriverRepository extends JpaRepository<Driver, Long> {
     @Query(value = "SELECT d FROM Driver d WHERE d.name = :driverName")
     List<Driver> findByName(String driverName);
 
+    @Query("SELECT d FROM Driver d JOIN FETCH d.season s JOIN FETCH d.team t "
+            + "LEFT JOIN FETCH t.season WHERE d.name = :driverName ORDER BY s.number ASC, d.id ASC")
+    List<Driver> findTeamHistoryByName(String driverName);
+
     @Query(value = "SELECT d FROM Driver d WHERE d.season.number = :seasonNumber AND d.name = :driverName")
     List<Driver> findByNameAndSeason(int seasonNumber, String driverName);
 }

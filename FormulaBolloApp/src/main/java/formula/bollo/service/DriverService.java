@@ -25,6 +25,7 @@ import formula.bollo.impl.ResultImpl;
 import formula.bollo.impl.SeasonImpl;
 import formula.bollo.impl.TeamImpl;
 import formula.bollo.model.DriverDTO;
+import formula.bollo.model.DriverTeamHistoryDTO;
 import formula.bollo.model.DriverInfoDTO;
 import formula.bollo.model.DriverPointsDTO;
 import formula.bollo.model.DriverPointsEvolutionDTO;
@@ -91,6 +92,17 @@ public class DriverService {
                 this.championshipRepository.findByDriverIds(listOfIds));
     }
 
+    public List<DriverTeamHistoryDTO> getTeamHistory(List<Driver> drivers) {
+        if (drivers.isEmpty())
+            return List.of();
+
+        List<Driver> ordered = drivers.stream()
+                .sorted(Comparator.comparingInt((Driver driver) -> driver.getSeason().getNumber())
+                        .thenComparing(Driver::getId))
+                .toList();
+        return this.driverImpl.convertDriversToTeamHistoryDTO(ordered);
+    }
+
     /**
      * Misma información que {@link #getAllInfoDriver(List)} para cada piloto de la lista, pero
      * cargando resultados, sprints, sanciones y campeonatos en 4 consultas en total.
@@ -148,10 +160,10 @@ public class DriverService {
 
     private DriverInfoDTO buildInfo(List<Driver> drivers, List<Result> results, List<Sprint> sprints,
             int penalties, int championships) {
-        List<Driver> driverList = drivers.stream()
-                .filter(driverFilter -> driverFilter.getSeason().getNumber() == Constants.ACTUAL_SEASON)
-                .toList();
-        Driver driver = driverList.isEmpty() ? drivers.get(drivers.size() - 1) : driverList.get(0);
+        Driver driver = drivers.stream()
+                .max(Comparator.comparingInt((Driver candidate) -> candidate.getSeason().getNumber())
+                        .thenComparing(Driver::getId, Comparator.reverseOrder()))
+                .orElseThrow();
 
         List<Result> finished = results.stream().filter(result -> result.getPosition() != null).toList();
         IntSummaryStatistics positions = finished.stream()
