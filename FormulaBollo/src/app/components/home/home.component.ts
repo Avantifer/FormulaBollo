@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { HomeDriversComponent } from "./home-drivers/home-drivers.component";
 import { HomeTeamsComponent } from "./home-teams/home-teams.component";
 import { NgOptimizedImage } from '@angular/common';
@@ -18,5 +18,6 @@ import { HomeConfigurationComponent } from "./home-configuration/home-configurat
 })
 export class HomeComponent {
   protected readonly imageService: ImageService = inject(ImageService);
+  protected readonly heroImageFailed = signal(false);
 
 }

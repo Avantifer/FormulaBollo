@@ -81,4 +81,28 @@ describe('HomeTeamsComponent', () => {
     expect(fixture.nativeElement.querySelectorAll('p-skeleton').length).toBe(10);
     expect(fixture.nativeElement.querySelector('[role="status"], [role="alert"]')).toBeNull();
   });
+
+  it('keeps dark logos on light bordered badges without changing cell height in either theme', () => {
+    response.next(['Aston Martin', 'Alpine', 'RB'].map((name, id) => ({ ...teamPointsFixture.team, name, id })));
+    fixture.detectChanges();
+    const root = document.documentElement;
+    const wasDark = root.classList.contains('dark');
+    try {
+      for (const dark of [false, true]) {
+        root.classList.toggle('dark', dark);
+        const logos = fixture.nativeElement.querySelectorAll('.teams-schema-container-image') as NodeListOf<HTMLImageElement>;
+        expect(logos.length).toBe(3);
+        for (const logo of Array.from(logos)) {
+          const style = getComputedStyle(logo);
+          expect(style.backgroundColor).toBe('rgb(233, 236, 239)');
+          expect(style.borderTopWidth).toBe('1px');
+          expect(style.filter).toBe('none');
+          expect(logo.classList.contains('reverse-color')).toBeFalse();
+          expect(logo.getBoundingClientRect().width).toBe(96);
+          expect(logo.getBoundingClientRect().height).toBe(96);
+          expect(logo.closest('a')!.getBoundingClientRect().height).toBe(144);
+        }
+      }
+    } finally { root.classList.toggle('dark', wasDark); }
+  });
 });
