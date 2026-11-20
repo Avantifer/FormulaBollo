@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NavigationEnd, Router } from '@angular/router';
+import { Event as RouterEvent, NavigationCancel, NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
@@ -52,6 +52,36 @@ describe('HeaderComponent navigation and layout', () => {
   afterEach(() => {
     fixture?.destroy();
     localStorage.clear();
+  });
+
+  it('recalculates navigation initially and only on NavigationEnd, including JWT checks and the dock', () => {
+    expect(admin).toHaveBeenCalledTimes(1);
+    expect(logged).toHaveBeenCalledTimes(1);
+    const fantasy = spyOn(fixture.componentInstance, 'checkIsFantasy').and.callThrough();
+    const items = spyOn(fixture.componentInstance, 'putItemsHeader').and.callThrough();
+    const dock = spyOn(fixture.componentInstance, 'showBottomDock').and.callThrough();
+    url.and.returnValue('/fantasy/team');
+    fixture.componentInstance.bottomDockHidden.set(true);
+    const events = router.events as Subject<RouterEvent>;
+    events.next(new NavigationStart(2, '/fantasy/team'));
+    events.next(new NavigationCancel(2, '/fantasy/team', 'cancelled'));
+    expect(fantasy).not.toHaveBeenCalled();
+    expect(items).not.toHaveBeenCalled();
+    expect(dock).not.toHaveBeenCalled();
+    expect(admin).toHaveBeenCalledTimes(1);
+    expect(logged).toHaveBeenCalledTimes(1);
+    expect(fixture.componentInstance.isFantasy()).toBeFalse();
+    expect(fixture.componentInstance.isActive('/drivers')).toBeTrue();
+    expect(fixture.componentInstance.bottomDockHidden()).toBeTrue();
+    events.next(new NavigationEnd(3, '/fantasy/team', '/fantasy/team'));
+    expect(fantasy).toHaveBeenCalledTimes(1);
+    expect(items).toHaveBeenCalledTimes(1);
+    expect(dock).toHaveBeenCalledTimes(1);
+    expect(admin).toHaveBeenCalledTimes(2);
+    expect(logged).toHaveBeenCalledTimes(2);
+    expect(fixture.componentInstance.isFantasy()).toBeTrue();
+    expect(fixture.componentInstance.isActive('/fantasy/team')).toBeTrue();
+    expect(fixture.componentInstance.bottomDockHidden()).toBeFalse();
   });
 
   it('contains both Spanish navigation landmarks and an accessible logo link without a menubar', () => {
@@ -283,13 +313,22 @@ describe('HeaderComponent navigation and layout', () => {
     TestBed.inject(MessageService).add({ severity: 'success', detail: 'Cabecera comprobada', sticky: true });
     await toast.whenStable();
     toast.detectChanges();
-    const styles = Array.from(document.styleSheets).flatMap(sheet => {
+    const copyRules = (sheet: CSSStyleSheet): string[] => {
       try {
-        return Array.from(sheet.cssRules, rule => rule.cssText).filter(rule => !rule.startsWith('@import'));
+        return Array.from(sheet.cssRules).flatMap(rule => {
+          if (rule instanceof CSSImportRule) {
+            return rule.styleSheet ? copyRules(rule.styleSheet) : [];
+          }
+          // CSS copied into an about:blank iframe must keep the parent sheet's
+          // asset URLs, including Karma's emitted local font files.
+          return rule.cssText.replace(/url\(["']?([^"')]+)["']?\)/g,
+            (_, url: string) => `url("${new URL(url, sheet.href ?? document.baseURI).href}")`);
+        });
       } catch {
         return [];
       }
-    }).join('\n');
+    };
+    const styles = Array.from(document.styleSheets).flatMap(copyRules).join('\n');
 
     try {
       for (const fantasy of [false, true]) {
@@ -305,6 +344,12 @@ describe('HeaderComponent navigation and layout', () => {
             try {
               const doc = frame.contentDocument!;
               doc.documentElement.innerHTML = `<head><style>${styles}</style></head><body>${fixture.nativeElement.outerHTML}${toast.nativeElement.outerHTML}</body>`;
+              const loadedFonts = await doc.fonts.load('600 11px "Barlow Condensed"', 'PILOTOS ESCUDERÍAS RESULTADOS ESTATUTO ESTADÍSTICAS');
+              await doc.fonts.load('700 14px "Barlow Condensed"', 'LIGA FANTASY');
+              await doc.fonts.load('400 16px "Geist Variable"');
+              await doc.fonts.ready;
+              expect(loadedFonts.length).withContext('Local Barlow Condensed must load in every iframe').toBeGreaterThan(0);
+              expect(loadedFonts.every(font => font.status === 'loaded')).toBeTrue();
               const view = frame.contentWindow!;
               const header = doc.querySelector('header')!.getBoundingClientRect();
               const top = doc.querySelector<HTMLElement>('.header-top')!;
@@ -406,28 +451,14 @@ describe('HeaderComponent navigation and layout', () => {
                   expect(tab.getBoundingClientRect().height).withContext(context).toBe(52);
                   expect(view.getComputedStyle(tab.querySelector('.pi')!).fontSize).toBe('22px');
                 }
-                // Iframes do not load Google Fonts; Arial Narrow may also be absent (e.g. Linux CI).
-                const fontProbe = doc.createElement('canvas').getContext('2d')!;
-                const labelFont = view.getComputedStyle(bottom.querySelector('.tab-label')!).fontFamily;
-                fontProbe.font = '32px sans-serif';
-                const fallbackWidth = fontProbe.measureText('Estadísticas').width;
-                fontProbe.font = `32px ${labelFont}`;
-                const hasCondensedFont = fontProbe.measureText('Estadísticas').width < fallbackWidth;
-                const checkLabelClipping = fantasy || showAdmin || hasCondensedFont;
-                if (checkLabelClipping) {
-                  for (const text of Array.from(bottom.querySelectorAll<HTMLElement>('.tab-label'))) {
-                    expect(text.scrollWidth).withContext(`${context}/${text.textContent}`).toBeLessThanOrEqual(text.clientWidth);
-                  }
-                } else {
-                  console.info('HEADER_LABEL_CLIPPING_SKIPPED', context,
-                    'Skipping full-label clipping checks for Liga with 5 tabs: no condensed font is available in the iframe; Google Fonts is not loaded and the display font falls back to generic sans-serif.');
+                const labels = Array.from(bottom.querySelectorAll<HTMLElement>('.tab-label'));
+                for (const text of labels) {
+                  expect(view.getComputedStyle(text).fontFamily).toContain('Barlow Condensed');
+                  expect(text.scrollWidth).withContext(`${context}/${text.textContent}`).toBeLessThanOrEqual(text.clientWidth);
                 }
-                if (!fantasy && !showAdmin && (width === 320 || width === 360)) {
-                  const longest = Math.max(...Array.from(bottom.querySelectorAll<HTMLElement>('.tab-label'), text => text.scrollWidth));
-                  console.info('HEADER_LONGEST_LABEL', JSON.stringify({ width, longest }));
-                  if (width === 360 && checkLabelClipping) {
-                    expect(Array.from(bottom.querySelectorAll<HTMLElement>('.tab-label')).every(text => text.scrollWidth <= text.clientWidth)).toBeTrue();
-                  }
+                if (!fantasy && !showAdmin) {
+                  console.info('HEADER_LABEL_MEASUREMENTS', JSON.stringify({ width,
+                    labels: labels.map(text => ({ text: text.textContent, scrollWidth: text.scrollWidth, clientWidth: text.clientWidth })) }));
                 }
               } else {
                 expect(header.left).toBe(0);

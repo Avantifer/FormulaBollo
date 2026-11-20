@@ -37,7 +37,7 @@ export class HeaderComponent {
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly isDarkTheme: Signal<boolean> = this.themeService.isDarkTheme;
-  // El menú cambia con cada evento del router (fuera de un evento de plantilla): por eso es estado en signals.
+  // La navegación completada actualiza el menú fuera de un evento de plantilla.
   protected readonly items: WritableSignal<HeaderItem[]> = signal<HeaderItem[]>([]);
   protected readonly visibleCount: WritableSignal<number> = signal(0);
   private readonly currentRoute: WritableSignal<string> = signal('');
@@ -54,8 +54,8 @@ export class HeaderComponent {
     };
     updateNavigation();
     this.router.events.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(event => {
-      updateNavigation();
       if (event instanceof NavigationEnd) {
+        updateNavigation();
         this.showBottomDock();
       }
     });
