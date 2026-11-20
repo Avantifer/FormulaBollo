@@ -26,7 +26,7 @@ import { FantasyTeamComponent } from '../app/components/fantasy/fantasy-team/fan
 import { ThemeService } from '../shared/services/theme.service';
 import { DriversInfoComponent } from '../app/components/drivers/drivers-info/drivers-info.component';
 import { SelectRacesComponent } from '../shared/components/select-races/select-races.component';
-import { DriverCardComponent } from '../app/components/drivers/driver-card/driver-card.component';
+import { DriversRankingComponent } from '../app/components/drivers/drivers-ranking/drivers-ranking.component';
 import { FantasyLoginComponent } from '../app/components/fantasy/fantasy-login/fantasy-login.component';
 
 describe('Frontend regressions', () => {
@@ -109,13 +109,20 @@ describe('Frontend regressions', () => {
     expect(component.comparisonChartData).toBeUndefined();
   });
 
-  it('uses the requested historical season for participant fallbacks', () => {
+  it('uses the requested historical season for participant fallbacks', async () => {
     const fixture = TestBed.createComponent(DriversGridTableComponent);
     const component = fixture.componentInstance as any;
     const drivers = spyOn(TestBed.inject(DriverApiService), 'getAllDrivers').and.returnValue(of([]));
     const teams = spyOn(TestBed.inject(TeamApiService), 'getAllTeams').and.returnValue(of([]));
     const season = new Season(1, 'One', 1);
-    component._updateDriversPointsData([], season);
+    spyOn(TestBed.inject(ResultApiService), 'getAllDriverPoints').and.returnValue(of([]));
+    const ranking = TestBed.createComponent(DriversRankingComponent);
+    ranking.componentRef.setInput('season', season);
+    ranking.componentRef.setInput('selectedTeams', []);
+    ranking.detectChanges();
+    await new Promise(resolve => setTimeout(resolve, 120));
+    await ranking.whenStable();
+    ranking.detectChanges();
     component._updateTeamsPointsData([], season);
     expect(drivers).toHaveBeenCalledWith(1);
     expect(teams).toHaveBeenCalledWith(1);
@@ -136,6 +143,7 @@ describe('Frontend regressions', () => {
     spyOn(TestBed.inject(DriverApiService), 'getInfoByDriverName').and.returnValue(throwError(() => 'offline'));
     const driver = TestBed.createComponent(DriversInfoComponent).componentInstance as any;
     const mapStats = spyOn(driver, '_mapDriverStats');
+    spyOn(TestBed.inject(ResultApiService), 'getAllDriverPoints').and.returnValue(of([]));
     driver.onSeasonChange(new Season(1, 'One', 1));
     expect(mapStats).not.toHaveBeenCalled();
     expect(driver.driverInfo()).toBeUndefined();
@@ -150,17 +158,26 @@ describe('Frontend regressions', () => {
     expect(selection).not.toHaveBeenCalled();
   });
 
-  it('renders native driver and team links with reserved lazy images', () => {
-    const driver = TestBed.createComponent(DriverCardComponent);
-    driver.componentRef.setInput('driverPoint', driverPointsFixture);
-    driver.componentRef.setInput('index', 1);
+  it('renders native driver and team links with reserved lazy images', async () => {
+    spyOn(TestBed.inject(ResultApiService), 'getAllDriverPoints').and.returnValue(of([driverPointsFixture]));
+    const driver = TestBed.createComponent(DriversRankingComponent);
+    driver.componentRef.setInput('season', driverPointsFixture.driver.season);
+    driver.componentRef.setInput('selectedTeams', []);
     driver.detectChanges();
-    const link = driver.nativeElement.querySelector('a');
-    expect(link.getAttribute('href')).toContain('/drivers/Piloto_de_prueba');
-    const image = link.querySelector('img');
-    expect(image.loading).toBe('lazy');
-    expect(image.getAttribute('width')).toBeTruthy();
-    expect(image.getAttribute('height')).toBeTruthy();
+    await new Promise(resolve => setTimeout(resolve, 120));
+    await driver.whenStable();
+    driver.detectChanges();
+    const links = driver.nativeElement.querySelectorAll('a') as NodeListOf<HTMLAnchorElement>;
+    expect(links.length).toBe(1);
+    expect(links[0].getAttribute('href')).toContain('/drivers/Piloto_de_prueba');
+    expect(links[0].querySelector('.sr-only')?.textContent).toBe('Ver perfil de ');
+    expect(links[0].hasAttribute('aria-label')).toBeFalse();
+    for (const selector of ['.driver-photo', '.team-badge']) {
+      const image = driver.nativeElement.querySelector(selector) as HTMLImageElement;
+      expect(image.loading).toBe('lazy');
+      expect(image.getAttribute('width')).toBeTruthy();
+      expect(image.getAttribute('height')).toBeTruthy();
+    }
 
     spyOn(TestBed.inject(TeamApiService), 'getAllTeams').and.returnValue(of([{ ...driverPointsFixture.driver.team, name: 'Aston Martin' }]));
     const team = TestBed.createComponent(HomeTeamsComponent);

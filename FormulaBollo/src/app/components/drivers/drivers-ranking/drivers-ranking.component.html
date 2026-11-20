@@ -1,0 +1,58 @@
+@if (isLoading()) {
+	<div class="grid gap-2 py-2" aria-hidden="true">
+		@for (row of skeletonRows; track $index) {
+			<p-skeleton width="100%" height="3.25rem" />
+		}
+	</div>
+} @else {
+	<ol class="ranking m-0 list-none p-0 border-t border-rule">
+		@for (row of rows(); track row.driver.id) {
+			<li class="ranking-row border-b border-rule text-ink odd:bg-panel-alt" [attr.value]="row.position">
+				<span class="rank-position font-display tabular-nums text-2xl font-bold" [class.text-podium-1]="row.position === 1" [class.text-podium-2]="row.position === 2" [class.text-podium-3]="row.position === 3">{{ row.position.toString().padStart(2, '0') }}@if (row.tied) {<span class="sr-only"> empatado</span>}</span>
+				<img class="team-badge" [src]="imageService.getImageUrl(row.driver.team.logoImage)" alt="" width="32" height="32" loading="lazy" />
+				<img class="driver-photo rounded-full object-cover bg-panel" [class.default-driver-photo]="row.driver.driverImage.includes('/default/')" [src]="imageService.getImageUrl(row.driver.driverImage | SpaceToUnderscore)" alt="" width="32" height="32" loading="lazy" />
+				<div class="driver-identity min-w-0">
+					<h3 class="truncate text-sm font-semibold"><a class="profile-link" [routerLink]="['/drivers', utilsService.spaceToUnderScore(row.driver.name)]" [queryParams]="{ season: season().number }"><span class="sr-only">Ver perfil de </span>{{ row.driver.name }}</a></h3>
+					<p class="truncate text-xs text-ink-soft">{{ row.driver.team.name }}</p>
+				</div>
+				<span class="driver-number font-display tabular-nums text-ink-soft font-bold"><span class="sr-only">Número </span><span aria-hidden="true">#</span>{{ row.driver.number }}</span>
+				<div class="points-track bg-rule rounded-xs overflow-hidden" aria-hidden="true">
+					<div class="h-full rounded-xs" [class]="'bg-' + (row.driver.team.name | SpaceToUnderscore)" [style.width.%]="row.percentage"></div>
+				</div>
+				<div class="points-score text-right font-display tabular-nums">
+					<strong class="text-3xl leading-none">{{ row.totalPoints }}</strong><span class="sr-only"> PTS</span>
+				</div>
+				<span class="points-gap text-right font-display tabular-nums text-xs text-ink-soft">{{ row.gap }}</span>
+				<div class="position-change text-xs tabular-nums">
+					@if (row.positionChange === 'ADVANCED' || row.positionChange === 'DROPPED') {
+						<span class="inline-flex items-center gap-1" [class]="row.positionChange === 'ADVANCED' ? 'text-sector-up' : 'text-sector-down'">
+							<i class="pi" [class]="row.positionChange === 'ADVANCED' ? 'pi-arrow-up' : 'pi-arrow-down'" aria-hidden="true"></i>
+							<span aria-hidden="true">{{ row.positionChangeAmount }}</span>
+							<span class="sr-only">{{ row.positionChange === 'ADVANCED' ? 'Sube' : 'Baja' }} {{ row.positionChangeAmount }} {{ row.positionChangeAmount === 1 ? 'puesto' : 'puestos' }}</span>
+						</span>
+					}
+				</div>
+				<div class="profile-desktop hidden md:block" aria-hidden="true">
+					<span class="profile-indicator">
+						<i class="pi pi-arrow-right" aria-hidden="true"></i>
+					</span>
+				</div>
+				<span class="profile-mobile md:hidden inline-flex min-h-11 min-w-11 items-center justify-center rounded-full text-ink-soft" aria-hidden="true">
+					<i class="pi pi-arrow-right" aria-hidden="true"></i>
+				</span>
+			</li>
+		}
+	</ol>
+	@if (vacancies().length) {
+		<section class="vacancies mt-4" aria-label="Puestos vacantes">
+			<ul class="m-0 list-none p-0">
+				@for (row of vacancies(); track row.driver.id) {
+					<li class="vacancy-row border-b border-rule text-ink-soft">
+						<img class="team-badge" [src]="imageService.getImageUrl(row.driver.team.logoImage)" alt="" width="32" height="32" loading="lazy" />
+						<div class="min-w-0"><p class="text-sm font-semibold">Vacante</p><p class="truncate text-xs">{{ row.driver.team.name }}</p></div>
+					</li>
+				}
+			</ul>
+		</section>
+	}
+}

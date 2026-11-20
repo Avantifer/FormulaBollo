@@ -1,9 +1,24 @@
+@if (variant() === 'tabs') {
+	<div class="flex max-w-full gap-1 overflow-x-auto rounded-row border border-rule bg-panel p-1" role="group" aria-label="Temporadas">
+		@for (season of seasons(); track season.id) {
+			<button type="button"
+				class="min-h-11 min-w-11 shrink-0 cursor-pointer rounded-row px-4 font-display font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-focus"
+				[class]="seasonForm.get('season')?.value?.number === season.number ? 'bg-accent text-on-accent' : 'text-ink-soft hover:bg-panel-alt'"
+				[attr.aria-pressed]="seasonForm.get('season')?.value?.number === season.number"
+				(click)="seasonForm.get('season')!.setValue(season)">
+				{{ season.number === 0 ? 'Total' : 'T' + season.number }}@if (season.number !== 0) {<span class="sr-only"> (Temporada {{ season.number }})</span>}
+			</button>
+		}
+	</div>
+} @else {
 <form [formGroup]="seasonForm">
 	<p-select
 		formControlName="season"
 		[options]="seasons()"
 		optionLabel="name"
 		dataKey="id"
+		[dt]="variant() === 'pill' || variant() === 'row' ? { root: { borderRadius: variant() === 'row' ? 'var(--radius-row)' : '9999px', background: 'var(--panel)', borderColor: 'var(--rule)', color: 'var(--ink)' }, dropdown: { color: 'var(--ink-soft)' } } : undefined"
+		[style.min-height]="variant() === 'pill' || variant() === 'row' ? '2.75rem' : null"
 		class="text-sm w-full xs:min-w-[150px]">
 		<ng-template pTemplate="item" let-season>
 			<div class="flex items-center gap-2">
@@ -17,3 +32,4 @@
 		</ng-template>
 	</p-select>
 </form>
+}
