@@ -25,6 +25,11 @@ El backend no trae secretos en el repositorio; deben llegar por ficheros de perf
 - [ ] Las fuentes (Barlow Condensed y Geist) ya salen de nuestro propio servidor: no hay peticiones a Google Fonts.
       Nada que configurar, pero conviene comprobar que `/media/*.woff2` responde 200 tras publicar. El frontend
       tiene dos dependencias nuevas (`@fontsource/barlow-condensed` y `@fontsource-variable/geist`).
+- [ ] **La foto de la portada no está en git** (`/images/` está en `.gitignore`). Copia a mano
+      `images/intro/introImage-v4.avif` al servidor, en la misma carpeta `images/intro/`, antes de publicar el
+      frontend. El nombre lleva versión (`-v4`) para saltarse la caché del navegador: si cambias la foto, súbela con
+      otro nombre y actualiza `home.component.html`, su test y el script de precarga de `index.html`.
+      Sin el archivo la portada no se rompe (se queda con fondo liso), pero el navegador pide la imagen y recibe un 404.
 
 ## 2b. Cambios de contrato que obligan a desplegar backend y frontend a la vez
 
@@ -79,6 +84,9 @@ El backend no trae secretos en el repositorio; deben llegar por ficheros de perf
   Tras la última carrera responde 200 «Era la última carrera de la temporada…» (antes 404); 404 solo si la carrera no
   existe. Los precios de la carrera 31 que ya estaban guardados no coinciden con los que se regeneran desde la 30 (ni
   siquiera con el código anterior): vienen de datos editados después de calcularlos. No se ha tocado ningún dato.
+- Frontend: la web usa ahora el locale `es-ES` (decimales con coma, p. ej. posición media `2,41`) y cada página
+  tiene su propio título del navegador (`<página> · FormulaBollo`; la ficha de un piloto, de una escudería y de una
+  carrera llevan además su nombre). No afecta al backend.
 - CI: `.github/workflows/ci.yml` ejecuta los tests del backend (con H2, sin Docker) y del frontend, y compila el
   frontend, en cada PR. Los tests de repositorio usan H2 y no sustituyen a la prueba con MariaDB real del paso 4.
 
@@ -152,6 +160,7 @@ Sustituye `$B` por la URL del backend.
 |---|---|
 | `curl -s -o /dev/null -w "%{http_code}" $B/seasons/all` | 200 |
 | `curl -s -o /dev/null -w "%{http_code}" "$B/drivers/allInfoDriver?season=3"` | 200 |
+| `curl -s -o /dev/null -w "%{http_code}" "$B/intro/introImage-v4.avif"` | 200 |
 | `curl -s -o /dev/null -w "%{http_code}" -X DELETE "$B/results/delete?raceId=1"` | **403** (sin token) |
 | `curl -s -o /dev/null -w "%{http_code}" -X POST "$B/cache/update"` | **403** |
 | `curl -s -o /dev/null -w "%{http_code}" "$B/account/id?id=1"` | **403** |

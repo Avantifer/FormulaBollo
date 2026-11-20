@@ -74,10 +74,37 @@ describe('ResultsComponent', () => {
       expect(cells[0].classList).toContain('border-Ferrari');
       expect(row.querySelectorAll('td.tt-points').length).toBe(1);
       expect(cells[3].classList).toContain('tt-points');
-      expect(cells[3].textContent!.trim()).toBe(index === 0 ? '25' : 'DNF');
+      expect(cells[3].textContent!.trim()).toBe(index === 0 ? '26' : 'DNF');
       expect(cells[4].textContent!.trim()).toBe(index === 0 ? 'Sí' : 'No');
       expect(cells[5].textContent!.trim()).toBe(index === 0 ? 'No' : 'Sí');
     });
+  });
+
+  for (const { position, fastlap, expected } of [
+    { position: new Position(1, 1, 25), fastlap: 1, expected: '26' },
+    { position: new Position(1, 1, 25), fastlap: 0, expected: '25' },
+    { position: new Position(6, 6, 8), fastlap: 1, expected: '9' },
+    { position: null, fastlap: 1, expected: 'DNF' },
+    { position: new Position(1, 1, 25), fastlap: null, expected: '25' },
+    { position: new Position(1, 1, 25), fastlap: undefined, expected: '25' },
+  ]) {
+    it(`renders race points ${expected} for position ${position?.positionNumber ?? 'DNF'} and fastlap ${fastlap}`, () => {
+      const raceResult = { ...result, position, fastlap } as Result;
+      results.getAllResultsPerRacePilots.and.returnValue(of([raceResult]));
+      fixture.detectChanges();
+
+      const points: HTMLElement = fixture.nativeElement.querySelector('tbody td.tt-points');
+      expect(points.textContent!.trim()).toBe(expected);
+      expect({ ...raceResult }).toEqual({ ...result, position, fastlap } as Result);
+    });
+  }
+
+  it('renders team points received from the API without adding a fastest lap', () => {
+    (component as any).typeSelected = 'Equipos';
+    fixture.detectChanges();
+
+    const points: HTMLElement = fixture.nativeElement.querySelector('tbody td.tt-points');
+    expect(points.textContent!.trim()).toBe('50');
   });
 
   it('renders the penalty severity in a timing tower when penalties are shown', () => {

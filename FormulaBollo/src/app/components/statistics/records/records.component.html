@@ -13,7 +13,7 @@
 				<h3 class="text-sm font-medium text-ink-soft mb-1">{{ record.title }}</h3>
 				<div class="flex items-baseline gap-2 mb-1">
 					<p class="font-display tabular-nums text-4xl font-bold text-ink mb-1">
-						{{ record.title.includes('porcentaje') ? record.value.toFixed(2) : record.value }}
+						{{ record.title.includes('porcentaje') ? (record.value | number:'1.2-2':'es-ES') : record.value }}
 						{{ record.title.includes('porcentaje') ? '%' : '' }}
 					</p>
 				</div>

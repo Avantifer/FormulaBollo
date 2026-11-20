@@ -56,6 +56,24 @@ describe('FantasyTeamComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  for (const isDriver of [true, false]) {
+    it(`renders Spanish prices and percentage changes for ${isDriver ? 'drivers' : 'teams'}`, async () => {
+      component.optionSelected = isDriver ? 'Pilotos' : 'Equipos';
+      for (const differencePrice of [2.41, -7.34, 0]) {
+        const info = { ...fantasyInfo, differencePrice };
+        if (isDriver) {
+          component.fantasyPricesDriversFiltered.set([{ ...driverPrice, price: 1234567, fantasyInfo: info }]);
+        } else {
+          component.fantasyPricesTeamsFiltered.set([{ ...teamPrice, price: 1234567, fantasyInfo: info }]);
+        }
+        await fixture.whenStable();
+        const text = fixture.nativeElement.textContent.replace(/\s+/g, ' ');
+        expect(text).toContain('1,23M');
+        expect(text).toContain(differencePrice === 0 ? '0,00 %' : differencePrice > 0 ? '2,41 %' : '-7,34 %');
+      }
+    });
+  }
+
   it('ignores an undefined race without requesting an election', () => {
     expect(() => component.onRaceChange(undefined as any)).not.toThrow();
     expect(api.getFantasyElection).not.toHaveBeenCalled();
@@ -186,7 +204,7 @@ describe('FantasyTeamComponent', () => {
     await fixture.whenStable();
     response.next([{ id: 1, driver, race, points: 17, season: driver.season }]);
     await fixture.whenStable();
-    expect(fixture.nativeElement.textContent).toContain('17.0');
+    expect(fixture.nativeElement.textContent).toContain('17,0');
     expect(component.showDriverPointsData()).toBeTrue();
   });
 

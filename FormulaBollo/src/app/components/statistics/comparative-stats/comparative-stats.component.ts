@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import { colorsMappings, ERROR_DRIVER_INFO_FETCH, ERROR_TEAM_INFO_FETCH, getComparisonChartOptions, getComparisonChartOptionsMobile } from './../../../constants';
 import { Component, effect, inject, Input, signal, SimpleChanges, WritableSignal } from '@angular/core';
 import { Season } from '../../../../shared/models/season';
@@ -21,6 +22,7 @@ import { SpaceToUnderscorePipe } from '../../../../shared/pipes/spaceToUnderscor
   selector: 'app-comparative-stats',
   imports: [
     ChartModule,
+    DecimalPipe,
     SpaceToUnderscorePipe,
     SelectTeamsComponent, 
     SelectDriversComponent
