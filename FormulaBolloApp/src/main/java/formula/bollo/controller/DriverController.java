@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import formula.bollo.entity.Driver;
 import formula.bollo.impl.DriverImpl;
 import formula.bollo.model.DriverDTO;
+import formula.bollo.model.DriverTeamHistoryDTO;
 import formula.bollo.model.DriverInfoDTO;
 import formula.bollo.model.DriverPointsEvolutionDTO;
 import formula.bollo.model.RecordDTO;
@@ -73,6 +74,13 @@ public class DriverController {
         List<Driver> drivers = (season == null || season == 0) ? driverRepository.findByName(driverName)
                 : driverRepository.findByNameAndSeason(season, driverName);
         return this.driverService.getAllInfoDriver(drivers);
+    }
+
+    @Operation(summary = "Get a driver's team history", tags = Constants.TAG_DRIVER)
+    @Transactional(readOnly = true)
+    @GetMapping(path = "/teamHistory", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<DriverTeamHistoryDTO> getTeamHistory(@RequestParam String driverName) {
+        return this.driverService.getTeamHistory(this.driverRepository.findTeamHistoryByName(driverName));
     }
 
     @Operation(summary = "Get all info of drivers", tags = Constants.TAG_DRIVER)

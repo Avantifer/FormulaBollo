@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import formula.bollo.entity.Driver;
 import formula.bollo.mapper.DriverMapper;
 import formula.bollo.model.DriverDTO;
+import formula.bollo.model.DriverTeamHistoryDTO;
 
 @Service
 public class DriverImpl {
@@ -23,6 +24,10 @@ public class DriverImpl {
 
     public DriverDTO driverToDriverDTO(Driver driver) {
         return driverMapper.driverToDriverDTO(driver);
+    }
+
+    public List<DriverTeamHistoryDTO> convertDriversToTeamHistoryDTO(List<Driver> drivers) {
+        return driverMapper.convertDriversToTeamHistoryDTO(drivers);
     }
 
     public Driver driverDTOToDriver(DriverDTO driver) {

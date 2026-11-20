@@ -113,6 +113,7 @@ public class ResultService {
             List<Result> results) {
 
         Map<String, DriverPointsDTO> mergedDrivers = new HashMap<>();
+        Comparator<DriverDTO> principalDriver = Comparator.comparing(DriverDTO::getId);
 
         for (Map.Entry<DriverDTO, Integer> entry : totalPointsByDriver.entrySet()) {
             DriverDTO currentDriver = entry.getKey();
@@ -123,7 +124,9 @@ public class ResultService {
             if (mergedDrivers.containsKey(uniqueKey)) {
                 DriverPointsDTO existing = mergedDrivers.get(uniqueKey);
                 existing.setTotalPoints(existing.getTotalPoints() + points);
-                existing.setDriver(currentDriver);
+                if (principalDriver.compare(currentDriver, existing.getDriver()) < 0) {
+                    existing.setDriver(currentDriver);
+                }
             } else {
                 mergedDrivers.put(uniqueKey, new DriverPointsDTO(currentDriver, points));
             }
