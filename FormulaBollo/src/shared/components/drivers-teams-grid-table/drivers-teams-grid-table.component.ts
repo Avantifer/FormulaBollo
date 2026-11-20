@@ -1,8 +1,6 @@
 import { environment } from '../../../enviroments/enviroment';
 import { Component, effect, inject, input, Input, InputSignal, signal, WritableSignal } from '@angular/core';
-import { DriverCardComponent } from "../../../app/components/drivers/driver-card/driver-card.component";
 import { CommonModule } from '@angular/common';
-import { DriverPoints } from '../../models/driverPoints';
 import { TableModule } from 'primeng/table';
 import { SpaceToUnderscorePipe } from '../../pipes/spaceToUnderscore.pipe';
 import { ButtonModule } from 'primeng/button';
@@ -10,12 +8,9 @@ import { Router } from '@angular/router';
 import { UtilsService } from '../../services/utils.service';
 import { SkeletonModule } from 'primeng/skeleton';
 import { SkeletonItemsPipe } from '../../pipes/skeletonItems.pipe';
-import { Driver } from '../../models/driver';
 import { Season } from '../../models/season';
 import { catchError, delay, Subject, takeUntil } from 'rxjs';
-import { DriverApiService } from '../../services/api/driver-api.service';
-import { ResultApiService } from '../../services/api/result-api.service';
-import { ERROR_DRIVER_FETCH, ERROR_TEAM_FETCH } from '../../../app/constants';
+import { ERROR_TEAM_FETCH } from '../../../app/constants';
 import { TeamApiService } from '../../services/api/team-api.service';
 import { TeamWithDrivers } from '../../models/teamWithDrivers';
 import { Team } from '../../models/team';
@@ -31,15 +26,12 @@ import { TeamCardComponent } from "../../../app/components/teams/team-card/team-
     SkeletonModule,
     SkeletonItemsPipe,
     SpaceToUnderscorePipe,
-    DriverCardComponent,
     TeamCardComponent
   ],
   templateUrl: './drivers-teams-grid-table.component.html',
   styleUrl: './drivers-teams-grid-table.component.scss'
 })
 export class DriversGridTableComponent {
-  private readonly driversApiService: DriverApiService = inject(DriverApiService);
-  private readonly resultApiService: ResultApiService = inject(ResultApiService);
   protected readonly router: Router = inject(Router);
   protected readonly utilsService: UtilsService = inject(UtilsService);
   private readonly teamApiService: TeamApiService = inject(TeamApiService);
@@ -47,11 +39,9 @@ export class DriversGridTableComponent {
 
   @Input() listValue!: string;
   @Input() selectedTeams: string[] = [];
-  @Input() type!: string;
+  @Input() type: 'Equipos' = 'Equipos';
 
   readonly season: InputSignal<Season> = input(environment.seasonActual);
-  protected drivers: WritableSignal<Driver[]> = signal<Driver[]>([]);
-  protected driverPoints: WritableSignal<DriverPoints[]> = signal<DriverPoints[]>([]);
   protected teamPoints: WritableSignal<TeamWithDrivers[]> = signal([]);
   protected teams: WritableSignal<Team[]> = signal([]);
 
@@ -61,20 +51,8 @@ export class DriversGridTableComponent {
   constructor(){
     effect(() => {
       this._resetData();
-      this._getPointsDrivers(this.season());
-
-      if (this.type === 'Equipos') {
-        this._getTeamsPoints(this.season());
-      }
+      this._getTeamsPoints(this.season());
     });
-  }
-
-  protected _getPointsDrivers(season: Season): void {
-    this.resultApiService.getAllDriverPoints(season.number).pipe(
-      takeUntil(this.destroy$),
-      delay(100),
-      catchError((error) => this.utilsService.handleError(ERROR_DRIVER_FETCH, error, [])),
-    ).subscribe((driverPoints: DriverPoints[]) => this._updateDriversPointsData(driverPoints, season))
   }
 
   private _getTeamsPoints(season: Season): void {
@@ -83,16 +61,6 @@ export class DriversGridTableComponent {
       delay(100),
       catchError((error) => this.utilsService.handleError(ERROR_TEAM_FETCH, error, []))
     ).subscribe((teamWithDrivers: TeamWithDrivers[]) => this._updateTeamsPointsData(teamWithDrivers, season));
-  }
-
-  private _updateDriversPointsData(driverPoints: DriverPoints[], season: Season): void {
-    if (!driverPoints.length) {
-      this.isLoading.set(true);
-      this._getAllDrivers(season.number);
-    }
-
-    this.driverPoints.set(driverPoints);
-    this.isLoading.set(false);
   }
 
   private _updateTeamsPointsData(teamWithDrivers: TeamWithDrivers[], season: Season): void {
@@ -105,15 +73,6 @@ export class DriversGridTableComponent {
     this.isLoading.set(false);
   }
 
-  private _getAllDrivers(seasonNumber: number): void {
-    this.driversApiService.getAllDrivers(seasonNumber)
-      .pipe(
-        takeUntil(this.destroy$),
-        catchError((error) => this.utilsService.handleError(ERROR_DRIVER_FETCH, error, []))
-      )
-      .subscribe((drivers: Driver[]) => this.drivers.set(drivers));
-  }
-  
   private _getAllTeams(seasonNumber: number) {
     this.teamApiService.getAllTeams(seasonNumber)
       .pipe(
@@ -124,17 +83,8 @@ export class DriversGridTableComponent {
 
   private _resetData(): void {
     this.isLoading.set(true);
-    this.driverPoints.set([]);
-    this.drivers.set([]);
     this.teamPoints.set([]);
     this.teams.set([]);
-  }
-
-  protected showDriverByTeamFilter(driver: Driver): boolean {
-    if (!this.selectedTeams?.length) return true;
-  
-    const driverTeam = driver.team.name;
-    return this.selectedTeams.includes('Todos los equipos') || this.selectedTeams.includes(driverTeam);
   }
 
   protected showTeamsByTeamFilter(team: Team): boolean {

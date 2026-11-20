@@ -1,5 +1,5 @@
 import { Subscription } from 'rxjs';
-import { Component, EventEmitter, inject, Input, Output, SimpleChanges, signal, WritableSignal } from '@angular/core';
+import { Component, EventEmitter, inject, input, Input, Output, SimpleChanges, signal, WritableSignal } from '@angular/core';
 import { Season } from '../../models/season';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { environment } from '../../../enviroments/enviroment';
@@ -24,6 +24,8 @@ export class SelectSeasonsComponent {
   @Input() teamName!: string;
   @Input() statistics!: string;
   @Input() fantasy: boolean = false; 
+  readonly variant = input<'default' | 'select' | 'pill' | 'row' | 'tabs'>('default');
+  readonly initialSeasonNumber = input<number>();
 
   public readonly seasons: WritableSignal<Season[]> = signal<Season[]>([]);
 
@@ -62,7 +64,8 @@ export class SelectSeasonsComponent {
       next: seasons => {
         const options = includeTotal ? [new Season(0, 'Total', 0), ...seasons] : seasons;
         this.seasons.set(options);
-        const selection = includeTotal ? options[0] : options.at(-1);
+        const selection = options.find(season => season.number === this.initialSeasonNumber())
+          ?? (includeTotal ? options[0] : options.at(-1));
         this.seasonForm.get('season')!.setValue(selection ?? null, { emitEvent: false });
         if (selection) this.seasonChanged.emit(selection);
         if (!seasons.length && (this.driverName || this.teamName)) {

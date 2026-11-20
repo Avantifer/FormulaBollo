@@ -5,7 +5,6 @@ import { Season } from '../../../shared/models/season';
 import { Subject } from 'rxjs';
 import { environment } from '../../../enviroments/enviroment';
 import { SkeletonModule } from 'primeng/skeleton';
-import { RaceDetailsComponent } from "../../../shared/components/race-details/race-details.component";
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { ButtonModule } from 'primeng/button';
 import { FormsModule } from '@angular/forms';
@@ -22,7 +21,6 @@ import { DriversGridTableComponent } from "../../../shared/components/drivers-te
     SkeletonModule,
     DividerModule,
     SelectSeasonsComponent,
-    RaceDetailsComponent,
     TeamsFiltersComponent,
     DriversGridTableComponent
 ],
