@@ -10,7 +10,7 @@ import { AccountApiService } from '../shared/services/api/account-api.service';
 import { SeasonApiService } from '../shared/services/api/season-api.service';
 import { SelectSeasonsComponent } from '../shared/components/select-seasons/select-seasons.component';
 import { ComparativeStatsComponent } from '../app/components/statistics/comparative-stats/comparative-stats.component';
-import { DriversGridTableComponent } from '../shared/components/drivers-teams-grid-table/drivers-teams-grid-table.component';
+import { TeamsRankingComponent } from '../app/components/teams/teams-ranking/teams-ranking.component';
 import { DriverApiService } from '../shared/services/api/driver-api.service';
 import { TeamApiService } from '../shared/services/api/team-api.service';
 import { HomeTeamsComponent } from '../app/components/home/home-teams/home-teams.component';
@@ -110,8 +110,7 @@ describe('Frontend regressions', () => {
   });
 
   it('uses the requested historical season for participant fallbacks', async () => {
-    const fixture = TestBed.createComponent(DriversGridTableComponent);
-    const component = fixture.componentInstance as any;
+    const fixture = TestBed.createComponent(TeamsRankingComponent);
     const drivers = spyOn(TestBed.inject(DriverApiService), 'getAllDrivers').and.returnValue(of([]));
     const teams = spyOn(TestBed.inject(TeamApiService), 'getAllTeams').and.returnValue(of([]));
     const season = new Season(1, 'One', 1);
@@ -123,7 +122,12 @@ describe('Frontend regressions', () => {
     await new Promise(resolve => setTimeout(resolve, 120));
     await ranking.whenStable();
     ranking.detectChanges();
-    component._updateTeamsPointsData([], season);
+    spyOn(TestBed.inject(TeamApiService), 'getllTeamsWithDrivers').and.returnValue(of([]));
+    fixture.componentRef.setInput('season', season);
+    fixture.detectChanges();
+    await new Promise(resolve => setTimeout(resolve, 120));
+    await fixture.whenStable();
+    fixture.detectChanges();
     expect(drivers).toHaveBeenCalledWith(1);
     expect(teams).toHaveBeenCalledWith(1);
   });

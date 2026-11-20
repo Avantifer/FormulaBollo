@@ -1,0 +1,39 @@
+@if (isLoading()) {
+	<div class="grid gap-2 py-2" aria-hidden="true">
+		@for (row of skeletonRows; track $index) {
+			<p-skeleton width="100%" height="7.5rem" />
+		}
+	</div>
+} @else {
+	<ol class="ranking m-0 grid list-none gap-2 border-t border-rule p-0 pt-2">
+		@for (row of rows(); track row.team.id; let first = $first) {
+			<li class="ranking-row bg-panel-alt text-ink" [attr.value]="row.position">
+				<span class="rank-position font-display tabular-nums font-bold text-ink-soft" [class.text-podium-1]="row.position === 1" [class.text-podium-2]="row.position === 2" [class.text-podium-3]="row.position === 3">{{ row.position.toString().padStart(2, '0') }}@if (row.tied) {<span class="sr-only"> empatado</span>}</span>
+				<img class="team-badge bg-gray-200 border border-rule" [src]="imageService.getImageUrl(row.team.logoImage)" alt="" width="40" height="40" loading="lazy" />
+				<h3 class="team-name min-w-0 font-display uppercase font-bold"><a class="profile-link" [routerLink]="['/teams', utilsService.spaceToUnderScore(row.team.name)]"><span class="sr-only">Ver ficha de </span>{{ row.team.name }}</a></h3>
+				<div class="team-drivers">
+					@for (point of row.drivers; track $index) {
+						<div class="team-driver">
+							@if (isVacantDriver(point.driver)) {
+								<span class="driver-avatar vacant border border-dashed border-ink-soft" aria-hidden="true"></span>
+							} @else if (!point.driver.driverImage || point.driver.driverImage.includes('/default/')) {
+								<span class="driver-avatar driver-initials bg-rule text-ink text-xs font-semibold" aria-hidden="true">{{ initials(point.driver.name) }}</span>
+							} @else {
+								<img class="driver-avatar bg-panel object-cover" [src]="imageService.getImageUrl(point.driver.driverImage | SpaceToUnderscore)" alt="" width="32" height="32" loading="lazy" />
+							}
+							<span class="driver-name text-ink">{{ isVacantDriver(point.driver) ? 'Vacante' : point.driver.name }}</span>
+							<span class="driver-points font-display tabular-nums text-ink-soft font-bold">{{ isVacantDriver(point.driver) ? 0 : point.totalPoints }}<span class="sr-only"> PTS</span></span>
+						</div>
+					}
+				</div>
+				<div class="points-score text-right font-display tabular-nums">
+					<strong class="font-bold leading-none">{{ row.totalPoints }}</strong><span class="sr-only"> PTS</span>
+					<span class="points-gap block text-ink-soft text-sm">{{ row.gap }}</span>
+				</div>
+				<img class="team-car object-contain" [src]="imageService.getImageUrl(row.team.carImage)" alt="" width="360" height="84" [attr.loading]="first ? 'eager' : 'lazy'" />
+				<span class="profile-indicator border border-rule rounded-full text-ink-soft" aria-hidden="true"><i class="pi pi-arrow-right" aria-hidden="true"></i></span>
+				<span class="team-rule" [class]="'bg-' + (row.team.name | SpaceToUnderscore)" aria-hidden="true"></span>
+			</li>
+		}
+	</ol>
+}
