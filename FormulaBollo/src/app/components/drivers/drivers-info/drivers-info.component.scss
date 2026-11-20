@@ -28,7 +28,7 @@
 .race-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem 0.5rem; align-items: center; }
 .race-circuit { grid-column: 1; grid-row: 1; }
 .race-marks { grid-column: 1; grid-row: 2; }
-.race-score { grid-column: 2; grid-row: 1; grid-template-columns: 2.5rem 3ch; font-size: 1.5rem; }
+.race-score { grid-column: 2; grid-row: 1; grid-template-columns: 2.5rem 3rem; font-size: 1.5rem; }
 .results-link { grid-column: 2; grid-row: 2; }
 
 @media (min-width: 640px) {
