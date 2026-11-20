@@ -1,3 +1,4 @@
+import Chart from 'chart.js/auto';
 import {
   chartGridColor,
   chartLabelColor,
@@ -10,6 +11,31 @@ import {
 } from './constants';
 
 describe('Chart theme', () => {
+  for (const mobile of [false, true]) {
+    it(`renders Spanish decimal ticks and tooltip values in ${mobile ? 'horizontal bars' : 'lines'}`, () => {
+      const canvas = document.createElement('canvas');
+      const chart = new Chart(canvas, {
+        type: mobile ? 'bar' : 'line',
+        data: { labels: ['Primera', 'Segunda'], datasets: [{ label: 'Media', data: [2.41, 7.34] }] },
+        options: {
+          ...(mobile ? getBarMobileChartOptions(false) : getLineChartOptions(false)),
+          responsive: false,
+          animation: false
+        }
+      });
+      try {
+        chart.tooltip!.setActiveElements([{ datasetIndex: 0, index: 0 }], { x: 0, y: 0 });
+        expect(chart.tooltip!.dataPoints[0].formattedValue).toBe('2,41');
+        chart.tooltip!.setActiveElements([{ datasetIndex: 0, index: 1 }], { x: 0, y: 0 });
+        expect(chart.tooltip!.dataPoints[0].formattedValue).toBe('7,34');
+        const scale = chart.scales[mobile ? 'x' : 'y'];
+        expect(scale.getLabelForValue(2.41)).toBe('2,41');
+      } finally {
+        chart.destroy();
+      }
+    });
+  }
+
   function luminance(hex: string): number {
     const value = hex.slice(1);
     const expanded = value.length === 3 ? [...value].map(channel => channel + channel).join('') : value;
@@ -56,6 +82,7 @@ describe('Chart theme', () => {
       ]) {
         it(`uses semantic colors throughout ${factory.name}`, () => {
           const options = factory(isDarkMode);
+          expect(options.locale).toBe('es-ES');
           const serialized = JSON.stringify(options);
           for (const legacy of ['rgb(150', 'rgb(220', 'rgba(200']) {
             expect(serialized).withContext(legacy).not.toContain(legacy);

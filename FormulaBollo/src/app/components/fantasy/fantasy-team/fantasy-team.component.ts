@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import { FantasyApiService } from './../../../../shared/services/api/fantasy-api.service';
 import { ButtonModule } from 'primeng/button';
 import { Component, computed, effect, inject, signal, Signal, untracked } from '@angular/core';
@@ -36,6 +37,7 @@ import { OrderBy } from '../../../../shared/models/orderBy';
   selector: 'app-fantasy-team',
   imports: [
     SelectButtonModule,
+    DecimalPipe,
     ButtonModule,
     ChartModule,
     IconFieldModule,

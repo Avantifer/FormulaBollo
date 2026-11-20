@@ -247,17 +247,17 @@
 														@if (fantasyPricesDriver.fantasyInfo.differencePrice > 0) {
 															<span class="text-sector-up">
 																<i class="pi pi-arrow-up-right" style="font-size: 8px"></i>
-																{{ fantasyPricesDriver.fantasyInfo.differencePrice.toFixed(2) }} %</span
+																{{ fantasyPricesDriver.fantasyInfo.differencePrice | number:'1.2-2':'es-ES' }} %</span
 															>
 														} @else if (fantasyPricesDriver.fantasyInfo.differencePrice < 0) {
 															<span class="text-sector-down"
 																><i class="pi pi-arrow-down-right" style="font-size: 8px"></i>
-																{{ fantasyPricesDriver.fantasyInfo.differencePrice.toFixed(2) }} %</span
+																{{ fantasyPricesDriver.fantasyInfo.differencePrice | number:'1.2-2':'es-ES' }} %</span
 															>
 														} @else {
 															<span class="text-sector-flat"
 																><i class="pi pi-arrow-right" style="font-size: 8px"></i>
-																{{ fantasyPricesDriver.fantasyInfo.differencePrice.toFixed(2) }} %</span
+																{{ fantasyPricesDriver.fantasyInfo.differencePrice | number:'1.2-2':'es-ES' }} %</span
 															>
 														}
 													</div>
@@ -336,17 +336,17 @@
 														@if (fantasyPricesTeam.fantasyInfo.differencePrice > 0) {
 															<span class="text-sector-up">
 																<i class="pi pi-arrow-up-right" style="font-size: 8px"></i>
-																{{ fantasyPricesTeam.fantasyInfo.differencePrice.toFixed(2) }} %</span
+																{{ fantasyPricesTeam.fantasyInfo.differencePrice | number:'1.2-2':'es-ES' }} %</span
 															>
 														} @else if (fantasyPricesTeam.fantasyInfo.differencePrice < 0) {
 															<span class="text-sector-down"
 																><i class="pi pi-arrow-down-right" style="font-size: 8px"></i>
-																{{ fantasyPricesTeam.fantasyInfo.differencePrice.toFixed(2) }} %</span
+																{{ fantasyPricesTeam.fantasyInfo.differencePrice | number:'1.2-2':'es-ES' }} %</span
 															>
 														} @else {
 															<span class="text-sector-flat"
 																><i class="pi pi-arrow-right" style="font-size: 8px"></i>
-																{{ fantasyPricesTeam.fantasyInfo.differencePrice.toFixed(2) }} %</span
+																{{ fantasyPricesTeam.fantasyInfo.differencePrice | number:'1.2-2':'es-ES' }} %</span
 															>
 														}
 													</div>
@@ -527,7 +527,7 @@
 				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
 					<div class="bg-panel border border-rule p-2 sm:p-3 rounded-row">
 						<div class="text-ink-soft">Puntos por carrera</div>
-						<div class="font-display tabular-nums font-bold text-ink">{{ showDriverMedianPointsData().toFixed(1) }}</div>
+						<div class="font-display tabular-nums font-bold text-ink">{{ showDriverMedianPointsData() | number:'1.1-1':'es-ES' }}</div>
 					</div>
 					<div class="bg-panel border border-rule p-2 sm:p-3 rounded-row">
 						<div class="text-ink-soft">Mejor resultado</div>
@@ -584,7 +584,7 @@
 				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
 					<div class="bg-panel border border-rule p-2 sm:p-3 rounded-row">
 						<div class="text-ink-soft">Puntos por carrera</div>
-						<div class="font-display tabular-nums font-bold text-ink">{{ showTeamMedianPointsData().toFixed(1) }}</div>
+						<div class="font-display tabular-nums font-bold text-ink">{{ showTeamMedianPointsData() | number:'1.1-1':'es-ES' }}</div>
 					</div>
 					<div class="bg-panel border border-rule p-2 sm:p-3 rounded-row">
 						<div class="text-ink-soft">Mejor resultado</div>

@@ -76,6 +76,9 @@ El backend no trae secretos en el repositorio; deben llegar por ficheros de perf
   Tras la última carrera responde 200 «Era la última carrera de la temporada…» (antes 404); 404 solo si la carrera no
   existe. Los precios de la carrera 31 que ya estaban guardados no coinciden con los que se regeneran desde la 30 (ni
   siquiera con el código anterior): vienen de datos editados después de calcularlos. No se ha tocado ningún dato.
+- Frontend: la web usa ahora el locale `es-ES` (decimales con coma, p. ej. posición media `2,41`) y cada página
+  tiene su propio título del navegador (`<página> · FormulaBollo`; la ficha de un piloto, de una escudería y de una
+  carrera llevan además su nombre). No afecta al backend.
 - CI: `.github/workflows/ci.yml` ejecuta los tests del backend (con H2, sin Docker) y del frontend, y compila el
   frontend, en cada PR. Los tests de repositorio usan H2 y no sustituyen a la prueba con MariaDB real del paso 4.
 

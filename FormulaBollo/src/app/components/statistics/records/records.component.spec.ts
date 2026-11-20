@@ -27,6 +27,17 @@ describe('RecordsComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('localizes percentage records and preserves integer values', () => {
+    const driver = driverPointsFixture.driver;
+    TestBed.inject(HttpTestingController).expectOne(request => request.url.endsWith('/recordsDrivers')).flush([
+      { title: 'Mayor porcentaje de victorias', value: 7.34, driver, team: driver.team, season: driver.season },
+      { title: 'Victorias', value: 12345, driver, team: driver.team, season: driver.season }
+    ]);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('7,34');
+    expect(fixture.nativeElement.textContent).toContain('12345');
+  });
+
   it('marks every record trophy as a best result and preserves driver and team hrefs', () => {
     const driver = driverPointsFixture.driver;
     TestBed.inject(HttpTestingController).expectOne(request => request.url.endsWith('/recordsDrivers')).flush([
