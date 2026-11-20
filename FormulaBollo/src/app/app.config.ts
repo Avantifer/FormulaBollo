@@ -1,4 +1,7 @@
-import { ApplicationConfig, provideZonelessChangeDetection } from '@angular/core';
+import { ApplicationConfig, LOCALE_ID, provideZonelessChangeDetection } from '@angular/core';
+import { registerLocaleData } from '@angular/common';
+import localeEs from '@angular/common/locales/es';
+import { PageTitleStrategy } from '../shared/services/page-title.strategy';
 
 import { routes } from './app.routes';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
@@ -9,7 +12,7 @@ import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeuix/themes/aura';
 import { definePreset } from '@primeuix/themes';
 import type { ComponentsDesignTokens } from '@primeuix/themes/types';
-import { provideRouter, withInMemoryScrolling, withPreloading } from '@angular/router';
+import { provideRouter, TitleStrategy, withInMemoryScrolling, withPreloading } from '@angular/router';
 import { SelectivePreloadStrategy } from '../shared/services/selective-preload.strategy';
 
 
@@ -111,9 +114,13 @@ export const FormulaBolloPreset = definePreset(Aura, {
   } satisfies ComponentsDesignTokens
 });
 
+registerLocaleData(localeEs);
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZonelessChangeDetection(),
+    { provide: LOCALE_ID, useValue: 'es-ES' },
+    { provide: TitleStrategy, useClass: PageTitleStrategy },
     provideRouter(routes, withPreloading(SelectivePreloadStrategy), withInMemoryScrolling({ scrollPositionRestoration: 'enabled' })),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     providePrimeNG({

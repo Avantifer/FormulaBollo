@@ -86,7 +86,7 @@ export class TeamsInfoComponent {
       { icon: 'pi pi-flag', color: 'text-ink-soft', key: 'Poles', value: teamInfo.poles },
       { icon: 'pi pi-star', color: 'text-ink-soft', key: 'Podios', value: teamInfo.podiums },
       { icon: 'pi pi-bolt', color: 'text-ink-soft', key: 'Vueltas Rápidas', value: teamInfo.fastlaps },
-      { icon: 'pi pi-percentage', color: 'text-ink-soft', key: 'Posición Media', value: teamInfo.averagePosition.toFixed(2) },
+      { icon: 'pi pi-percentage', color: 'text-ink-soft', key: 'Posición Media', value: teamInfo.averagePosition.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
       { icon: 'pi pi-calendar', color: 'text-ink-soft', key: 'Carreras Terminadas', value: teamInfo.racesFinished },
       { icon: 'pi pi-chart-bar', color: 'text-ink-soft', key: 'Puntos Totales', value: teamInfo.totalPoints },
       { icon: 'pi pi-exclamation-triangle', color: 'text-ink-soft', key: 'Penalizaciones', value: teamInfo.penalties },

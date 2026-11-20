@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DriverApiService } from './../../../../shared/services/api/driver-api.service';
 import { ChangeDetectionStrategy, Component, inject, Signal } from '@angular/core';
@@ -11,7 +12,7 @@ import { ImageService } from '../../../../shared/services/image.service';
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-records',
-  imports: [RouterLink],
+  imports: [RouterLink, DecimalPipe],
   templateUrl: './records.component.html'
 })
 export class RecordsComponent  {

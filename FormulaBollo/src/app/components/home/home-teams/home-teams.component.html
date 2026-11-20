@@ -15,8 +15,7 @@
 						height="96"
 						[src]="imageService.getImageUrl(team.logoImage)"
 						[alt]="team.name"
-						[class.reverse-color]="team.name === 'Alpine' || team.name === 'AlphaTauri' || team.name === 'Aston Martin'"
-						class="teams-schema-container-image m-auto w-24" />
+						class="teams-schema-container-image m-auto size-24 rounded-row border border-rule bg-[#E9ECEF] object-contain p-2" />
 				</a>
 			}
 			@if (loading()) {

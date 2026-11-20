@@ -95,6 +95,10 @@ export class ResultsComponent  {
     this.getResults();
   }
 
+  protected getRacePoints(result: Result): number | 'DNF' {
+    return result.position === null ? 'DNF' : result.position.points + (result.fastlap ?? 0);
+  }
+
   onSeasonChange(newSeason: Season): void {
     this.seasonSelected = newSeason;
   }

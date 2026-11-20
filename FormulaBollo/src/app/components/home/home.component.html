@@ -4,7 +4,9 @@
 			Formula Bollo
 		</h1>
 	</div>
-	<img [ngSrc]="imageService.getImageUrl('intro/introImage-v3.avif')" alt="" class="object-cover" fill priority />
+	@if (!heroImageFailed()) {
+		<img [ngSrc]="imageService.getImageUrl('intro/introImage-v4.avif')" alt="" class="object-cover" fill priority (error)="heroImageFailed.set(true)" />
+	}
 </div>
 <div class="bg-canvas text-ink">
 	<app-home-drivers />

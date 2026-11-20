@@ -22,6 +22,11 @@ El backend no trae secretos en el repositorio; deben llegar por ficheros de perf
 - [ ] `SWAGGER_ENABLED`: déjalo sin definir (Swagger cerrado). Solo `true` en un entorno de pruebas.
 - [ ] Certificado (`.p12`) fuera del repositorio. Si el que estuvo versionado llegó a usarse, rótalo.
 - [ ] Carpeta `images/` donde apunte `spring.web.resources.static-locations`: la base guarda rutas relativas.
+- [ ] **La foto de la portada no está en git** (`/images/` está en `.gitignore`). Copia a mano
+      `images/intro/introImage-v4.avif` al servidor, en la misma carpeta `images/intro/`, antes de publicar el
+      frontend. El nombre lleva versión (`-v4`) para saltarse la caché del navegador: si cambias la foto, súbela con
+      otro nombre y actualiza `home.component.html`, su test y el script de precarga de `index.html`.
+      Sin el archivo la portada no se rompe (se queda con fondo liso), pero el navegador pide la imagen y recibe un 404.
 
 ## 2b. Cambios de contrato que obligan a desplegar backend y frontend a la vez
 
@@ -86,6 +91,9 @@ El backend no trae secretos en el repositorio; deben llegar por ficheros de perf
   `GET /results/totalPerDriver` (lista de pilotos y portada) y `GET /drivers/infoDriverByName` (campo `driver`). Antes
   se quedaba con el que devolviera el `HashMap`, sin ningún criterio. Las estadísticas siguen sumando todos los
   registros. No hay cambios de esquema ni de datos.
+- Frontend: la web usa ahora el locale `es-ES` (decimales con coma, p. ej. posición media `2,41`) y cada página
+  tiene su propio título del navegador (`<página> · FormulaBollo`; la ficha de un piloto, de una escudería y de una
+  carrera llevan además su nombre). No afecta al backend.
 - CI: `.github/workflows/ci.yml` ejecuta los tests del backend (con H2, sin Docker) y del frontend, y compila el
   frontend, en cada PR. Los tests de repositorio usan H2 y no sustituyen a la prueba con MariaDB real del paso 4.
 
@@ -160,6 +168,7 @@ Sustituye `$B` por la URL del backend.
 | `curl -s -o /dev/null -w "%{http_code}" $B/seasons/all` | 200 |
 | `curl -s -o /dev/null -w "%{http_code}" "$B/drivers/allInfoDriver?season=3"` | 200 |
 | `curl -s "$B/drivers/teamHistory?driverName=Robe"` | lista de 4 entradas: T1 Ferrari, T2 Alpine, T3 Kick Sauber, T3 Ferrari |
+| `curl -s -o /dev/null -w "%{http_code}" "$B/intro/introImage-v4.avif"` | 200 |
 | `curl -s -o /dev/null -w "%{http_code}" -X DELETE "$B/results/delete?raceId=1"` | **403** (sin token) |
 | `curl -s -o /dev/null -w "%{http_code}" -X POST "$B/cache/update"` | **403** |
 | `curl -s -o /dev/null -w "%{http_code}" "$B/account/id?id=1"` | **403** |
