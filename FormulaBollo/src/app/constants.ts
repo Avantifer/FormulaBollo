@@ -65,6 +65,7 @@ export function chartGridColor(isDarkMode: boolean): string {
 
 export function getBarChartOptions(isDarkMode: boolean): any {
   return {
+    locale: 'es-ES',
     maintainAspectRatio: false,
     aspectRatio: 0.8,
     plugins: {
@@ -104,6 +105,7 @@ export function getBarMobileChartOptions(isDarkMode: boolean): any {
   return {
     indexAxis: 'y',
     responsive: true,
+    locale: 'es-ES',
     maintainAspectRatio: false,
     aspectRatio: 0.8,
     plugins: {
@@ -147,6 +149,7 @@ export function getPieChartOptions(isDarkMode: boolean): any {
   return {
     responsive: true,
     aspectRatio: 0.9,
+    locale: 'es-ES',
     maintainAspectRatio: false,
     plugins: {
       datalabels: {
@@ -165,6 +168,7 @@ export function getPieChartOptions(isDarkMode: boolean): any {
 export function getLineChartOptions(isDarkMode: boolean, displayLegend: boolean = true): any {
   return {
     responsive: true,
+    locale: 'es-ES',
     maintainAspectRatio: false,
     plugins: {
       datalabels: {
@@ -210,6 +214,7 @@ function createComparisonChartOptions(isDarkMode: boolean, isMobile: boolean = f
   const labelColor = chartLabelColor(isDarkMode);
 
   const baseOptions: any = {
+    locale: 'es-ES',
     maintainAspectRatio: false,
     plugins: {
       legend: {

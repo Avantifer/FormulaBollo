@@ -26,6 +26,21 @@ describe('TeamsInfoComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('formats the average position with a comma while preserving integer statistics', () => {
+    const info: TeamInfo = {
+      team: teamPointsFixture.team,
+      poles: 1, fastlaps: 2, racesFinished: 3, totalPoints: 12345,
+      constructors: 0, penalties: 0, bestPosition: 1,
+      podiums: 4, victories: 2, averagePosition: 7.34, last5Results: []
+    };
+    component['teamInfo'].set(info);
+    component['_mapTeamStats'](info);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('7,34');
+    expect(fixture.nativeElement.textContent).toContain('12345');
+    expect(component['teamStatsArray']().find(stat => stat.key === 'Puntos Totales')?.value).toBe(12345);
+  });
+
   it('renders one h1 before loading and replaces it with the team name', () => {
     expect(fixture.nativeElement.querySelectorAll('h1').length).toBe(1);
     component['teamInfo'].set({

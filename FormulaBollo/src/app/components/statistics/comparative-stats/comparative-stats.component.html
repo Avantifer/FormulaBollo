@@ -247,7 +247,7 @@
 										: (teamsInfo[0].team!.name | SpaceToUnderscore))
 								"></span
 							><span class="font-display tabular-nums text-2xl font-bold text-ink">{{
-								typeSelected === 'Pilotos' ? driversInfo[0].averagePosition.toFixed(2) : teamsInfo[0].averagePosition.toFixed(2)
+								(typeSelected === 'Pilotos' ? driversInfo[0].averagePosition : teamsInfo[0].averagePosition) | number:'1.2-2':'es-ES'
 							}}</span>
 						</div>
 						<div class="flex items-center gap-1">
@@ -260,7 +260,7 @@
 										: (teamsInfo[1].team!.name | SpaceToUnderscore))
 								"></span
 							><span class="font-display tabular-nums text-2xl font-bold text-ink">{{
-								typeSelected === 'Pilotos' ? driversInfo[1].averagePosition.toFixed(2) : teamsInfo[1].averagePosition.toFixed(2)
+								(typeSelected === 'Pilotos' ? driversInfo[1].averagePosition : teamsInfo[1].averagePosition) | number:'1.2-2':'es-ES'
 							}}</span>
 						</div>
 					</div>
