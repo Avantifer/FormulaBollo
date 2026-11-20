@@ -22,6 +22,9 @@ El backend no trae secretos en el repositorio; deben llegar por ficheros de perf
 - [ ] `SWAGGER_ENABLED`: déjalo sin definir (Swagger cerrado). Solo `true` en un entorno de pruebas.
 - [ ] Certificado (`.p12`) fuera del repositorio. Si el que estuvo versionado llegó a usarse, rótalo.
 - [ ] Carpeta `images/` donde apunte `spring.web.resources.static-locations`: la base guarda rutas relativas.
+- [ ] Las fuentes (Barlow Condensed y Geist) ya salen de nuestro propio servidor: no hay peticiones a Google Fonts.
+      Nada que configurar, pero conviene comprobar que `/media/*.woff2` responde 200 tras publicar. El frontend
+      tiene dos dependencias nuevas (`@fontsource/barlow-condensed` y `@fontsource-variable/geist`).
 - [ ] **La foto de la portada no está en git** (`/images/` está en `.gitignore`). Copia a mano
       `images/intro/introImage-v4.avif` al servidor, en la misma carpeta `images/intro/`, antes de publicar el
       frontend. El nombre lleva versión (`-v4`) para saltarse la caché del navegador: si cambias la foto, súbela con

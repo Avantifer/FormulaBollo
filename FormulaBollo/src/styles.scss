@@ -1,5 +1,12 @@
 @use "primeicons/primeicons.css";
 @use "assets/scss/customSCSS.scss";
+// Keep latin last: the subset CSS has no unicode-range, so extended glyphs
+// fall back to latin-ext only when they are absent from the latin face.
+@use "@fontsource/barlow-condensed/latin-ext-600.css";
+@use "@fontsource/barlow-condensed/latin-600.css";
+@use "@fontsource/barlow-condensed/latin-ext-700.css";
+@use "@fontsource/barlow-condensed/latin-700.css";
+@use "@fontsource-variable/geist/wght.css";
 
 @plugin 'tailwindcss-primeui';
 @layer tailwind, primeng;
@@ -10,7 +17,7 @@
 
 @theme {
   --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
-  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
   --text-display-md: 2rem;
   --text-display-md--line-height: 1.1;
   --text-display-md--letter-spacing: 0.01em;
