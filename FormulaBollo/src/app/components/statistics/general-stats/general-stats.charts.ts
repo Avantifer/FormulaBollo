@@ -30,9 +30,10 @@ export const centerTextPlugin: Plugin<'doughnut', CenterTextOptions> = {
   }
 };
 
+const LINE_DASHES = [[], [6, 3], [2, 3], [9, 3, 2, 3]];
 const LINE_PLOT_HEIGHT = 274;
 const LINE_LABEL_GAP = 13;
-const LINE_LABEL_OFFSET = 10;
+const LINE_LABEL_OFFSET = 18;
 
 type Entry = DriverStats | TeamStats;
 export type StatisticsPalette = Record<'ink' | 'soft' | 'rule' | 'panel' | 'up' | 'down' | 'best' | 'gold' | 'silver' | 'bronze', string>;
@@ -47,7 +48,7 @@ export interface StatisticsChart {
   data: ChartData;
   options: ChartOptions;
   height: number;
-  values: { label: string; value: string }[];
+  values: { label: string; value: string; color?: string; dash?: number[] }[];
   ariaLabel: string;
 }
 
@@ -67,7 +68,7 @@ export function buildStatisticsCharts(overview: StatisticsOverview, teams: boole
   const cards: StatisticsChart[] = [];
   const color = (entry: Entry): string => colorsMappings['driver' in entry ? entry.driver.team.name : entry.team.name] ?? palette.soft;
   const summary = (entries: Entry[], value: (entry: Entry) => number, suffix = '') =>
-    entries.slice(0, 5).map(entry => ({ label: name(entry), value: format(value(entry)) + suffix }));
+    entries.slice(0, 5).map(entry => ({ label: name(entry), value: format(value(entry)) + suffix, color: color(entry) }));
 
   function options(kind: ChartType = 'bar', stacked = false, percent = false): ChartOptions {
     const base = kind === 'line' ? getLineChartOptions(dark, false) : kind === 'doughnut' ? getPieChartOptions(dark) : getBarMobileChartOptions(dark);
@@ -142,7 +143,7 @@ export function buildStatisticsCharts(overview: StatisticsOverview, teams: boole
     }
     const total = values.reduce((sum, value) => sum + value, 0);
     const card = add(id, title, description, { labels, datasets: [{ data: values, backgroundColor: colors, borderColor: palette.panel, borderWidth: 3 }] },
-      labels.map((label, index) => ({ label, value: format(values[index]) + ' · ' + format(total ? 100 * values[index] / total : 0) + ' %' })),
+      labels.map((label, index) => ({ label, value: format(values[index]) + ' · ' + format(total ? 100 * values[index] / total : 0) + ' %', color: colors[index] })),
       { type: 'doughnut', span: id === 'share' || id === 'winners' ? 4 : 6, height: 220, note: 'Los cinco primeros y el resto. Los colores de las marcas identifican al equipo actual.' });
     (card.options as ChartOptions<'doughnut'>).cutout = '72%';
     card.options.plugins!.centerText = { value: format(total), label: unit, color: palette.ink, soft: palette.soft };
@@ -170,13 +171,13 @@ export function buildStatisticsCharts(overview: StatisticsOverview, teams: boole
           label: entry.name, data: entry.cumulative, borderColor: entry.color, backgroundColor: entry.color, borderWidth: 2,
           pointRadius: (context: ScriptableContext<'line'>) => context.dataIndex === entry.cumulative.length - 1 ? 4 : 0, pointHoverRadius: 5,
           pointStyle: ['circle', 'rect', 'triangle'][index % 3] as 'circle' | 'rect' | 'triangle',
-          borderDash: [[], [6, 3], [2, 3], [9, 3, 2, 3]][index % 4], tension: 0, fill: false,
+          borderDash: LINE_DASHES[index % 4], tension: 0, fill: false,
           datalabels: { align: Math.atan2(shift, LINE_LABEL_OFFSET) * 180 / Math.PI, offset: Math.hypot(shift, LINE_LABEL_OFFSET) }
         } as ChartDataset;
       })
-    }, series.map(entry => ({ label: entry.name, value: format(entry.cumulative.at(-1) ?? 0) + ' pts' })), { type: 'line', span: 8, height: 350, note: 'Incluye puntos de sprint. Cada trazo tiene su etiqueta final y un marcador propio.' });
+    }, series.map((entry, index) => ({ label: entry.name, value: format(entry.cumulative.at(-1) ?? 0) + ' pts', color: entry.color, dash: LINE_DASHES[index % 4] })), { type: 'line', span: 8, height: 350, note: 'Incluye puntos de sprint. Cada trazo se identifica por el nombre de su etiqueta final y por su muestra de color y trazo.' });
     card.options.indexAxis = 'x';
-    card.options.layout = { padding: { right: mobile ? 40 : 46, top: 24, bottom: 12 } };
+    card.options.layout = { padding: { right: mobile ? 128 : 130, top: 24, bottom: 12 } };
     card.options.scales = {
       x: { grid: { color: palette.rule }, ticks: { color: palette.soft, font: { size: 11 }, maxTicksLimit: 3, maxRotation: 0, callback: (_value, index) => String(index + 1) }, title: { display: true, text: 'Carrera disputada', color: palette.soft } },
       y: { beginAtZero: true, grid: { color: palette.rule }, ticks: { color: palette.soft, font: { size: 11 }, maxTicksLimit: 5 } }
@@ -184,24 +185,24 @@ export function buildStatisticsCharts(overview: StatisticsOverview, teams: boole
     card.options.plugins!.datalabels = {
       display: context => context.dataIndex === context.dataset.data.length - 1,
       color: palette.ink, anchor: 'end', clamp: true,
-      font: { size: 11 }, formatter: (value: number) => format(value)
+      font: { size: 11 }, formatter: (value: number, context: { dataset: { label?: string } }) => context.dataset.label + ' ' + format(value)
     };
   }
 
   function reliability(all: Entry[]): void {
     const entries = all.filter(entry => entry.races > 0);
     const card = grouped('reliability', teams ? 'Fiabilidad del equipo' : 'Llegar hasta el final',
-      'Terminadas frente a abandonos; porcentaje de participaciones.',
+      'Carreras con posición final frente a carreras sin ella; porcentaje de participaciones.',
       entries,
       [
         { label: 'Terminadas (%)', value: entry => entry.races ? 100 * entry.racesFinished / entry.races : 0, color: palette.up },
-        { label: 'Abandonos (%)', value: entry => 100 * rate(entry), color: palette.soft }
-      ], true, teams ? 'Cada piloto cuenta como una participación.' : 'Mínimo 20 carreras. Menor tasa de abandono; empates por nombre.');
+        { label: 'Sin terminar (%)', value: entry => 100 * rate(entry), color: palette.soft }
+      ], true, (teams ? 'Cada piloto cuenta como una participación. ' : 'Mínimo 20 carreras. Menor porcentaje sin terminar; empates por nombre. ') + 'Sin terminar incluye abandonos y carreras sin participar: no se distinguen en los datos.');
     card.options.scales!['x'] = { max: 100, stacked: true, grid: { color: palette.rule }, ticks: { color: palette.soft, font: { size: 11 } } };
-    card.values = entries.slice(0, 5).map(entry => ({ label: name(entry), value: 'Terminadas ' + entry.racesFinished + ' · Abandonos ' + entry.dnfs + ' (' + format(rate(entry) * 100) + ' %)' }));
+    card.values = entries.slice(0, 5).map(entry => ({ label: name(entry), value: 'Terminadas ' + entry.racesFinished + ' · Sin terminar ' + entry.dnfs + ' (' + format(rate(entry) * 100) + ' %)' }));
     card.options.plugins!.tooltip = { callbacks: { label: context => {
       const entry = entries[context.dataIndex];
-      return (context.datasetIndex === 0 ? 'Terminadas: ' + entry.racesFinished : 'Abandonos: ' + entry.dnfs) + ' · ' + format(Number(context.raw)) + ' %';
+      return (context.datasetIndex === 0 ? 'Terminadas: ' + entry.racesFinished : 'Sin terminar: ' + entry.dnfs) + ' · ' + format(Number(context.raw)) + ' %';
     } } };
   }
 
@@ -269,7 +270,7 @@ export function buildStatisticsCharts(overview: StatisticsOverview, teams: boole
     } } };
     const scatter = add('wins-podiums', 'Victorias y presencia en el podio', 'Cada punto es un equipo; el eje vertical cuenta todos sus podios.', {
       datasets: constructors.map((entry, index) => ({ label: name(entry), data: [{ x: entry.victories, y: entry.podiums }], backgroundColor: color(entry), pointRadius: 5, pointStyle: ['circle', 'rect', 'triangle'][index % 3] as 'circle' | 'rect' | 'triangle' }))
-    }, constructors.slice(0, 5).map(entry => ({ label: name(entry), value: format(entry.victories) + ' victorias / ' + format(entry.podiums) + ' podios' })), { type: 'scatter', height: 300 });
+    }, constructors.slice(0, 5).map(entry => ({ label: name(entry), value: format(entry.victories) + ' victorias / ' + format(entry.podiums) + ' podios', color: color(entry) })), { type: 'scatter', height: 300 });
     scatter.options.plugins!.tooltip = { callbacks: { label: context => {
       const point = context.raw as { x: number; y: number };
       return context.dataset.label + ': ' + point.x + ' victorias · ' + point.y + ' podios';

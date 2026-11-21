@@ -65,7 +65,7 @@ export class GeneralStatsComponent implements OnChanges {
       { label: 'Líder de puntos', value: leader?.totalPoints ?? 0, suffix: '', detail: (leader?.name ?? '—') + ' · Ventaja ' + data.summary.margin + ' pts', reference: leader },
       { label: 'Victorias', value: entries.reduce((sum, entry) => sum + entry.victories, 0), suffix: '', detail: data.summary.distinctWinners + ' ganadores distintos', reference: winner },
       { label: 'Pole → victoria', value: data.summary.poleWinRate, suffix: ' %', detail: 'Poles convertidas en victoria', reference: pole },
-      { label: 'Abandonos', value: data.summary.dnfRate * 100, suffix: ' %', detail: 'De las participaciones', reference: reliable }
+      { label: 'Sin terminar', value: data.summary.dnfRate * 100, suffix: ' %', detail: 'Participaciones sin posición final', reference: reliable }
     ].map(figure => ({
       ...figure, sparkline: this.sparkline(figure.reference?.pointsBySeason ?? {}),
       sparkLabel: 'Puntos por temporada de ' + (figure.reference?.name ?? '—')

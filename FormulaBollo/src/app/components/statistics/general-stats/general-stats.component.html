@@ -46,7 +46,15 @@
 				</div>
 				<ul [class]="card.type === 'doughnut' || card.type === 'line' || card.type === 'scatter' || card.type === 'bubble' || card.id === 'duels' ? 'chart-values' : 'sr-only'">
 					@for (value of card.values; track $index) {
-						<li><span>{{ value.label }}</span><span class="tabular-nums">{{ value.value }}</span></li>
+						<li>
+							<span class="value-label">
+								@if (value.color) {
+									<svg class="swatch" viewBox="0 0 22 8" aria-hidden="true"><line x1="0" y1="4" x2="22" y2="4" [attr.stroke]="value.color" [attr.stroke-dasharray]="value.dash?.join(' ') || null" /></svg>
+								}
+								{{ value.label }}
+							</span>
+							<span class="tabular-nums">{{ value.value }}</span>
+						</li>
 					}
 				</ul>
 				@if (card.note) { <p class="chart-note">{{ card.note }}</p> }

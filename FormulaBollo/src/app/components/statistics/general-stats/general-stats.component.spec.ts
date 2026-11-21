@@ -244,6 +244,28 @@ describe('GeneralStatsComponent', () => {
     expect(colour('Temporada 2', alone)).toBe(colour('Temporada 2', all));
   });
 
+  it('identifies every series by name on the line chart and by a colour swatch in the value lists', () => {
+    load();
+    const evolution = card('evolution');
+    const formatter = evolution.options.plugins!.datalabels!.formatter as (value: number, context: unknown) => string;
+    expect(formatter(100, { dataset: { label: 'Piloto 01' } })).toBe('Piloto 01 100');
+    expect(evolution.values.every(value => !!value.color && value.dash !== undefined)).toBeTrue();
+    expect(evolution.values.map(value => value.dash!.length)).toContain(4);
+    expect(card('winners').values.every(value => !!value.color)).toBeTrue();
+    for (const id of ['evolution', 'winners', 'poles-wins']) {
+      const article = root().querySelector('[data-chart="' + id + '"]')!;
+      expect(article.querySelectorAll('.chart-values svg.swatch').length).withContext(id).toBe(card(id).values.length);
+    }
+  });
+
+  it('calls the rows without a final position "sin terminar" instead of retirements', () => {
+    load();
+    expect(root().querySelector('.key-figures')!.textContent).toContain('Sin terminar');
+    expect(root().textContent).not.toMatch(/Abandonos/);
+    expect(card('reliability').data.datasets.map(dataset => dataset.label)).toEqual(['Terminadas (%)', 'Sin terminar (%)']);
+    expect(card('reliability').note).toContain('no se distinguen');
+  });
+
   it('shows readable tooltips for bubbles and scatter points', () => {
     load();
     const bubble = card('poles-wins');
