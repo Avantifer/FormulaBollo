@@ -12,9 +12,9 @@
 .driver-avatar { width: 2rem; height: 2rem; }
 .driver-label { font-size: 0.6875rem; overflow-wrap: anywhere; }
 .driver-details > span { font-size: 0.6875rem; }
-.driver-details > span > strong { font-family: var(--font-display); font-size: 1.125rem; }
-.driver-number { font-size: 0.875rem; }
-.driver-chip:hover { text-decoration: underline; text-underline-offset: 3px; }
+.driver-details > span > strong:not(.driver-label) { font-family: var(--font-display); font-size: 1.125rem; }
+.driver-number { margin-inline-start: 0.5rem; font-size: 0.75rem; font-weight: 400; white-space: nowrap; }
+a.driver-chip:hover .driver-label, a.driver-chip:focus-visible .driver-label { text-decoration: underline; text-underline-offset: 3px; }
 .driver-chip:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
 .stat { padding: 1rem; border-right: 1px solid var(--rule); container-type: inline-size; }
@@ -55,8 +55,8 @@
   .driver-avatar { width: 3.25rem; height: 3.25rem; }
   .driver-label { font-size: 1rem; }
   .driver-details > span { font-size: 0.75rem; }
-  .driver-details > span > strong { font-size: 1.25rem; }
-  .driver-number { font-size: 1.125rem; }
+  .driver-details > span > strong:not(.driver-label) { font-size: 1.25rem; }
+  .driver-number { font-size: 0.875rem; }
 }
 
 @media (min-width: 768px) {

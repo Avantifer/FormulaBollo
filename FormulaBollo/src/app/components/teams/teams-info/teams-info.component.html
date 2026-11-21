@@ -40,8 +40,8 @@
 									<span class="driver-avatar initials inline-flex shrink-0 items-center justify-center rounded-full bg-panel-alt text-ink font-bold" aria-hidden="true">{{ driverInitials(point.driver.name) }}</span>
 								}
 								<span class="driver-details min-w-0">
-									<strong class="driver-label block">{{ point.driver.name }}</strong>
-									<span class="block text-xs tabular-nums"><span class="driver-number mr-2 font-display font-bold"><span class="sr-only">Número </span>{{ point.driver.number }}</span><strong>{{ point.totalPoints }}</strong> pts</span>
+									<span class="block"><strong class="driver-label">{{ point.driver.name }}</strong> <span class="driver-number font-display tabular-nums"><span class="sr-only">Número </span><span aria-hidden="true">#</span>{{ point.driver.number }}</span></span>
+									<span class="block text-xs tabular-nums"><strong>{{ point.totalPoints }}</strong> pts</span>
 								</span>
 							</a>
 						}

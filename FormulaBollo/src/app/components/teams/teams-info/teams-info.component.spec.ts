@@ -136,10 +136,61 @@ describe('TeamsInfoComponent', () => {
     chips.forEach((chip, index) => {
       expect(chip.getAttribute('href')).toBe('/drivers/' + drivers[index].driver.name.replaceAll(' ', '_'));
       expect(chip.textContent).toContain(drivers[index].driver.name);
-      expect(chip.textContent).toContain(String(drivers[index].driver.number));
-      expect(chip.textContent).toContain(drivers[index].totalPoints + ' pts');
+      const number = chip.querySelector<HTMLElement>('.driver-number')!;
+      expect(number.textContent).toBe('Número #' + drivers[index].driver.number);
+      expect(number.querySelector('.sr-only')!.textContent).toBe('Número ');
+      expect(number.querySelector('[aria-hidden="true"]')!.textContent).toBe('#');
+      expect(number.parentElement).toBe(chip.querySelector('.driver-label')!.parentElement);
+      const points = chip.querySelector('.driver-details')!.lastElementChild!;
+      expect(points.textContent).toBe(drivers[index].totalPoints + ' pts');
+      expect(points.querySelector('.driver-number')).toBeNull();
       expect(chip.querySelector('img')!.alt).toBe('');
     });
+  });
+
+  it('underlines only the driver name on chip hover and keyboard focus', () => {
+    create();
+    render(info, [{ ...drivers[0], totalPoints: 539, driver: { ...drivers[0].driver, number: 46 } }]);
+    const chip = fixture.nativeElement.querySelector('a.driver-chip') as HTMLAnchorElement;
+    const name = chip.querySelector<HTMLElement>('.driver-label')!;
+    const number = chip.querySelector<HTMLElement>('.driver-number')!;
+    expect(number.textContent).toBe('Número #46');
+    expect(chip.querySelector('.driver-details')!.lastElementChild!.textContent).toBe('539 pts');
+    // DOM mouse events cannot activate :hover. Replay the compiled hover selectors
+    // with a class, retaining their declarations and targets to catch propagation.
+    const style = document.createElement('style');
+    function hoverRules(rules: CSSRuleList): string[] {
+      return Array.from(rules).flatMap(rule => {
+        if (rule instanceof CSSStyleRule && rule.selectorText.includes('.driver-chip') && rule.selectorText.includes(':hover')) {
+          return rule.selectorText.split(',').filter(selector => selector.includes(':hover'))
+            .map(selector => selector.replaceAll(':hover', '.test-hover') + '{' + rule.style.cssText + '}');
+        }
+        return rule instanceof CSSGroupingRule ? hoverRules(rule.cssRules) : [];
+      });
+    }
+    style.textContent = Array.from(document.styleSheets).flatMap(sheet => hoverRules(sheet.cssRules)).join('\n');
+    expect(style.textContent).not.toBe('');
+    document.head.append(style);
+    function expectNameOnly(): void {
+      expect(getComputedStyle(name).textDecorationLine).toBe('underline');
+      expect(getComputedStyle(name).textUnderlineOffset).toBe('3px');
+      for (const element of [chip, number, number.parentElement!, chip.querySelector('.driver-details')!.lastElementChild!]) {
+        expect(getComputedStyle(element).textDecorationLine).toBe('none');
+      }
+    }
+    try {
+      expect(getComputedStyle(name).textDecorationLine).toBe('none');
+      chip.classList.add('test-hover');
+      expectNameOnly();
+      chip.classList.remove('test-hover');
+      chip.focus();
+      expect(chip.matches(':focus-visible')).toBeTrue();
+      expectNameOnly();
+      expect(getComputedStyle(chip).outlineStyle).toBe('solid');
+    } finally {
+      chip.blur();
+      style.remove();
+    }
   });
 
   it('renders case insensitive vacancies without photos, number or link and initials for missing/default photos', () => {
@@ -448,7 +499,7 @@ describe('TeamsInfoComponent', () => {
           catch { return []; }
         }).join('\n');
         for (const dark of [false, true]) {
-          for (const width of [320, 390, 768, 1024, 1296]) {
+          for (const width of [320, 390, 640, 768, 1024, 1296]) {
             const frame = document.createElement('iframe');
             Object.assign(frame.style, { width: width + 'px', height: '1200px', border: '0' });
             document.body.append(frame);
@@ -494,9 +545,25 @@ describe('TeamsInfoComponent', () => {
                 expect(view.getComputedStyle(target).outlineStyle).withContext(context + '/focus').toBe('solid');
               }
               const heroBackground = view.getComputedStyle(hero).backgroundColor;
-              for (const text of Array.from(doc.querySelectorAll('h1, .driver-label, .driver-details > span'))) {
+              for (const text of Array.from(doc.querySelectorAll('h1, .driver-label, .driver-number, .driver-details > span'))) {
                 expect(contrast(view.getComputedStyle(text).color, heroBackground)).withContext(context + '/hero contrast').toBeGreaterThanOrEqual(4.5);
               }
+              const heroClasses = hero.className;
+              const teams = ['Red_Bull', 'AlphaTauri', 'Ferrari', 'Mercedes', 'Aston_Martin', 'Williams', 'Haas', 'McLaren', 'Alfa_Romeo', 'Alpine', 'Kick_Sauber', 'RB'];
+              for (const team of [...teams, 'Alfa_Romeo_Racing']) {
+                hero.className = 'team-hero bg-' + team + ' on-' + team;
+                for (const number of Array.from(hero.querySelectorAll<HTMLElement>('.driver-number'))) {
+                  const numberStyle = view.getComputedStyle(number);
+                  const labelStyle = view.getComputedStyle(number.parentElement!.querySelector('.driver-label')!);
+                  expect(contrast(numberStyle.color, view.getComputedStyle(hero).backgroundColor)).withContext(context + '/' + team + '/number contrast').toBeGreaterThanOrEqual(4.5);
+                  expect(numberStyle.opacity).toBe('1');
+                  expect(Number(numberStyle.fontWeight)).toBeLessThan(Number(labelStyle.fontWeight));
+                  expect(parseFloat(numberStyle.fontSize)).toBe(width < 640 ? 12 : 14);
+                  expect(numberStyle.marginInlineStart).toBe('8px');
+                  expect(numberStyle.whiteSpace).toBe('nowrap');
+                }
+              }
+              hero.className = heroClasses;
               for (const text of Array.from(doc.querySelectorAll('.initials'))) {
                 expect(contrast(view.getComputedStyle(text).color, view.getComputedStyle(text).backgroundColor)).toBeGreaterThanOrEqual(4.5);
               }
