@@ -162,7 +162,7 @@ describe('GeneralStatsComponent', () => {
     load();
     selectTeams();
     expect(component['cards']().map(card => card.id)).toEqual([
-      'evolution', 'share', 'points', 'contributions', 'wins-podiums', 'winners', 'one-lap', 'duels', 'double', 'reliability', 'penalties', 'average', 'finished'
+      'evolution', 'share', 'points', 'contributions', 'wins-podiums', 'winners', 'one-lap', 'duels', 'finished', 'double', 'reliability', 'penalties', 'average'
     ]);
     expect(root().querySelectorAll('article.chart-card').length).toBe(13);
     expect(card('points').data.labels).not.toContain('RB');

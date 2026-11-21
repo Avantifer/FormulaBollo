@@ -296,16 +296,21 @@ export function buildStatisticsCharts(overview: StatisticsOverview, teams: boole
     { stacked: true, note: 'Solo parejas identificadas; se excluyen vacantes. A la izquierda el piloto A, a la derecha el B.' });
     const extent = Math.max(1, ...shownDuels.flatMap(entry => [entry.aAhead, entry.bAhead]));
     duel.options.scales!['x'] = { min: -extent, max: extent, stacked: true, grid: { color: palette.rule }, ticks: { color: palette.soft, font: { size: 11 }, callback: value => String(Math.abs(Number(value))) } };
+    duel.options.plugins!.datalabels = {
+      display: context => Number(context.dataset.data[context.dataIndex]) !== 0,
+      color: palette.panel, anchor: 'center', align: 'center',
+      font: { size: 11, weight: 600 }, formatter: (value: number) => String(Math.abs(value))
+    };
     duel.options.plugins!.tooltip = { callbacks: { label: context => {
       const entry = shownDuels[context.dataIndex];
       return (context.datasetIndex === 0 ? entry.a + ': ' + entry.aAhead : entry.b + ': ' + entry.bAhead) + ' · Empates: ' + entry.tied;
     } } };
+    bars('finished', 'Carreras terminadas', 'Suma de llegadas a meta de los pilotos de cada equipo.', constructors, entry => entry.racesFinished, 'Una carrera con dos coches en meta cuenta como dos llegadas.');
     grouped('double', 'Sumar con los dos coches', 'Carreras con doble puntuación frente a carreras con doble podio.', entries,
       [{ label: 'Doble puntuación', value: entry => (entry as TeamStats).doublePoints, color: palette.soft }, { label: 'Dobles podios', value: entry => (entry as TeamStats).doublePodiums, color: palette.gold }]);
     reliability(entries);
     bars('penalties', 'Penalizaciones', 'Número de sanciones asignadas a cada constructor.', rank(constructors, entry => entry.penalties).slice(0, mobile ? 5 : undefined), entry => entry.penalties);
     lollipop(entries);
-    bars('finished', 'Carreras terminadas', 'Suma de llegadas a meta de los pilotos de cada equipo.', constructors, entry => entry.racesFinished, 'Una carrera con dos coches en meta cuenta como dos llegadas.');
   }
   return cards.filter(card => card.values.length > 0);
 }

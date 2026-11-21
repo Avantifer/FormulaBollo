@@ -52,6 +52,7 @@ export class GeneralStatsComponent implements OnChanges {
     const data = this.overview();
     return data ? buildStatisticsCharts(data, this.isTeams(), this.mobile(), this.theme.isDarkTheme(), this.palette()) : [];
   });
+  protected readonly hasTallCard = computed(() => this.cards().some(card => card.id === 'duels'));
   protected readonly keyFigures = computed(() => {
     const data = this.overview();
     if (!data) return [];

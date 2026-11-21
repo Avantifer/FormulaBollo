@@ -34,7 +34,7 @@
 		<h2>Lectura general · {{ seasonSelected().number === 0 ? 'Total' : 'Temporada ' + seasonSelected().number }}</h2>
 		<p>{{ overview()!.summary.finishedRaces }} de {{ overview()!.summary.raceCount }} carreras disputadas</p>
 	</header>
-	<div class="dashboard-grid">
+	<div class="dashboard-grid" [class.has-tall]="hasTallCard()">
 		@for (card of cards(); track card.id) {
 			<article class="chart-card" [class.span-8]="card.span === 8" [class.span-4]="card.span === 4" [attr.data-chart]="card.id">
 				<header class="card-heading">
@@ -44,7 +44,7 @@
 				<div class="chart-container" role="img" [attr.aria-label]="card.ariaLabel" [style.min-height.px]="card.height">
 					<p-chart [type]="card.type" [data]="card.data" [options]="card.options" [plugins]="plugins" width="100%" height="100%" aria-hidden="true" />
 				</div>
-				<ul [class]="card.type === 'doughnut' || card.type === 'line' || card.type === 'scatter' || card.type === 'bubble' || card.id === 'duels' ? 'chart-values' : 'sr-only'">
+				<ul [class]="card.type === 'doughnut' || card.type === 'line' || card.type === 'scatter' || card.type === 'bubble' ? 'chart-values' : 'sr-only'">
 					@for (value of card.values; track $index) {
 						<li>
 							<span class="value-label">
