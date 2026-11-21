@@ -244,7 +244,7 @@ class StatisticsServiceJpaTest {
     }
 
     @Test
-    void evolutionIncludesSprintsAndOnlyFinishedRacesAndSelectsTopEightWithNameTies() {
+    void evolutionIncludesSprintsAndOnlyFinishedRacesAndAllDriversOrderedByPointsWithNameTies() {
         Season season = season(1);
         Team alpha = team("Alpha", season);
         Team beta = team("Beta", season);
@@ -272,8 +272,12 @@ class StatisticsServiceJpaTest {
         assertThat(overview.getDrivers()).extracting(dto -> dto.getDriver().getName())
                 .containsExactly("Driver 0", "Driver 1", "Driver 2", "Driver 3", "Driver 4",
                         "Driver 5", "Driver 6", "Driver 7", "Driver 8", "Driver 9");
-        assertThat(overview.getDriverEvolution().getSeries()).hasSize(8);
+        assertThat(overview.getDriverEvolution().getSeries()).extracting(series -> series.getDriver().getName())
+                .containsExactly("Driver 0", "Driver 1", "Driver 2", "Driver 3", "Driver 4",
+                        "Driver 5", "Driver 6", "Driver 7", "Driver 8", "Driver 9");
         assertThat(overview.getDriverEvolution().getSeries().getFirst().getCumulative()).containsExactly(33, 58);
+        assertThat(overview.getDriverEvolution().getSeries()).filteredOn(series -> series.getDriver().getName().equals("Driver 9"))
+                .singleElement().satisfies(series -> assertThat(series.getCumulative()).containsExactly(25, 25));
         assertThat(overview.getDriverEvolution().getSeries()).allSatisfy(series ->
                 assertThat(series.getCumulative().getLast()).isEqualTo(driver(overview, series.getDriver().getName()).getTotalPoints()));
         assertThat(overview.getTeamEvolution().getSeries()).hasSize(2).allSatisfy(series ->
