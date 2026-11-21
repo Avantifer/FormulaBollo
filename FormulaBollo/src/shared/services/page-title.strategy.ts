@@ -12,6 +12,8 @@ export function driverSeasonTitle(name: string, season: number): string {
   return `${name} · ${season ? `Temporada ${season}` : 'Total'} · FormulaBollo`;
 }
 
+export const teamSeasonTitle = driverSeasonTitle;
+
 @Injectable()
 export class PageTitleStrategy extends TitleStrategy {
   private readonly title = inject(Title);
@@ -22,7 +24,7 @@ export class PageTitleStrategy extends TitleStrategy {
     while (route.firstChild) route = route.firstChild;
     // The season selector navigates with query parameters. Preserve its title
     // when the router finishes that navigation, including returning to Total.
-    if (route.routeConfig?.path === 'drivers/:name' && pageTitle) {
+    if (['drivers/:name', 'teams/:name'].includes(route.routeConfig?.path ?? '') && pageTitle) {
       const season = route.queryParamMap.get('season');
       this.title.setTitle(driverSeasonTitle(pageTitle, season && /^\d+$/.test(season) ? Number(season) : 0));
       return;

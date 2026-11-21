@@ -1,0 +1,85 @@
+:host { display: block; min-width: 0; }
+
+.team-hero, .loading-hero { min-height: 26.875rem; }
+.team-hero { display: grid; padding: 1.375rem 1.25rem; align-content: start; }
+.team-name { font-size: clamp(2rem, 10vw, 2.875rem); line-height: 1; overflow-wrap: anywhere; }
+.team-badge { background: #E9ECEF; padding: 4px; border: 1px solid var(--rule); }
+.hero-art { order: 3; position: relative; height: 10.625rem; min-width: 0; }
+.hero-car { width: 17.5rem; max-width: none; height: 9.6875rem; right: -1.25rem; }
+.hero-number { right: 0; bottom: -0.1em; font-size: 12.5rem; opacity: 0.13; }
+.hero-drivers { display: grid; grid-template-columns: auto auto minmax(0, 1fr) minmax(3rem, 0.5fr) auto; column-gap: 0.375rem; width: 100%; max-width: 35rem; margin-top: 1.25rem; }
+.driver-entry, .driver-row { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; align-items: center; }
+.driver-entry + .driver-entry { border-top: 1px solid rgba(0, 0, 0, 0.25); }
+.driver-row { min-height: 3.25rem; color: inherit; text-decoration: none; }
+.driver-avatar { width: 2rem; height: 2rem; }
+.driver-rank, .driver-points { font-size: 1.375rem; line-height: 1; }
+.driver-label { font-size: 0.75rem; }
+.driver-number { flex-shrink: 0; margin-inline-start: 0.5rem; font-size: 0.75rem; font-weight: 400; white-space: nowrap; }
+.driver-unit { font-size: 0.625rem; }
+.driver-track { height: 4px; background: rgba(0, 0, 0, 0.18); }
+.driver-fill { background: currentColor; }
+a.driver-row:hover .driver-label, a.driver-row:focus-visible .driver-label { text-decoration: underline; text-underline-offset: 3px; }
+.driver-row:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; border-radius: var(--radius-row); }
+@media (prefers-reduced-motion: reduce) {
+  .driver-row, .driver-fill { animation: none; transition: none; }
+}
+
+.stat { padding: 1rem; border-right: 1px solid var(--rule); container-type: inline-size; }
+.stat dt, .stat dd { overflow-wrap: anywhere; }
+.stat:nth-child(even) { border-right: 0; }
+.stat:nth-child(n + 3) { border-top: 1px solid var(--rule); }
+.key-stats dd { font-size: clamp(1.75rem, 30cqi, 3.5rem); line-height: 1.1; }
+.secondary-stats dt { min-height: 2.5rem; }
+.secondary-stats dd { font-size: clamp(1.5rem, 24cqi, 1.875rem); }
+.classification-stat dd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem; }
+.classification-total { white-space: nowrap; }
+.has-classification {
+  .classification-stat { grid-column: 1 / -1; border-right: 0; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .classification-stat dd { margin-top: 0; font-size: 2.5rem; flex-shrink: 0; }
+  .stat:nth-child(n + 2) { border-top: 1px solid var(--rule); }
+  .stat:nth-child(even) { border-right: 1px solid var(--rule); }
+  .stat:nth-child(odd) { border-right: 0; }
+}
+
+.timeline-rule { position: absolute; top: 0; bottom: 0; left: 0.5rem; width: 1px; background: var(--rule); z-index: 0; }
+.timeline-dot { left: calc(-1rem + 0.5px); top: 1.75rem; transform: translateX(-50%); box-shadow: 0 0 0 2px var(--canvas); z-index: 1; }
+.race-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem 0.5rem; align-items: center; }
+.race-circuit { grid-column: 1; grid-row: 1; }
+.race-circuit h3, .race-circuit time { overflow-wrap: anywhere; }
+.race-marks { grid-column: 1; grid-row: 2; }
+.race-score { grid-column: 2; grid-row: 1; grid-template-columns: 2.5rem max(3rem, 2ch + 1em); font-size: 1.5rem; }
+.results-link { grid-column: 2; grid-row: 2; }
+
+@media (min-width: 640px) {
+  .team-hero, .loading-hero { min-height: 19.125rem; }
+  .team-hero { grid-template-columns: minmax(0, 55%) minmax(0, 45%); padding: 1.75rem 2rem; }
+  .hero-identity, .hero-drivers { grid-column: 1; }
+  .team-name { font-size: clamp(2.5rem, 6vw, 4.75rem); }
+  .hero-art { position: absolute; inset: 0; height: auto; pointer-events: none; }
+  .hero-car { width: 28.75rem; max-width: 44%; height: 13.125rem; right: -1.125rem; }
+  .hero-number { right: 2.8125rem; bottom: -0.12em; font-size: 18.75rem; }
+  .hero-drivers { margin-top: 1.25rem; column-gap: 0.625rem; }
+  .driver-row { min-height: 2.75rem; }
+  .driver-label { font-size: 0.875rem; }
+  .driver-number { font-size: 0.875rem; }
+  .driver-unit { font-size: 0.6875rem; }
+
+}
+
+@media (min-width: 768px) {
+  .stat { padding: 1.25rem; }
+  .stat:nth-child(n) { border-top: 0; border-right: 1px solid var(--rule); }
+  .stat:last-child { border-right: 0; }
+  .key-stats.has-classification {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    .classification-stat { grid-column: auto; display: block; }
+    .stat { border-top: 0; border-right: 1px solid var(--rule); }
+    .stat:last-child { border-right: 0; }
+    .classification-stat dd { margin-top: 0.5rem; font-size: clamp(1.75rem, 30cqi, 3.5rem); }
+  }
+}
+
+@media (min-width: 1024px) {
+  .race-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto auto; column-gap: 1.5rem; }
+  .race-circuit, .race-marks, .race-score, .results-link { grid-column: auto; grid-row: auto; }
+}
