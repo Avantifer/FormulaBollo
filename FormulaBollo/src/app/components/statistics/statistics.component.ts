@@ -1,11 +1,7 @@
-import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { ButtonModule } from 'primeng/button';
-import { SelectButtonModule } from 'primeng/selectbutton';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { SelectSeasonsComponent } from '../../../shared/components/select-seasons/select-seasons.component';
 import { Season } from '../../../shared/models/season';
-import { RecordsComponent } from "./records/records.component";
+import { RecordsComponent } from './records/records.component';
 import { GeneralStatsComponent } from './general-stats/general-stats.component';
 import { EvolutionStatsComponent } from './evolution-stats/evolution-stats.component';
 import { environment } from '../../../enviroments/enviroment';
@@ -13,40 +9,40 @@ import { ComparativeStatsComponent } from './comparative-stats/comparative-stats
 
 @Component({
   selector: 'app-statistics',
-  standalone: true,
-  imports: [
-    FormsModule,
-    CommonModule,
-    ButtonModule,
-    SelectButtonModule,
-    SelectSeasonsComponent,
-    RecordsComponent,
-    GeneralStatsComponent,
-    EvolutionStatsComponent,
-    ComparativeStatsComponent
-  ],
+  imports: [SelectSeasonsComponent, RecordsComponent, GeneralStatsComponent, EvolutionStatsComponent, ComparativeStatsComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './statistics.component.html',
-  styleUrls: ['./statistics.component.scss']
+  styleUrl: './statistics.component.scss'
 })
 export class StatisticsComponent {
-  protected selectedTab: string = 'general';
+  protected readonly selectedTab = signal('general');
   protected readonly tabs = [
-    { label: 'General', icon: 'pi pi-chart-bar', value: 'general' },
-    { label: 'Evolución', icon: 'pi pi-chart-line', value: 'evolucion' },
-    { label: 'Comparativa', icon: 'pi pi-sort-alt', value: 'comparative' },
-    { label: 'Récords', icon: 'pi pi-trophy', value: 'records' },
+    { label: 'General', value: 'general' },
+    { label: 'Evolución', value: 'evolucion' },
+    { label: 'Comparativa', value: 'comparative' },
+    { label: 'Récords', value: 'records' }
   ];
-  protected readonly listOptions: any[] = [
-    { icon: 'pi pi-user', value: 'Pilotos' },
-    { icon: 'pi pi-car', value: 'Equipos' }
-  ];
+  protected readonly listOptions = ['Pilotos', 'Equipos'];
+  protected readonly typeSelected = signal('Pilotos');
+  protected readonly seasonSelected = signal(new Season(0, 'Total', 0));
+  protected readonly seasonEvolucionSelected = signal(environment.seasonActual);
 
-  protected typeSelected: string = 'Pilotos';
-  protected seasonSelected: Season = new Season(0, "Total", 0);
-  protected seasonEvolucionSelected: Season = environment.seasonActual;
+  onSeasonChange(season: Season): void {
+    if (this.selectedTab() === 'general') this.seasonSelected.set(season);
+    if (season.number !== 0) this.seasonEvolucionSelected.set(season);
+  }
 
-  onSeasonChange(newSeason: Season): void {
-    this.seasonSelected = newSeason;
-    this.seasonEvolucionSelected = newSeason;
+  protected onTabKeydown(event: KeyboardEvent, index: number): void {
+    let next: number;
+    switch (event.key) {
+      case 'ArrowRight': next = (index + 1) % this.tabs.length; break;
+      case 'ArrowLeft': next = (index + this.tabs.length - 1) % this.tabs.length; break;
+      case 'Home': next = 0; break;
+      case 'End': next = this.tabs.length - 1; break;
+      default: return;
+    }
+    event.preventDefault();
+    this.selectedTab.set(this.tabs[next].value);
+    (event.currentTarget as HTMLElement).parentElement!.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next].focus();
   }
 }
