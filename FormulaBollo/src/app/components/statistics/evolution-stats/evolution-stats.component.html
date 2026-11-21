@@ -1,32 +1,62 @@
-<div class="min-w-0 bg-panel border border-rule rounded-panel p-6 my-6">
-	@if (typeSelected === 'Pilotos') {
-		<h2 class="font-display uppercase tracking-wide text-ink text-lg font-semibold">Seleccionar pilotos para mostrar en la evolución:</h2>
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 my-3">
-			@for (1 of [1, 2, 3, 4]; track $index) {
-				<div>
-					<span class="block text-sm font-medium text-ink-soft mb-2">Piloto {{ $index + 1 }}</span>
-					<select-drivers (driverChanged)="onDriverChange($event, $index)" [position]="$index" [season]="seasonSelected" />
-				</div>
+<p class="sr-only" aria-live="polite" aria-atomic="true">{{ announcement() }}</p>
+@if (loadError()) {
+	<div role="alert" class="state-panel">
+		<p>No se pudieron cargar las estadísticas.</p>
+		<button type="button" class="retry-button" (click)="retry()">Reintentar</button>
+	</div>
+} @else if (loading()) {
+	<div aria-busy="true" aria-label="Cargando estadísticas">
+		<div class="selection-panel" aria-hidden="true"><p-skeleton width="100%" height="6rem" /></div>
+		<div class="dashboard-grid" aria-hidden="true">
+			@for (item of [0, 1, 2]; track item) {
+				<div class="chart-card" [class.span-12]="item === 0"><p-skeleton width="100%" height="20rem" /></div>
 			}
 		</div>
-	} @else {
-		<h2 class="font-display uppercase tracking-wide text-ink text-lg font-semibold">Seleccionar escuderías para mostrar en la evolución:</h2>
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 my-3">
-			@for (1 of [1, 2, 3, 4]; track $index) {
-				<div>
-					<span class="block text-sm font-medium text-ink-soft mb-2">Escudería {{ $index + 1 }}</span>
-					<select-teams (teamChanged)="onTeamChange($event, $index)" [position]="$index" [season]="seasonSelected" />
-				</div>
+	</div>
+} @else if (empty()) {
+	<div class="state-panel" role="status">Todavía no hay carreras disputadas en esta temporada.</div>
+} @else {
+	<section class="selection-panel" aria-labelledby="evolution-selection-heading">
+		<header class="selection-heading">
+			<div>
+				<h2 id="evolution-selection-heading">{{ isTeams() ? 'Comparar escuderías' : 'Comparar pilotos' }}</h2>
+				<p id="evolution-selection-help">Elige hasta 6 {{ noun() }} para comparar su evolución.</p>
+			</div>
+			<button type="button" class="reset-button" (click)="reset()">Restablecer</button>
+		</header>
+		<div class="comparison-chips" role="group" [attr.aria-label]="isTeams() ? 'Escuderias a comparar' : 'Pilotos a comparar'" aria-describedby="evolution-selection-help evolution-selection-limit">
+			@for (chip of chips(); track chip.id) {
+				<button type="button" class="comparison-chip" [attr.aria-pressed]="chip.selected" [disabled]="chip.disabled" (click)="toggle(chip.id)">
+					<svg class="swatch" viewBox="0 0 22 8" aria-hidden="true"><line x1="0" y1="4" x2="22" y2="4" [attr.stroke]="chip.color" [attr.stroke-dasharray]="chip.dash.join(' ') || null" /></svg>
+					<span>{{ chip.name }}</span>
+				</button>
 			}
 		</div>
-	}
-</div>
-<div class="min-w-0 bg-panel border border-rule rounded-panel p-6">
-	<div class="flex items-center mb-4">
-		<i class="pi pi-chart-line text-accent-text mr-2" style="font-size: 18px"></i>
-		<h2 class="font-display uppercase tracking-wide text-ink text-xl font-bold">Media de puntos por carrera</h2>
+		<p id="evolution-selection-limit" class="selection-limit">Máximo 6 · {{ selectedIds().length }} seleccionados · Mantén al menos uno.</p>
+	</section>
+	<div class="dashboard-grid">
+		@for (card of cards(); track card.id) {
+			<article class="chart-card" [class.span-12]="card.span === 12" [attr.data-chart]="card.id">
+				<header class="card-heading">
+					<h3 [id]="'evolution-heading-' + card.id">{{ card.title }}</h3>
+					<p>{{ card.description }}</p>
+				</header>
+				<div class="chart-container" role="img" [attr.aria-label]="card.ariaLabel" [attr.aria-describedby]="'evolution-values-' + card.id" [style.min-height.px]="card.height">
+					<p-chart type="line" [data]="card.data" [options]="card.options" [plugins]="plugins" width="100%" height="100%" aria-hidden="true" />
+				</div>
+				<ul class="chart-values" [id]="'evolution-values-' + card.id">
+					@for (value of card.values; track value.label) {
+						<li>
+							<span class="value-label">
+								<svg class="swatch" viewBox="0 0 22 8" aria-hidden="true"><line x1="0" y1="4" x2="22" y2="4" [attr.stroke]="value.color" [attr.stroke-dasharray]="value.dash?.join(' ') || null" /></svg>
+								{{ value.label }}
+							</span>
+							<span class="tabular-nums">{{ value.value }}</span>
+						</li>
+					}
+				</ul>
+				<p class="chart-note">{{ card.note }}</p>
+			</article>
+		}
 	</div>
-	<div class="h-[500px]">
-		<p-chart type="line" [data]="dataDriversEvolutionPoints" [options]="lineChartOptions" style="width: 100%; height: 100%" />
-	</div>
-</div>
+}

@@ -7,7 +7,6 @@ import { Team } from "../../models/team";
 import { TeamWithDrivers } from "../../models/teamWithDrivers";
 import { TeamInfo } from "../../models/teamInfo";
 import { CacheService } from "../cache.service";
-import { TeamEvolutionPoints } from "../../models/teamEvolutionPoints";
 
 @Injectable({
   providedIn: "root",
@@ -45,12 +44,5 @@ export class TeamApiService {
 
     const params = this.baseApiService.createParams({ season: seasonNumber });
     return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<TeamInfo[]>(`${environment.apiUrl}${this.endpoint}/allInfoTeam`, { params }));
-  }
-
-  getEvolutionPointsTeams(team1Id: number, team2Id: number, team3Id: number, team4Id: number, season: number): Observable<TeamEvolutionPoints[]> {
-    const cacheKey: string = `evolutionTeams-${team1Id}-${team2Id}-${team3Id}-${team4Id}-${season}`;
-
-    const params = this.baseApiService.createParams({ team1Id: team1Id, team2Id: team2Id, team3Id: team3Id, team4Id: team4Id });
-    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<TeamEvolutionPoints[]>(`${environment.apiUrl}${this.endpoint}/evolutionPoints`, { params }));
   }
 }

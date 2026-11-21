@@ -22,8 +22,8 @@ export class StatisticsComponent {
     { label: 'Comparativa', value: 'comparative' },
     { label: 'Récords', value: 'records' }
   ];
-  protected readonly listOptions = ['Pilotos', 'Equipos'];
-  protected readonly typeSelected = signal('Pilotos');
+  protected readonly listOptions = ['Pilotos', 'Equipos'] as const;
+  protected readonly typeSelected = signal<'Pilotos' | 'Equipos'>('Pilotos');
   protected readonly seasonSelected = signal(new Season(0, 'Total', 0));
   protected readonly seasonEvolucionSelected = signal(environment.seasonActual);
 

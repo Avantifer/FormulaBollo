@@ -14,7 +14,8 @@ export class StatisticsApiService {
 
   getOverview(season: number): Observable<StatisticsOverview> {
     const params = this.baseApiService.createParams({ season });
-    return this.cacheService.getOrLoad('statisticsOverview-' + season, () =>
+    // Increment v2 if the overview response shape changes again.
+    return this.cacheService.getOrLoad('statisticsOverview-v2-' + season, () =>
       this.httpClient.get<StatisticsOverview>(environment.apiUrl + '/statistics/overview', { params }));
   }
 }
