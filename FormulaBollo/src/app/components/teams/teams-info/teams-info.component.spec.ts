@@ -328,7 +328,8 @@ describe('TeamsInfoComponent', () => {
     rows.forEach((row, index) => {
       const result = info.last5Results[index];
       const dot = row.querySelector('.timeline-dot')!;
-      expect(dot.classList.contains('bg-sector-up')).toBeTrue();
+      expect(dot.classList.contains('bg-McLaren')).toBeTrue();
+      expect(dot.classList.contains('bg-sector-up')).toBeFalse();
       expect(dot.getAttribute('aria-hidden')).toBe('true');
       expect(row.querySelector('.position')!.textContent!.trim()).toBe('Posición ' + [4, 1, 1, 2, 2][index]);
       expect(row.querySelector('h3')!.textContent).toBe(result.race.name);
@@ -674,7 +675,8 @@ describe('TeamsInfoComponent', () => {
                 expect(view.getComputedStyle(position).borderTopWidth).toBe('1px');
                 expect(view.getComputedStyle(position).borderRadius).toBe(view.getComputedStyle(doc.querySelector('.results-link')!).borderRadius);
                 expect(view.getComputedStyle(points).fontSize).toBe('24px');
-                expect(view.getComputedStyle(dot).backgroundColor).toBe(view.getComputedStyle(points).color);
+                expect(dot.classList.contains('bg-' + sample.name.replaceAll(' ', '_'))).toBeTrue();
+                expect(dot.classList.contains('bg-sector-up')).toBeFalse();
                 expect(dot.getBoundingClientRect().width).toBe(10);
                 expect(view.getComputedStyle(score).gridColumnStart).toBe(width < 1024 ? '2' : 'auto');
                 expect(view.getComputedStyle(score).gridRowStart).toBe(width < 1024 ? '1' : 'auto');
