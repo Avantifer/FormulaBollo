@@ -25,6 +25,10 @@ public class Constants {
     public static final String TAG_DRIVER = "Drivers";
     public static final String TAG_DRIVER_SUMMARY = "Operations related with drivers";
 
+    public static final String TAG_STATISTICS = "Statistics";
+    public static final String TAG_STATISTICS_SUMMARY = "Operations related with statistics";
+    public static final String STATISTICS_OVERVIEW_SUMMARY = "Get statistics overview";
+
     public static final String TAG_PENALTY = "Penalties";
     public static final String TAG_PENALTY_SUMMARY = "Operations related with penalties";
 
@@ -58,6 +62,7 @@ public class Constants {
     public static final String ENDPOINT_CIRCUIT = "/circuits";
     public static final String ENDPOINT_CONFIGURATION = "/configurations";
     public static final String ENDPOINT_DRIVER = "/drivers";
+    public static final String ENDPOINT_STATISTICS = "/statistics";
     public static final String ENDPOINT_PENALTY = "/penalties";
     public static final String ENDPOINT_PENALTY_SEVERITY = "/penaltiesSeverity";
     public static final String ENDPOINT_RACE = "/races";

@@ -12,6 +12,13 @@ import formula.bollo.model.RecordDTO;
 @Repository
 public interface PenaltyRepository extends JpaRepository<Penalty, Long> {
 
+    @Query("""
+            SELECT p FROM Penalty p JOIN FETCH p.penaltySeverity JOIN FETCH p.driver d JOIN FETCH d.season
+            JOIN FETCH d.team t LEFT JOIN FETCH t.season JOIN FETCH p.season
+            WHERE (:season = 0 OR p.season.number = :season) ORDER BY p.id
+            """)
+    List<Penalty> findForStatistics(int season);
+
     @Query(value = "SELECT COUNT(p) FROM Penalty p WHERE p.driver.id IN :driverIds")
     int findByDriverIds(List<Long> driverIds);
 

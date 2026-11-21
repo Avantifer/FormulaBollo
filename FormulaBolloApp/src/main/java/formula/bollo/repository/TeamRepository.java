@@ -11,6 +11,12 @@ import formula.bollo.entity.Team;
 @Repository
 public interface TeamRepository extends JpaRepository<Team, Long> {
 
+    @Query("""
+            SELECT t FROM Team t JOIN FETCH t.season
+            WHERE (:season = 0 OR t.season.number = :season) ORDER BY t.id
+            """)
+    List<Team> findForStatistics(int season);
+
     @Query("SELECT t FROM Team t LEFT JOIN FETCH t.season WHERE t.id IN :teamIds")
     List<Team> findWithSeasonByIdIn(List<Long> teamIds);
     

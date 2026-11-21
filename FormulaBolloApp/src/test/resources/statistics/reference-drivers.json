@@ -1,0 +1,2864 @@
+{
+  "seasons": [
+    {
+      "number": 1,
+      "year": 2023,
+      "races": [
+        {
+          "name": "Baréin",
+          "date": "2023-04-09T12:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Bubapu",
+              "Red Bull",
+              1,
+              25,
+              0,
+              1
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              null,
+              null,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Jeddah",
+          "date": "2023-04-16T12:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Ferrari",
+              2,
+              20,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Red Bull",
+              4,
+              13,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              12,
+              4,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Melbourne",
+          "date": "2023-04-30T17:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Bubapu",
+              "Red Bull",
+              2,
+              20,
+              0,
+              1
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              6,
+              10,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Shangai",
+          "date": "2023-05-07T12:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Bubapu",
+              "Red Bull",
+              3,
+              16,
+              1,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              4,
+              13,
+              0,
+              1
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Bakú",
+          "date": "2023-05-14T16:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Ferrari",
+              2,
+              20,
+              0,
+              1
+            ],
+            [
+              "Bubapu",
+              "Red Bull",
+              4,
+              13,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Miami",
+          "date": "2023-05-21T12:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Ferrari",
+              1,
+              25,
+              0,
+              1
+            ],
+            [
+              "Bubapu",
+              "Red Bull",
+              2,
+              20,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              5,
+              11,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Imola",
+          "date": "2023-05-28T18:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Bubapu",
+              "Red Bull",
+              3,
+              16,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              10,
+              6,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Mónaco",
+          "date": "2023-06-04T18:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Ferrari",
+              2,
+              20,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Red Bull",
+              6,
+              10,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              7,
+              9,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Barcelona",
+          "date": "2023-06-11T21:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Bubapu",
+              "Red Bull",
+              1,
+              25,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              2,
+              20,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Montreal",
+          "date": "2023-06-18T12:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Bubapu",
+              "Red Bull",
+              4,
+              13,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              5,
+              11,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              8,
+              8,
+              1,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Red Bull Ring",
+          "date": "2023-06-25T21:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Ferrari",
+              4,
+              13,
+              0,
+              1
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              6,
+              10,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Red Bull",
+              19,
+              0,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Silverstone",
+          "date": "2023-07-02T21:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "Williams",
+              7,
+              9,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              8,
+              8,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Red Bull",
+              15,
+              1,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Hungaroring ",
+          "date": "2023-07-09T21:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Bubapu",
+              "Red Bull",
+              1,
+              25,
+              1,
+              1
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              4,
+              13,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              6,
+              10,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Spa-Francorchamps",
+          "date": "2023-07-16T21:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Ferrari",
+              3,
+              16,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              8,
+              8,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Red Bull",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [
+            [
+              "SmokingWeed",
+              "Williams",
+              2,
+              7
+            ],
+            [
+              "Bubapu",
+              "Red Bull",
+              null,
+              null
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              null,
+              null
+            ]
+          ],
+          "penalties": []
+        },
+        {
+          "name": "Zandvoort",
+          "date": "2023-07-30T21:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Ferrari",
+              4,
+              13,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              9,
+              7,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Red Bull",
+              12,
+              4,
+              1,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": [
+            [
+              "Robe",
+              "Aviso"
+            ]
+          ]
+        },
+        {
+          "name": "Monza",
+          "date": "2023-08-20T15:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Bubapu",
+              "Red Bull",
+              1,
+              25,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              5,
+              11,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Marina Bay",
+          "date": "2023-09-10T21:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Bubapu",
+              "Red Bull",
+              2,
+              20,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              4,
+              13,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              7,
+              9,
+              0,
+              1
+            ]
+          ],
+          "sprints": [],
+          "penalties": [
+            [
+              "Bubapu",
+              "Aviso"
+            ],
+            [
+              "SmokingWeed",
+              "Grave"
+            ],
+            [
+              "Robe",
+              "Grave"
+            ]
+          ]
+        },
+        {
+          "name": "Suzuka",
+          "date": "2023-09-17T20:41:50",
+          "finished": 1,
+          "results": [
+            [
+              "Bubapu",
+              "Red Bull",
+              1,
+              25,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              6,
+              10,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              8,
+              8,
+              1,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Francia",
+          "date": "2023-09-24T19:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Ferrari",
+              2,
+              20,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Red Bull",
+              3,
+              16,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              6,
+              10,
+              0,
+              0
+            ]
+          ],
+          "sprints": [
+            [
+              "Robe",
+              "Ferrari",
+              1,
+              8
+            ],
+            [
+              "Bubapu",
+              "Red Bull",
+              3,
+              6
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              8,
+              1
+            ]
+          ],
+          "penalties": []
+        },
+        {
+          "name": "Américas",
+          "date": "2023-10-01T11:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Bubapu",
+              "Red Bull",
+              1,
+              25,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              2,
+              20,
+              1,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              15,
+              1,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "México",
+          "date": "2023-10-08T19:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Ferrari",
+              1,
+              25,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              3,
+              16,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Red Bull",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Sao Paulo",
+          "date": "2023-10-15T16:13:08",
+          "finished": 1,
+          "results": [
+            [
+              "Bubapu",
+              "Red Bull",
+              2,
+              20,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              7,
+              9,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              11,
+              5,
+              0,
+              0
+            ]
+          ],
+          "sprints": [
+            [
+              "Bubapu",
+              "Red Bull",
+              1,
+              8
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              2,
+              7
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              null,
+              null
+            ]
+          ],
+          "penalties": []
+        },
+        {
+          "name": "Portimao",
+          "date": "2023-11-05T12:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Ferrari",
+              1,
+              25,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "Williams",
+              3,
+              16,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Red Bull",
+              4,
+              13,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Yas Marina",
+          "date": "2023-11-26T20:27:36",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "Williams",
+              2,
+              40,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Red Bull",
+              4,
+              26,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              6,
+              20,
+              0,
+              1
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "year": 2024,
+      "races": [
+        {
+          "name": "Baréin",
+          "date": "2024-03-03T18:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Alpine",
+              3,
+              16,
+              0,
+              1
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              4,
+              13,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              6,
+              10,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": [
+            [
+              "Robe",
+              "Aviso"
+            ]
+          ]
+        },
+        {
+          "name": "Jeddah",
+          "date": "2024-03-10T12:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Alpine",
+              2,
+              20,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              null,
+              null,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Melbourne",
+          "date": "2024-03-31T20:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              1,
+              25,
+              1,
+              1
+            ],
+            [
+              "Robe",
+              "Alpine",
+              10,
+              6,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Suzuka",
+          "date": "2024-04-06T16:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Alpine",
+              2,
+              20,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              3,
+              16,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              7,
+              9,
+              0,
+              1
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Shangai",
+          "date": "2024-04-21T12:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Alpine",
+              1,
+              25,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              2,
+              20,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              6,
+              10,
+              0,
+              0
+            ]
+          ],
+          "sprints": [
+            [
+              "Robe",
+              "Alpine",
+              1,
+              8
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              3,
+              6
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              5,
+              4
+            ]
+          ],
+          "penalties": []
+        },
+        {
+          "name": "Miami",
+          "date": "2024-05-05T15:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Bubapu",
+              "Ferrari",
+              3,
+              16,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Alpine",
+              null,
+              null,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [
+            [
+              "Robe",
+              "Alpine",
+              1,
+              8
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              3,
+              6
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              5,
+              4
+            ]
+          ],
+          "penalties": []
+        },
+        {
+          "name": "Imola",
+          "date": "2024-05-19T13:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Bubapu",
+              "Ferrari",
+              2,
+              20,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Alpine",
+              9,
+              7,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Mónaco",
+          "date": "2024-05-26T18:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              2,
+              20,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Alpine",
+              3,
+              16,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Montreal",
+          "date": "2024-06-09T22:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              1,
+              25,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              8,
+              8,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Alpine",
+              12,
+              4,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Barcelona",
+          "date": "2024-06-23T18:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Bubapu",
+              "Ferrari",
+              1,
+              25,
+              1,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              9,
+              7,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Alpine",
+              11,
+              5,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Red Bull Ring",
+          "date": "2024-06-30T18:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              4,
+              13,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Alpine",
+              5,
+              11,
+              1,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              10,
+              6,
+              0,
+              0
+            ]
+          ],
+          "sprints": [
+            [
+              "Robe",
+              "Alpine",
+              2,
+              7
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              6,
+              3
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              7,
+              2
+            ]
+          ],
+          "penalties": []
+        },
+        {
+          "name": "Silverstone",
+          "date": "2024-07-07T20:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              1,
+              25,
+              0,
+              1
+            ],
+            [
+              "Robe",
+              "Alpine",
+              4,
+              13,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              7,
+              9,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Hungaroring ",
+          "date": "2024-07-21T18:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              1,
+              25,
+              0,
+              1
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              5,
+              11,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Alpine",
+              6,
+              10,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Spa-Francorchamps",
+          "date": "2024-07-28T05:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              3,
+              16,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Alpine",
+              6,
+              10,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": [
+            [
+              "Robe",
+              "Leve"
+            ]
+          ]
+        },
+        {
+          "name": "Zandvoort",
+          "date": "2024-08-25T16:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Alpine",
+              7,
+              9,
+              1,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              8,
+              8,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Monza",
+          "date": "2024-09-01T10:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Alpine",
+              1,
+              25,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              3,
+              16,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              4,
+              13,
+              1,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Bakú",
+          "date": "2024-09-15T18:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Bubapu",
+              "Ferrari",
+              1,
+              25,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              3,
+              16,
+              1,
+              0
+            ],
+            [
+              "Robe",
+              "Alpine",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": [
+            [
+              "SmokingWeed",
+              "Leve"
+            ]
+          ]
+        },
+        {
+          "name": "Marina Bay",
+          "date": "2024-09-22T12:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Alpine",
+              4,
+              13,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              5,
+              11,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              6,
+              10,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Portimao",
+          "date": "2024-09-29T14:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Alpine",
+              3,
+              16,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              5,
+              11,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Francia",
+          "date": "2024-10-12T18:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              2,
+              20,
+              0,
+              1
+            ],
+            [
+              "Robe",
+              "Alpine",
+              4,
+              13,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              5,
+              11,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Américas",
+          "date": "2024-10-20T16:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              2,
+              20,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Alpine",
+              6,
+              10,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              1,
+              8
+            ],
+            [
+              "Robe",
+              "Alpine",
+              11,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              null,
+              null
+            ]
+          ],
+          "penalties": []
+        },
+        {
+          "name": "México",
+          "date": "2024-10-27T17:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Bubapu",
+              "Ferrari",
+              2,
+              20,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Alpine",
+              5,
+              11,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              7,
+              9,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Sao Paulo",
+          "date": "2024-11-10T18:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              3,
+              16,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Alpine",
+              5,
+              11,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [
+            [
+              "Bubapu",
+              "Ferrari",
+              2,
+              7
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              4,
+              5
+            ],
+            [
+              "Robe",
+              "Alpine",
+              8,
+              1
+            ]
+          ],
+          "penalties": [
+            [
+              "SmokingWeed",
+              "Aviso"
+            ]
+          ]
+        },
+        {
+          "name": "Las Vegas",
+          "date": "2024-11-23T18:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              2,
+              20,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              3,
+              16,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Alpine",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Qatar",
+          "date": "2024-12-01T18:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              2,
+              20,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              3,
+              16,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Alpine",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              1,
+              8
+            ],
+            [
+              "Robe",
+              "Alpine",
+              11,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              14,
+              0
+            ]
+          ],
+          "penalties": []
+        },
+        {
+          "name": "Yas Marina",
+          "date": "2024-12-08T17:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              2,
+              40,
+              0,
+              1
+            ],
+            [
+              "Robe",
+              "Alpine",
+              3,
+              32,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              5,
+              22,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "year": 2025,
+      "races": [
+        {
+          "name": "Melbourne",
+          "date": "2025-03-16T11:30:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              3,
+              15,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              6,
+              8,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Kick Sauber",
+              7,
+              6,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Shangai",
+          "date": "2025-03-20T20:30:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              1,
+              25,
+              1,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              3,
+              15,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Kick Sauber",
+              9,
+              2,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              1,
+              8
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              7,
+              2
+            ],
+            [
+              "Robe",
+              "Kick Sauber",
+              8,
+              1
+            ]
+          ],
+          "penalties": []
+        },
+        {
+          "name": "Suzuka",
+          "date": "2025-03-30T10:30:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              1,
+              25,
+              0,
+              1
+            ],
+            [
+              "Robe",
+              "Kick Sauber",
+              4,
+              12,
+              1,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              5,
+              10,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Baréin",
+          "date": "2025-04-03T19:30:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              1,
+              25,
+              0,
+              1
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              2,
+              18,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Kick Sauber",
+              7,
+              6,
+              1,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Jeddah",
+          "date": "2025-04-20T16:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Bubapu",
+              "Ferrari",
+              1,
+              25,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              2,
+              18,
+              0,
+              1
+            ],
+            [
+              "Robe",
+              "Kick Sauber",
+              null,
+              null,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Miami",
+          "date": "2025-04-27T19:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Bubapu",
+              "Ferrari",
+              2,
+              18,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              4,
+              12,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Kick Sauber",
+              null,
+              null,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [
+            [
+              "Robe",
+              "Ferrari",
+              6,
+              3
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              8,
+              1
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              null,
+              null
+            ]
+          ],
+          "penalties": []
+        },
+        {
+          "name": "Imola",
+          "date": "2025-05-04T18:15:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              2,
+              18,
+              0,
+              1
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              5,
+              10,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              6,
+              8,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Kick Sauber",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Mónaco",
+          "date": "2025-05-16T19:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              1,
+              25,
+              0,
+              1
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              3,
+              15,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Kick Sauber",
+              null,
+              null,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Barcelona",
+          "date": "2025-05-25T10:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Ferrari",
+              4,
+              12,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              5,
+              10,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              9,
+              2,
+              0,
+              1
+            ],
+            [
+              "Robe",
+              "Kick Sauber",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": [
+            [
+              "Robe",
+              "Grave"
+            ]
+          ]
+        },
+        {
+          "name": "Montreal",
+          "date": "2025-06-01T19:30:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              2,
+              18,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              3,
+              15,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Kick Sauber",
+              null,
+              null,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": [
+            [
+              "Robe",
+              "Leve"
+            ]
+          ]
+        },
+        {
+          "name": "Red Bull Ring",
+          "date": "2025-06-23T20:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Ferrari",
+              1,
+              25,
+              1,
+              1
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              2,
+              18,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              5,
+              10,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Kick Sauber",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": [
+            [
+              "Bubapu",
+              "Grave"
+            ]
+          ]
+        },
+        {
+          "name": "Silverstone",
+          "date": "2025-07-29T18:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Ferrari",
+              1,
+              25,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              3,
+              15,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              6,
+              8,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Kick Sauber",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Spa-Francorchamps",
+          "date": "2025-07-27T09:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Kick Sauber",
+              1,
+              25,
+              0,
+              1
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              2,
+              18,
+              1,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              8,
+              4,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              1,
+              8
+            ],
+            [
+              "Robe",
+              "Kick Sauber",
+              3,
+              6
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              10,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              null,
+              null
+            ]
+          ],
+          "penalties": []
+        },
+        {
+          "name": "Hungaroring ",
+          "date": "2025-08-03T11:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              2,
+              18,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              3,
+              15,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              4,
+              12,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Kick Sauber",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Zandvoort",
+          "date": "2025-08-31T13:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Bubapu",
+              "Ferrari",
+              1,
+              25,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              2,
+              18,
+              0,
+              1
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              4,
+              12,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Kick Sauber",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Monza",
+          "date": "2025-09-07T13:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              1,
+              25,
+              1,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              4,
+              12,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Kick Sauber",
+              null,
+              null,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Bakú",
+          "date": "2025-09-21T11:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "SmokingWeed",
+              "McLaren",
+              1,
+              25,
+              1,
+              1
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              4,
+              12,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Kick Sauber",
+              null,
+              null,
+              0,
+              0
+            ],
+            [
+              "Robe",
+              "Ferrari",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Marina Bay",
+          "date": "2025-10-05T12:00:00",
+          "finished": 1,
+          "results": [
+            [
+              "Robe",
+              "Ferrari",
+              1,
+              25,
+              0,
+              0
+            ],
+            [
+              "Bubapu",
+              "Ferrari",
+              3,
+              15,
+              0,
+              0
+            ],
+            [
+              "SmokingWeed",
+              "McLaren",
+              6,
+              8,
+              0,
+              1
+            ],
+            [
+              "Robe",
+              "Kick Sauber",
+              null,
+              null,
+              0,
+              0
+            ]
+          ],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Américas",
+          "date": "2025-10-19T21:00:00",
+          "finished": 0,
+          "results": [],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "México",
+          "date": "2025-10-26T21:00:00",
+          "finished": 0,
+          "results": [],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Sao Paulo",
+          "date": "2025-11-09T18:00:00",
+          "finished": 0,
+          "results": [],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Las Vegas",
+          "date": "2025-11-23T05:00:00",
+          "finished": 0,
+          "results": [],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Qatar",
+          "date": "2025-11-30T17:00:00",
+          "finished": 0,
+          "results": [],
+          "sprints": [],
+          "penalties": []
+        },
+        {
+          "name": "Yas Marina",
+          "date": "2025-12-07T14:00:00",
+          "finished": 0,
+          "results": [],
+          "sprints": [],
+          "penalties": []
+        }
+      ]
+    }
+  ],
+  "expected": [
+    {
+      "name": "SmokingWeed",
+      "races": 68,
+      "dnfs": 9,
+      "poleWins": 7,
+      "hatTricks": 2,
+      "podiumStreak": 9,
+      "winStreak": 3,
+      "currentPodiumStreak": 0,
+      "posStd": 3.1,
+      "penaltiesBy": {
+        "Aviso": 1,
+        "Leve": 1,
+        "Grave": 1
+      },
+      "posDist": [
+        10,
+        15,
+        7,
+        3,
+        3,
+        6,
+        6,
+        3,
+        3,
+        1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        9
+      ]
+    },
+    {
+      "name": "Bubapu",
+      "races": 68,
+      "dnfs": 10,
+      "poleWins": 2,
+      "hatTricks": 1,
+      "podiumStreak": 5,
+      "winStreak": 1,
+      "currentPodiumStreak": 1,
+      "posStd": 3.3,
+      "penaltiesBy": {
+        "Aviso": 1,
+        "Leve": 0,
+        "Grave": 1
+      },
+      "posDist": [
+        10,
+        9,
+        12,
+        8,
+        7,
+        5,
+        1,
+        2,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        10
+      ]
+    },
+    {
+      "name": "Robe",
+      "races": 68,
+      "dnfs": 12,
+      "poleWins": 3,
+      "hatTricks": 1,
+      "podiumStreak": 4,
+      "winStreak": 3,
+      "currentPodiumStreak": 1,
+      "posStd": 2.8,
+      "penaltiesBy": {
+        "Aviso": 2,
+        "Leve": 2,
+        "Grave": 2
+      },
+      "posDist": [
+        9,
+        7,
+        6,
+        12,
+        5,
+        6,
+        3,
+        2,
+        2,
+        1,
+        2,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        12
+      ]
+    }
+  ]
+}

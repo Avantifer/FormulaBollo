@@ -27,6 +27,13 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import formula.bollo.impl.DriverImpl;
 import formula.bollo.impl.ResultImpl;
+import formula.bollo.controller.StatisticsController;
+import formula.bollo.config.WebSocketConfig;
+import formula.bollo.repository.CacheRepository;
+import formula.bollo.repository.DriverRepository;
+import formula.bollo.repository.TeamRepository;
+import formula.bollo.repository.RaceRepository;
+import formula.bollo.repository.PenaltyRepository;
 import formula.bollo.repository.ResultRepository;
 import formula.bollo.repository.SprintRepository;
 import formula.bollo.utils.Constants;
@@ -66,6 +73,23 @@ class StatsCacheTest {
         SynchronizedStats synchronizedStats() {
             return new SynchronizedStats();
         }
+
+        @Bean
+        StatisticsController statisticsController(ResultRepository results, SprintRepository sprints) {
+            return new StatisticsController(new StatisticsService(mock(DriverRepository.class),
+                    mock(TeamRepository.class), mock(RaceRepository.class), results, sprints,
+                    mock(PenaltyRepository.class), mock(DriverService.class), mock(TeamService.class)));
+        }
+
+        @Bean
+        CacheService cacheService() {
+            return new CacheService(mock(CacheRepository.class));
+        }
+
+        @Bean
+        CacheNotifier cacheNotifier(CacheService cacheService) {
+            return new CacheNotifier(cacheService, mock(WebSocketConfig.CacheWebSocketHandler.class));
+        }
     }
 
     static class SynchronizedStats {
@@ -92,6 +116,28 @@ class StatsCacheTest {
 
     @Autowired
     private SynchronizedStats synchronizedStats;
+
+    @Autowired
+    private StatisticsController statisticsController;
+
+    @Autowired
+    private CacheNotifier cacheNotifier;
+
+    @Test
+    void overviewIsCachedPerSeasonAndPublishingEvictsIt() {
+        statisticsController.getOverview(1);
+        statisticsController.getOverview(1);
+        statisticsController.getOverview(2);
+        verify(resultRepository, times(1)).findForStatistics(1);
+        verify(resultRepository, times(1)).findForStatistics(2);
+
+        cacheNotifier.publish();
+
+        statisticsController.getOverview(1);
+        statisticsController.getOverview(2);
+        verify(resultRepository, times(2)).findForStatistics(1);
+        verify(resultRepository, times(2)).findForStatistics(2);
+    }
 
     @Test
     void statsAreCachedAndEvictedWhenResultsChange() {

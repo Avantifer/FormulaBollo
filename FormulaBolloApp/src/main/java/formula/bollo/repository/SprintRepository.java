@@ -13,6 +13,13 @@ import jakarta.transaction.Transactional;
 @Repository
 public interface SprintRepository extends JpaRepository<Sprint, Long> {
 
+    @Query("""
+            SELECT s FROM Sprint s JOIN FETCH s.race race JOIN FETCH race.season LEFT JOIN FETCH s.position
+            JOIN FETCH s.driver d JOIN FETCH d.season JOIN FETCH d.team t LEFT JOIN FETCH t.season
+            WHERE (:season = 0 OR race.season.number = :season) ORDER BY s.id
+            """)
+    List<Sprint> findForStatistics(int season);
+
     @Modifying
     @Transactional
     @Query("DELETE FROM Sprint s WHERE s.race.id = :raceId")
