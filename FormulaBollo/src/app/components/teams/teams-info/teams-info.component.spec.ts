@@ -322,10 +322,14 @@ describe('TeamsInfoComponent', () => {
     render();
     const rows = fixture.nativeElement.querySelectorAll('ol > .race-row') as NodeListOf<HTMLElement>;
     expect(rows.length).toBe(5);
+    expect(fixture.nativeElement.querySelector('.timeline-rule').getAttribute('aria-hidden')).toBe('true');
     expect(fixture.nativeElement.querySelector('h2').textContent).toBe('Últimas 5 carreras');
     expect(fixture.nativeElement.textContent).toContain('Solo se muestran carreras principales, no incluye carreras sprint');
     rows.forEach((row, index) => {
       const result = info.last5Results[index];
+      const dot = row.querySelector('.timeline-dot')!;
+      expect(dot.classList.contains('bg-sector-up')).toBeTrue();
+      expect(dot.getAttribute('aria-hidden')).toBe('true');
       expect(row.querySelector('.position')!.textContent!.trim()).toBe('Posición ' + [4, 1, 1, 2, 2][index]);
       expect(row.querySelector('h3')!.textContent).toBe(result.race.name);
       expect(row.querySelector('time')!.textContent).toBe('01/01/2026');
@@ -336,33 +340,77 @@ describe('TeamsInfoComponent', () => {
       expect(marks[1].textContent).toBe('Vuelta Rápida ' + (index % 2 ? 'Sí' : 'No'));
       expect(marks[0].classList.contains('text-sector-up')).toBe(index % 2 === 0);
       expect(marks[1].classList.contains('text-sector-up')).toBe(index % 2 === 1);
+      for (const [markIndex, icon] of ['pi-flag', 'pi-bolt'].entries()) {
+        expect(marks[markIndex].querySelector('i')!.classList.contains(icon)).toBeTrue();
+        expect(marks[markIndex].querySelector('i')!.getAttribute('aria-hidden')).toBe('true');
+        expect(marks[markIndex].classList.contains('border')).toBeFalse();
+        expect(marks[markIndex].classList.contains('text-ink-soft')).toBe(!marks[markIndex].classList.contains('text-sector-up'));
+      }
       expect(row.querySelector('.race-points')!.textContent).toBe('Puntos +20');
       const link = row.querySelector<HTMLAnchorElement>('.results-link')!;
       expect(link.getAttribute('href')).toBe('/results/' + result.race.name.replaceAll(' ', '_') + '/1');
       expect(link.getAttribute('aria-label')).toBe('Resultados de ' + result.race.name);
+      expect(link.querySelector('i')!.classList.contains('pi-arrow-up-right')).toBeTrue();
+      expect(link.querySelector('i')!.getAttribute('aria-hidden')).toBe('true');
     });
     expect(best).toHaveBeenCalled();
     expect(sum).toHaveBeenCalled();
   });
 
-  it('renders a dash when neither driver finished and handles a single result', () => {
+  for (const position of [1, 2, 3, 4, 10]) {
+    it('uses the driver podium colors only for race position ' + position, () => {
+      create();
+      const race = info.last5Results[0];
+      render({ ...info, last5Results: [{ ...race, results: race.results.map(result => ({
+        ...result, position: { ...result.position!, positionNumber: position }
+      })) }] });
+      const value: HTMLElement = fixture.nativeElement.querySelector('.position');
+      expect(value.textContent!.trim()).toBe('Posición ' + position);
+      for (const podium of [1, 2, 3]) expect(value.classList.contains('text-podium-' + podium)).toBe(position === podium);
+      expect(value.classList.contains('size-10')).toBeTrue();
+      expect(value.classList.contains('rounded-full')).toBeFalse();
+      expect(value.parentElement!.classList.contains('race-score')).toBeTrue();
+    });
+  }
+
+  it('renders an accessible dash for missing and sentinel positions and handles a single result', () => {
     create();
     const race = info.last5Results[0];
-    for (const results of [[], race.results.map(result => ({ ...result, position: null! }))]) {
+    for (const results of [[], race.results.map(result => ({ ...result, position: null! })),
+      race.results.map(result => ({ ...result, position: { id: 0, positionNumber: 99, points: 0 } }))]) {
       render({ ...info, last5Results: [{ ...race, results }] });
-      expect(fixture.nativeElement.querySelector('.position').textContent.trim()).toBe('Posición –');
+      const value: HTMLElement = fixture.nativeElement.querySelector('.position');
+      expect(value.textContent!.trim()).toBe('–Sin posición');
+      expect(value.querySelector('[aria-hidden="true"]')!.textContent).toBe('–');
+      expect(value.querySelector('.sr-only')!.textContent).toBe('Sin posición');
+      expect(value.textContent).not.toContain('99');
+      for (const podium of [1, 2, 3]) expect(value.classList.contains('text-podium-' + podium)).toBeFalse();
       expect(fixture.nativeElement.querySelector('.race-points').textContent).toBe('Puntos +0');
     }
     render({ ...info, last5Results: [{ ...race, results: [race.results[1]] }] });
     expect(fixture.nativeElement.querySelector('.position').textContent.trim()).toBe('Posición 4');
     expect(fixture.nativeElement.querySelector('.race-points').textContent).toBe('Puntos +12');
+    render({ ...info, last5Results: [{ ...race, results: [{ ...race.results[0], position: null! }, race.results[1]] }] });
+    expect(fixture.nativeElement.querySelector('.position').textContent.trim()).toBe('Posición 4');
+  });
+
+  it('hides the sentinel in the best position statistic with an accessible dash', () => {
+    create();
+    render({ ...info, bestPosition: 99 });
+    const cell = Array.from(fixture.nativeElement.querySelectorAll('.secondary-stats .stat') as NodeListOf<HTMLElement>)
+      .find(stat => stat.querySelector('dt')!.textContent === 'Mejor posición')!;
+    expect(cell.querySelector('dd')!.textContent).toBe('–Sin posición');
+    expect(cell.querySelector('[aria-hidden="true"]:not(i)')!.textContent).toBe('–');
+    expect(cell.querySelector('.sr-only')!.textContent).toBe('Sin posición');
   });
 
   it('renders the empty result message without a timeline', () => {
     create();
     render({ ...info, last5Results: [] });
     expect(fixture.nativeElement.querySelector('.race-timeline')).toBeNull();
-    expect(fixture.nativeElement.querySelector('.empty-results').textContent).toBe('No hay resultados disponibles');
+    const section = fixture.nativeElement.querySelector('[aria-labelledby="recent-races-title"]');
+    expect(section.querySelector('p.mt-8').textContent).toBe('No hay resultados disponibles');
+    expect(section.querySelector('.race-row, .results-link, .timeline-rule')).toBeNull();
   });
 
   async function open(season?: string): Promise<SelectSeasonsComponent> {
@@ -616,6 +664,22 @@ describe('TeamsInfoComponent', () => {
                 expect(contrast(view.getComputedStyle(text).color, view.getComputedStyle(panel).backgroundColor)).withContext(context + '/stat contrast').toBeGreaterThanOrEqual(4.5);
               }
               const canvas = view.getComputedStyle(doc.querySelector('.bg-canvas')!).backgroundColor;
+              for (const row of Array.from(doc.querySelectorAll<HTMLElement>('.race-row'))) {
+                const position = row.querySelector<HTMLElement>('.position')!;
+                const points = row.querySelector<HTMLElement>('.race-points')!;
+                const score = row.querySelector<HTMLElement>('.race-score')!;
+                const dot = row.querySelector<HTMLElement>('.timeline-dot')!;
+                expect(position.getBoundingClientRect().width).withContext(context + '/position width').toBe(40);
+                expect(position.getBoundingClientRect().height).withContext(context + '/position height').toBe(40);
+                expect(view.getComputedStyle(position).borderTopWidth).toBe('1px');
+                expect(view.getComputedStyle(position).borderRadius).toBe(view.getComputedStyle(doc.querySelector('.results-link')!).borderRadius);
+                expect(view.getComputedStyle(points).fontSize).toBe('24px');
+                expect(view.getComputedStyle(dot).backgroundColor).toBe(view.getComputedStyle(points).color);
+                expect(dot.getBoundingClientRect().width).toBe(10);
+                expect(view.getComputedStyle(score).gridColumnStart).toBe(width < 1024 ? '2' : 'auto');
+                expect(view.getComputedStyle(score).gridRowStart).toBe(width < 1024 ? '1' : 'auto');
+                expect(contrast(view.getComputedStyle(position).color, view.getComputedStyle(position).backgroundColor)).withContext(context + '/race position contrast').toBeGreaterThanOrEqual(4.5);
+              }
               for (const text of Array.from(doc.querySelectorAll('.race-marks > span, .race-points, time'))) {
                 expect(contrast(view.getComputedStyle(text).color, canvas)).withContext(context + '/race contrast').toBeGreaterThanOrEqual(4.5);
               }

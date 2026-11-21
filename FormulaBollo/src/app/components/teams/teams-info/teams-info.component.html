@@ -83,7 +83,7 @@
 					@for (stat of teamStatsArray().slice(4); track stat.key) {
 						<div class="stat min-w-0">
 							<dt class="flex items-start gap-2 font-display text-xs font-bold uppercase text-ink-soft"><i [class]="stat.icon" aria-hidden="true"></i><span>{{ stat.key }}</span></dt>
-							<dd class="m-0 mt-2 font-display text-3xl font-bold tabular-nums">{{ stat.value }}</dd>
+							<dd class="m-0 mt-2 font-display text-3xl font-bold tabular-nums">@if (stat.value === '–') {<span aria-hidden="true">–</span><span class="sr-only">Sin posición</span>} @else {<ng-container>{{ stat.value }}</ng-container>}</dd>
 						</div>
 					}
 				</dl>
@@ -95,12 +95,11 @@
 				</div>
 				@if (info.last5Results.length) {
 					<ol class="race-timeline relative m-0 list-none p-0">
+						<li class="timeline-rule" aria-hidden="true"></li>
 						@for (result of info.last5Results; track $index) {
 							@let position = getBestPosition(result.results);
-							<li class="race-row relative border-b border-rule last:border-0">
-								<span class="position relative z-10 inline-flex size-11 items-center justify-center rounded-full border bg-canvas font-display text-2xl font-bold tabular-nums" [class]="'border-' + teamClass">
-									<span class="sr-only">Posición </span>{{ position }}
-								</span>
+							<li class="race-row relative ml-6 border-b border-rule py-4 last:border-0">
+								<span class="timeline-dot absolute size-2.5 rounded-full bg-sector-up" aria-hidden="true"></span>
 								<div class="race-circuit flex min-w-0 items-center gap-3">
 									<img [src]="imageService.getImageUrl(result.race.flagImage)" alt="" class="h-5 w-8 shrink-0 object-cover" loading="lazy" decoding="async" width="32" height="20" />
 									<div class="min-w-0">
@@ -108,21 +107,30 @@
 										<time class="text-xs text-ink-soft" [attr.datetime]="result.race.dateStart | date: 'yyyy-MM-dd'">{{ result.race.dateStart | date: 'dd/MM/yyyy' }}</time>
 									</div>
 								</div>
-								<div class="race-marks flex flex-wrap gap-2 text-xs">
-									<span class="inline-flex items-center gap-1 rounded-row border border-rule px-2 py-1" [class]="result.hasPole ? 'text-sector-up' : 'text-ink-soft'">Pole <strong>{{ result.hasPole ? 'Sí' : 'No' }}</strong></span>
-									<span class="inline-flex items-center gap-1 rounded-row border border-rule px-2 py-1" [class]="result.hasFastLap ? 'text-sector-up' : 'text-ink-soft'">Vuelta Rápida <strong>{{ result.hasFastLap ? 'Sí' : 'No' }}</strong></span>
+								<div class="race-marks flex flex-wrap gap-x-4 gap-y-2 text-xs">
+									<span class="inline-flex items-center gap-1" [class]="result.hasPole ? 'text-sector-up' : 'text-ink-soft'"><i class="pi pi-flag" aria-hidden="true"></i>Pole <strong>{{ result.hasPole ? 'Sí' : 'No' }}</strong></span>
+									<span class="inline-flex items-center gap-1" [class]="result.hasFastLap ? 'text-sector-up' : 'text-ink-soft'"><i class="pi pi-bolt" aria-hidden="true"></i>Vuelta Rápida <strong>{{ result.hasFastLap ? 'Sí' : 'No' }}</strong></span>
 								</div>
-								<span class="race-points font-display text-3xl font-bold tabular-nums text-sector-up"><span class="sr-only">Puntos </span>+{{ racePoints(result.results) }}</span>
-								<a class="results-link inline-flex min-h-11 items-center justify-center gap-2 rounded-row border border-rule bg-panel-alt px-3 text-xs font-semibold text-ink transition-colors hover:bg-panel"
-									[routerLink]="['/results', result.race.name | SpaceToUnderscore, result.race.season.number]"
-									[attr.aria-label]="'Resultados de ' + result.race.name.trim()">
-									Resultados<i class="pi pi-arrow-right" aria-hidden="true"></i>
+								<div class="race-score grid items-center gap-3 font-display font-bold tabular-nums">
+									<span class="position inline-flex size-10 items-center justify-center rounded-row border border-rule bg-panel text-2xl"
+										[class.text-podium-1]="position === 1" [class.text-podium-2]="position === 2" [class.text-podium-3]="position === 3">
+										@if (position !== null) {
+											<span class="sr-only">Posición </span>{{ position }}
+										} @else {
+											<span aria-hidden="true">–</span><span class="sr-only">Sin posición</span>
+										}
+									</span>
+									<span class="race-points text-right text-2xl tabular-nums text-sector-up"><span class="sr-only">Puntos </span>+{{ racePoints(result.results) }}</span>
+								</div>
+								<a class="results-link inline-flex min-h-11 items-center justify-center gap-2 rounded-row border border-rule bg-panel px-3 text-xs font-semibold text-ink transition-colors hover:bg-panel-alt"
+									[routerLink]="['/results/' + (result.race.name | SpaceToUnderscore) + '/' + result.race.season.number]" [attr.aria-label]="'Resultados de ' + result.race.name.trim()">
+									Resultados<span class="sr-only"> de {{ result.race.name.trim() }}</span><i class="pi pi-arrow-up-right" aria-hidden="true"></i>
 								</a>
 							</li>
 						}
 					</ol>
 				} @else {
-					<p class="empty-results flex min-h-40 items-center justify-center rounded-row border border-dashed border-rule p-6 text-center text-sm text-ink-soft">No hay resultados disponibles</p>
+					<p class="mt-8 text-center text-2xl text-ink-soft">No hay resultados disponibles</p>
 				}
 			</section>
 		} @else {

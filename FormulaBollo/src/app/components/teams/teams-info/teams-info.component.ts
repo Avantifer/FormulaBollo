@@ -156,7 +156,7 @@ export class TeamsInfoComponent {
       { icon: 'pi pi-percentage', key: 'Posición Media', value: info.averagePosition.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
       { icon: 'pi pi-calendar', key: 'Carreras Terminadas', value: info.racesFinished },
       { icon: 'pi pi-exclamation-triangle', key: 'Penalizaciones', value: info.penalties },
-      { icon: 'pi pi-chart-line', key: 'Mejor posición', value: info.bestPosition },
+      { icon: 'pi pi-chart-line', key: 'Mejor posición', value: info.bestPosition === 99 ? '–' : info.bestPosition },
       { icon: 'pi pi-shield', key: 'Constructores', value: info.constructors }
     ]);
   }
@@ -166,9 +166,9 @@ export class TeamsInfoComponent {
     return (words.length > 1 ? words[0][0] + words.at(-1)![0] : name.slice(0, 2)).toUpperCase();
   }
 
-  protected getBestPosition(results: Result[]): number | string {
-    if (!results.some(result => result.position)) return '–';
-    return this.utilsService.whichPositionIsBetter(results[0]?.position ?? null, results[1]?.position ?? null).positionNumber;
+  protected getBestPosition(results: Result[]): number | null {
+    const position = this.utilsService.whichPositionIsBetter(results[0]?.position ?? null, results[1]?.position ?? null).positionNumber;
+    return position === 99 ? null : position;
   }
 
   protected racePoints(results: Result[]): number {
