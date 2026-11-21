@@ -1,0 +1,25 @@
+:host {
+  --statute-offset: 92px;
+  display: block;
+  min-width: 0;
+}
+
+section, article { scroll-margin-top: var(--statute-offset); }
+
+.pit-subtitle { color: color-mix(in srgb, var(--on-pit) 80%, var(--pit)); }
+
+a:focus-visible, summary:focus-visible, h2:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -3px;
+}
+
+@media (min-width: 768px) {
+  :host { --statute-offset: 80px; }
+}
+
+@media (min-width: 1024px) {
+  .statute-index {
+    top: var(--statute-offset);
+    max-height: calc(100dvh - var(--statute-offset) - 16px);
+  }
+}

@@ -1,6 +1,109 @@
-<div class="w-full bg-canvas">
-	<h1 class="sr-only">Estatuto</h1>
-	<object data="/assets/archives/estatutoF1Bollo.pdf" type="application/pdf" aria-label="Estatuto de la liga en PDF" style="width: 100%; height: 100vh">
-		<p class="p-4 text-ink">Tu navegador no soporta PDFs. <a href="/assets/archives/estatutoF1Bollo.pdf" target="_blank" rel="noopener noreferrer" class="text-accent-text underline">Descargar PDF</a>.</p>
-	</object>
+<div class="bg-canvas py-3 text-base text-ink sm:py-8">
+	<div class="my-container min-w-0">
+		<header class="overflow-hidden rounded-panel border border-rule bg-pit text-on-pit">
+			<div class="p-4 sm:p-6">
+				<h1 class="font-display text-display-md font-bold uppercase md:text-display-lg">{{ statute.title }}</h1>
+				<p class="pit-subtitle mt-3 leading-relaxed">{{ statute.subtitle }}</p>
+				<a class="mt-5 inline-flex min-h-11 items-center gap-2 rounded-row border border-rule px-4 py-2 font-semibold hover:underline"
+					href="/assets/archives/estatutoF1Bollo.pdf" download target="_blank" rel="noopener noreferrer">
+					<i class="pi pi-download" aria-hidden="true"></i>Descargar PDF
+				</a>
+			</div>
+			<dl class="m-0 flex flex-wrap gap-6 border-t border-rule p-4 sm:p-6">
+				<div>
+					<dt class="font-display text-xs font-semibold uppercase tracking-wide">Títulos</dt>
+					<dd class="m-0 font-display text-2xl font-bold tabular-nums">{{ titleCount }}</dd>
+				</div>
+				<div class="border-l border-rule pl-6">
+					<dt class="font-display text-xs font-semibold uppercase tracking-wide">Artículos</dt>
+					<dd class="m-0 font-display text-2xl font-bold tabular-nums">{{ articleCount }}</dd>
+				</div>
+			</dl>
+		</header>
+
+		<div class="mt-6 grid min-w-0 grid-cols-1 items-start gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
+			<nav aria-label="Indice del estatuto" class="statute-index hidden min-w-0 rounded-panel border border-rule bg-panel lg:sticky lg:block lg:overflow-y-auto">
+				<h2 class="px-4 pt-4 font-display text-xl font-semibold uppercase">Índice</h2>
+				<ng-container [ngTemplateOutlet]="indexList" />
+			</nav>
+			<details class="min-w-0 rounded-panel border border-rule bg-panel lg:hidden">
+				<summary class="min-h-11 cursor-pointer rounded-row px-4 py-3 font-semibold">Índice</summary>
+				<nav aria-label="Indice del estatuto">
+					<ng-container [ngTemplateOutlet]="indexList" />
+				</nav>
+			</details>
+
+			<div class="statute-document min-w-0 space-y-6 break-words">
+				@for (section of sections; track section.id) {
+					<section [id]="section.id" [attr.aria-labelledby]="section.id + '-title'" class="overflow-hidden rounded-panel border border-rule bg-panel">
+						<header class="bg-pit p-4 text-on-pit sm:p-6">
+							@if (section.label) {
+								<p class="mb-2 font-display text-xs font-semibold uppercase tracking-wide">{{ section.label }}</p>
+							}
+							<h2 [id]="section.id + '-title'" tabindex="-1" class="rounded-row font-display text-xl font-semibold uppercase sm:text-2xl">{{ section.title }}</h2>
+						</header>
+						@if (section.intro.length) {
+							<div class="space-y-4 p-4 text-ink-soft sm:p-6">
+								@for (paragraph of section.intro; track $index) {
+									<p class="max-w-3xl leading-relaxed">{{ paragraph }}</p>
+								}
+							</div>
+						}
+						@for (article of section.articles; track article.id) {
+							<article [id]="article.id" [attr.aria-labelledby]="article.id + '-title'" class="grid min-w-0 grid-cols-[2rem_minmax(0,1fr)] gap-3 border-t border-rule p-4 sm:gap-4 sm:p-6">
+								<span class="inline-flex h-8 min-w-8 items-center justify-center rounded-row bg-pit font-display font-bold tabular-nums text-on-pit"><span class="sr-only">Artículo </span>{{ article.number }}</span>
+								<div class="min-w-0 space-y-4">
+									<h3 [id]="article.id + '-title'" class="font-semibold text-ink">{{ article.title }}</h3>
+									@for (paragraph of article.paragraphs; track $index) {
+										<p class="max-w-3xl leading-relaxed">{{ paragraph }}</p>
+									}
+									@if (article.items; as items) {
+										<ol class="m-0 max-w-3xl list-none space-y-3 p-0" role="list">
+											@for (item of items; track item.mark) {
+												<li class="flex min-w-0 items-start gap-3"
+													[class]="article.number === '32' ? 'border-l-4 pl-3 ' + (item.lead === 'Leve' ? 'border-sector-flat' : item.lead === 'Grave' ? 'border-warn' : 'border-sector-down') : ''">
+													<span class="inline-flex h-8 min-w-8 shrink-0 items-center justify-center rounded-row border border-rule bg-panel-alt">{{ item.mark }}</span>
+													<p class="min-w-0 leading-relaxed"><strong class="font-semibold">{{ item.lead }}:</strong> {{ item.text }}</p>
+												</li>
+											}
+										</ol>
+									}
+									@for (paragraph of article.afterItems ?? []; track $index) {
+										<p class="max-w-3xl leading-relaxed">{{ paragraph }}</p>
+									}
+								</div>
+							</article>
+						}
+					</section>
+				}
+				<section id="disposicion-final" aria-labelledby="disposicion-final-title" class="overflow-hidden rounded-panel border border-rule bg-panel">
+					<header class="bg-pit p-4 text-on-pit sm:p-6">
+						<h2 id="disposicion-final-title" tabindex="-1" class="rounded-row font-display text-xl font-semibold uppercase sm:text-2xl">{{ statute.finalProvision.title }}</h2>
+					</header>
+					<div class="space-y-4 p-4 sm:p-6">
+						@for (paragraph of statute.finalProvision.paragraphs; track $index) {
+							<p class="max-w-3xl leading-relaxed">{{ paragraph }}</p>
+						}
+						<p class="font-display text-xl font-semibold uppercase">{{ statute.finalProvision.signature }}</p>
+					</div>
+				</section>
+			</div>
+		</div>
+	</div>
 </div>
+
+<ng-template #indexList>
+	<ol class="m-0 list-none space-y-1 p-2" role="list">
+		@for (entry of indexEntries; track entry.id) {
+			<li>
+				<a [href]="'#' + entry.id" (click)="navigateToSection($event, entry.id)"
+					class="block min-h-11 break-words rounded-row border-l-4 px-3 py-3 hover:underline"
+					[class]="activeSection() === entry.id ? 'border-accent bg-panel-alt font-semibold' : 'border-rule'"
+					[attr.aria-current]="activeSection() === entry.id ? 'location' : null">
+					@if (entry.label) {<span class="mb-1 block text-xs text-ink-soft">{{ entry.label }}</span>}
+					<span class="text-ink">{{ entry.title }}</span>
+				</a>
+			</li>
+		}
+	</ol>
+</ng-template>
