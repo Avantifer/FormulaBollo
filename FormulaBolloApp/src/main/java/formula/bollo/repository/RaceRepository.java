@@ -11,6 +11,12 @@ import formula.bollo.entity.Race;
 
 @Repository
 public interface RaceRepository extends JpaRepository<Race, Long> {
+
+    @Query("""
+            SELECT r FROM Race r JOIN FETCH r.season
+            WHERE (:season = 0 OR r.season.number = :season) ORDER BY r.id
+            """)
+    List<Race> findForStatistics(int season);
     
     @Query("SELECT r FROM Race r WHERE r.name = :name AND r.season.number = :seasonNumber")
     Optional<Race> findByNameAndSeason(String name, int seasonNumber);

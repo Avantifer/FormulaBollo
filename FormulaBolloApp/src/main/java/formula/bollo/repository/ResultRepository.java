@@ -14,6 +14,13 @@ import jakarta.transaction.Transactional;
 @Repository
 public interface ResultRepository extends JpaRepository<Result, Long> {
 
+    @Query("""
+            SELECT r FROM Result r JOIN FETCH r.race race JOIN FETCH race.season LEFT JOIN FETCH r.position
+            JOIN FETCH r.driver d JOIN FETCH d.season JOIN FETCH d.team t LEFT JOIN FETCH t.season
+            WHERE (:season = 0 OR race.season.number = :season) ORDER BY r.id
+            """)
+    List<Result> findForStatistics(int season);
+
     @Modifying
     @Transactional
     @Query("DELETE FROM Result r WHERE r.race.id = :raceId")

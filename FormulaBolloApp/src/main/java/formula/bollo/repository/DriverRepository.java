@@ -10,6 +10,13 @@ import formula.bollo.entity.Driver;
 
 @Repository
 public interface DriverRepository extends JpaRepository<Driver, Long> {
+
+    @Query("""
+            SELECT d FROM Driver d JOIN FETCH d.season JOIN FETCH d.team t LEFT JOIN FETCH t.season
+            WHERE (:season = 0 OR d.season.number = :season) ORDER BY d.id
+            """)
+    List<Driver> findForStatistics(int season);
+
     @Query("SELECT d FROM Driver d WHERE d.season.number = :seasonNumber")
     List<Driver> findBySeason(int seasonNumber);
 
