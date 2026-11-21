@@ -128,10 +128,10 @@ describe('TeamsInfoComponent', () => {
     expect(fixture.nativeElement.querySelector('p-table, p-button')).toBeNull();
   });
 
-  it('links driver chips with names, numbers and points in descending points order', () => {
+  it('links driver rows with names, numbers and points in descending points order', () => {
     create();
     render(info, [...drivers].reverse());
-    const chips = fixture.nativeElement.querySelectorAll('a.driver-chip') as NodeListOf<HTMLAnchorElement>;
+    const chips = fixture.nativeElement.querySelectorAll('a.driver-row') as NodeListOf<HTMLAnchorElement>;
     expect(chips.length).toBe(2);
     chips.forEach((chip, index) => {
       expect(chip.getAttribute('href')).toBe('/drivers/' + drivers[index].driver.name.replaceAll(' ', '_'));
@@ -141,27 +141,49 @@ describe('TeamsInfoComponent', () => {
       expect(number.querySelector('.sr-only')!.textContent).toBe('Número ');
       expect(number.querySelector('[aria-hidden="true"]')!.textContent).toBe('#');
       expect(number.parentElement).toBe(chip.querySelector('.driver-label')!.parentElement);
-      const points = chip.querySelector('.driver-details')!.lastElementChild!;
-      expect(points.textContent).toBe(drivers[index].totalPoints + ' pts');
+      const points = chip.querySelector('.driver-points')!;
+      expect(points.textContent).toBe(drivers[index].totalPoints + ' pts puntos');
       expect(points.querySelector('.driver-number')).toBeNull();
       expect(chip.querySelector('img')!.alt).toBe('');
     });
   });
 
-  it('underlines only the driver name on chip hover and keyboard focus', () => {
+  it('shares competition ranks excluding vacancies and scales bars relative to the leader', () => {
+    create();
+    const roster = [50, 100, 200, 100, 0].map((totalPoints, index) => ({
+      ...drivers[0], totalPoints, driver: { ...drivers[0].driver, id: index, name: index === 2 ? 'Vacante' : 'Piloto ' + index }
+    }));
+    render(info, roster);
+    const list: HTMLOListElement = fixture.nativeElement.querySelector('.hero-drivers');
+    expect(list.tagName).toBe('OL');
+    expect(list.querySelectorAll(':scope > li').length).toBe(5);
+    expect(Array.from(list.querySelectorAll('.driver-rank'), rank => rank.textContent!.trim())).toEqual(['–', 'Posición 1', 'Posición 1', 'Posición 3', 'Posición 4']);
+    expect(list.querySelector('.driver-rank > span')!.getAttribute('aria-hidden')).toBe('true');
+    expect(Array.from(list.querySelectorAll<HTMLElement>('.driver-fill'), bar => bar.style.width)).toEqual(['100%', '50%', '50%', '25%', '0%']);
+    for (const bar of Array.from(list.querySelectorAll('.driver-track'))) expect(bar.getAttribute('aria-hidden')).toBe('true');
+    render(info, roster.map(point => ({ ...point, totalPoints: 0 })));
+    for (const bar of Array.from(list.querySelectorAll<HTMLElement>('.driver-fill'))) {
+      expect(bar.style.width).toBe('0%');
+      expect(bar.getAttribute('style')).not.toContain('NaN');
+    }
+    render(info, []);
+    expect(list.children.length).toBe(0);
+  });
+
+  it('underlines only the driver name on row hover and keyboard focus', () => {
     create();
     render(info, [{ ...drivers[0], totalPoints: 539, driver: { ...drivers[0].driver, number: 46 } }]);
-    const chip = fixture.nativeElement.querySelector('a.driver-chip') as HTMLAnchorElement;
+    const chip = fixture.nativeElement.querySelector('a.driver-row') as HTMLAnchorElement;
     const name = chip.querySelector<HTMLElement>('.driver-label')!;
     const number = chip.querySelector<HTMLElement>('.driver-number')!;
     expect(number.textContent).toBe('Número #46');
-    expect(chip.querySelector('.driver-details')!.lastElementChild!.textContent).toBe('539 pts');
+    expect(chip.querySelector('.driver-points')!.textContent).toBe('539 pts puntos');
     // DOM mouse events cannot activate :hover. Replay the compiled hover selectors
     // with a class, retaining their declarations and targets to catch propagation.
     const style = document.createElement('style');
     function hoverRules(rules: CSSRuleList): string[] {
       return Array.from(rules).flatMap(rule => {
-        if (rule instanceof CSSStyleRule && rule.selectorText.includes('.driver-chip') && rule.selectorText.includes(':hover')) {
+        if (rule instanceof CSSStyleRule && rule.selectorText.includes('.driver-row') && rule.selectorText.includes(':hover')) {
           return rule.selectorText.split(',').filter(selector => selector.includes(':hover'))
             .map(selector => selector.replaceAll(':hover', '.test-hover') + '{' + rule.style.cssText + '}');
         }
@@ -174,7 +196,7 @@ describe('TeamsInfoComponent', () => {
     function expectNameOnly(): void {
       expect(getComputedStyle(name).textDecorationLine).toBe('underline');
       expect(getComputedStyle(name).textUnderlineOffset).toBe('3px');
-      for (const element of [chip, number, number.parentElement!, chip.querySelector('.driver-details')!.lastElementChild!]) {
+      for (const element of [chip, number, number.parentElement!, chip.querySelector('.driver-points')!]) {
         expect(getComputedStyle(element).textDecorationLine).toBe('none');
       }
     }
@@ -199,7 +221,7 @@ describe('TeamsInfoComponent', () => {
       ...drivers[0], driver: { ...drivers[0].driver, name, driverImage: index === 2 ? '' : 'drivers/default/default.webp' }
     }));
     render(info, roster);
-    const chips = fixture.nativeElement.querySelectorAll('.driver-chip') as NodeListOf<HTMLElement>;
+    const chips = fixture.nativeElement.querySelectorAll('.driver-row') as NodeListOf<HTMLElement>;
     expect(chips.length).toBe(4);
     for (const chip of Array.from(chips).slice(0, 2)) {
       expect(chip.tagName).toBe('DIV');
@@ -216,9 +238,9 @@ describe('TeamsInfoComponent', () => {
   it('shows every historical driver in Total and omits classification and giant rank', () => {
     create();
     select(total);
-    render(info, [...drivers, { ...drivers[0], driver: { ...drivers[0].driver, id: 3, name: 'Histórico' }, totalPoints: 120 }]);
-    const chips = fixture.nativeElement.querySelectorAll('.driver-chip');
-    expect(chips.length).toBe(3);
+    render(info, [...drivers, ...[120, 40, 20].map((totalPoints, index) => ({ ...drivers[0], driver: { ...drivers[0].driver, id: index + 3, name: 'Histórico' }, totalPoints }))]);
+    const chips = fixture.nativeElement.querySelectorAll('.driver-row');
+    expect(chips.length).toBe(5);
     expect(chips[1].textContent).toContain('Histórico');
     expect(fixture.nativeElement.querySelector('.classification-stat, .hero-number')).toBeNull();
     expect(fixture.nativeElement.querySelectorAll('.key-stats > .stat').length).toBe(4);
@@ -339,7 +361,7 @@ describe('TeamsInfoComponent', () => {
   it('renders the empty result message without a timeline', () => {
     create();
     render({ ...info, last5Results: [] });
-    expect(fixture.nativeElement.querySelector('ol')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.race-timeline')).toBeNull();
     expect(fixture.nativeElement.querySelector('.empty-results').textContent).toBe('No hay resultados disponibles');
   });
 
@@ -429,7 +451,7 @@ describe('TeamsInfoComponent', () => {
     pointsRequest.and.returnValue(pendingDrivers);
     select(season1);
     expect(fixture.nativeElement.querySelector('header').classList.contains('bg-McLaren')).toBeTrue();
-    expect(fixture.nativeElement.querySelectorAll('.driver-chip').length).toBe(2);
+    expect(fixture.nativeElement.querySelectorAll('.driver-row').length).toBe(2);
     expect(fixture.nativeElement.querySelector('.loading-profile')).toBeNull();
   });
 
@@ -475,7 +497,12 @@ describe('TeamsInfoComponent', () => {
       return (values[0] + 0.05) / (values[1] + 0.05);
     }
     const cases = [
+      { name: 'Ferrari', position: 1, points: 1405, roster: [539, 478, 292, 72, 24].map((totalPoints, index) => ({
+        ...drivers[0], totalPoints, driver: { ...drivers[0].driver, id: index + 1, name: ['Bubapu', 'Robe', 'Fernando', 'Chamann', 'Escapa'][index] }
+      })), races: info.last5Results },
       { name: 'McLaren', position: 1, points: 414, roster: drivers, races: info.last5Results },
+      { name: 'Mercedes', position: 2, points: 336, roster: [drivers[0]], races: [] },
+      { name: 'Williams', position: 3, points: 492, roster: [...drivers, { ...drivers[1], driver: { ...drivers[1].driver, name: 'Un nombre muy largo para comprobar el truncado' } }], races: [] },
       { name: 'Aston Martin', position: 5, points: 222, roster: [
         { ...drivers[0], driver: { ...drivers[0].driver, name: 'Dani Calde', driverImage: 'drivers/default/default.webp' } }, drivers[1]
       ], races: info.last5Results },
@@ -492,7 +519,7 @@ describe('TeamsInfoComponent', () => {
           standing(team.id, sample.name, sample.points)
         ]));
         select(isTotal ? total : season1);
-        render(value, isTotal ? [...sample.roster, ...sample.roster, ...sample.roster] : sample.roster);
+        render(value, sample.roster);
         await fixture.whenStable();
         const styles = Array.from(document.styleSheets).flatMap(sheet => {
           try { return Array.from(sheet.cssRules, rule => rule.cssText).filter(rule => !rule.startsWith('@import')); }
@@ -511,7 +538,7 @@ describe('TeamsInfoComponent', () => {
               await doc.fonts.ready;
               const context = sample.name + '/' + (isTotal ? 'Total' : 'season') + '/' + (dark ? 'dark' : 'light') + '/' + width;
               expect(doc.documentElement.scrollWidth).withContext(context + '/document overflow').toBeLessThanOrEqual(doc.documentElement.clientWidth);
-              for (const element of Array.from(doc.querySelectorAll<HTMLElement>('.team-name, .driver-chip, .driver-details, .stat, .stat dt, .stat dd, .race-row, .race-circuit, .race-marks, .results-link'))) {
+              for (const element of Array.from(doc.querySelectorAll<HTMLElement>('.team-name, .driver-row, .driver-identity, .stat, .stat dt, .stat dd, .race-row, .race-circuit, .race-marks, .results-link'))) {
                 expect(element.scrollWidth).withContext(context + '/' + element.className).toBeLessThanOrEqual(element.clientWidth);
               }
               const hero = doc.querySelector<HTMLElement>('header')!;
@@ -519,18 +546,32 @@ describe('TeamsInfoComponent', () => {
               const badge = doc.querySelector<HTMLElement>('.team-badge')!;
               expect(view.getComputedStyle(badge).backgroundColor).toBe('rgb(233, 236, 239)');
               expect(view.getComputedStyle(badge).filter).toBe('none');
-              expect(doc.querySelectorAll('.driver-chip').length).toBe(isTotal ? 6 : 2);
+              expect(doc.querySelectorAll('.driver-row').length).toBe(sample.roster.length);
               expect(doc.querySelector('.classification-stat') === null).toBe(isTotal);
               expect(doc.querySelector('.hero-number') === null).toBe(isTotal);
               const car = doc.querySelector<HTMLElement>('.hero-car')!.getBoundingClientRect();
               const heading = doc.querySelector('h1')!.getBoundingClientRect();
+              const list = doc.querySelector<HTMLElement>('.hero-drivers')!;
+              expect(list.tagName).toBe('OL');
+              expect(list.getBoundingClientRect().width).toBeLessThanOrEqual(560);
+              expect(list.getBoundingClientRect().top).withContext(context + '/list below heading').toBeGreaterThanOrEqual(heading.bottom);
+              for (const row of Array.from(doc.querySelectorAll<HTMLElement>('.driver-row'))) {
+                expect(row.getBoundingClientRect().height).withContext(context + '/row height').toBeGreaterThanOrEqual(44);
+                expect(row.querySelector('.driver-avatar')!.getBoundingClientRect().width).toBe(32);
+                expect(row.querySelector('.driver-track')!.getBoundingClientRect().width).withContext(context + '/bar minimum').toBeGreaterThanOrEqual(48);
+                expect(row.querySelector('.driver-track')!.getBoundingClientRect().height).toBe(4);
+                const label = row.querySelector<HTMLElement>('.driver-label')!;
+                expect(view.getComputedStyle(label).textOverflow).toBe('ellipsis');
+                expect(view.getComputedStyle(label).whiteSpace).toBe('nowrap');
+                if (width >= 640) expect(row.getBoundingClientRect().right).withContext(context + '/rows clear of car').toBeLessThanOrEqual(car.left);
+              }
               expect(car.width).withContext(context + '/car visible').toBeGreaterThan(0);
               if (width < 640) {
                 expect(car.top).withContext(context + '/car below name').toBeGreaterThanOrEqual(heading.bottom);
                 const chips = doc.querySelector<HTMLElement>('.hero-drivers')!.getBoundingClientRect();
-                expect(chips.top).withContext(context + '/chips below car').toBeGreaterThanOrEqual(car.bottom);
+                expect(car.top).withContext(context + '/car below rows').toBeGreaterThanOrEqual(chips.bottom);
               }
-              for (const chip of Array.from(doc.querySelectorAll<HTMLElement>('.driver-chip'))) {
+              for (const chip of Array.from(doc.querySelectorAll<HTMLElement>('.driver-row'))) {
                 expect(chip.getBoundingClientRect().bottom).withContext(context + '/chips inside hero').toBeLessThanOrEqual(heroRect.bottom);
               }
               const bar = doc.querySelector<HTMLElement>('.points-bar')!;
@@ -545,13 +586,16 @@ describe('TeamsInfoComponent', () => {
                 expect(view.getComputedStyle(target).outlineStyle).withContext(context + '/focus').toBe('solid');
               }
               const heroBackground = view.getComputedStyle(hero).backgroundColor;
-              for (const text of Array.from(doc.querySelectorAll('h1, .driver-label, .driver-number, .driver-details > span'))) {
+              for (const text of Array.from(doc.querySelectorAll('h1, .driver-label, .driver-number, .driver-rank, .driver-points'))) {
                 expect(contrast(view.getComputedStyle(text).color, heroBackground)).withContext(context + '/hero contrast').toBeGreaterThanOrEqual(4.5);
               }
               const heroClasses = hero.className;
               const teams = ['Red_Bull', 'AlphaTauri', 'Ferrari', 'Mercedes', 'Aston_Martin', 'Williams', 'Haas', 'McLaren', 'Alfa_Romeo', 'Alpine', 'Kick_Sauber', 'RB'];
               for (const team of [...teams, 'Alfa_Romeo_Racing']) {
                 hero.className = 'team-hero bg-' + team + ' on-' + team;
+                for (const text of Array.from(hero.querySelectorAll<HTMLElement>('.driver-label, .driver-rank, .driver-points'))) {
+                  expect(contrast(view.getComputedStyle(text).color, view.getComputedStyle(hero).backgroundColor)).withContext(context + '/' + team + '/text contrast').toBeGreaterThanOrEqual(4.5);
+                }
                 for (const number of Array.from(hero.querySelectorAll<HTMLElement>('.driver-number'))) {
                   const numberStyle = view.getComputedStyle(number);
                   const labelStyle = view.getComputedStyle(number.parentElement!.querySelector('.driver-label')!);
@@ -582,5 +626,5 @@ describe('TeamsInfoComponent', () => {
         }
       }
     }
-  });
+  }, 30000);
 });

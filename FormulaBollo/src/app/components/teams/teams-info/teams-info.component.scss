@@ -4,18 +4,25 @@
 .team-hero { display: grid; padding: 1.375rem 1.25rem; align-content: start; }
 .team-name { font-size: clamp(2rem, 10vw, 2.875rem); line-height: 1; overflow-wrap: anywhere; }
 .team-badge { background: #E9ECEF; padding: 4px; border: 1px solid var(--rule); }
-.hero-art { position: relative; height: 10.625rem; min-width: 0; }
+.hero-art { order: 3; position: relative; height: 10.625rem; min-width: 0; }
 .hero-car { width: 17.5rem; max-width: none; height: 9.6875rem; right: -1.25rem; }
 .hero-number { right: 0; bottom: -0.1em; font-size: 12.5rem; opacity: 0.13; }
-.hero-drivers { margin-top: 0.5rem; }
-.driver-chip { flex: 1 1 calc(50% - 0.5rem); max-width: 100%; min-height: 4.625rem; padding: 0.5rem 0.375rem; border: 1px solid currentColor; color: inherit; }
+.hero-drivers { display: grid; grid-template-columns: auto auto minmax(0, 1fr) minmax(3rem, 0.5fr) auto; column-gap: 0.375rem; width: 100%; max-width: 35rem; margin-top: 1.25rem; }
+.driver-entry, .driver-row { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; align-items: center; }
+.driver-entry + .driver-entry { border-top: 1px solid rgba(0, 0, 0, 0.25); }
+.driver-row { min-height: 3.25rem; color: inherit; text-decoration: none; }
 .driver-avatar { width: 2rem; height: 2rem; }
-.driver-label { font-size: 0.6875rem; overflow-wrap: anywhere; }
-.driver-details > span { font-size: 0.6875rem; }
-.driver-details > span > strong:not(.driver-label) { font-family: var(--font-display); font-size: 1.125rem; }
-.driver-number { margin-inline-start: 0.5rem; font-size: 0.75rem; font-weight: 400; white-space: nowrap; }
-a.driver-chip:hover .driver-label, a.driver-chip:focus-visible .driver-label { text-decoration: underline; text-underline-offset: 3px; }
-.driver-chip:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.driver-rank, .driver-points { font-size: 1.375rem; line-height: 1; }
+.driver-label { font-size: 0.75rem; }
+.driver-number { flex-shrink: 0; margin-inline-start: 0.5rem; font-size: 0.75rem; font-weight: 400; white-space: nowrap; }
+.driver-unit { font-size: 0.625rem; }
+.driver-track { height: 4px; background: rgba(0, 0, 0, 0.18); }
+.driver-fill { background: currentColor; }
+a.driver-row:hover .driver-label, a.driver-row:focus-visible .driver-label { text-decoration: underline; text-underline-offset: 3px; }
+.driver-row:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; border-radius: var(--radius-row); }
+@media (prefers-reduced-motion: reduce) {
+  .driver-row, .driver-fill { animation: none; transition: none; }
+}
 
 .stat { padding: 1rem; border-right: 1px solid var(--rule); container-type: inline-size; }
 .stat dt, .stat dd { overflow-wrap: anywhere; }
@@ -50,13 +57,12 @@ a.driver-chip:hover .driver-label, a.driver-chip:focus-visible .driver-label { t
   .hero-art { position: absolute; inset: 0; height: auto; pointer-events: none; }
   .hero-car { width: 28.75rem; max-width: 44%; height: 13.125rem; right: -1.125rem; }
   .hero-number { right: 2.8125rem; bottom: -0.12em; font-size: 18.75rem; }
-  .hero-drivers { margin-top: 1.75rem; }
-  .driver-chip { flex-basis: 12rem; padding: 0.625rem; gap: 0.625rem; }
-  .driver-avatar { width: 3.25rem; height: 3.25rem; }
-  .driver-label { font-size: 1rem; }
-  .driver-details > span { font-size: 0.75rem; }
-  .driver-details > span > strong:not(.driver-label) { font-size: 1.25rem; }
+  .hero-drivers { margin-top: 1.25rem; column-gap: 0.625rem; }
+  .driver-row { min-height: 2.75rem; }
+  .driver-label { font-size: 0.875rem; }
   .driver-number { font-size: 0.875rem; }
+  .driver-unit { font-size: 0.6875rem; }
+
 }
 
 @media (min-width: 768px) {

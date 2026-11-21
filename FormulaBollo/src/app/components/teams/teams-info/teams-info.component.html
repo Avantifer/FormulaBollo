@@ -24,29 +24,39 @@
 					}
 					<img class="hero-car absolute bottom-0 object-contain" [src]="imageService.getImageUrl(info.team.carImage)" alt="" width="460" height="210" />
 				</div>
-				<div class="hero-drivers relative z-10 flex min-w-0 flex-wrap gap-2 sm:gap-3">
-					@for (point of sortedDrivers(); track $index) {
-						@if (isVacantDriver(point.driver)) {
-							<div class="driver-chip flex min-w-0 items-center gap-2 rounded-row">
-								<span class="driver-avatar vacant-avatar inline-flex shrink-0 items-center justify-center rounded-full border border-dashed" aria-hidden="true"><i class="pi pi-user"></i></span>
-								<span class="driver-details min-w-0"><strong class="driver-label block">Vacante</strong><span class="block text-xs tabular-nums"><strong>{{ point.totalPoints }}</strong> pts</span></span>
-							</div>
-						} @else {
-							<a class="driver-chip flex min-w-0 items-center gap-2 rounded-row"
-								[routerLink]="['/drivers', point.driver.name | SpaceToUnderscore]">
-								@if (point.driver.driverImage && !point.driver.driverImage.includes('/default/')) {
-									<img class="driver-avatar shrink-0 rounded-full object-cover object-top bg-panel-alt" [src]="imageService.getImageUrl(point.driver.driverImage | SpaceToUnderscore)" alt="" width="52" height="52" />
-								} @else {
-									<span class="driver-avatar initials inline-flex shrink-0 items-center justify-center rounded-full bg-panel-alt text-ink font-bold" aria-hidden="true">{{ driverInitials(point.driver.name) }}</span>
-								}
-								<span class="driver-details min-w-0">
-									<span class="block"><strong class="driver-label">{{ point.driver.name }}</strong> <span class="driver-number font-display tabular-nums"><span class="sr-only">Número </span><span aria-hidden="true">#</span>{{ point.driver.number }}</span></span>
-									<span class="block text-xs tabular-nums"><strong>{{ point.totalPoints }}</strong> pts</span>
+				<ol class="hero-drivers relative z-10 m-0 min-w-0 list-none p-0" aria-label="Clasificación interna de pilotos" role="list">
+					@for (point of driverStandings(); track $index) {
+						@let vacant = isVacantDriver(point.driver);
+						<li class="driver-entry min-w-0">
+							<ng-template #row>
+								<span class="driver-rank font-display font-bold tabular-nums">
+									@if (vacant) { <span aria-hidden="true">–</span> }
+									@else { <span class="sr-only">Posición </span>{{ point.position }} }
 								</span>
-							</a>
-						}
+								@if (vacant) {
+									<span class="driver-avatar vacant-avatar inline-flex items-center justify-center rounded-full border border-dashed" aria-hidden="true"><i class="pi pi-user"></i></span>
+								} @else if (point.driver.driverImage && !point.driver.driverImage.includes('/default/')) {
+									<img class="driver-avatar rounded-full object-cover object-top bg-panel-alt" [src]="imageService.getImageUrl(point.driver.driverImage | SpaceToUnderscore)" alt="" width="32" height="32" />
+								} @else {
+									<span class="driver-avatar initials inline-flex items-center justify-center rounded-full bg-panel-alt text-ink font-bold" aria-hidden="true">{{ driverInitials(point.driver.name) }}</span>
+								}
+								<span class="driver-identity flex min-w-0 items-baseline">
+									<strong class="driver-label min-w-0 truncate">{{ vacant ? 'Vacante' : point.driver.name }}</strong>
+									@if (!vacant) {
+										<span class="driver-number font-display tabular-nums"><span class="sr-only">Número </span><span aria-hidden="true">#</span>{{ point.driver.number }}</span>
+									}
+								</span>
+								<span class="driver-track" aria-hidden="true"><span class="driver-fill block h-full" [style.width.%]="point.share"></span></span>
+								<span class="driver-points whitespace-nowrap text-right font-display font-bold tabular-nums">{{ point.totalPoints }} <span class="driver-unit font-sans font-normal" aria-hidden="true">pts</span><span class="sr-only"> puntos</span></span>
+							</ng-template>
+							@if (vacant) {
+								<div class="driver-row min-w-0"><ng-container [ngTemplateOutlet]="row" /></div>
+							} @else {
+								<a class="driver-row min-w-0" [routerLink]="['/drivers', point.driver.name | SpaceToUnderscore]"><ng-container [ngTemplateOutlet]="row" /></a>
+							}
+						</li>
 					}
-				</div>
+				</ol>
 			</header>
 			<section class="team-stats overflow-hidden rounded-b-panel border border-rule bg-panel text-ink" aria-label="Estadísticas de la escudería">
 				<dl class="key-stats m-0 grid grid-cols-2 md:grid-cols-4" [class.has-classification]="!!championshipPosition()">

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { catchError, distinctUntilChanged, map, of, Subject, Subscription, switchMap, takeUntil } from 'rxjs';
@@ -23,7 +23,7 @@ import { isVacantDriver } from '../../drivers/drivers-ranking/drivers-ranking.co
 @Component({
   selector: 'app-teams-info',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterModule, DatePipe, SpaceToUnderscorePipe, SelectSeasonsComponent],
+  imports: [RouterModule, DatePipe, NgTemplateOutlet, SpaceToUnderscorePipe, SelectSeasonsComponent],
   templateUrl: './teams-info.component.html',
   styleUrl: './teams-info.component.scss'
 })
@@ -45,6 +45,16 @@ export class TeamsInfoComponent {
   protected readonly drivers = signal<DriverPoints[]>([]);
   protected readonly sortedDrivers = computed(() => [...this.drivers()].sort((a, b) => b.totalPoints - a.totalPoints));
   protected readonly isVacantDriver = isVacantDriver;
+  protected readonly driverStandings = computed(() => {
+    const drivers = this.sortedDrivers();
+    const occupied = drivers.filter(point => !isVacantDriver(point.driver));
+    const maximum = Math.max(0, ...drivers.map(point => point.totalPoints));
+    return drivers.map(point => ({
+      ...point,
+      position: isVacantDriver(point.driver) ? null : 1 + occupied.filter(other => other.totalPoints > point.totalPoints).length,
+      share: maximum > 0 ? point.totalPoints / maximum * 100 : 0
+    }));
+  });
   private readonly standings = signal<TeamWithDrivers[]>([]);
   protected readonly championshipPosition = computed(() => {
     const team = this.teamInfo()?.team;
