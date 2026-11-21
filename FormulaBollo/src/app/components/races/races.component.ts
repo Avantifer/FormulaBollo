@@ -1,6 +1,6 @@
 import { SkeletonModule } from 'primeng/skeleton';
-import { RouterModule } from '@angular/router';
-import { Component, inject, signal, WritableSignal } from '@angular/core';
+import { ActivatedRoute, convertToParamMap, Router, RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, WritableSignal } from '@angular/core';
 import { SelectSeasonsComponent } from '../../../shared/components/select-seasons/select-seasons.component';
 import { Season } from '../../../shared/models/season';
 import { Race } from '../../../shared/models/race';
@@ -8,9 +8,7 @@ import { environment } from '../../../enviroments/enviroment';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { ERROR_RACE_FETCH } from '../../constants';
-import { ButtonModule } from 'primeng/button';
 import { ImageService } from '../../../shared/services/image.service';
-import { CarouselModule, CarouselResponsiveOptions } from 'primeng/carousel';
 import { RaceApiService } from '../../../shared/services/api/race-api.service';
 import { UtilsService } from '../../../shared/services/utils.service';
 import { SpaceToUnderscorePipe } from '../../../shared/pipes/spaceToUnderscore.pipe';
@@ -21,20 +19,25 @@ import { SkeletonItemsPipe } from '../../../shared/pipes/skeletonItems.pipe';
   standalone: true,
   imports: [
     CommonModule,
-    ButtonModule,
-    CarouselModule,
-    RouterModule,
+    RouterLink,
     SkeletonModule,
     SkeletonItemsPipe,
     SpaceToUnderscorePipe,
     SelectSeasonsComponent
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './races.component.html',
   styleUrl: './races.component.scss'
 })
 export class RacesComponent {
   private readonly raceApiService: RaceApiService = inject(RaceApiService);
   private readonly utilsService: UtilsService = inject(UtilsService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly initialParams = this.route.snapshot.queryParamMap ?? convertToParamMap(this.route.snapshot.queryParams ?? {});
+  private readonly requestedSeason = Number(this.initialParams.get('season'));
+  protected readonly initialSeasonNumber = Number.isSafeInteger(this.requestedSeason) && this.requestedSeason > 0
+    ? this.requestedSeason : environment.seasonActual.number;
   public imageService: ImageService = inject(ImageService);
 
   protected seasonSelected: Season = environment.seasonActual;
@@ -42,49 +45,35 @@ export class RacesComponent {
   protected races: WritableSignal<Race[]> = signal<Race[]>([]);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
+  protected readonly sortedRaces = computed(() => [...this.races()].sort(
+    (a, b) => new Date(a.dateStart).getTime() - new Date(b.dateStart).getTime()
+  ));
+  protected readonly featuredRace = computed(() => this.sortedRaces().find(race => !race.finished) ?? this.sortedRaces().at(-1));
+  protected readonly calendarRaces = computed(() => this.sortedRaces().filter(race => race !== this.featuredRace()));
   private loadSubscription?: Subscription;
-  protected readonly responsiveOptionsCarousel: CarouselResponsiveOptions[] = [
-    {
-      breakpoint: '1520px',
-      numVisible: 4,
-      numScroll: 4,
-    },
-    {
-      breakpoint: '1399px',
-      numVisible: 3,
-      numScroll: 3,
-    },
-    {
-      breakpoint: '1023px',
-      numVisible: 4,
-      numScroll: 4,
-    },
-    {
-      breakpoint: '991px',
-      numVisible: 3,
-      numScroll: 3,
-    },
-    {
-      breakpoint: '767px',
-      numVisible: 2,
-      numScroll: 2,
-    },
-    { 
-      breakpoint: '639px',
-      numVisible: 1,
-      numScroll: 1,
-    }
-  ];
+  private loadedSeasonNumber?: number;
+  private seasonReady = false;
 
   onSeasonChange(newSeason: Season): void {
+    const initialized = this.seasonReady;
+    if (initialized && this.seasonSelected.number === newSeason.number) return;
     this.seasonSelected = newSeason;
-    if (this.seasonSelected) {
+    this.seasonReady = true;
+    if (this.loadedSeasonNumber !== newSeason.number) {
       this.getRaces(newSeason);
+    }
+    if (initialized) {
+      void this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { season: newSeason.number === environment.seasonActual.number ? null : newSeason.number },
+        queryParamsHandling: 'merge',
+        replaceUrl: true
+      });
     }
   }
 
   ngOnInit(): void {
-    this.getRaces(this.seasonSelected);
+    if (this.initialSeasonNumber === environment.seasonActual.number) this.getRaces(this.seasonSelected);
   }
 
   protected retry(): void {
@@ -93,6 +82,7 @@ export class RacesComponent {
 
   private getRaces(season: Season): void {
     this.loadSubscription?.unsubscribe();
+    this.loadedSeasonNumber = season.number;
     this.loading.set(true);
     this.loadError.set(false);
     this.races.set([]);

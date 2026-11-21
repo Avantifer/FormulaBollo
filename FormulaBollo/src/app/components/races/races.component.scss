@@ -1,31 +1,51 @@
-::ng-deep .carousel .buttonRace .p-button {
-  width: 100%;
-  background: var(--accent);
-  color: var(--on-accent);
+:host {
+  display: block;
+  min-width: 0;
 }
 
-::ng-deep .carousel .buttonRace .p-button:hover {
-  background: color-mix(in srgb, var(--accent) 85%, black);
+.race-hero {
+  min-height: 340px;
+  align-items: flex-end;
+  padding: 24px;
 }
 
-::ng-deep .p-carousel-indicator-active .p-carousel-indicator-button {
-  background: var(--accent);
+.hero-skeleton {
+  height: 340px;
 }
 
-::ng-deep .carousel .p-carousel-next-button {
-  position: absolute;
-  top: 0;
-  right: 0;
+.hero-title {
+  margin-block: 14px;
+  font-size: 40px;
+  line-height: 1;
+  overflow-wrap: anywhere;
 }
 
-::ng-deep .carousel .p-carousel-prev-button {
-  position: absolute;
-  top: 0;
-  right: 3rem;
+.calendar-row {
+  grid-template-columns: 32px minmax(0, 1fr) 16px;
+  min-height: 80px;
 }
 
-::ng-deep .carousel .p-icon {
-  width: var(--p-icon-size);
-  height: var(--p-icon-size);
-  color: var(--ink);
+.race-name {
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 768px) {
+  .race-hero {
+    min-height: 360px;
+    align-items: center;
+    padding: 36px;
+  }
+
+  .hero-skeleton {
+    height: 360px;
+  }
+
+  .hero-title {
+    margin-block: 20px;
+    font-size: 64px;
+  }
+
+  .calendar-row {
+    min-height: 88px;
+  }
 }
