@@ -7,7 +7,7 @@ import { ThemeService } from '../../../../shared/services/theme.service';
 import { Season } from '../../../../shared/models/season';
 import { StatisticsOverview } from '../../../../shared/models/statistics';
 import { statisticsFixture } from '../statistics.fixture';
-import { StatisticsChart } from './general-stats.charts';
+import { buildStatisticsCharts, StatisticsChart } from './general-stats.charts';
 import { GeneralStatsComponent } from './general-stats.component';
 
 describe('GeneralStatsComponent', () => {
@@ -86,13 +86,13 @@ describe('GeneralStatsComponent', () => {
     expect(root().querySelectorAll('.key-main')[2].textContent!.trim()).toBe('—');
   });
 
-  it('renders exactly the 14 driver cards, their real chart types and accessible descriptions', async () => {
+  it('renders exactly the 12 driver cards, their real chart types and accessible descriptions', async () => {
     load();
     await fixture.whenStable();
     expect(component['cards']().map(card => card.id)).toEqual([
-      'evolution', 'winners', 'points', 'podiums', 'one-lap', 'poles-wins', 'average', 'reliability', 'penalties', 'regularity', 'streaks', 'conversion', 'hat-tricks', 'season-points'
+      'evolution', 'winners', 'points', 'podiums', 'one-lap', 'poles-wins', 'average', 'reliability', 'penalties', 'conversion', 'hat-tricks', 'season-points'
     ]);
-    expect(root().querySelectorAll('article.chart-card').length).toBe(14);
+    expect(root().querySelectorAll('article.chart-card').length).toBe(12);
     expect(new Set(component['cards']().map(card => card.type))).toEqual(new Set(['line', 'doughnut', 'bar', 'bubble']));
     for (const article of Array.from(root().querySelectorAll('article'))) {
       expect(article.querySelector('h3')).not.toBeNull();
@@ -101,7 +101,7 @@ describe('GeneralStatsComponent', () => {
       expect(article.querySelectorAll('li').length).toBeGreaterThanOrEqual(3);
     }
     expect(root().textContent).not.toMatch(/Variante 1|Nuevo|Vacante/i);
-    expect(root().querySelectorAll('canvas').length).toBeGreaterThanOrEqual(14);
+    expect(root().querySelectorAll('canvas').length).toBeGreaterThanOrEqual(12);
   });
 
   it('applies Top 10/8, alphabetical tie breaks, ordering, and excludes all vacant driver slots', () => {
@@ -128,10 +128,6 @@ describe('GeneralStatsComponent', () => {
     expect(card('conversion').data.labels).not.toContain('Piloto 01');
     expect(card('reliability').data.labels).toContain('Piloto 02');
     expect(card('reliability').data.labels).not.toContain('Piloto 01');
-    expect(card('regularity').data.labels).toContain('Piloto 02');
-    expect(card('regularity').data.labels).not.toContain('Piloto 01');
-    expect(card('regularity').data.labels).not.toContain('Piloto 04');
-    expect(card('regularity').data.datasets[0].data[0]).toEqual([3.9, 6.1]);
     const bubble = card('poles-wins').data.datasets.find(dataset => dataset.label === 'Piloto 02')!;
     expect(bubble.data[0]).toEqual(jasmine.objectContaining({ x: 4, y: 7 }));
     expect(card('average').data.datasets[0].data[0]).toBe(1000 / 7);
@@ -143,7 +139,6 @@ describe('GeneralStatsComponent', () => {
     load();
     expect(card('podiums').data.datasets.map(dataset => dataset.data[0])).toEqual([8, 3, 1]);
     expect(card('penalties').data.datasets.map(dataset => dataset.data[0])).toEqual([10, 5, 5]);
-    expect(card('streaks').data.datasets.map(dataset => dataset.data[0])).toEqual([9, 3]);
     expect(card('hat-tricks').data.datasets[0].data[0]).toBe(5);
     expect(card('season-points').data.datasets.map(dataset => dataset.label)).toEqual(['Temporada 1', 'Temporada 2', 'Temporada 3']);
     expect(card('season-points').data.datasets.map(dataset => dataset.data[0])).toEqual([150, 350, 500]);
@@ -160,19 +155,18 @@ describe('GeneralStatsComponent', () => {
     expect(component['remainingPoints']().count).toBe(7);
     selectTeams();
     expect(card('evolution').data.datasets.length).toBe(5);
-    expect(card('points').data.labels!.length).toBe(10);
+    expect(card('points').data.labels!.length).toBe(9);
   });
 
-  it('renders exactly the 13 team cards, preserves zero-point teams, and uses calendar races for the average', () => {
+  it('renders exactly the 13 team cards, drops zero-point teams from the bars, and uses calendar races for the average', () => {
     load();
     selectTeams();
     expect(component['cards']().map(card => card.id)).toEqual([
       'evolution', 'share', 'points', 'contributions', 'wins-podiums', 'winners', 'one-lap', 'duels', 'double', 'reliability', 'penalties', 'average', 'finished'
     ]);
     expect(root().querySelectorAll('article.chart-card').length).toBe(13);
-    expect(card('points').data.labels!.length).toBe(10);
-    expect(card('points').data.labels!.at(-1)).toBe('RB');
-    expect(card('points').data.datasets[0].data.at(-1)).toBe(0);
+    expect(card('points').data.labels).not.toContain('RB');
+    expect(card('points').data.datasets[0].data.every(value => Number(value) > 0)).toBeTrue();
     expect(card('average').data.datasets[0].data[0]).toBe(1000 / 60);
     expect(card('finished').data.datasets[0].data[0]).toBe(40);
     expect(card('wins-podiums').data.datasets[0].data[0]).toEqual({ x: 6, y: 15 });
@@ -221,12 +215,44 @@ describe('GeneralStatsComponent', () => {
     expect(root().querySelector('article')).toBeNull();
   });
 
-  it('keeps every card with a clear empty message when its eligibility filter has no data', () => {
+  it('hides the cards whose eligibility filter or values leave no data, instead of showing empty ones', () => {
     const data = statisticsFixture();
-    data.drivers.forEach(entry => { entry.poles = 0; entry.races = 1; entry.racesFinished = 1; entry.victories = 0; });
+    data.drivers.forEach(entry => { entry.poles = 0; entry.races = 1; entry.racesFinished = 1; entry.victories = 0; entry.hatTricks = 0; });
     load(data);
-    expect(root().querySelectorAll('article').length).toBe(14);
-    expect(root().querySelectorAll('.insufficient-data').length).toBe(5);
+    const ids = component['cards']().map(card => card.id);
+    for (const hidden of ['poles-wins', 'conversion', 'reliability', 'hat-tricks', 'winners']) expect(ids).not.toContain(hidden);
+    expect(root().querySelectorAll('article').length).toBe(ids.length);
+    expect(root().querySelector('.insufficient-data')).toBeNull();
+  });
+
+  it('drops rows whose value is zero and keeps one stable colour per season in the season chart', () => {
+    const data = statisticsFixture();
+    data.drivers.forEach((entry, index) => entry.hatTricks = index < 2 ? 3 - index : 0);
+    load(data);
+    expect(card('hat-tricks').data.labels!.length).toBe(2);
+    expect(card('hat-tricks').data.datasets[0].data).toEqual([3, 2]);
+    expect(new Set(card('season-points').data.datasets.map(dataset => dataset.backgroundColor)).size).toBe(3);
+  });
+
+  it('paints a season with the same colour whether it is shown alone or with the others', () => {
+    const colour = (labelled: string, chart: StatisticsChart) => chart.data.datasets.find(dataset => dataset.label === labelled)!.backgroundColor;
+    const all = buildStatisticsCharts(statisticsFixture(), false, false, true, component['palette']()).find(chart => chart.id === 'season-points')!;
+    const data = statisticsFixture();
+    data.drivers.forEach(entry => entry.pointsBySeason = { '2': 10 });
+    const alone = buildStatisticsCharts(data, false, false, true, component['palette']()).find(chart => chart.id === 'season-points')!;
+    expect(alone.data.datasets.map(dataset => dataset.label)).toEqual(['Temporada 2']);
+    expect(colour('Temporada 2', alone)).toBe(colour('Temporada 2', all));
+  });
+
+  it('shows readable tooltips for bubbles and scatter points', () => {
+    load();
+    const bubble = card('poles-wins');
+    const label = bubble.options.plugins!.tooltip!.callbacks!.label! as (context: unknown) => string;
+    expect(label({ dataset: { label: 'Piloto 02' }, raw: { x: 4, y: 7, r: 9.5 } })).toBe('Piloto 02: 4 poles · 7 victorias');
+    expect(label({ dataset: { type: 'line', label: 'Igualdad' }, raw: { x: 4, y: 4 } })).toBe('Igualdad');
+    selectTeams();
+    const teamLabel = card('wins-podiums').options.plugins!.tooltip!.callbacks!.label! as (context: unknown) => string;
+    expect(teamLabel({ dataset: { label: 'Equipo 01' }, raw: { x: 6, y: 15 } })).toBe('Equipo 01: 6 victorias · 15 podios');
   });
 
   it('cancels older responses before a new season loads and also cancels on destruction', () => {

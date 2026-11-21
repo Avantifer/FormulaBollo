@@ -88,7 +88,7 @@ export function buildStatisticsCharts(overview: StatisticsOverview, teams: boole
         },
         tooltip: { callbacks: { label: context => {
           const raw = context.raw;
-          const value = typeof raw === 'number' ? format(Math.abs(raw)) + (percent ? ' %' : '') : Array.isArray(raw) ? raw.map(format).join(' – ') : JSON.stringify(raw);
+          const value = typeof raw === 'number' ? format(Math.abs(raw)) + (percent ? ' %' : '') : Array.isArray(raw) ? raw.map(format).join(' – ') : format((raw as { x: number }).x);
           return (context.dataset.label ? context.dataset.label + ': ' : '') + value;
         } } }
       },
@@ -111,11 +111,13 @@ export function buildStatisticsCharts(overview: StatisticsOverview, teams: boole
     return card;
   }
 
-  function bars(id: string, title: string, description: string, entries: Entry[], value: (entry: Entry) => number, note = '', percent = false): StatisticsChart {
+  function bars(id: string, title: string, description: string, all: Entry[], value: (entry: Entry) => number, note = '', percent = false): StatisticsChart {
+    const entries = all.filter(entry => value(entry) > 0);
     return add(id, title, description, { labels: entries.map(name), datasets: [{ label: title, data: entries.map(value), backgroundColor: entries.map(color), borderRadius: 0, barThickness: 14 }] }, summary(entries, value, percent ? ' %' : ''), { note, percent });
   }
 
-  function grouped(id: string, title: string, description: string, entries: Entry[], series: { label: string; value: (entry: Entry) => number; color: string }[], stacked = false, note = ''): StatisticsChart {
+  function grouped(id: string, title: string, description: string, all: Entry[], series: { label: string; value: (entry: Entry) => number; color: string }[], stacked = false, note = ''): StatisticsChart {
+    const entries = all.filter(entry => series.some(item => item.value(entry) > 0));
     const card = add(id, title, description, {
       labels: entries.map(name),
       datasets: series.map(series => ({ label: series.label, data: entries.map(series.value), backgroundColor: series.color, barThickness: stacked ? 18 : 9 }))
@@ -183,7 +185,8 @@ export function buildStatisticsCharts(overview: StatisticsOverview, teams: boole
     };
   }
 
-  function reliability(entries: Entry[]): void {
+  function reliability(all: Entry[]): void {
+    const entries = all.filter(entry => entry.races > 0);
     const card = grouped('reliability', teams ? 'Fiabilidad del equipo' : 'Llegar hasta el final',
       'Terminadas frente a abandonos; porcentaje de participaciones.',
       entries,
@@ -199,8 +202,9 @@ export function buildStatisticsCharts(overview: StatisticsOverview, teams: boole
     } } };
   }
 
-  function lollipop(entries: Entry[]): void {
+  function lollipop(all: Entry[]): void {
     const value = (entry: Entry) => teams ? overview.summary.finishedRaces ? entry.totalPoints / overview.summary.finishedRaces : 0 : average(entry);
+    const entries = all.filter(entry => value(entry) > 0);
     const card = bars('average', 'Media de puntos por carrera', teams ? 'Puntos del constructor / carreras disputadas del calendario.' : 'Puntos totales divididos por carreras terminadas.', entries, value,
       teams ? 'Denominador común: ' + overview.summary.finishedRaces + ' carreras disputadas. Incluye sprint.' : 'Incluye puntos de sprint. Solo pilotos con carreras terminadas.');
     (card.data.datasets[0] as ChartDataset<'bar'>).barThickness = 2;
@@ -221,6 +225,11 @@ export function buildStatisticsCharts(overview: StatisticsOverview, teams: boole
     const bubble = add('poles-wins', 'Poles frente a victorias', 'Cada burbuja es un piloto; su tamaño representa puntos totales.', {
       datasets: rank(eligible, entry => entry.totalPoints).map(entry => ({ label: name(entry), data: [{ x: entry.poles, y: entry.victories, r: 3 + 7 * Math.sqrt(entry.totalPoints / Math.max(1, ...drivers.map(entry => entry.totalPoints))) }], backgroundColor: color(entry) }))
     }, summary(rank(eligible, entry => entry.totalPoints), entry => entry.victories, ' victorias'), { type: 'bubble', height: 300, note: 'Mínimo 3 poles. La diagonal es referencia de igualdad, no una tasa de conversión.' });
+    bubble.options.plugins!.tooltip = { callbacks: { label: context => {
+      if (context.dataset.type === 'line') return context.dataset.label ?? '';
+      const point = context.raw as { x: number; y: number };
+      return context.dataset.label + ': ' + point.x + ' poles · ' + point.y + ' victorias';
+    } } };
     const max = Math.max(1, ...eligible.flatMap(entry => [entry.poles, entry.victories]));
     bubble.data.datasets.push({ type: 'line', label: 'Igualdad', data: [{ x: 0, y: 0 }, { x: max, y: max }], borderColor: palette.soft, borderDash: [4, 4], pointRadius: 0 });
     bubble.options.scales = {
@@ -235,28 +244,18 @@ export function buildStatisticsCharts(overview: StatisticsOverview, teams: boole
         { label: 'Leve', value: entry => (entry as DriverStats).penaltiesBy.minor, color: palette.gold },
         { label: 'Grave', value: entry => (entry as DriverStats).penaltiesBy.serious, color: palette.down }
       ], true);
-    const steady = rank(drivers.filter(entry => entry.racesFinished >= 8 && entry.posStd !== null), entry => entry.posStd!, true).slice(0, n);
-    const regularity = add('regularity', 'Regularidad de llegada', 'La barra abarca media ± desviación; la marca señala la media.', {
-      labels: steady.map(name), datasets: [
-        { label: 'Media ± σ', data: steady.map(entry => [Math.max(1, entry.averagePosition - entry.posStd!), Math.min(20, entry.averagePosition + entry.posStd!)]), backgroundColor: steady.map(color), barThickness: 14 },
-        { type: 'scatter', label: 'Media', data: steady.map((entry, index) => ({ x: entry.averagePosition, y: index })), backgroundColor: palette.ink, pointStyle: 'line', pointRotation: 90, pointRadius: 9, borderColor: palette.ink, borderWidth: 2 }
-      ]
-    }, steady.slice(0, 5).map(entry => ({ label: name(entry), value: 'Media ' + format(entry.averagePosition) + ' · σ ' + format(entry.posStd!) })), { note: 'Mínimo 8 carreras terminadas. Menor σ significa más regularidad. Intervalo limitado a P1–P20.' });
-    regularity.options.scales!['x'] = { min: 1, max: 20, grid: { color: palette.rule }, ticks: { color: palette.soft, font: { size: 11 } } };
-    grouped('streaks', 'Rachas de podios', 'Máxima secuencia consecutiva de podios frente a la racha vigente.', rank(drivers, entry => entry.podiumStreak).slice(0, n),
-      [{ label: 'Racha máxima', value: entry => (entry as DriverStats).podiumStreak, color: palette.soft }, { label: 'Vigente', value: entry => (entry as DriverStats).currentPodiumStreak, color: palette.best }]);
     const conversion = (entry: DriverStats): number => entry.poleWins / entry.poles * 100;
     bars('conversion', 'Convertir la pole', 'Porcentaje de poles que terminaron en victoria para el mismo piloto.', rank(eligible, conversion).slice(0, n), entry => conversion(entry as DriverStats), 'Mínimo 3 poles. La tasa usa poleWins / poles, no victorias / poles.', true);
     bars('hat-tricks', 'El fin de semana perfecto', 'Hat-tricks: victoria, pole y vuelta rápida en la misma carrera.', rank(drivers, entry => entry.hatTricks).slice(0, n), entry => (entry as DriverStats).hatTricks);
     const seasons = [...new Set(drivers.flatMap(entry => Object.keys(entry.pointsBySeason)))].sort((a, b) => Number(a) - Number(b));
     grouped('season-points', 'El impulso por temporada', 'Puntos totales de cada temporada de los pilotos líderes.', points.slice(0, n),
-      seasons.map((season, index) => ({ label: 'Temporada ' + season, value: entry => entry.pointsBySeason[season] ?? 0, color: [palette.soft, palette.best, palette.gold][index % 3] })), true,
+      seasons.map(season => ({ label: 'Temporada ' + season, value: entry => entry.pointsBySeason[season] ?? 0, color: [palette.soft, palette.best, palette.gold][(Number(season) + 2) % 3] })), true,
       'Incluye carrera y sprint. El desglose exclusivo de sprint no está disponible.');
   } else {
     const entries = constructors.slice(0, mobile ? 5 : undefined);
     donut('share', 'Cuota de puntos', 'Porcentaje de puntos totales de la liga que aporta cada equipo.', constructors, entry => entry.totalPoints, 'puntos');
     bars('points', 'Puntos del constructor', 'Puntuación oficial del equipo, incluidos los puntos de sprint.', constructors, entry => entry.totalPoints, 'Todos los equipos; los equipos sin puntos se conservan al final.');
-    const contributors = entries.map(entry => ({ ...entry, drivers: entry.drivers.filter(driver => !isVacant(driver.name)).slice(0, 2) }));
+    const contributors = entries.map(entry => ({ ...entry, drivers: entry.drivers.filter(driver => !isVacant(driver.name)).slice(0, 2) })).filter(entry => entry.drivers.some(driver => driver.points > 0));
     const contribution = grouped('contributions', 'Quién firma los puntos', 'Puntos personales de los dos pilotos de la pareja actual.', contributors,
       [0, 1].map(index => ({ label: 'Piloto ' + (index + 1), value: entry => (entry as TeamStats).drivers[index]?.points ?? 0, color: index ? palette.soft : palette.best })), true,
       'Los totales personales pueden diferir del constructor por cambios de equipo o de alineación.');
@@ -268,6 +267,10 @@ export function buildStatisticsCharts(overview: StatisticsOverview, teams: boole
     const scatter = add('wins-podiums', 'Victorias y presencia en el podio', 'Cada punto es un equipo; el eje vertical cuenta todos sus podios.', {
       datasets: constructors.map((entry, index) => ({ label: name(entry), data: [{ x: entry.victories, y: entry.podiums }], backgroundColor: color(entry), pointRadius: 5, pointStyle: ['circle', 'rect', 'triangle'][index % 3] as 'circle' | 'rect' | 'triangle' }))
     }, constructors.slice(0, 5).map(entry => ({ label: name(entry), value: format(entry.victories) + ' victorias / ' + format(entry.podiums) + ' podios' })), { type: 'scatter', height: 300 });
+    scatter.options.plugins!.tooltip = { callbacks: { label: context => {
+      const point = context.raw as { x: number; y: number };
+      return context.dataset.label + ': ' + point.x + ' victorias · ' + point.y + ' podios';
+    } } };
     scatter.options.scales = {
       x: { type: 'linear', beginAtZero: true, title: { display: true, text: 'Victorias', color: palette.soft }, ticks: { color: palette.soft, font: { size: 11 } }, grid: { color: palette.rule } },
       y: { type: 'linear', beginAtZero: true, title: { display: true, text: 'Podios', color: palette.soft }, ticks: { color: palette.soft, font: { size: 11 } }, grid: { color: palette.rule } }
@@ -299,5 +302,5 @@ export function buildStatisticsCharts(overview: StatisticsOverview, teams: boole
     lollipop(entries);
     bars('finished', 'Carreras terminadas', 'Suma de llegadas a meta de los pilotos de cada equipo.', constructors, entry => entry.racesFinished, 'Una carrera con dos coches en meta cuenta como dos llegadas.');
   }
-  return cards;
+  return cards.filter(card => card.values.length > 0);
 }

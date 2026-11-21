@@ -41,18 +41,14 @@
 					<h3 [id]="'chart-heading-' + card.id">{{ card.title }}</h3>
 					<p>{{ card.description }}</p>
 				</header>
-				@if (card.values.length) {
-					<div class="chart-container" role="img" [attr.aria-label]="card.ariaLabel" [style.height.px]="card.height">
-						<p-chart [type]="card.type" [data]="card.data" [options]="card.options" [plugins]="plugins" width="100%" height="100%" aria-hidden="true" />
-					</div>
-					<ul [class]="card.type === 'doughnut' || card.type === 'line' || card.type === 'scatter' || card.type === 'bubble' || card.id === 'duels' ? 'chart-values' : 'sr-only'">
-						@for (value of card.values; track $index) {
-							<li><span>{{ value.label }}</span><span class="tabular-nums">{{ value.value }}</span></li>
-						}
-					</ul>
-				} @else {
-					<p class="insufficient-data">No hay datos suficientes para este gráfico.</p>
-				}
+				<div class="chart-container" role="img" [attr.aria-label]="card.ariaLabel" [style.min-height.px]="card.height">
+					<p-chart [type]="card.type" [data]="card.data" [options]="card.options" [plugins]="plugins" width="100%" height="100%" aria-hidden="true" />
+				</div>
+				<ul [class]="card.type === 'doughnut' || card.type === 'line' || card.type === 'scatter' || card.type === 'bubble' || card.id === 'duels' ? 'chart-values' : 'sr-only'">
+					@for (value of card.values; track $index) {
+						<li><span>{{ value.label }}</span><span class="tabular-nums">{{ value.value }}</span></li>
+					}
+				</ul>
 				@if (card.note) { <p class="chart-note">{{ card.note }}</p> }
 				@if (card.id === 'points' && !isTeams() && remainingPoints().count) {
 					<details class="remaining-points">
