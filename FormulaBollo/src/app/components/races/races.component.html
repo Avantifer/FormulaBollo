@@ -1,110 +1,71 @@
 <div class="bg-canvas text-ink">
-	<div class="flex-1 bg-canvas text-ink">
-		<div class="my-container mx-auto py-8">
-			<div class="mb-6 flex flex-wrap justify-between items-center gap-4 p-4 bg-panel border border-rule rounded-panel">
-				<div class="flex items-center gap-2">
-					<h1 class="font-display uppercase tracking-wide text-ink text-2xl font-bold">Resultados</h1>
-				</div>
-				<div class="flex flex-wrap items-center gap-4">
-					<select-seasons (seasonChanged)="onSeasonChange($event)" />
-				</div>
+	<div class="my-container mx-auto min-w-0 py-8">
+		<header class="mb-4 flex min-w-0 flex-col items-start justify-between gap-4 rounded-panel border border-rule bg-panel p-3 md:mb-6 md:flex-row md:items-center md:p-6">
+			<h1 class="font-display text-2xl font-bold uppercase tracking-wide md:text-display-md">Resultados</h1>
+			<select-seasons class="block min-w-0 max-w-full md:ml-auto" variant="tabs" [initialSeasonNumber]="initialSeasonNumber" (seasonChanged)="onSeasonChange($event)" />
+		</header>
+		@if (loadError()) {
+			<div role="alert" class="flex min-h-45 flex-col items-center justify-center gap-4 rounded-panel border border-rule bg-panel p-6 text-center">
+				<p>No se pudieron cargar las carreras.</p>
+				<button type="button" (click)="retry()" class="inline-flex min-h-11 cursor-pointer items-center rounded-row bg-accent px-4 font-display font-semibold uppercase text-on-accent focus-visible:outline-2 focus-visible:outline-offset-2">Reintentar</button>
 			</div>
-			@if (loadError()) {
-				<div role="alert" class="p-4 text-center">
-					<p>No se pudieron cargar las carreras.</p>
-					<button type="button" (click)="retry()" class="underline focus-visible:outline-2">Reintentar</button>
-				</div>
-			} @else if (!loading() && !races().length) {
-				<p role="status" class="p-4 text-center">No hay carreras para esta temporada.</p>
-			}
-			<div class="carousel relative">
-				<div class="min-h-12 flex justify-between items-center mb-4 pr-24">
-					<h2 class="font-display uppercase tracking-wide text-ink text-base xs:text-xl font-bold">Calendario de Carreras</h2>
-				</div>
-				@if (races().length) {
-					<p-carousel [value]="races()" [numVisible]="5" [numScroll]="5" [responsiveOptions]="responsiveOptionsCarousel">
-						<ng-template let-race #item>
-							<div
-								class="rounded-panel border border-rule hover:border-ink-soft h-60 w-full max-w-full sm:size-57 lg:size-74 overflow-hidden bg-panel transition-colors duration-300 relative group">
-								<div class="relative h-35 lg:h-46 overflow-hidden">
-									<img
-										[alt]="race.name"
-										loading="lazy"
-										class="object-cover transition-transform duration-500 group-hover:scale-110 absolute size-full inset-0"
-										[src]="imageService.getImageUrl(race.circuitImage)" />
-									<div class="absolute inset-0 bg-gradient-to-t from-pit to-transparent"></div>
-									<div class="absolute bottom-0 left-0 right-0 p-4">
-										<div class="flex items-center">
-											<span class="text-on-pit font-display uppercase text-xl font-bold mr-2">{{ race.name }}</span>
-										</div>
-									</div>
-								</div>
-
-								<div class="p-2 lg:p-4">
-									<div class="flex items-center mb-3">
-										<i class="pi pi-calendar text-ink-soft mr-1" style="font-size: 14px"></i>
-										<span class="text-sm text-ink-soft tabular-nums">{{ race.dateStart | date: 'dd/MM/yyyy' }}</span>
-									</div>
-									<p-button
-										label="Ver resultados"
-										icon="pi pi-angle-right"
-										class="buttonRace text-sm rounded-row w-full cursor-pointer"
-										iconPos="right"
-										[routerLink]="['/results/' + (race.name | SpaceToUnderscore) + '/' + race.season.number]" />
-								</div>
-								@if (race.finished) {
-									<div class="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-1 text-xs rounded-row bg-pit text-on-pit">
-										<i class="pi pi-check text-sector-up" aria-hidden="true"></i>Completada
-									</div>
-								}
-							</div>
-						</ng-template>
-					</p-carousel>
-				} @else if (loading()) {
-					<div class="p-2 md:p-6">
-						<p-skeleton width="100%" height="17rem" />
-					</div>
-				}
-			</div>
-			<div class="mt-8 bg-panel border border-rule rounded-panel">
-				<div class="p-6">
-					@if (races().length) {
-						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-							@for (race of races(); track $index) {
-								<a
-									class="flex min-w-0 items-center p-3 bg-panel-alt border border-rule rounded-row hover:bg-rule focus-visible:outline-2 focus-visible:outline-offset-2 text-ink transition-colors cursor-pointer"
-									[routerLink]="['/results/' + (race.name | SpaceToUnderscore) + '/' + race.season.number]">
-									<div class="mr-3 size-12 shrink-0 rounded-full overflow-hidden relative">
-										<img
-											[alt]="race.name"
-											loading="lazy"
-											class="object-cover absolute size-full"
-											[src]="imageService.getImageUrl(race.flagImage)" />
-									</div>
-									<div class="flex-grow min-w-0 break-words">
-										<div class="flex items-center">
-											<span class="font-medium">{{ race.name }}</span>
-										</div>
-										<div class="flex items-center mb-3">
-											<i class="pi pi-calendar text-ink-soft mr-1" style="font-size: 14px"></i>
-											<span class="text-sm text-ink-soft tabular-nums">{{ race.dateStart | date: 'dd/MM/yyyy' }}</span>
-										</div>
-									</div>
-									<i class="pi pi-chevron-right text-ink-soft ml-1 pt-0.5"></i>
-								</a>
-							}
-						</div>
-					} @else if (loading()) {
-						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-							@for (item of 12 | skeletonItems; track $index) {
-								<div class="mb-6">
-									<p-skeleton width="95%" height="5rem" />
-								</div>
-							}
-						</div>
+		} @else if (loading()) {
+			<div class="grid gap-4" aria-busy="true" aria-label="Cargando carreras">
+				<div class="hero-skeleton overflow-hidden rounded-panel" aria-hidden="true"><p-skeleton width="100%" height="100%" /></div>
+				<div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
+					@for (item of 6 | skeletonItems; track $index) {
+						<p-skeleton width="100%" height="64px" />
 					}
 				</div>
 			</div>
-		</div>
+		} @else if (featuredRace(); as race) {
+			<section class="race-hero relative isolate flex min-w-0 overflow-hidden rounded-panel border border-rule bg-pit text-on-pit" aria-labelledby="featured-race-title">
+				<img class="hero-image absolute inset-y-0 right-0 -z-20 h-full w-full object-cover md:w-[55%]" [src]="imageService.getImageUrl(race.circuitImage)" alt="" width="960" height="540" loading="eager" />
+				<div class="hero-shade absolute inset-0 -z-10 bg-linear-to-t from-pit from-35% to-transparent md:left-[45%] md:bg-linear-to-r md:from-15%" aria-hidden="true"></div>
+				<div class="hero-copy min-w-0 w-full md:w-1/2">
+					@if (race.finished) {
+						<span class="inline-flex items-center gap-1 rounded-row bg-pit px-2 py-1 font-display text-xs font-semibold uppercase text-on-pit"><i class="pi pi-check text-sector-up" aria-hidden="true"></i>Completada</span>
+					} @else {
+						<span class="inline-flex rounded-row bg-accent px-2 py-1 font-display text-xs font-semibold uppercase text-on-accent">Próxima</span>
+					}
+					<h2 id="featured-race-title" class="hero-title font-display font-extrabold uppercase">{{ race.name }}</h2>
+					<div class="flex items-center gap-3">
+						<img class="size-10 shrink-0 rounded-full object-cover" [src]="imageService.getImageUrl(race.flagImage)" alt="" width="40" height="40" />
+						<time class="text-lg tabular-nums md:text-xl" [attr.datetime]="race.dateStart | date: 'yyyy-MM-dd'">{{ race.dateStart | date: 'dd/MM/yyyy' }}</time>
+					</div>
+					<a class="mt-5 inline-flex min-h-11 max-w-full items-center justify-center gap-3 rounded-row bg-accent px-4 py-2.5 font-display font-semibold uppercase text-on-accent transition-colors hover:outline hover:outline-on-pit focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-pit motion-reduce:transition-none md:mt-7"
+						[routerLink]="['/results/' + (race.name | SpaceToUnderscore) + '/' + race.season.number]" [attr.aria-label]="'Ver resultados de ' + race.name">
+						Ver resultados<i class="pi pi-arrow-right shrink-0" aria-hidden="true"></i>
+					</a>
+				</div>
+			</section>
+			<section class="mt-6 md:mt-7" aria-labelledby="calendar-title">
+				<h2 id="calendar-title" class="mb-3 font-display text-2xl font-bold uppercase tracking-wide md:mb-4 md:text-[26px]">Calendario</h2>
+				<div class="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
+					@for (race of calendarRaces(); track race.id) {
+						<a class="calendar-row group grid min-w-0 items-center gap-2.5 rounded-row border border-rule bg-panel p-3 text-ink transition-colors hover:border-ink-soft hover:bg-panel-alt focus-visible:outline-2 focus-visible:outline-offset-2 motion-reduce:transition-none md:gap-3 md:p-4"
+							[class.border-dashed]="!race.finished" [class.bg-panel-alt]="!race.finished"
+							[routerLink]="['/results/' + (race.name | SpaceToUnderscore) + '/' + race.season.number]">
+							<img class="size-8 shrink-0 rounded-full object-cover border border-rule" [src]="imageService.getImageUrl(race.flagImage)" alt="" width="32" height="32" loading="lazy" />
+							<div class="min-w-0">
+								<span class="race-name block text-sm font-medium leading-snug underline-offset-4 group-hover:underline group-focus-visible:underline">{{ race.name }}</span>
+								<div class="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1">
+									<time class="text-xs text-ink-soft tabular-nums" [attr.datetime]="race.dateStart | date: 'yyyy-MM-dd'">{{ race.dateStart | date: 'dd/MM/yyyy' }}</time>
+									@if (race.finished) {
+										<span class="inline-flex items-center gap-1 rounded-row bg-pit px-1.5 py-0.5 font-display text-[11px] font-semibold uppercase text-on-pit"><i class="pi pi-check text-sector-up" aria-hidden="true"></i>Completada</span>
+									}
+								</div>
+							</div>
+							<i class="pi pi-chevron-right text-xs text-ink-soft" aria-hidden="true"></i>
+						</a>
+					}
+				</div>
+			</section>
+		} @else {
+			<div class="flex min-h-45 flex-col items-center justify-center gap-4 rounded-panel border border-rule bg-panel p-6 text-center text-ink-soft">
+				<i class="pi pi-calendar text-2xl" aria-hidden="true"></i>
+				<p role="status">No hay carreras para esta temporada.</p>
+			</div>
+		}
 	</div>
 </div>
