@@ -123,7 +123,8 @@ export function buildStatisticsCharts(overview: StatisticsOverview, teams: boole
       labels: entries.map(name),
       datasets: series.map(series => ({
         label: series.label, data: entries.map(series.value), backgroundColor: series.color,
-        ...(stacked ? { barThickness: 18 } : { maxBarThickness: 14, barPercentage: 0.7, categoryPercentage: 0.8 })
+        barThickness: 18,
+        ...(stacked ? {} : { borderWidth: 2, borderColor: palette.panel, borderSkipped: false })
       }))
     }, entries.slice(0, 5).map(entry => ({ label: name(entry), value: series.map(series => series.label + ' ' + format(series.value(entry))).join('; ') })), { stacked, note, height: Math.max(260, entries.length * 48 + 60) });
     card.options.plugins!.legend = { display: true, position: 'top', labels: { color: palette.soft, font: { size: 11 }, boxWidth: 10, boxHeight: 10 } };
