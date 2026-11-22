@@ -1,6 +1,48 @@
 import { Driver } from './driver';
 import { Team } from './team';
 
+export interface StatisticsRace {
+  id: number;
+  name: string;
+  season: number;
+}
+
+export interface RecordEntry {
+  rank: number;
+  value: number;
+  season: number;
+  driver: Driver | null;
+  team: Team | null;
+}
+
+export interface RecordBoard {
+  key: string;
+  title: string;
+  percent: boolean;
+  negative: boolean;
+  value: number;
+  holders: RecordEntry[];
+  ranking: RecordEntry[];
+}
+
+export interface StatisticsRecords {
+  seasons: {
+    number: number;
+    year: number;
+    races: number;
+    finishedRaces: number;
+    inProgress: boolean;
+    leader: { driver: Driver; points: number; margin: number } | null;
+  }[];
+  driverRecords: RecordBoard[];
+  teamRecords: RecordBoard[];
+  holderCounts: { driver: Driver; count: number }[];
+  victoryProgress: {
+    races: { race: StatisticsRace; season: number; order: number; played: boolean }[];
+    series: { driver: Driver; wins: (number | null)[] }[];
+  };
+}
+
 export interface StatisticsSummary {
   raceCount: number;
   finishedRaces: number;
@@ -54,7 +96,7 @@ export interface TeamStats {
 }
 
 export interface StatisticsEvolution<T> {
-  races: { id: number; name: string; season: number }[];
+  races: StatisticsRace[];
   series: T[];
 }
 
@@ -78,7 +120,7 @@ export interface StatisticsHeadToHead {
   pointsA: number;
   pointsB: number;
   races: {
-    race: { id: number; name: string; season: number };
+    race: StatisticsRace;
     positionA: number | null;
     positionB: number | null;
     result: 'A' | 'B' | 'NONE';

@@ -7,7 +7,6 @@ import { DriverInfo } from "../../models/driverInfo";
 import { DriverTeamHistoryEntry } from "../../models/driverTeamHistoryEntry";
 import { BaseApiService } from "../baseApiService.service";
 import { CacheService } from "../cache.service";
-import { Record } from "../../models/record";
 
 @Injectable({
   providedIn: "root",
@@ -53,9 +52,4 @@ export class DriverApiService {
     return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<DriverInfo[]>(`${environment.apiUrl}${this.endpoint}/allInfoDriver`, { params }));
   }
 
-  getRecordsDrivers(): Observable<Record[]> {
-    const cacheKey: string = `recordsDrivers-${0}`;
-
-    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<Record[]>(`${environment.apiUrl}${this.endpoint}/recordsDrivers`));
-  }
 }

@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../enviroments/enviroment';
-import { StatisticsHeadToHead, StatisticsOverview } from '../../models/statistics';
+import { StatisticsHeadToHead, StatisticsOverview, StatisticsRecords } from '../../models/statistics';
 import { BaseApiService } from '../baseApiService.service';
 import { CacheService } from '../cache.service';
 
@@ -11,6 +11,11 @@ export class StatisticsApiService {
   private readonly httpClient = inject(HttpClient);
   private readonly baseApiService = inject(BaseApiService);
   private readonly cacheService = inject(CacheService);
+
+  getRecords(): Observable<StatisticsRecords> {
+    return this.cacheService.getOrLoad('statisticsRecords-v4', () =>
+      this.httpClient.get<StatisticsRecords>(environment.apiUrl + '/statistics/records'));
+  }
 
   getOverview(season: number): Observable<StatisticsOverview> {
     const params = this.baseApiService.createParams({ season });
