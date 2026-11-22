@@ -2,6 +2,22 @@
   border-width: 0 0 0 6px;
 }
 
+.p-toast-message-success .p-toast-message-icon {
+  color: var(--sector-up);
+}
+
+.p-toast-message-error .p-toast-message-icon {
+  color: var(--sector-down);
+}
+
+.p-toast-message-warn .p-toast-message-icon {
+  color: var(--warn);
+}
+
+.p-toast-message-info .p-toast-message-icon {
+  color: var(--fantasy-text);
+}
+
 .p-toast-message-icon, .p-toast-message-icon .p-icon {
   width: 2rem;
   height: 2rem;
