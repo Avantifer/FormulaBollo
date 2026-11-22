@@ -94,8 +94,8 @@ describe('StatisticsComponent', () => {
     select('evolucion');
     expect(root().querySelector('app-general-stats')).toBeNull();
     const evolution = fixture.debugElement.query(By.directive(EvolutionStatsComponent)).componentInstance as EvolutionStatsComponent;
-    expect(evolution.seasonSelected.number).toBe(2);
-    expect(evolution.typeSelected).toBe('Equipos');
+    expect(evolution.seasonSelected().number).toBe(2);
+    expect(evolution.typeSelected()).toBe('Equipos');
     const evolutionSelector = fixture.debugElement.query(By.directive(SelectSeasonsComponent)).componentInstance as SelectSeasonsComponent;
     expect(evolutionSelector.seasons().some(season => season.number === 0)).toBeFalse();
     component.onSeasonChange(seasons[2]);

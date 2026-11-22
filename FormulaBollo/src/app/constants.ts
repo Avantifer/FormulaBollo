@@ -15,7 +15,6 @@ export const ERROR_FANTASY_ELECTION_NOT_FOUND: string = "No se ha podido recoger
 export const ERROR_DRIVER_NAME_NOT_FOUND: string = "No hay ningún piloto con ese nombre";
 export const ERROR_TEAM_NAME_NOT_FOUND: string = "No hay ningún equipo con ese nombre";
 export const ERROR_RECORDS_NOT_FOUND: string = "No hay records de los pilotos";
-export const ERROR_EVOLUTION_POINTS_NOT_FOUND: string = "Error la evolución de puntos";
 export const ERROR_CACHE: string = "Error al obtener la versión de la caché: ";
 export const ERROR_LOGIN_CREDENTIALS: string = "Credenciales incorrectas.";
 export const ERROR_RECOVER_PASSWORD: string = "Correo incorrecto.";

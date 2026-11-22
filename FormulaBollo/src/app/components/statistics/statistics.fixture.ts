@@ -24,7 +24,7 @@ export function statisticsFixture(seasonNumber = 0): StatisticsOverview {
     season: seasonNumber,
     summary: { raceCount: 72, finishedRaces: 60, distinctWinners: 8, poleWinRate: 42.5, dnfRate: 0.125, margin: 30 },
     drivers, teams,
-    driverEvolution: { races: [{ id: 1, name: 'Carrera A', season: 1 }, { id: 2, name: 'Carrera B', season: 1 }], series: drivers.slice(0, 8).map((entry, index) => ({ driver: entry.driver, cumulative: [25 - index, 50 - index] })) },
+    driverEvolution: { races: [{ id: 1, name: 'Carrera A', season: 1 }, { id: 2, name: 'Carrera B', season: 1 }], series: drivers.map((entry, index) => ({ driver: entry.driver, cumulative: index > 11 ? [0, 0] : index === 2 ? [23, 49] : [25 - index, 50 - index] })) },
     teamEvolution: { races: [{ id: 1, name: 'Carrera A', season: 1 }, { id: 2, name: 'Carrera B', season: 1 }], series: teams.map((entry, index) => ({ team: entry.team, cumulative: [50 - index, 100 - index] })) }
   };
 }

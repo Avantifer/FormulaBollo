@@ -1,7 +1,42 @@
-// Los tamaños requieren !important para sobrescribir los estilos en línea de PrimeNG.
-p-chart,
-p-chart > div,
-p-chart canvas {
-  height: 100% !important;
-  width: 100% !important;
+:host { display: block; min-width: 0; color: var(--ink); }
+.selection-panel { min-width: 0; padding: 16px; margin-bottom: 16px; border: 1px solid var(--rule); border-radius: var(--radius-panel); background: var(--panel); }
+.selection-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.selection-heading > div { min-width: 0; }
+.selection-heading h2 { font: 600 20px/1.15 var(--font-display); text-transform: uppercase; }
+.selection-heading p { margin-top: 8px; color: var(--ink-soft); font-size: 12px; line-height: 1.5; }
+.comparison-chips { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.comparison-chip { display: flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--rule); border-radius: var(--radius-row); color: var(--ink); background: var(--panel); cursor: pointer; font-size: 13px; }
+.comparison-chip span { min-width: 0; overflow-wrap: anywhere; text-align: left; }
+.comparison-chip[aria-pressed='false']:enabled:hover, .reset-button:hover { background: var(--panel-alt); }
+.comparison-chip[aria-pressed='true'] { border-color: var(--ink); background: var(--pit); color: var(--on-pit); }
+.comparison-chip:disabled { color: var(--ink-soft); border-style: dashed; opacity: .55; cursor: default; }
+.comparison-chip:focus-visible, .reset-button:focus-visible, .retry-button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.reset-button, .retry-button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--rule); border-radius: var(--radius-row); cursor: pointer; }
+.reset-button { flex-shrink: 0; color: var(--ink); background: var(--panel); font-size: 12px; }
+.retry-button { background: var(--accent); color: var(--on-accent); }
+.selection-limit { margin-top: 12px; color: var(--ink-soft); font-size: 11px; }
+.chart-card { display: flex; flex-direction: column; min-width: 0; padding: 16px; border: 1px solid var(--rule); border-radius: var(--radius-panel); background: var(--panel); }
+.card-heading { margin-bottom: 18px; }
+.card-heading h3 { font: 600 23px/1.15 var(--font-display); text-transform: uppercase; letter-spacing: .3px; overflow-wrap: anywhere; }
+.card-heading p { margin-top: 8px; color: var(--ink-soft); font-size: 12px; line-height: 1.5; }
+.chart-container { position: relative; min-width: 0; width: 100%; height: 420px; margin-bottom: 12px; }
+p-chart { position: absolute; inset: 0; display: block; width: 100%; height: 100%; min-width: 0; }
+:host ::ng-deep .chart-container canvas { max-width: 100%; }
+.chart-values { display: grid; gap: 8px; padding: 0; margin: 0 0 12px; list-style: none; font-size: 11px; }
+.chart-values li { display: flex; justify-content: space-between; gap: 12px; min-width: 0; }
+.chart-values span { min-width: 0; overflow-wrap: anywhere; }
+.value-label { display: flex; align-items: center; gap: 8px; }
+.value-points { display: flex; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; gap: 4px 16px; text-align: right; }
+.value-gain { color: var(--ink-soft); }
+.swatch { width: 22px; height: 8px; flex-shrink: 0; }
+.swatch line { stroke-width: 4; }
+.chart-note { color: var(--ink-soft); font-size: 11px; line-height: 1.55; border-top: 1px solid var(--rule); padding-top: 12px; margin-top: auto; }
+.state-panel { display: flex; min-height: 240px; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; border: 1px solid var(--rule); border-radius: var(--radius-panel); background: var(--panel); text-align: center; }
+@media (min-width: 640px) {
+  .selection-panel, .chart-card { padding: 24px; }
+}
+@media (max-width: 639px) {
+  .selection-heading { flex-direction: column; gap: 8px; }
+  .chart-container { height: 320px; }
+  .value-points { flex-direction: column; }
 }

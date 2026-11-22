@@ -8,7 +8,6 @@ import { DriverTeamHistoryEntry } from "../../models/driverTeamHistoryEntry";
 import { BaseApiService } from "../baseApiService.service";
 import { CacheService } from "../cache.service";
 import { Record } from "../../models/record";
-import { DriverEvolutionPoints } from "../../models/driverEvolutionPoints";
 
 @Injectable({
   providedIn: "root",
@@ -58,12 +57,5 @@ export class DriverApiService {
     const cacheKey: string = `recordsDrivers-${0}`;
 
     return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<Record[]>(`${environment.apiUrl}${this.endpoint}/recordsDrivers`));
-  }
-
-  getEvolutionPointsDrivers(driver1Id: number, driver2Id: number, driver3Id: number, driver4Id: number, season: number): Observable<DriverEvolutionPoints[]> {
-    const cacheKey: string = `evolutionDrivers-${driver1Id}-${driver2Id}-${driver3Id}-${driver4Id}-${season}`;
-
-    const params = this.baseApiService.createParams({ driver1Id: driver1Id, driver2Id: driver2Id, driver3Id: driver3Id, driver4Id: driver4Id });
-    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<DriverEvolutionPoints[]>(`${environment.apiUrl}${this.endpoint}/evolutionPoints`, { params }));
   }
 }

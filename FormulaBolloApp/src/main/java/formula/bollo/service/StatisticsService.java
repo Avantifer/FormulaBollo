@@ -101,7 +101,7 @@ public class StatisticsService {
                 .map(race -> new StatisticsRaceDTO(race.getId(), race.getName(), race.getSeason().getNumber())).toList();
         Map<String, Map<Long, Integer>> driverRacePoints = racePoints(rows, sprints, false);
         Map<String, Map<Long, Integer>> teamRacePoints = racePoints(rows, sprints, true);
-        var driverSeries = driverStats.stream().limit(8)
+        var driverSeries = driverStats.stream()
                 .map(dto -> new DriverStatisticsSeriesDTO(dto.getDriver(),
                         cumulative(finished, driverRacePoints.getOrDefault(dto.getDriver().getName(), Map.of()))))
                 .toList();

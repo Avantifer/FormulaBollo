@@ -1,6 +1,7 @@
 import { ChartData, ChartDataset, ChartOptions, ChartType, Plugin, ScriptableContext } from 'chart.js';
 import { DriverStats, StatisticsOverview, TeamStats } from '../../../../shared/models/statistics';
 import { colorsMappings, getBarMobileChartOptions, getLineChartOptions, getPieChartOptions } from '../../../constants';
+import { endLabelPlacement, LINE_DASHES, LINE_PLOT_HEIGHT } from '../chart-labels';
 
 interface CenterTextOptions { value: string; label: string; color: string; soft: string }
 
@@ -29,11 +30,6 @@ export const centerTextPlugin: Plugin<'doughnut', CenterTextOptions> = {
     ctx.restore();
   }
 };
-
-const LINE_DASHES = [[], [6, 3], [2, 3], [9, 3, 2, 3]];
-const LINE_PLOT_HEIGHT = 274;
-const LINE_LABEL_GAP = 13;
-const LINE_LABEL_OFFSET = 18;
 
 type Entry = DriverStats | TeamStats;
 export type StatisticsPalette = Record<'ink' | 'soft' | 'rule' | 'panel' | 'up' | 'down' | 'best' | 'gold' | 'silver' | 'bronze', string>;
@@ -159,21 +155,16 @@ export function buildStatisticsCharts(overview: StatisticsOverview, teams: boole
     const finals = series.map(entry => entry.cumulative.at(-1) ?? 0);
     const top = Math.max(1, ...finals) * 1.04;
     const natural = finals.map(value => (1 - value / top) * LINE_PLOT_HEIGHT);
-    const order = finals.map((_, index) => index).sort((a, b) => finals[b] - finals[a]);
-    const placed: number[] = [];
-    order.forEach((index, position) => {
-      placed[index] = position ? Math.max(natural[index], placed[order[position - 1]] + LINE_LABEL_GAP) : natural[index];
-    });
+    const labels = endLabelPlacement(natural);
     const card = add('evolution', teams ? 'El pulso de los equipos' : 'La carrera por los puntos', 'Puntos de carrera acumulados; ' + (mobile ? 'los cinco líderes.' : teams ? 'todos los equipos.' : 'los ocho líderes.'), {
       labels: source.races.map(race => race.name),
       datasets: series.map((entry, index) => {
-        const shift = placed[index] - natural[index];
         return {
           label: entry.name, data: entry.cumulative, borderColor: entry.color, backgroundColor: entry.color, borderWidth: 2,
           pointRadius: (context: ScriptableContext<'line'>) => context.dataIndex === entry.cumulative.length - 1 ? 4 : 0, pointHoverRadius: 5,
           pointStyle: ['circle', 'rect', 'triangle'][index % 3] as 'circle' | 'rect' | 'triangle',
           borderDash: LINE_DASHES[index % 4], tension: 0, fill: false,
-          datalabels: { align: Math.atan2(shift, LINE_LABEL_OFFSET) * 180 / Math.PI, offset: Math.hypot(shift, LINE_LABEL_OFFSET) }
+          datalabels: labels[index]
         } as ChartDataset;
       })
     }, series.map((entry, index) => ({ label: entry.name, value: format(entry.cumulative.at(-1) ?? 0) + ' pts', color: entry.color, dash: LINE_DASHES[index % 4] })), { type: 'line', span: 8, height: 350, note: 'Incluye puntos de sprint. Cada trazo se identifica por el nombre de su etiqueta final y por su muestra de color y trazo.' });
