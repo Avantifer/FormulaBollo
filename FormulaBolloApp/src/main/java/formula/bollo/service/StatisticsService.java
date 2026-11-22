@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -13,10 +14,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import formula.bollo.entity.Driver;
 import formula.bollo.entity.Penalty;
 import formula.bollo.entity.Race;
 import formula.bollo.entity.Result;
 import formula.bollo.entity.Sprint;
+import formula.bollo.entity.Team;
 import formula.bollo.model.*;
 import formula.bollo.repository.DriverRepository;
 import formula.bollo.repository.PenaltyRepository;
@@ -124,6 +127,185 @@ public class StatisticsService {
                 rows.isEmpty() ? 0 : round((double) dnfs / rows.size(), 3), margin);
         return new StatisticsOverviewDTO(season, summary, driverStats, teamStats,
                 new StatisticsEvolutionDTO<>(axis, driverSeries), new StatisticsEvolutionDTO<>(axis, teamSeries));
+    }
+
+    public StatisticsRecordsDTO getRecords() {
+        var drivers = driverRepository.findForStatistics(0).stream()
+                .filter(driver -> !vacancy(driver.getName())).toList();
+        List<Race> races = raceRepository.findForStatistics(0).stream().sorted(CHRONOLOGICAL).toList();
+        List<Result> rows = deduplicate(resultRepository.findForStatistics(0).stream()
+                .filter(row -> row.getRace().getFinished() == 1 && !vacancy(row.getDriver().getName())).toList());
+        List<Sprint> sprints = sprintRepository.findForStatistics(0).stream()
+                .filter(sprint -> sprint.getRace().getFinished() == 1 && !vacancy(sprint.getDriver().getName())).toList();
+        List<Penalty> penalties = penaltyRepository.findForStatistics(0).stream()
+                .filter(penalty -> !vacancy(penalty.getDriver().getName())).toList();
+
+        Map<Integer, List<Race>> calendars = races.stream().collect(Collectors.groupingBy(
+                race -> race.getSeason().getNumber(), TreeMap::new, Collectors.toList()));
+        Map<DriverSeason, List<Driver>> driversBySeason = drivers.stream().collect(Collectors.groupingBy(
+                driver -> new DriverSeason(driver.getName(), driver.getSeason().getNumber())));
+        Map<DriverSeason, List<Result>> rowsByDriver = rows.stream().collect(Collectors.groupingBy(
+                row -> new DriverSeason(row.getDriver().getName(), row.getRace().getSeason().getNumber())));
+        Map<DriverSeason, List<Sprint>> sprintsByDriver = sprints.stream().collect(Collectors.groupingBy(
+                sprint -> new DriverSeason(sprint.getDriver().getName(), sprint.getRace().getSeason().getNumber())));
+        Map<DriverSeason, List<Penalty>> penaltiesByDriver = penalties.stream().collect(Collectors.groupingBy(
+                penalty -> new DriverSeason(penalty.getDriver().getName(), penalty.getSeason().getNumber())));
+        List<DriverStatsDTO> driverStats = driversBySeason.entrySet().stream().map(entry -> {
+            List<Result> results = rowsByDriver.getOrDefault(entry.getKey(), List.of());
+            Map<Long, Long> teamCounts = results.stream().collect(Collectors.groupingBy(
+                    row -> row.getDriver().getTeam().getId(), Collectors.counting()));
+            Driver representative = entry.getValue().stream().sorted(Comparator
+                    .comparingLong((Driver driver) -> teamCounts.getOrDefault(driver.getTeam().getId(), 0L)).reversed()
+                    .thenComparing(Driver::getId)).findFirst().orElseThrow();
+            List<Penalty> sanctions = penaltiesByDriver.getOrDefault(entry.getKey(), List.of());
+            DriverInfoDTO info = driverService.buildInfo(List.of(representative), results,
+                    sprintsByDriver.getOrDefault(entry.getKey(), List.of()), sanctions.size(), 0);
+            return driverStats(info, results, sanctions);
+        }).sorted(Comparator.comparingInt(DriverStatsDTO::getTotalPoints).reversed()
+                .thenComparing(dto -> dto.getDriver().getName())).toList();
+
+        List<RecordSeasonDTO> seasons = calendars.entrySet().stream().map(entry -> {
+            int number = entry.getKey();
+            int finished = (int) entry.getValue().stream().filter(race -> race.getFinished() == 1).count();
+            List<DriverStatsDTO> standings = driverStats.stream()
+                    .filter(dto -> dto.getDriver().getSeason().getNumber() == number).toList();
+            RecordLeaderDTO leader = finished == 0 || standings.isEmpty() ? null : new RecordLeaderDTO(
+                    standings.getFirst().getDriver(), standings.getFirst().getTotalPoints(), standings.size() < 2 ? 0
+                            : standings.getFirst().getTotalPoints() - standings.get(1).getTotalPoints());
+            return new RecordSeasonDTO(number, entry.getValue().getFirst().getSeason().getYear(),
+                    entry.getValue().size(), finished, finished < entry.getValue().size(), leader);
+        }).toList();
+        Map<Integer, Integer> finishedCounts = seasons.stream().collect(Collectors.toMap(
+                RecordSeasonDTO::getNumber, RecordSeasonDTO::getFinishedRaces));
+        List<RecordBoardDTO> driverBoards = new ArrayList<>();
+        addDriverBoard(driverBoards, "poles", "Poles", false, false, driverStats, DriverStatsDTO::getPoles);
+        addDriverBoard(driverBoards, "podiums", "Podios", false, false, driverStats, DriverStatsDTO::getPodiums);
+        addDriverBoard(driverBoards, "fastLaps", "Vueltas rápidas", false, false, driverStats, DriverStatsDTO::getFastlaps);
+        addDriverBoard(driverBoards, "victories", "Victorias", false, false, driverStats, DriverStatsDTO::getVictories);
+        addDriverBoard(driverBoards, "winRate", "% de victorias", true, false, driverStats.stream()
+                .filter(dto -> dto.getRaces() > 0 && 2 * dto.getRaces() >= finishedCounts
+                        .getOrDefault(dto.getDriver().getSeason().getNumber(), 0)).toList(),
+                dto -> round(100d * dto.getVictories() / dto.getRaces(), 1));
+        addDriverBoard(driverBoards, "penalties", "Penalizaciones", false, true, driverStats, DriverStatsDTO::getPenalties);
+        addDriverBoard(driverBoards, "racesFinished", "Carreras terminadas", false, false, driverStats,
+                DriverStatsDTO::getRacesFinished);
+        addDriverBoard(driverBoards, "points", "Puntos", false, false, driverStats, DriverStatsDTO::getTotalPoints);
+
+        List<TeamStatsDTO> teamStats = recordTeamStats(rows, sprints);
+        List<RecordBoardDTO> teamBoards = new ArrayList<>();
+        addTeamBoard(teamBoards, "teamPoints", "Puntos de equipo", teamStats, TeamStatsDTO::getTotalPoints);
+        addTeamBoard(teamBoards, "teamVictories", "Victorias de equipo", teamStats, TeamStatsDTO::getVictories);
+        addTeamBoard(teamBoards, "teamDoublePodiums", "Dobles podios", teamStats, TeamStatsDTO::getDoublePodiums);
+
+        Map<Long, Integer> raceOrders = new HashMap<>();
+        calendars.values().forEach(calendar -> {
+            for (int index = 0; index < calendar.size(); index++)
+                raceOrders.put(calendar.get(index).getId(), index + 1);
+        });
+        Map<String, DriverDTO> latest = new HashMap<>();
+        driverStats.forEach(dto -> latest.merge(dto.getDriver().getName(), dto.getDriver(),
+                (first, second) -> first.getSeason().getNumber() >= second.getSeason().getNumber() ? first : second));
+        return new StatisticsRecordsDTO(seasons, driverBoards, teamBoards,
+                holderCounts(driverBoards, latest), victoryProgress(races, rows, driverStats, raceOrders, latest));
+    }
+
+    private boolean vacancy(String name) {
+        return name.matches("(?i)^vacante[0-9]*$");
+    }
+
+    private List<TeamStatsDTO> recordTeamStats(List<Result> rows, List<Sprint> sprints) {
+        Map<Long, List<Result>> byTeam = rows.stream().collect(Collectors.groupingBy(
+                row -> row.getDriver().getTeam().getId()));
+        // Use the surviving result's team for sprint points, as in the overview's evolution.
+        Map<DriverRace, Result> surviving = rows.stream().collect(Collectors.toMap(
+                row -> new DriverRace(row.getDriver().getName(), row.getRace().getId()), Function.identity()));
+        Map<Long, List<Sprint>> teamSprints = sprints.stream().collect(Collectors.groupingBy(
+                sprint -> sprintTeam(sprint, surviving).getId()));
+        Map<Long, Driver> representatives = new HashMap<>();
+        rows.forEach(row -> representatives.putIfAbsent(row.getDriver().getTeam().getId(), row.getDriver()));
+        sprints.forEach(sprint -> representatives.putIfAbsent(sprint.getDriver().getTeam().getId(), sprint.getDriver()));
+        return representatives.entrySet().stream().map(entry -> {
+            List<Result> results = byTeam.getOrDefault(entry.getKey(), List.of());
+            DriverInfoDTO info = driverService.buildInfo(List.of(entry.getValue()), results,
+                    teamSprints.getOrDefault(entry.getKey(), List.of()), 0, 0);
+            return teamStats(new TeamInfoDTO(info.getDriver().getTeam(), 0, info, List.of()), results, Map.of(), 0);
+        }).toList();
+    }
+
+    private void addDriverBoard(List<RecordBoardDTO> boards, String key, String title, boolean percent,
+            boolean negative, List<DriverStatsDTO> stats, Function<DriverStatsDTO, Number> value) {
+        addBoard(boards, key, title, percent, negative, stats.stream().map(dto -> new RecordEntryDTO(
+                0, value.apply(dto), dto.getDriver().getSeason().getNumber(), dto.getDriver(), null)).toList());
+    }
+
+    private void addTeamBoard(List<RecordBoardDTO> boards, String key, String title, List<TeamStatsDTO> stats,
+            Function<TeamStatsDTO, Number> value) {
+        addBoard(boards, key, title, false, false, stats.stream().map(dto -> new RecordEntryDTO(
+                0, value.apply(dto), dto.getTeam().getSeason().getNumber(), null, dto.getTeam())).toList());
+    }
+
+    private void addBoard(List<RecordBoardDTO> boards, String key, String title, boolean percent,
+            boolean negative, List<RecordEntryDTO> entries) {
+        List<RecordEntryDTO> sorted = entries.stream().sorted(Comparator
+                .comparingDouble((RecordEntryDTO entry) -> entry.getValue().doubleValue()).reversed()
+                .thenComparingInt(RecordEntryDTO::getSeason).thenComparing(entry -> entry.getDriver() != null
+                        ? entry.getDriver().getName() : entry.getTeam().getName())).toList();
+        if (sorted.isEmpty() || sorted.getFirst().getValue().doubleValue() == 0)
+            return;
+        double cutoff = sorted.get(Math.min(4, sorted.size() - 1)).getValue().doubleValue();
+        List<RecordEntryDTO> ranking = new ArrayList<>();
+        int rank = 0;
+        for (int index = 0; index < sorted.size(); index++) {
+            RecordEntryDTO entry = sorted.get(index);
+            if (entry.getValue().doubleValue() < cutoff)
+                break;
+            if (index == 0 || Double.compare(entry.getValue().doubleValue(),
+                    sorted.get(index - 1).getValue().doubleValue()) != 0)
+                rank = index + 1;
+            entry.setRank(rank);
+            ranking.add(entry);
+        }
+        boards.add(new RecordBoardDTO(key, title, percent, negative, sorted.getFirst().getValue(),
+                ranking.stream().filter(entry -> entry.getRank() == 1).toList(), ranking));
+    }
+
+    private StatisticsRaceDTO statisticsRace(Race race) {
+        return new StatisticsRaceDTO(race.getId(), race.getName(), race.getSeason().getNumber());
+    }
+
+    private List<RecordHolderCountDTO> holderCounts(List<RecordBoardDTO> boards, Map<String, DriverDTO> latest) {
+        Map<String, List<RecordBoardDTO>> held = new HashMap<>();
+        boards.forEach(board -> board.getHolders().stream().map(entry -> entry.getDriver().getName()).distinct()
+                .forEach(name -> held.computeIfAbsent(name, key -> new ArrayList<>()).add(board)));
+        return held.entrySet().stream().map(entry -> new RecordHolderCountDTO(latest.get(entry.getKey()),
+                entry.getValue().size()))
+                .sorted(Comparator.comparingInt(RecordHolderCountDTO::getCount).reversed()
+                        .thenComparing(dto -> dto.getDriver().getName())).toList();
+    }
+
+    private VictoryProgressDTO victoryProgress(List<Race> races, List<Result> rows, List<DriverStatsDTO> stats,
+            Map<Long, Integer> orders, Map<String, DriverDTO> latest) {
+        Map<String, Integer> wins = new HashMap<>();
+        Map<String, Integer> points = new HashMap<>();
+        stats.forEach(dto -> {
+            wins.merge(dto.getDriver().getName(), dto.getVictories(), Integer::sum);
+            points.merge(dto.getDriver().getName(), dto.getTotalPoints(), Integer::sum);
+        });
+        Map<String, Map<Long, Integer>> byRace = rows.stream().filter(row -> position(row) == 1)
+                .collect(Collectors.groupingBy(row -> row.getDriver().getName(), Collectors.toMap(
+                        row -> row.getRace().getId(), row -> 1)));
+        List<VictorySeriesDTO> series = wins.keySet().stream().sorted(Comparator
+                .<String>comparingInt(wins::get).reversed()
+                .thenComparing(Comparator.<String>comparingInt(points::get).reversed())
+                .thenComparing(Comparator.naturalOrder())).limit(5).map(name -> {
+                    List<Integer> accumulated = cumulative(races, byRace.getOrDefault(name, Map.of()));
+                    Integer[] values = new Integer[races.size()];
+                    for (int index = 0; index < races.size(); index++)
+                        values[index] = races.get(index).getFinished() == 1 ? accumulated.get(index) : null;
+                    return new VictorySeriesDTO(latest.get(name), values);
+                }).toList();
+        return new VictoryProgressDTO(races.stream().map(race -> new VictoryRaceDTO(statisticsRace(race),
+                race.getSeason().getNumber(), orders.get(race.getId()), race.getFinished() == 1)).toList(), series);
     }
 
     public StatisticsHeadToHeadDTO getHeadToHead(int season, String a, String b) {
@@ -293,13 +475,16 @@ public class StatisticsService {
             points.computeIfAbsent(name, key -> new HashMap<>()).merge(row.getRace().getId(), scored, Integer::sum);
         }
         for (Sprint sprint : sprints) {
-            Result row = surviving.get(new DriverRace(sprint.getDriver().getName(), sprint.getRace().getId()));
-            String name = !teams ? sprint.getDriver().getName()
-                    : row == null ? sprint.getDriver().getTeam().getName() : row.getDriver().getTeam().getName();
+            String name = teams ? sprintTeam(sprint, surviving).getName() : sprint.getDriver().getName();
             int scored = sprint.getPosition() == null ? 0 : sprint.getPosition().getPoints();
             points.computeIfAbsent(name, key -> new HashMap<>()).merge(sprint.getRace().getId(), scored, Integer::sum);
         }
         return points;
+    }
+
+    private Team sprintTeam(Sprint sprint, Map<DriverRace, Result> surviving) {
+        Result row = surviving.get(new DriverRace(sprint.getDriver().getName(), sprint.getRace().getId()));
+        return (row == null ? sprint.getDriver() : row.getDriver()).getTeam();
     }
 
     private List<Integer> cumulative(List<Race> races, Map<Long, Integer> points) {
