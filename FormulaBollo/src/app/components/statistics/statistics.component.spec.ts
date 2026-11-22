@@ -10,7 +10,7 @@ import { StatisticsComponent } from './statistics.component';
 import { GeneralStatsComponent } from './general-stats/general-stats.component';
 import { EvolutionStatsComponent } from './evolution-stats/evolution-stats.component';
 import { ComparativeStatsComponent } from './comparative-stats/comparative-stats.component';
-import { statisticsFixture } from './statistics.fixture';
+import { recordsFixture, statisticsFixture } from './statistics.fixture';
 
 describe('StatisticsComponent', () => {
   const seasons = [1, 2, 3].map(number => new Season(number, 'Temporada ' + number, number));
@@ -24,7 +24,8 @@ describe('StatisticsComponent', () => {
   const type = (teams: boolean): void => { root().querySelectorAll<HTMLButtonElement>('.entity-switch button')[teams ? 1 : 0].click(); render(); };
 
   beforeEach(() => {
-    api = jasmine.createSpyObj('StatisticsApiService', ['getOverview', 'getHeadToHead']);
+    api = jasmine.createSpyObj('StatisticsApiService', ['getOverview', 'getHeadToHead', 'getRecords']);
+    api.getRecords.and.callFake(() => of(recordsFixture()));
     api.getOverview.and.callFake(season => of(statisticsFixture(season)));
     api.getHeadToHead.and.callFake((season, a, b) => of({ season, a, b, aheadA: 0, aheadB: 0, comparable: 0, bothDnf: 0, pointsA: 0, pointsB: 0, races: [] }));
     TestBed.configureTestingModule({

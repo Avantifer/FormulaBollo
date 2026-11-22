@@ -158,7 +158,7 @@ public class DriverService {
         return counts;
     }
 
-    private DriverInfoDTO buildInfo(List<Driver> drivers, List<Result> results, List<Sprint> sprints,
+    DriverInfoDTO buildInfo(List<Driver> drivers, List<Result> results, List<Sprint> sprints,
             int penalties, int championships) {
         Driver driver = drivers.stream()
                 .max(Comparator.comparingInt((Driver candidate) -> candidate.getSeason().getNumber())

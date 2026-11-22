@@ -508,6 +508,271 @@ class StatisticsServiceJpaTest {
                 + statistics.getPrepareStatementCount() + " SELECTs");
     }
 
+    @Test
+    void recordsMergePeopleWithinEachSeasonAndExposeAllRecordSections() {
+        Season old = season(1);
+        Team big = team("Big", old);
+        Driver robe = driver("Robe", big);
+        Driver transfer = driver("Robe", team("Small", old));
+        Driver ana = driver("Ana", big);
+        Driver bea = driver("Bea", team("Other", old));
+        Driver dubious = driver("Dubious", big);
+        Driver vacant = driver("VaCaNtE12", big);
+        Driver vacantWithoutNumber = driver("vacante", big);
+        Position first = position(1, 25);
+        Position second = position(2, 18);
+        Race r2 = race(old, 2, 1);
+        Race r1 = race(old, 1, 1);
+        Race r3 = race(old, 3, 1);
+        Race r4 = race(old, 4, 1);
+        for (Race race : List.of(r1, r2, r3, r4))
+            race.setDateStart(race.getDateStart().minusYears(1));
+        result(transfer, r1, null, 1, 1);
+        result(robe, r1, first, 1, 1);
+        result(robe, r2, second, 0, 1);
+        result(robe, r3, null, 0, 0);
+        result(ana, r1, second, 0, 0);
+        result(ana, r2, first, 0, 1);
+        result(ana, r3, first, 0, 1);
+        result(ana, r4, null, 0, 0);
+        result(bea, r4, first, 0, 0);
+        result(vacant, r1, first, 1, 1);
+        result(vacantWithoutNumber, r3, null, 0, 0);
+        SprintPosition sprintFirst = persist(new SprintPosition(null, 1, 8));
+        persist(new Sprint(null, r1, transfer, sprintFirst));
+        persist(new Sprint(null, r1, vacant, sprintFirst));
+        PenaltySeverity severity = persist(new PenaltySeverity(null, "Leve"));
+        persist(new Penalty(null, r1, robe, "Penalty", severity, old));
+        for (Race race : List.of(r3, r4)) {
+            for (int index = 0; index < 3; index++)
+                persist(new Penalty(null, race, dubious, "Penalty", severity, old));
+        }
+        persist(new Penalty(null, r1, vacant, "Penalty", severity, old));
+
+        Season current = season(2);
+        Team next = team("New", current);
+        Driver newRobe = driver("Robe", next);
+        Driver newAna = driver("Ana", next);
+        Race last = race(current, 3, 1);
+        Race pending = race(current, 2, 0);
+        Race opening = race(current, 1, 1);
+        for (Race race : List.of(opening, last)) {
+            result(newRobe, race, first, 1, 1);
+            result(newAna, race, second, 0, 0);
+        }
+        // A pending result and sprint must not affect records or accumulated wins.
+        result(newAna, pending, first, 1, 1);
+        persist(new Sprint(null, pending, newAna, sprintFirst));
+        flushAndClear();
+
+        StatisticsRecordsDTO dto = service.getRecords();
+        assertThat(dto.getDriverRecords()).extracting(RecordBoardDTO::getKey).containsExactly(
+                "poles", "podiums", "fastLaps", "victories", "winRate", "penalties", "racesFinished", "points");
+        assertThat(board(dto.getDriverRecords(), "poles").getHolders())
+                .extracting(entry -> entry.getDriver().getName() + entry.getSeason())
+                .containsExactly("Ana1", "Robe1", "Robe2");
+        RecordEntryDTO oldRobe = board(dto.getDriverRecords(), "points").getRanking().stream()
+                .filter(entry -> entry.getSeason() == 1 && entry.getDriver().getName().equals("Robe"))
+                .findFirst().orElseThrow();
+        assertThat(oldRobe.getValue()).isEqualTo(52);
+        assertThat(oldRobe.getDriver().getTeam().getName()).isEqualTo("Big");
+        assertThat(oldRobe.getDriver().getSeason().getNumber()).isEqualTo(1);
+        assertThat(oldRobe.getDriver().getDriverImage()).isEqualTo("");
+        assertThat(board(dto.getDriverRecords(), "victories").getValue()).isEqualTo(2);
+        assertThat(board(dto.getDriverRecords(), "racesFinished").getValue()).isEqualTo(3);
+        RecordBoardDTO rate = board(dto.getDriverRecords(), "winRate");
+        assertThat(rate.isPercent()).isTrue();
+        assertThat(rate.getValue()).isEqualTo(100d);
+        assertThat(rate.getHolders()).singleElement().satisfies(entry -> {
+            assertThat(entry.getDriver().getName()).isEqualTo("Robe");
+            assertThat(entry.getSeason()).isEqualTo(2);
+        });
+        assertThat(rate.getRanking()).noneMatch(entry -> entry.getDriver().getName().equals("Bea"));
+        assertThat(rate.getRanking()).filteredOn(entry -> entry.getSeason() == 1
+                && entry.getDriver().getName().equals("Robe")).singleElement()
+                .extracting(RecordEntryDTO::getValue).isEqualTo(33.3d);
+        assertThat(board(dto.getDriverRecords(), "penalties").isNegative()).isTrue();
+        assertThat(board(dto.getDriverRecords(), "penalties").getValue()).isEqualTo(6);
+        assertThat(dto.getDriverRecords()).allSatisfy(record -> assertThat(record.getRanking())
+                .noneMatch(entry -> entry.getDriver().getName().toLowerCase().startsWith("vacante")));
+
+        assertThat(dto.getTeamRecords()).extracting(RecordBoardDTO::getKey)
+                .containsExactly("teamPoints", "teamVictories", "teamDoublePodiums");
+        assertThat(board(dto.getTeamRecords(), "teamPoints").getValue()).isEqualTo(120);
+        assertThat(board(dto.getTeamRecords(), "teamVictories").getValue()).isEqualTo(3);
+        assertThat(board(dto.getTeamRecords(), "teamDoublePodiums").getValue()).isEqualTo(2);
+        assertThat(board(dto.getTeamRecords(), "teamDoublePodiums").getHolders())
+                .extracting(entry -> entry.getTeam().getName()).containsExactly("Big", "New");
+        assertThat(dto.getTeamRecords()).allSatisfy(record -> assertThat(record.getRanking()).allSatisfy(entry -> {
+            assertThat(entry.getDriver()).isNull();
+            assertThat(entry.getTeam().getSeason().getNumber()).isEqualTo(entry.getSeason());
+        }));
+
+        assertThat(dto.getHolderCounts()).extracting(count -> count.getDriver().getName())
+                .containsExactly("Ana", "Robe", "Dubious");
+        assertThat(dto.getHolderCounts()).extracting(RecordHolderCountDTO::getCount).containsExactly(5, 4, 1);
+        assertThat(dto.getHolderCounts().get(1).getDriver().getId()).isEqualTo(newRobe.getId());
+        assertThat(dto.getSeasons()).extracting(RecordSeasonDTO::getNumber).containsExactly(1, 2);
+        assertThat(dto.getSeasons()).extracting(RecordSeasonDTO::isInProgress).containsExactly(false, true);
+        assertThat(dto.getSeasons().getFirst()).satisfies(season -> {
+            assertThat(season.getYear()).isEqualTo(2024);
+            assertThat(season.getRaces()).isEqualTo(4);
+            assertThat(season.getFinishedRaces()).isEqualTo(4);
+            assertThat(season.getLeader().getDriver().getName()).isEqualTo("Ana");
+            assertThat(season.getLeader().getDriver().getSeason().getNumber()).isEqualTo(1);
+            assertThat(season.getLeader().getPoints()).isEqualTo(68);
+            assertThat(season.getLeader().getMargin()).isEqualTo(16);
+        });
+        assertThat(dto.getSeasons().getLast().getLeader().getPoints()).isEqualTo(52);
+        assertThat(dto.getSeasons().getLast().getLeader().getMargin()).isEqualTo(16);
+        assertThat(dto.getSeasons().getLast().getRaces()).isEqualTo(3);
+        assertThat(dto.getSeasons().getLast().getFinishedRaces()).isEqualTo(2);
+        assertThat(dto.getVictoryProgress().getRaces()).extracting(race -> race.getRace().getId())
+                .containsExactly(r1.getId(), r2.getId(), r3.getId(), r4.getId(), opening.getId(), pending.getId(), last.getId());
+        assertThat(dto.getVictoryProgress().getRaces()).extracting(VictoryRaceDTO::isPlayed)
+                .containsExactly(true, true, true, true, true, false, true);
+        assertThat(dto.getVictoryProgress().getRaces()).extracting(VictoryRaceDTO::getOrder)
+                .containsExactly(1, 2, 3, 4, 1, 2, 3);
+        assertThat(dto.getVictoryProgress().getSeries().getFirst()).satisfies(series -> {
+            assertThat(series.getDriver().getId()).isEqualTo(newRobe.getId());
+            assertThat(series.getWins()).containsExactly(1, 1, 1, 1, 2, null, 3);
+        });
+    }
+
+    @Test
+    void recordsUseCompetitionRanksAndIncludeEveryTieAtTheFifthValue() {
+        Season season = season(1);
+        Team team = team("Team", season);
+        List<Race> calendar = java.util.stream.IntStream.rangeClosed(1, 5)
+                .mapToObj(day -> race(season, day, 1)).toList();
+        int[] poles = {5, 5, 4, 3, 2, 2, 1};
+        for (int index = poles.length - 1; index >= 0; index--) {
+            Driver driver = driver("Driver " + index, team);
+            for (int day = 0; day < poles[index]; day++)
+                result(driver, calendar.get(day), null, 0, 1);
+        }
+        flushAndClear();
+        StatisticsRecordsDTO dto = service.getRecords();
+        RecordBoardDTO board = board(dto.getDriverRecords(), "poles");
+        assertThat(board.getHolders()).hasSize(2);
+        assertThat(board.getRanking()).extracting(RecordEntryDTO::getRank).containsExactly(1, 1, 3, 4, 5, 5);
+        assertThat(board.getRanking()).extracting(entry -> entry.getDriver().getName())
+                .containsExactly("Driver 0", "Driver 1", "Driver 2", "Driver 3", "Driver 4", "Driver 5");
+        assertThat(board.getRanking()).containsAll(board.getHolders());
+        assertThat(dto.getDriverRecords()).extracting(RecordBoardDTO::getKey).containsExactly("poles");
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {4, 5})
+    void winRateRequiresAtLeastHalfTheFinishedCalendarIncludingRetirements(int finishedCount) {
+        Season season = season(1);
+        Team team = team("Team", season);
+        Driver eligible = driver("Eligible", team);
+        Driver shortSample = driver("Short", team);
+        Position winner = position(1, 25);
+        int half = (finishedCount + 1) / 2;
+        for (int index = 0; index < finishedCount; index++) {
+            Race race = race(season, index + 1, 1);
+            if (index < half)
+                result(eligible, race, index == 0 ? winner : null, 0, 0);
+            if (index < half - 1)
+                result(shortSample, race, winner, 0, 0);
+        }
+        race(season, finishedCount + 1, 0);
+        flushAndClear();
+        RecordBoardDTO rate = board(service.getRecords().getDriverRecords(), "winRate");
+        assertThat(rate.getValue()).isEqualTo(finishedCount == 4 ? 50d : 33.3d);
+        assertThat(rate.getRanking()).singleElement()
+                .extracting(entry -> entry.getDriver().getName()).isEqualTo("Eligible");
+    }
+
+    @Test
+    void recordsKeepAllHoldersEvenWhenMoreThanFiveShareFirstPlace() {
+        seedTeams(7);
+        flushAndClear();
+        StatisticsRecordsDTO records = service.getRecords();
+        RecordBoardDTO victories = board(records.getDriverRecords(), "victories");
+        assertThat(victories.getHolders()).hasSize(7);
+        assertThat(records.getHolderCounts()).extracting(count -> count.getDriver().getName())
+                .containsExactly("Ana 0", "Ana 1", "Ana 2", "Ana 3", "Ana 4", "Ana 5", "Ana 6");
+        assertThat(records.getHolderCounts()).extracting(RecordHolderCountDTO::getCount)
+                .containsExactly(7, 7, 7, 7, 7, 7, 7);
+        assertThat(victories.getRanking()).hasSize(7).allSatisfy(entry -> assertThat(entry.getRank()).isEqualTo(1));
+    }
+
+    @Test
+    void victoryProgressSelectsFivePeopleByWinsThenPointsThenNameAndUsesDateAndIdOrder() {
+        Season season = season(1);
+        Team team = team("Team", season);
+        Race first = race(season, 1, 1);
+        Race second = race(season, 1, 1);
+        Race pending = race(season, 2, 0);
+        Position winner = position(1, 25);
+        String[] names = {"Zed", "Bea", "Ana", "Cid", "Eli", "Dan", "Fox"};
+        int[] extra = {25, 20, 20, 18, 0, 0, 100};
+        for (int index = 0; index < names.length; index++) {
+            Driver driver = driver(names[index], team);
+            if (index < 6)
+                result(driver, first, winner, 0, 0);
+            result(driver, second, position(index == 0 ? 1 : 2, extra[index]), 0, 0);
+        }
+        flushAndClear();
+        VictoryProgressDTO progress = service.getRecords().getVictoryProgress();
+        assertThat(progress.getSeries()).extracting(series -> series.getDriver().getName())
+                .containsExactly("Zed", "Ana", "Bea", "Cid", "Dan");
+        assertThat(progress.getRaces()).extracting(race -> race.getRace().getId())
+                .containsExactly(first.getId(), second.getId(), pending.getId());
+        assertThat(progress.getSeries().getFirst().getWins()).containsExactly(1, 2, null);
+        assertThat(progress.getSeries().subList(1, 5)).allSatisfy(series ->
+                assertThat(series.getWins()).containsExactly(1, 1, null));
+    }
+
+    @Test
+    void recordsHandleEmptyDatabaseAndPendingSeasonsAndSingleDriverLeader() {
+        StatisticsRecordsDTO empty = service.getRecords();
+        assertThat(empty.getSeasons()).isEmpty();
+        assertThat(empty.getDriverRecords()).isEmpty();
+        assertThat(empty.getTeamRecords()).isEmpty();
+        assertThat(empty.getHolderCounts()).isEmpty();
+        assertThat(empty.getVictoryProgress().getRaces()).isEmpty();
+        assertThat(empty.getVictoryProgress().getSeries()).isEmpty();
+
+        Season old = season(1);
+        Driver solo = driver("Solo", team("Team", old));
+        Race played = race(old, 1, 1);
+        race(old, 2, 0);
+        result(solo, played, position(1, 25), 0, 0);
+        Season latest = season(2);
+        driver("Waiting", team("Next", latest));
+        race(latest, 3, 0);
+        season(3); // Seasons with no calendar do not appear.
+        flushAndClear();
+        StatisticsRecordsDTO dto = service.getRecords();
+        assertThat(dto.getSeasons()).hasSize(2);
+        assertThat(dto.getSeasons().getFirst().getLeader().getMargin()).isZero();
+        assertThat(dto.getSeasons().getLast().getLeader()).isNull();
+        assertThat(dto.getSeasons().getLast().isInProgress()).isTrue();
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 10})
+    void recordsUseFiveBatchQueriesIncludingDetachedSerialization(int count) {
+        seedTeams(count);
+        flushAndClear();
+        var statistics = em.getEntityManagerFactory().unwrap(SessionFactory.class).getStatistics();
+        statistics.clear();
+        StatisticsRecordsDTO dto = service.getRecords();
+        em.clear();
+        json.writeValueAsString(dto);
+        assertThat(statistics.getPrepareStatementCount()).isEqualTo(5);
+        System.out.println("statistics/records: " + count + " teams, "
+                + statistics.getPrepareStatementCount() + " SELECTs");
+    }
+
+    private RecordBoardDTO board(List<RecordBoardDTO> boards, String key) {
+        return boards.stream().filter(board -> board.getKey().equals(key)).findFirst().orElseThrow();
+    }
+
     private void assertLegacyFields(int season, StatisticsOverviewDTO overview) {
         List<String> fields = List.of("poles", "fastlaps", "racesFinished", "totalPoints", "penalties",
                 "victories", "podiums", "averagePosition");

@@ -1,4 +1,5 @@
-import { DriverStats, StatisticsHeadToHead, StatisticsOverview, TeamStats } from '../../../shared/models/statistics';
+import { DriverStats, RecordBoard, RecordEntry, StatisticsHeadToHead, StatisticsOverview, StatisticsRecords, TeamStats } from '../../../shared/models/statistics';
+import { Driver } from '../../../shared/models/driver';
 import { Season } from '../../../shared/models/season';
 
 export function statisticsFixture(seasonNumber = 0): StatisticsOverview {
@@ -38,5 +39,61 @@ export function headToHeadFixture(season = 3, a = 'Piloto 01', b = 'Piloto 02'):
       { race: { id: 3, name: 'Suzuka', season }, positionA: null, positionB: null, result: 'NONE' },
       { race: { id: 4, name: 'Bahréin', season }, positionA: 3, positionB: 3, result: 'NONE' }
     ]
+  };
+}
+
+export function recordsFixture(): StatisticsRecords {
+  const driver = (name: string, id: number, teamName: string, number: number): Driver => {
+    const season = new Season(number, 'Temporada ' + number, number);
+    return { id, name, number: id, driverImage: '', season, team: { id, name: teamName, season, carImage: '', logoImage: '' } };
+  };
+  const smoking = driver('SmokingWeed', 1, 'McLaren', 3);
+  const moraga = driver('Moraga', 2, 'Red Bull', 3);
+  const bubapu = driver('Bubapu', 3, 'Ferrari', 1);
+  const robe = driver('Robe', 4, 'Ferrari', 2);
+  const fernando = driver('Fernando', 5, 'Aston Martin', 2);
+  const dubious = driver('Dani Calde', 6, 'Aston Martin', 1);
+  const pilots = [smoking, moraga, bubapu, robe, fernando];
+  const entry = (person: Driver, value: number, rank = 1): RecordEntry => ({ rank, value, season: person.season.number, driver: person, team: null });
+  const board = (key: string, title: string, value: number, holders: RecordEntry[], percent = false, negative = false): RecordBoard => ({
+    key, title, value, holders, percent, negative,
+    ranking: [...holders, ...[moraga, fernando, robe, bubapu].slice(0, Math.max(0, 5 - holders.length)).map((person, i) => entry(person, Math.max(0, value - (i + 1)), holders.length + i + 1))]
+  });
+  const oldSmoking = driver('SmokingWeed', 1, 'AlphaTauri', 1);
+  const driverRecords = [
+    board('poles', 'Poles', 9, [entry(oldSmoking, 9), entry(smoking, 9)]),
+    board('podiums', 'Podios', 15, [entry(smoking, 15), entry(moraga, 15)]),
+    board('fastLaps', 'Vueltas rápidas', 7, [entry(bubapu, 7)]),
+    board('victories', 'Victorias', 6, [entry(oldSmoking, 6), entry(smoking, 6)]),
+    board('winRate', '% de victorias', 37.5, [entry(fernando, 37.5)], true),
+    board('penalties', 'Penalizaciones', 5, [entry(dubious, 5)], false, true),
+    board('racesFinished', 'Carreras terminadas', 24, [entry(fernando, 24)]),
+    board('points', 'Puntos', 430, [entry(bubapu, 430)])
+  ];
+  const teamEntry = (person: Driver, value: number, rank = 1): RecordEntry => ({ ...entry(person, value, rank), driver: null, team: person.team });
+  const teamRecords = [
+    board('teamPoints', 'Puntos de equipo', 630, [teamEntry(bubapu, 630)]),
+    board('teamVictories', 'Victorias de equipo', 7, [teamEntry(bubapu, 7)]),
+    board('teamDoublePodiums', 'Dobles podios', 3, [teamEntry(bubapu, 3), teamEntry(robe, 3)])
+  ];
+  teamRecords.forEach(item => item.ranking = [...item.holders, teamEntry(smoking, item.value - 1, item.holders.length + 1), teamEntry(moraga, item.value - 2, item.holders.length + 2)]);
+  const seasons: StatisticsRecords['seasons'] = [
+    { number: 1, year: 2023, races: 24, finishedRaces: 24, inProgress: false, leader: { driver: bubapu, points: 430, margin: 76 } },
+    { number: 2, year: 2024, races: 26, finishedRaces: 26, inProgress: false, leader: { driver: fernando, points: 402, margin: 24 } },
+    { number: 3, year: 2025, races: 24, finishedRaces: 18, inProgress: true, leader: { driver: smoking, points: 336, margin: 65 } }
+  ];
+  const circuits = ['Melbourne', 'Baréin', 'Suzuka', 'Shanghái', 'Miami', 'Imola', 'Mónaco', 'Barcelona', 'Montreal', 'Spielberg', 'Silverstone', 'Spa', 'Hungaroring', 'Monza', 'Zandvoort', 'Bakú', 'Singapur', 'Austin', 'México', 'Interlagos', 'Lusail', 'Yas Marina', 'Jeddah', 'Las Vegas', 'Portimão', 'Hockenheim'];
+  const races = seasons.flatMap(season => Array.from({ length: season.races }, (_, index) => ({ race: { id: season.number * 100 + index, name: circuits[index], season: season.number }, season: season.number, order: index + 1, played: index < season.finishedRaces })));
+  return {
+    seasons, driverRecords, teamRecords,
+    holderCounts: [{ driver: smoking, count: 3 }, { driver: bubapu, count: 2 }, { driver: fernando, count: 2 }, { driver: moraga, count: 1 }, { driver: dubious, count: 1 }],
+    victoryProgress: { races, series: pilots.map((person, index) => {
+      let wins = 0;
+      return { driver: person, wins: races.map((race, i) => {
+        if (!race.played) return null;
+        if (i % 7 === index) wins++;
+        return wins;
+      }) };
+    }) }
   };
 }

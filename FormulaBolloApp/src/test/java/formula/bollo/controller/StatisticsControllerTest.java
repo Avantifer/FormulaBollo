@@ -134,6 +134,86 @@ class StatisticsControllerTest {
     }
 
     @Test
+    void recordsSerializeEveryContractFieldWithoutParameters() throws Exception {
+        SeasonDTO season = new SeasonDTO(1L, "Season", 3, "2026");
+        TeamDTO team = new TeamDTO(2L, "Team", "logo", "red", season);
+        DriverDTO driver = new DriverDTO(4L, "Robe", 7, "image", season, team);
+        StatisticsRaceDTO race = new StatisticsRaceDTO(8L, "Race", 3);
+        RecordEntryDTO driverEntry = new RecordEntryDTO(1, 37.5d, 3, driver, null);
+        RecordEntryDTO teamEntry = new RecordEntryDTO(1, 100, 3, null, team);
+        when(service.getRecords()).thenReturn(new StatisticsRecordsDTO(
+                List.of(new RecordSeasonDTO(3, 2026, 8, 4, true, new RecordLeaderDTO(driver, 100, 20))),
+                List.of(new RecordBoardDTO("winRate", "% de victorias", true, false, 37.5d,
+                        List.of(driverEntry), List.of(driverEntry))),
+                List.of(new RecordBoardDTO("teamPoints", "Puntos de equipo", false, false, 100,
+                        List.of(teamEntry), List.of(teamEntry))),
+                List.of(new RecordHolderCountDTO(driver, 2)),
+                new VictoryProgressDTO(List.of(new VictoryRaceDTO(race, 3, 4, true)),
+                        List.of(new VictorySeriesDTO(driver, new Integer[]{2, null})))));
+        var mvc = MockMvcBuilders.standaloneSetup(controller).build();
+        var response = mvc.perform(get("/statistics/records"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith("application/json"))
+                .andExpect(jsonPath("$.length()").value(5))
+                .andExpect(jsonPath("$.seasons[0].length()").value(6))
+                .andExpect(jsonPath("$.seasons[0].number").value(3))
+                .andExpect(jsonPath("$.seasons[0].year").value(2026))
+                .andExpect(jsonPath("$.seasons[0].races").value(8))
+                .andExpect(jsonPath("$.seasons[0].finishedRaces").value(4))
+                .andExpect(jsonPath("$.seasons[0].inProgress").value(true))
+                .andExpect(jsonPath("$.seasons[0].leader.driver.name").value("Robe"))
+                .andExpect(jsonPath("$.seasons[0].leader.points").value(100))
+                .andExpect(jsonPath("$.seasons[0].leader.margin").value(20))
+                .andExpect(jsonPath("$.driverRecords[0].key").value("winRate"))
+                .andExpect(jsonPath("$.driverRecords[0].title").value("% de victorias"))
+                .andExpect(jsonPath("$.driverRecords[0].percent").value(true))
+                .andExpect(jsonPath("$.driverRecords[0].negative").value(false))
+                .andExpect(jsonPath("$.driverRecords[0].value").value(37.5))
+                .andExpect(jsonPath("$.driverRecords[0].holders[0].driver.team.name").value("Team"))
+                .andExpect(jsonPath("$.driverRecords[0].holders[0].driver.season.number").value(3))
+                .andExpect(jsonPath("$.driverRecords[0].holders[0].driver.driverImage").value("image"))
+                .andExpect(jsonPath("$.teamRecords[0].holders[0].team.name").value("Team"))
+                .andExpect(jsonPath("$.teamRecords[0].holders[0].driver").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.holderCounts[0].length()").value(2))
+                .andExpect(jsonPath("$.holderCounts[0].driver.name").value("Robe"))
+                .andExpect(jsonPath("$.holderCounts[0].count").value(2))
+                .andExpect(jsonPath("$.victoryProgress.races[0].length()").value(4))
+                .andExpect(jsonPath("$.victoryProgress.races[0].race.id").value(8))
+                .andExpect(jsonPath("$.victoryProgress.races[0].season").value(3))
+                .andExpect(jsonPath("$.victoryProgress.races[0].order").value(4))
+                .andExpect(jsonPath("$.victoryProgress.races[0].played").value(true))
+                .andExpect(jsonPath("$.victoryProgress.series[0].driver.name").value("Robe"))
+                .andExpect(jsonPath("$.victoryProgress.series[0].wins[0]").value(2))
+                .andExpect(jsonPath("$.victoryProgress.series[0].wins[1]").value(org.hamcrest.Matchers.nullValue()));
+        for (String field : List.of("driverRecords", "teamRecords")) {
+            response.andExpect(jsonPath("$." + field + "[0].length()").value(7));
+            for (String entries : List.of("holders", "ranking")) {
+                response.andExpect(jsonPath("$." + field + "[0]." + entries + "[0].length()").value(5))
+                        .andExpect(jsonPath("$." + field + "[0]." + entries + "[0].rank").value(1))
+                        .andExpect(jsonPath("$." + field + "[0]." + entries + "[0].season").value(3));
+            }
+        }
+        response.andExpect(jsonPath("$.driverRecords[0].ranking[0].value").value(37.5))
+                .andExpect(jsonPath("$.teamRecords[0].ranking[0].value").value(100));
+        verify(service).getRecords();
+    }
+
+    @Test
+    void recordsReturn200AndEmptyListsForEmptyDatabase() throws Exception {
+        var realService = new StatisticsService(mock(formula.bollo.repository.DriverRepository.class),
+                mock(formula.bollo.repository.TeamRepository.class), mock(formula.bollo.repository.RaceRepository.class),
+                mock(formula.bollo.repository.ResultRepository.class), mock(formula.bollo.repository.SprintRepository.class),
+                mock(formula.bollo.repository.PenaltyRepository.class), mock(formula.bollo.service.DriverService.class),
+                mock(formula.bollo.service.TeamService.class));
+        var mvc = MockMvcBuilders.standaloneSetup(new StatisticsController(realService)).build();
+        var response = mvc.perform(get("/statistics/records")).andExpect(status().isOk());
+        for (String field : List.of("seasons", "driverRecords", "teamRecords", "holderCounts"))
+            response.andExpect(jsonPath("$." + field).isEmpty());
+        response.andExpect(jsonPath("$.victoryProgress.races").isEmpty())
+                .andExpect(jsonPath("$.victoryProgress.series").isEmpty());
+    }
+
+    @Test
     void missingAndMalformedSeasonAreBadRequests() throws Exception {
         var mvc = MockMvcBuilders.standaloneSetup(controller).build();
         mvc.perform(get("/statistics/overview")).andExpect(status().isBadRequest());

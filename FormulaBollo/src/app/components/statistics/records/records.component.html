@@ -1,40 +1,330 @@
-<div class="flex items-center mb-6">
-	<h2 class="font-display uppercase tracking-wide text-ink text-xl font-bold">Récords históricos</h2>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-10">
-	@for (record of records(); track $index) {
-		<div class="flex min-w-0 items-start space-x-4 bg-panel border border-rule rounded-panel p-4 overflow-hidden">
-			<div class="flex-shrink-0">
-				<div class="size-10 rounded-row bg-pit text-on-pit flex items-center justify-center">
-					<i class="pi pi-trophy text-sector-best"></i>
-				</div>
+@if (loading()) {
+	<div class="skeleton-grid" aria-busy="true" aria-label="Cargando récords">
+		@for (item of skeletons; track item) {
+			<div class="panel">
+				<p-skeleton animation="none" width="65%" height="2rem" /><p-skeleton
+					animation="none"
+					width="100%"
+					height="18rem" />
 			</div>
-			<div class="flex-1 min-w-0 relative">
-				<h3 class="text-sm font-medium text-ink-soft mb-1">{{ record.title }}</h3>
-				<div class="flex items-baseline gap-2 mb-1">
-					<p class="font-display tabular-nums text-4xl font-bold text-ink mb-1">
-						{{ record.title.includes('porcentaje') ? (record.value | number:'1.2-2':'es-ES') : record.value }}
-						{{ record.title.includes('porcentaje') ? '%' : '' }}
-					</p>
-				</div>
-				<p class="text-sm text-ink-soft break-words">
-					<a
-						class="cursor-pointer text-ink hover:underline focus-visible:underline focus-visible:outline-none"
-						[routerLink]="['/drivers/' + utilsService.spaceToUnderScore(record.driver.name)]">
-						{{ record.driver.name }}
-					</a>
-					<a
-						class="cursor-pointer text-ink hover:underline focus-visible:underline focus-visible:outline-none"
-						[routerLink]="['/teams/' + utilsService.spaceToUnderScore(record.team.name)]">
-						({{ record.team.name }})
-					</a>
-					• {{ record.season.year }}
-				</p>
-				<img
-					[src]="imageService.getImageUrl(record.team.carImage)"
-					[alt]="record.team.name"
-					class="hidden lg:block lg:absolute top-0 -right-60 scale-x-[-1]" />
-			</div>
+		}
+	</div>
+} @else if (loadError()) {
+	<div class="state-panel" role="alert">
+		<p>No se pudieron cargar los récords.</p>
+		<button class="retry-button" type="button" (click)="load()">Reintentar</button>
+	</div>
+} @else if (empty()) {
+	<div class="state-panel" role="status">Todavía no hay récords.</div>
+} @else if (data(); as records) {
+	<header class="records-title">
+		<div>
+			<p class="eyebrow">Récords históricos · {{ years() }}</p>
+			<h2>{{ seasons().length }} temporadas. <br />{{ records.driverRecords.length }} hitos.</h2>
 		</div>
+		<dl class="totals">
+			<div>
+				<dt>temporadas</dt>
+				<dd>{{ seasons().length }}</dd>
+			</div>
+			<div>
+				<dt>carreras disputadas</dt>
+				<dd>{{ totals().finished }} / {{ totals().races }}</dd>
+			</div>
+			<div>
+				<dt>récords de temporada</dt>
+				<dd>{{ records.driverRecords.length }}</dd>
+			</div>
+		</dl>
+	</header>
+	<div class="timeline" [style.--seasons]="seasons().length || 1">
+		@for (season of seasons(); track season.number) {
+			<section class="season" [attr.aria-label]="'Temporada ' + season.number">
+				<div class="season-title">
+					<h3>
+						T{{ season.number }} <span>{{ season.year }}</span>
+					</h3>
+					<span class="status"
+						>{{ season.finishedRaces }}{{ season.inProgress ? ' / ' + season.races : '' }} GP ·
+						{{ season.inProgress ? 'En curso' : 'Cerrada' }}</span
+					>
+				</div>
+				@if (season.leader; as leader) {
+					<div class="champion">
+						<div class="champion-top">
+							<p>{{ season.inProgress ? 'Líder provisional · título abierto' : 'Campeón de la temporada' }}</p>
+							<strong>+{{ format(leader.margin) }} pt</strong>
+						</div>
+						<ng-container *ngTemplateOutlet="person; context: { $implicit: leader.driver }" />
+						<p class="help">{{ format(leader.points) }} puntos · margen sobre el segundo</p>
+					</div>
+				}
+				<div class="pins">
+					@for (board of season.boards; track board.key) {
+						<article
+							class="pin"
+							[class.pin-old]="!season.inProgress"
+							[class.dubious]="board.negative"
+							[attr.data-record]="board.key">
+							<div>
+								<h4 class="pin-title">
+									@if (!board.negative) {
+										<i class="pi pi-trophy trophy" aria-hidden="true"></i>
+									}
+									<span>{{ board.title }}</span>
+								</h4>
+								@for (holder of board.holders; track $index) {
+									@if (holder.driver) {
+										<ng-container *ngTemplateOutlet="person; context: { $implicit: holder.driver }" />
+									}
+								}
+								<p class="help">
+									Temporada {{ season.number }} · {{ season.year
+									}}{{ board.holders.length > 1 ? ' · Cotitulares' : '' }}
+								</p>
+							</div>
+							<strong class="pin-value">{{ format(board.value, board.percent) }}</strong>
+						</article>
+					}
+				</div>
+				@for (note of season.notes; track $index) {
+					<p class="timeline-note">{{ note }}</p>
+				}
+				@if (season.inProgress) {
+					<p class="timeline-note">
+						Quedan {{ season.races - season.finishedRaces }} carreras. La historia de esta temporada todavía está
+						abierta.
+					</p>
+				}
+			</section>
+		}
+	</div>
+	@if (records.holderCounts.length) {
+		<section class="owners" aria-labelledby="owners-heading">
+			<div>
+				<h3 id="owners-heading">Quién reúne más récords</h3>
+				<div class="owner-lead">
+					<strong>{{ records.holderCounts[0].count }}</strong
+					><ng-container *ngTemplateOutlet="person; context: { $implicit: records.holderCounts[0].driver }" />
+				</div>
+			</div>
+			<ul class="owner-list">
+				@for (holder of records.holderCounts; track $index) {
+					<li>
+						<a [routerLink]="['/drivers', utilsService.spaceToUnderScore(holder.driver.name)]">{{
+							holder.driver.name
+						}}</a
+						><b>{{ holder.count }}</b>
+					</li>
+				}
+			</ul>
+			<p class="help">
+				{{ records.driverRecords.length }} categorías de temporada. Cada cotitular conserva su récord.
+			</p>
+		</section>
 	}
-</div>
+	<section class="panel" aria-labelledby="victory-heading">
+		<div class="section-head">
+			<div>
+				<h3 id="victory-heading">Quién lidera las victorias en cada momento</h3>
+				<p class="help">Victorias acumuladas, carrera a carrera. El tramo gris corresponde a carreras pendientes.</p>
+			</div>
+			<span class="ordinal" aria-hidden="true">01</span>
+		</div>
+		@if (records.victoryProgress.series.length && records.victoryProgress.races.length) {
+			<div class="chart-container" role="img" [attr.aria-label]="chart().ariaLabel">
+				<p-chart type="line" [data]="chart().data" [options]="chart().options" [plugins]="chart().plugins" />
+			</div>
+		} @else {
+			<p class="help">Todavía no hay victorias registradas.</p>
+		}
+		<div class="chart-note">
+			<p>{{ trajectory() }}</p>
+			<ul class="chart-values">
+				@for (value of chart().values; track $index) {
+					<li>
+						<span
+							class="chart-mark"
+							[attr.data-marker]="value.marker"
+							[style.background]="value.color"
+							aria-hidden="true"></span
+						><span>{{ value.name }}</span
+						><b>{{ value.value }}</b>
+					</li>
+				}
+			</ul>
+		</div>
+		<div class="sr-only">
+			<table>
+				<caption>
+					Victorias acumuladas por carrera
+				</caption>
+				<thead>
+					<tr>
+						<th scope="col">Carrera</th>
+						@for (value of chart().values; track $index) {
+							<th scope="col">{{ value.name }}</th>
+						}
+					</tr>
+				</thead>
+				<tbody>
+					@for (row of chart().rows; track $index) {
+						<tr>
+							<th scope="row">{{ row.label }}</th>
+							@for (value of row.values; track $index) {
+								<td>{{ value }}</td>
+							}
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	</section>
+	<section class="panel" aria-labelledby="records-heading">
+		<div class="section-head">
+			<div>
+				<h3 id="records-heading">Récords actuales</h3>
+				<p class="help">Las mejores marcas de una temporada. Todos los empates conservan su lugar.</p>
+			</div>
+			<span class="ordinal" aria-hidden="true">02</span>
+		</div>
+		@if (records.driverRecords.length) {
+			<ng-container
+				*ngTemplateOutlet="
+					boardTable;
+					context: { $implicit: records.driverRecords, kind: 'driver', caption: 'Récords de piloto por temporada' }
+				" />
+		} @else {
+			<p class="help">Todavía no hay récords de piloto.</p>
+		}
+	</section>
+	@if (records.teamRecords.length) {
+		<section class="panel" aria-labelledby="teams-heading">
+			<div class="section-head">
+				<div>
+					<h3 id="teams-heading">La historia también la escriben los equipos</h3>
+					<p class="help">Marcas de escudería por temporada.</p>
+				</div>
+				<span class="ordinal" aria-hidden="true">03</span>
+			</div>
+			<ng-container
+				*ngTemplateOutlet="
+					boardTable;
+					context: { $implicit: records.teamRecords, kind: 'team', caption: 'Récords de escudería por temporada' }
+				" />
+		</section>
+	}
+}
+
+<ng-template #team let-item>
+	<span class="team"
+		><i [style.background]="teamColor(item)" aria-hidden="true"></i
+		><a [routerLink]="['/teams', utilsService.spaceToUnderScore(item.name)]">{{ item.name }}</a></span
+	>
+</ng-template>
+<ng-template #person let-driver>
+	<div class="person">
+		@if (driver.driverImage && !failedImages().includes(driver.driverImage)) {
+			<img
+				class="avatar"
+				[src]="imageService.getImageUrl(driver.driverImage)"
+				alt=""
+				width="32"
+				height="32"
+				(error)="imageFailed(driver.driverImage)" />
+		} @else {
+			<span class="avatar" [attr.aria-label]="driver.name + ': sin foto'">{{ initials(driver.name) }}</span>
+		}
+		<div>
+			<strong
+				><a [routerLink]="['/drivers', utilsService.spaceToUnderScore(driver.name)]">{{ driver.name }}</a></strong
+			><ng-container *ngTemplateOutlet="team; context: { $implicit: driver.team }" />
+		</div>
+	</div>
+</ng-template>
+<ng-template #entryName let-entry>
+	@if (entry.driver) {
+		<span class="entry-name"
+			><i [style.background]="teamColor(entry.driver.team)" aria-hidden="true"></i
+			><a [routerLink]="['/drivers', utilsService.spaceToUnderScore(entry.driver.name)]">{{
+				entry.driver.name
+			}}</a></span
+		>
+	} @else if (entry.team) {
+		<ng-container *ngTemplateOutlet="team; context: { $implicit: entry.team }" />
+	}
+</ng-template>
+<ng-template #boardTable let-boards let-kind="kind" let-caption="caption">
+	<table class="record-table" [attr.data-kind]="kind">
+		<caption>
+			{{
+				caption
+			}}
+		</caption>
+		<colgroup>
+			<col class="col-record" />
+			<col class="col-value" />
+			<col class="col-holder" />
+			<col class="col-context" />
+		</colgroup>
+		<thead>
+			<tr>
+				<th scope="col">Récord</th>
+				<th scope="col">Marca</th>
+				<th scope="col">
+					{{
+						kind === 'driver' ? 'Titulares · temporada' : 'Escudería · temporada'
+					}}
+				</th>
+				<th scope="col">
+					{{ kind === 'driver' ? 'Segundo y tercero' : 'Siguientes registros' }}
+				</th>
+			</tr>
+		</thead>
+		<tbody>
+			@for (board of boards; track board.key) {
+				<tr [attr.data-record]="board.key">
+					<th scope="row">
+						<span>{{ board.title }}</span>
+					</th>
+					<td class="table-value">{{ format(board.value, board.percent) }}</td>
+					<td>
+						@for (holder of board.holders; track $index) {
+							<div class="holder">
+								@if (holder.driver) {
+									<ng-container *ngTemplateOutlet="person; context: { $implicit: holder.driver }" />
+								} @else {
+									<ng-container *ngTemplateOutlet="entryName; context: { $implicit: holder }" />
+								}
+								<small>Temporada {{ holder.season }}</small>
+							</div>
+						}
+					</td>
+					<td>
+						@for (entry of chasers(board.ranking); track $index) {
+							<p class="chaser">
+								<b>{{ entry.rank }}.º</b>
+								<ng-container *ngTemplateOutlet="entryName; context: { $implicit: entry }" /> ·
+								{{ format(entry.value, board.percent) }} · T{{ entry.season }}
+							</p>
+						}
+						<details>
+							<summary>Ver top 5 por temporada</summary>
+							<ol class="ranking">
+								@for (entry of board.ranking; track $index) {
+									<li>
+										<b>{{ entry.rank }}.</b>
+										<ng-container *ngTemplateOutlet="entryName; context: { $implicit: entry }" /> · T{{
+											entry.season
+										}}
+										· {{ format(entry.value, board.percent) }}
+									</li>
+								}
+							</ol>
+						</details>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+</ng-template>

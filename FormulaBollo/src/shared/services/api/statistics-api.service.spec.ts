@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { environment } from '../../../enviroments/enviroment';
-import { headToHeadFixture, statisticsFixture } from '../../../app/components/statistics/statistics.fixture';
+import { headToHeadFixture, recordsFixture, statisticsFixture } from '../../../app/components/statistics/statistics.fixture';
 import { CacheService } from '../cache.service';
 import { StatisticsApiService } from './statistics-api.service';
 
@@ -20,6 +20,34 @@ describe('StatisticsApiService', () => {
   afterEach(() => {
     http.verify();
     TestBed.inject(CacheService).clearCache();
+  });
+
+  it('loads records without parameters and shares pending and completed requests under statisticsRecords-v4', () => {
+    const response = recordsFixture();
+    const received = jasmine.createSpy('received');
+    const cache = spyOn(TestBed.inject(CacheService), 'getOrLoad').and.callThrough();
+    service.getRecords().subscribe(received);
+    service.getRecords().subscribe(received);
+    const request = http.expectOne(environment.apiUrl + '/statistics/records');
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.keys()).toEqual([]);
+    request.flush(response);
+    expect(received).toHaveBeenCalledTimes(2);
+    expect(received).toHaveBeenCalledWith(response);
+    service.getRecords().subscribe();
+    http.expectNone(() => true);
+    expect(cache).toHaveBeenCalledWith('statisticsRecords-v4', jasmine.any(Function));
+  });
+
+  it('cancels records requests and allows retry after an error', () => {
+    const subscription = service.getRecords().subscribe();
+    const request = http.expectOne(environment.apiUrl + '/statistics/records');
+    subscription.unsubscribe();
+    expect(request.cancelled).toBeTrue();
+    service.getRecords().subscribe({ error: () => undefined });
+    http.expectOne(environment.apiUrl + '/statistics/records').flush({}, { status: 500, statusText: 'Error' });
+    service.getRecords().subscribe();
+    http.expectOne(environment.apiUrl + '/statistics/records').flush(recordsFixture());
   });
 
   it('uses the overview URL and season parameter including Total', () => {

@@ -1,6 +1,7 @@
 package formula.bollo.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
@@ -122,7 +123,28 @@ class StatsCacheTest {
     private StatisticsController statisticsController;
 
     @Autowired
+    private CacheManager cacheManager;
+
+    @Autowired
     private CacheNotifier cacheNotifier;
+
+    @Test
+    void recordsAreCachedAndPublishingEvictsTheirKey() {
+        cacheNotifier.publish();
+        clearInvocations(resultRepository);
+        var records = statisticsController.getRecords();
+        assertSame(records, statisticsController.getRecords());
+        assertEquals(java.util.List.of(), records.getTeamRecords());
+        assertEquals(java.util.List.of(), records.getHolderCounts());
+        verify(resultRepository, times(1)).findForStatistics(0);
+        assertTrue(cacheManager.getCache(Constants.CACHE_STATS).get("statistics:records") != null);
+
+        cacheNotifier.publish();
+
+        assertTrue(cacheManager.getCache(Constants.CACHE_STATS).get("statistics:records") == null);
+        statisticsController.getRecords();
+        verify(resultRepository, times(2)).findForStatistics(0);
+    }
 
     @Test
     void overviewIsCachedPerSeasonAndPublishingEvictsIt() {

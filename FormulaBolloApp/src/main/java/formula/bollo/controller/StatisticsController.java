@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import formula.bollo.model.StatisticsHeadToHeadDTO;
 import formula.bollo.model.StatisticsOverviewDTO;
+import formula.bollo.model.StatisticsRecordsDTO;
 import formula.bollo.service.StatisticsService;
 import formula.bollo.utils.Constants;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +26,15 @@ public class StatisticsController {
 
     public StatisticsController(StatisticsService statisticsService) {
         this.statisticsService = statisticsService;
+    }
+
+    @Operation(summary = Constants.STATISTICS_RECORDS_SUMMARY, tags = Constants.TAG_STATISTICS)
+    @Transactional(readOnly = true)
+    @GetMapping(path = "/records", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Cacheable(cacheNames = Constants.CACHE_STATS, sync = true, key = "'statistics:records'")
+    public StatisticsRecordsDTO getRecords() {
+        log.info("Se coge la informacion de records de estadisticas");
+        return statisticsService.getRecords();
     }
 
     @Operation(summary = Constants.STATISTICS_HEAD_TO_HEAD_SUMMARY, tags = Constants.TAG_STATISTICS)
