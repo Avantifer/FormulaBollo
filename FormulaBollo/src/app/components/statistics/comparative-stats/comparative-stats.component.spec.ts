@@ -103,11 +103,13 @@ describe('ComparativeStatsComponent', () => {
       expect(Array.from(root().querySelectorAll('.contender')).map(element => element.getAttribute('aria-label'))).toEqual([a.name, b.name]);
       expect(text('.legend .key')).toEqual([a.name, b.name]);
       expect(text('.metric-heading > span')).toEqual([a.name, 'Estadística', b.name]);
+      const duel = component['duel']()!;
       const controls = fixture.debugElement.queryAll(By.directive(Select)).map(element => element.componentInstance as Select);
       expect(controls.map(control => control.ariaLabel)).toEqual([a, b].map(entry => 'Cambiar ' + kind.toLowerCase() + ' (' + entry.name + ')'));
       expect(root().querySelector('.duel-metrics')!.getAttribute('aria-label')).toBe('Estadísticas enfrentadas de ' + a.name + ' y ' + b.name);
       expect(root().querySelector('.result-bar')!.getAttribute('aria-label')).toContain('para ' + a.name + ', 1 para ' + b.name);
-      const duel = component['duel']()!;
+      expect(root().querySelector('.result-bar')!.getAttribute('aria-label')).toContain(duel.comparable + ' comparables de ' + duel.races.length + ' comunes' + (mode === 'teams' ? '.' : ' · ' + duel.bothDnf + ' excluidas por doble abandono.'));
+      expect(root().querySelector('.duel-headline')!.getAttribute('aria-label')).toBe(root().querySelector('.duel-headline')!.textContent);
       expect(root().querySelector('.races-card > .note')!.textContent).toBe(a.name + ': ' + duel.aheadA + ' carreras · ' + b.name + ': ' + duel.aheadB + ' carreras · ' + (duel.comparable - duel.aheadA - duel.aheadB) + ' empates. Puntos en carreras comunes: ' + a.name + ' ' + duel.pointsA + ' / ' + b.name + ' ' + duel.pointsB + ' pts.');
       expect(root().querySelector('.races-card > .help')!.textContent).toContain(': ' + a.name + ' a la izquierda, ' + b.name + ' a la derecha. = indica igualdad.');
       for (const [selector, name] of [['.race-a', a.name], ['.race-b', b.name]]) {
@@ -189,7 +191,7 @@ describe('ComparativeStatsComponent', () => {
     expect(request.request.params.get('b')).toBe('Piloto 01');
     request.flush(headToHeadFixture(3, 'Piloto 02', 'Piloto 01'));
     render();
-    expect(root().querySelector('[aria-live="polite"]')!.textContent).toBe('Comparando Piloto 02 con Piloto 01');
+    expect(root().querySelector('[aria-live="polite"]')!.textContent).toBe(root().querySelector('.duel-headline')!.textContent);
     expect(controls.map(control => control.ariaLabel)).toEqual(['Cambiar piloto (Piloto 02)', 'Cambiar piloto (Piloto 01)']);
   });
 
@@ -382,10 +384,12 @@ describe('ComparativeStatsComponent', () => {
   });
 
   for (const [aheadA, aheadB, comparable, headline] of [
-    [2, 1, 3, 'Piloto 01 adelanta a Piloto 02 en 2 de 3 carreras comunes'],
-    [1, 2, 3, 'Piloto 02 adelanta a Piloto 01 en 2 de 3 carreras comunes'],
-    [1, 1, 3, 'Piloto 01 y Piloto 02 van igualados: 1-1 en 3 carreras comunes'],
-    [0, 0, 0, 'No hay carreras comunes con resultado comparable.']
+    [2, 1, 3, 'Piloto 01 terminó por delante de Piloto 02 en 2 de las 3 carreras que corrieron juntos.'],
+    [1, 2, 3, 'Piloto 02 terminó por delante de Piloto 01 en 2 de las 3 carreras que corrieron juntos.'],
+    [3, 0, 3, 'Piloto 01 terminó por delante de Piloto 02 en las 3 carreras que corrieron juntos.'],
+    [1, 0, 1, 'Piloto 01 terminó por delante de Piloto 02 en la única carrera que corrieron juntos.'],
+    [1, 1, 3, 'Piloto 01 y Piloto 02 están igualados: cada uno terminó por delante en 1 de las 3 carreras que corrieron juntos.'],
+    [0, 0, 0, 'No hay ninguna carrera en la que ambos hayan corrido y se pueda saber quién terminó por delante.']
   ] as const) {
     it('renders the headline, A-B score and split bar for ' + aheadA + '/' + aheadB + '/' + comparable, () => {
       load(statisticsFixture(3), false);
@@ -394,7 +398,8 @@ describe('ComparativeStatsComponent', () => {
       expect(root().querySelector('.score')!.textContent!.trim()).toBe(aheadA + ' - ' + aheadB);
       expect(component['split']()[0]).toBe(comparable ? aheadA / comparable * 100 : 0);
       expect(component['split']()[2]).toBe(comparable ? (comparable - aheadA - aheadB) / comparable * 100 : 0);
-      expect(root().querySelector('.versus .help')!.textContent).toContain('1 excluidas por doble abandono');
+      expect(root().querySelector('.versus .help')).toBeNull();
+      expect(root().querySelector('[aria-live="polite"]')!.textContent).toBe(headline);
     });
   }
 
@@ -412,6 +417,9 @@ describe('ComparativeStatsComponent', () => {
     expect(root().querySelector('.race-a')!.textContent).toContain('40 pts');
     expect(root().querySelector('.race-b')!.textContent).toContain('50 pts');
     expect(root().querySelector('.race-grid')!.textContent).not.toContain('DNF');
+    expect(root().querySelector('.duel-headline')!.textContent).toBe('McLaren y Mercedes están igualadas: cada una sumó más puntos en 1 de las 2 carreras de la temporada.');
+    expect(root().querySelector('.duel-headline')!.getAttribute('aria-label')).toBe(root().querySelector('.duel-headline')!.textContent);
+    expect(root().querySelector('.versus .help')).toBeNull();
     const controls = fixture.debugElement.queryAll(By.directive(Select)).map(element => element.componentInstance as Select);
     expect(controls[1].ariaLabel).toBe('Cambiar escudería (Mercedes)');
   });
@@ -490,7 +498,7 @@ describe('ComparativeStatsComponent', () => {
     expect(root().textContent).toContain('Compañeros de equipo');
     expect(root().querySelector('.key')!.textContent).toBe('Piloto 01');
     expect(root().querySelector('.key-b')!.textContent).toBe('Piloto 02');
-    expect(root().querySelector('[aria-live="polite"]')!.textContent).toBe('Comparando Piloto 01 con Piloto 02');
+    expect(root().querySelector('[aria-live="polite"]')!.textContent).toBe(root().querySelector('.duel-headline')!.textContent);
     const table = root().querySelector('div.sr-only > table')!;
     expect(table).not.toBeNull();
     expect(root().querySelector('table.sr-only')).toBeNull();
@@ -584,6 +592,8 @@ describe('ComparativeStatsComponent', () => {
             for (const element of Array.from(doc.querySelectorAll<HTMLElement>('.hero, .contender, .picker, .picker-control, .versus, .metric-row, .card, .chart-container, .race-grid, .race-cell'))) {
               expect(element.scrollWidth).withContext(context + '/' + element.className).toBeLessThanOrEqual(element.clientWidth);
             }
+            const headline = doc.querySelector<HTMLElement>('.duel-headline')!;
+            expect(headline.scrollWidth).withContext(context + '/headline').toBeLessThanOrEqual(headline.clientWidth);
             expect(doc.querySelectorAll('.contender').length).toBe(2);
             expect(doc.querySelectorAll('.race-cell').length).toBeGreaterThan(0);
             for (const winner of Array.from(doc.querySelectorAll<HTMLElement>('.race-label > span:last-child'))) {

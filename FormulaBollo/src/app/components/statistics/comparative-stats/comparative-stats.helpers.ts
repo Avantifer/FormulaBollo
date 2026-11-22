@@ -86,11 +86,20 @@ export function teamHeadToHead(data: StatisticsOverview, a: number, b: number): 
   };
 }
 
-export function duelHeadline(duel: StatisticsHeadToHead, a: string, b: string): string {
-  if (!duel.comparable) return 'No hay carreras comunes con resultado comparable.';
-  if (duel.aheadA === duel.aheadB) return a + ' y ' + b + ' van igualados: ' + duel.aheadA + '-' + duel.aheadB + ' en ' + duel.comparable + ' carreras comunes';
-  const [leader, other, wins] = duel.aheadA > duel.aheadB ? [a, b, duel.aheadA] : [b, a, duel.aheadB];
-  return leader + ' adelanta a ' + other + ' en ' + wins + ' de ' + duel.comparable + ' carreras comunes';
+export function duelHeadline(duel: StatisticsHeadToHead, a: string, b: string, teams = false): string {
+  const m = duel.comparable;
+  if (!m) return teams
+    ? 'Todavía no hay carreras en las que se pueda comparar a las dos escuderías.'
+    : 'No hay ninguna carrera en la que ambos hayan corrido y se pueda saber quién terminó por delante.';
+  const winsA = duel.aheadA, winsB = duel.aheadB;
+  const races = teams ? 'carreras de la temporada' : 'carreras que corrieron juntos';
+  if (winsA === winsB) return teams
+    ? a + ' y ' + b + ' están igualadas: cada una sumó más puntos en ' + winsA + ' de las ' + m + ' ' + races + '.'
+    : a + ' y ' + b + ' están igualados: cada uno terminó por delante en ' + winsA + ' de las ' + m + ' ' + races + '.';
+  const [leader, other, wins] = winsA > winsB ? [a, b, winsA] : [b, a, winsB];
+  const verb = teams ? 'sumó más puntos que ' : 'terminó por delante de ';
+  const one = !teams && m === 1 ? 'la única carrera que corrieron juntos' : 'las ' + m + ' ' + races;
+  return leader + ' ' + verb + other + ' en ' + (wins === m ? one : wins + ' de las ' + m + ' ' + races) + '.';
 }
 
 export type ComparisonPalette = EvolutionPalette & { flat: string };

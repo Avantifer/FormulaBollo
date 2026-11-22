@@ -85,7 +85,7 @@ export class ComparativeStatsComponent implements OnChanges {
   });
   protected readonly headline = computed(() => {
     const [a, b] = this.selected();
-    return this.duel() && a && b ? duelHeadline(this.duel()!, a.name, b.name) : '';
+    return this.duel() && a && b ? duelHeadline(this.duel()!, a.name, b.name, this.isTeams()) : '';
   });
   protected readonly split = computed(() => {
     const duel = this.duel();
@@ -106,7 +106,7 @@ export class ComparativeStatsComponent implements OnChanges {
   ));
   protected readonly announcement = computed(() => {
     const [a, b] = this.selected();
-    return a && b ? 'Comparando ' + a.name + ' con ' + b.name : '';
+    return a && b && this.duel() ? this.headline() : '';
   });
 
   constructor() {

@@ -35,7 +35,6 @@ p-select { display: flex; width: 100%; min-height: 44px; box-shadow: none; }
 .fill-b { background: var(--b); }
 .fill-equal { background: var(--ink-soft); }
 .zero { border: 0; }
-.versus .help { font-size: 11px; }
 .swap-button, .retry-button { min-width: 44px; min-height: 44px; padding: 8px 16px; border: 1px solid var(--rule); border-radius: var(--radius-row); background: var(--panel); color: var(--ink); cursor: pointer; font-size: 12px; }
 .swap-button { margin-top: auto; }
 .swap-button span { font-size: 20px; vertical-align: middle; }

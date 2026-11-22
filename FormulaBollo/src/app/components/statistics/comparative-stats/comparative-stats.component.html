@@ -50,12 +50,11 @@
 						} @else if (duelLoading()) {
 							<div class="duel-skeleton" aria-busy="true" aria-label="Cargando cara a cara"><p-skeleton width="100%" height="9rem" animation="none" /></div>
 						} @else if (duel(); as result) {
-							<h2 class="duel-headline">{{ headline() }}</h2>
+							<h2 class="duel-headline" [attr.aria-label]="headline()">{{ headline() }}</h2>
 							<p class="score" [attr.aria-label]="a.name + ' ' + result.aheadA + ', ' + b.name + ' ' + result.aheadB">{{ result.aheadA }} <span>-</span> {{ result.aheadB }}</p>
-							<div class="result-bar" role="img" [attr.aria-label]="'Reparto: ' + result.aheadA + ' para ' + a.name + ', ' + result.aheadB + ' para ' + b.name + '; ' + (result.comparable - result.aheadA - result.aheadB) + ' empates'">
+							<div class="result-bar" role="img" [attr.aria-label]="'Reparto: ' + result.aheadA + ' para ' + a.name + ', ' + result.aheadB + ' para ' + b.name + '; ' + (result.comparable - result.aheadA - result.aheadB) + ' empates. ' + result.comparable + ' comparables de ' + result.races.length + ' comunes' + (isTeams() ? '.' : ' · ' + result.bothDnf + ' excluidas por doble abandono.')">
 								<span class="fill-a" [style.width.%]="split()[0]"></span><span class="fill-equal" [style.width.%]="split()[2]"></span><span class="fill-b" [class.zero]="!split()[1]" [style.width.%]="split()[1]"></span>
 							</div>
-							<p class="help">{{ isTeams() ? 'Adelanta = suma más puntos en la carrera.' : 'Adelanta = termina por delante. Terminar gana a abandonar.' }}<br>{{ result.comparable }} comparables de {{ result.races.length }} comunes{{ isTeams() ? '.' : ' · ' + result.bothDnf + ' excluidas por doble abandono.' }}</p>
 						}
 						<button type="button" class="swap-button" (click)="swap()"><span aria-hidden="true">⇄</span> Intercambiar</button>
 					</section>

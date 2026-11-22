@@ -101,12 +101,23 @@ describe('Comparative statistics helpers', () => {
     expect(teamHeadToHead(overview, 1, 99).comparable).toBe(0);
   });
 
-  it('writes headlines for either leader, ties and no comparable races', () => {
+  it('writes natural driver headlines for wins, sweeps, one race, ties and no comparable races', () => {
     const duel = headToHeadFixture();
-    expect(duelHeadline({ ...duel, aheadA: 2 }, 'Ana', 'Bea')).toBe('Ana adelanta a Bea en 2 de 3 carreras comunes');
-    expect(duelHeadline({ ...duel, aheadB: 2 }, 'Ana', 'Bea')).toBe('Bea adelanta a Ana en 2 de 3 carreras comunes');
-    expect(duelHeadline(duel, 'Ana', 'Bea')).toBe('Ana y Bea van igualados: 1-1 en 3 carreras comunes');
-    expect(duelHeadline({ ...duel, comparable: 0 }, 'Ana', 'Bea')).toBe('No hay carreras comunes con resultado comparable.');
+    expect(duelHeadline({ ...duel, aheadA: 2 }, 'Ana', 'Bea')).toBe('Ana terminó por delante de Bea en 2 de las 3 carreras que corrieron juntos.');
+    expect(duelHeadline({ ...duel, aheadB: 2 }, 'Ana', 'Bea')).toBe('Bea terminó por delante de Ana en 2 de las 3 carreras que corrieron juntos.');
+    expect(duelHeadline({ ...duel, aheadA: 3, aheadB: 0 }, 'Ana', 'Bea')).toBe('Ana terminó por delante de Bea en las 3 carreras que corrieron juntos.');
+    expect(duelHeadline({ ...duel, aheadA: 1, aheadB: 0, comparable: 1 }, 'Ana', 'Bea')).toBe('Ana terminó por delante de Bea en la única carrera que corrieron juntos.');
+    expect(duelHeadline(duel, 'Ana', 'Bea')).toBe('Ana y Bea están igualados: cada uno terminó por delante en 1 de las 3 carreras que corrieron juntos.');
+    expect(duelHeadline({ ...duel, comparable: 0 }, 'Ana', 'Bea')).toBe('No hay ninguna carrera en la que ambos hayan corrido y se pueda saber quién terminó por delante.');
+  });
+
+  it('writes natural team headlines for wins, sweeps, ties and no comparable races', () => {
+    const duel = headToHeadFixture();
+    expect(duelHeadline({ ...duel, aheadA: 2 }, 'McLaren', 'Mercedes', true)).toBe('McLaren sumó más puntos que Mercedes en 2 de las 3 carreras de la temporada.');
+    expect(duelHeadline({ ...duel, aheadB: 2 }, 'McLaren', 'Mercedes', true)).toBe('Mercedes sumó más puntos que McLaren en 2 de las 3 carreras de la temporada.');
+    expect(duelHeadline({ ...duel, aheadA: 3, aheadB: 0 }, 'McLaren', 'Mercedes', true)).toBe('McLaren sumó más puntos que Mercedes en las 3 carreras de la temporada.');
+    expect(duelHeadline(duel, 'McLaren', 'Mercedes', true)).toBe('McLaren y Mercedes están igualadas: cada una sumó más puntos en 1 de las 3 carreras de la temporada.');
+    expect(duelHeadline({ ...duel, comparable: 0 }, 'McLaren', 'Mercedes', true)).toBe('Todavía no hay carreras en las que se pueda comparar a las dos escuderías.');
   });
 
   const series = [
