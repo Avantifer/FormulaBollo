@@ -46,9 +46,12 @@ describe('Comparative statistics helpers', () => {
     const rows = comparisonMetrics(data.drivers[0], data.drivers[1], false);
     expect(comparisonMetricLabel(rows[0], 'SmokingWeed', 'Moraga')).toBe('Puntos: SmokingWeed 1000, Moraga 970. Gana SmokingWeed.');
     expect(comparisonMetricLabel(rows[7], 'SmokingWeed', 'Moraga')).toContain('. Gana Moraga.');
-    expect(comparisonMetricLabel({ ...rows[0], winner: '=' }, 'A', 'B')).toContain('. Empate.');
-    expect(comparisonMetricLabel({ ...rows[0], winner: null }, 'A', 'B')).toContain('. Sin dato suficiente.');
-    expect(rows.every(row => !comparisonMetricLabel(row, 'A', 'B').includes('✓'))).toBeTrue();
+    expect(comparisonMetricLabel({ ...rows[0], winner: '=' }, 'SmokingWeed', 'Moraga')).toBe('Puntos: SmokingWeed 1000, Moraga 970. Empate.');
+    expect(comparisonMetricLabel({ ...rows[0], winner: null }, 'McLaren', 'Mercedes')).toBe('Puntos: McLaren 1000, Mercedes 970. Sin dato suficiente.');
+    for (const row of rows) {
+      expect(comparisonMetricLabel(row, 'SmokingWeed', 'Moraga')).not.toMatch(/\b[AB]\b|✓/);
+    }
+    expect(comparisonMetricLabel(rows[0], 'McLaren', 'Mercedes')).toBe('Puntos: McLaren 1000, Mercedes 970. Gana McLaren.');
   });
 
   it('uses the specified driver order, units, precision and a separate scale for every metric', () => {

@@ -80,6 +80,55 @@ describe('ComparativeStatsComponent', () => {
     expect(losing.style.getPropertyValue('--team-color')).toBe(component['selected']()[1].color);
   });
 
+  for (const mode of ['drivers', 'teammates', 'teams']) {
+    it('uses contender names in all visible and accessible text for ' + mode, () => {
+      const data = statisticsFixture(3);
+      data.drivers[0].driver.name = 'SmokingWeed';
+      data.drivers[1].driver.name = 'Ricciardo Leon';
+      for (const evolution of [data.driverEvolution, data.teamEvolution]) {
+        evolution.races[0].name = 'Melbourne';
+        evolution.races[1].name = 'Shanghái';
+      }
+      if (mode === 'teammates') data.drivers[1].driver.team = data.drivers[0].driver.team;
+      if (mode === 'teams') {
+        fixture.componentRef.setInput('typeSelected', 'Equipos');
+        data.teamEvolution.series[1].cumulative = [40, 110];
+      }
+      load(data);
+      const [a, b] = component['selected']();
+      const kind = mode === 'teams' ? 'Escudería' : 'Piloto';
+      const text = (selector: string) => Array.from(root().querySelectorAll(selector)).map(element => element.textContent!.trim());
+      expect(text('.contender-top > span:first-child')).toEqual([kind, kind]);
+      expect(text('.picker label')).toEqual([kind, kind]);
+      expect(Array.from(root().querySelectorAll('.contender')).map(element => element.getAttribute('aria-label'))).toEqual([a.name, b.name]);
+      expect(text('.legend .key')).toEqual([a.name, b.name]);
+      expect(text('.metric-heading > span')).toEqual([a.name, 'Estadística', b.name]);
+      const controls = fixture.debugElement.queryAll(By.directive(Select)).map(element => element.componentInstance as Select);
+      expect(controls.map(control => control.ariaLabel)).toEqual([a, b].map(entry => 'Cambiar ' + kind.toLowerCase() + ' (' + entry.name + ')'));
+      expect(root().querySelector('.duel-metrics')!.getAttribute('aria-label')).toBe('Estadísticas enfrentadas de ' + a.name + ' y ' + b.name);
+      expect(root().querySelector('.result-bar')!.getAttribute('aria-label')).toContain('para ' + a.name + ', 1 para ' + b.name);
+      const duel = component['duel']()!;
+      expect(root().querySelector('.races-card > .note')!.textContent).toBe(a.name + ': ' + duel.aheadA + ' carreras · ' + b.name + ': ' + duel.aheadB + ' carreras · ' + (duel.comparable - duel.aheadA - duel.aheadB) + ' empates. Puntos en carreras comunes: ' + a.name + ' ' + duel.pointsA + ' / ' + b.name + ' ' + duel.pointsB + ' pts.');
+      expect(root().querySelector('.races-card > .help')!.textContent).toContain(': ' + a.name + ' a la izquierda, ' + b.name + ' a la derecha. = indica igualdad.');
+      for (const [selector, name] of [['.race-a', a.name], ['.race-b', b.name]]) {
+        const cell = root().querySelector<HTMLElement>(selector)!;
+        expect(cell.querySelector('.race-label > span:last-child')!.textContent).toBe(name);
+        expect(cell.title).toBe(name);
+        expect(cell.getAttribute('aria-label')).toContain('resultado ' + name);
+      }
+      if (mode !== 'teams') expect(text('.race-label > span:last-child')).toEqual([a.name, b.name, '×', '=']);
+      const heading = Array.from(root().querySelectorAll('.section-heading')).find(element => element.querySelector('h2')!.textContent === 'Tira y afloja')!;
+      expect(heading.children.length).toBe(1);
+      expect(root().querySelector('.duel-metrics > .note')).toBeNull();
+      expect(root().querySelector('.chart-card > .help')).toBeNull();
+      expect(root().querySelector('.chart-card .card-heading > span')).toBeNull();
+      expect(root().textContent).not.toMatch(/tono apagado|Gana la fila|Pierde la fila|cada fila tiene su propia escala|Las barras parten|σ describe|El mismo calendario|Líneas superpuestas|La letra/);
+      const accessible = Array.from(root().querySelectorAll('*')).flatMap(element => ['aria-label', 'title'].map(attribute => element.getAttribute(attribute) ?? '')).join(' ');
+      expect(root().textContent + ' ' + accessible).not.toMatch(/\b[AB]\b/);
+      expect(root().querySelector('[data-metric="totalPoints"]')!.getAttribute('aria-label')).toContain('Gana ' + a.name + '.');
+    });
+  }
+
   it('requests duels with selected driver names while keeping selection by ID', () => {
     const data = statisticsFixture(3);
     data.drivers[0].driver.id = 50;
@@ -124,7 +173,7 @@ describe('ComparativeStatsComponent', () => {
     load();
     const controls = fixture.debugElement.queryAll(By.directive(Select)).map(element => element.componentInstance as Select);
     expect(controls.length).toBe(2);
-    expect(controls.map(control => control.ariaLabel)).toEqual(['Cambiar piloto A', 'Cambiar piloto B']);
+    expect(controls.map(control => control.ariaLabel)).toEqual(['Cambiar piloto (Piloto 01)', 'Cambiar piloto (Piloto 02)']);
     expect(controls.every(control => control.filter)).toBeTrue();
     expect(controls[0].filterBy).toBe('name,team');
     expect(controls[0].options!.length).toBe(12);
@@ -141,6 +190,7 @@ describe('ComparativeStatsComponent', () => {
     request.flush(headToHeadFixture(3, 'Piloto 02', 'Piloto 01'));
     render();
     expect(root().querySelector('[aria-live="polite"]')!.textContent).toBe('Comparando Piloto 02 con Piloto 01');
+    expect(controls.map(control => control.ariaLabel)).toEqual(['Cambiar piloto (Piloto 02)', 'Cambiar piloto (Piloto 01)']);
   });
 
   it('swaps a duplicate choice on either side and permits an independent new choice', () => {
@@ -256,11 +306,7 @@ describe('ComparativeStatsComponent', () => {
     expect(root().querySelector('.duel-metrics .check')).toBeNull();
     expect(root().textContent).not.toContain('✓');
     expect(root().textContent).not.toContain('Mejor cifra');
-    const legend = root().querySelector('.metric-legend')!;
-    expect(legend.textContent).toContain('Gana la fila: color de equipo');
-    expect(legend.textContent).toContain('Pierde la fila: color apagado');
-    expect(legend.textContent).toContain('= empate');
-    expect(legend.querySelectorAll('.metric-key').length).toBe(2);
+    expect(root().querySelector('.metric-legend')).toBeNull();
     expect(Array.from(row('totalPoints').querySelectorAll('.track')).every(track => track.getAttribute('aria-hidden') === 'true')).toBeTrue();
     choose(4, 0);
     flushDuel();
@@ -322,7 +368,7 @@ describe('ComparativeStatsComponent', () => {
           expect(getComputedStyle(value).color).toBe(metric.winner === side ? ink : soft);
         }
       }
-      expect(getComputedStyle(root().querySelector('.metric-key-flat')!, '::before').backgroundColor).toBe(resolved('color-mix(in srgb, ' + a.color + ' 35%, var(--sector-flat))'));
+      expect(root().querySelector('.legend')!.textContent).not.toContain('tono apagado');
       const muted = mixHex(b.color, component['palette']().flat);
       expect(muted).not.toBe(b.color);
       expect(resolved(muted)).not.toBe(gray);
@@ -367,7 +413,7 @@ describe('ComparativeStatsComponent', () => {
     expect(root().querySelector('.race-b')!.textContent).toContain('50 pts');
     expect(root().querySelector('.race-grid')!.textContent).not.toContain('DNF');
     const controls = fixture.debugElement.queryAll(By.directive(Select)).map(element => element.componentInstance as Select);
-    expect(controls[1].ariaLabel).toBe('Cambiar escuderia B');
+    expect(controls[1].ariaLabel).toBe('Cambiar escudería (Mercedes)');
   });
 
   it('shows skeletons during overview and duel loading, without hiding the chart while the duel loads', () => {
@@ -434,16 +480,16 @@ describe('ComparativeStatsComponent', () => {
     expect(getComputedStyle(cells[1]).borderTopStyle).toBe('solid');
     expect(cells[2].textContent).toContain('×');
     expect(cells[3].textContent).toContain('=');
-    expect(cells[0].getAttribute('aria-label')).toBe('Melbourne: A P1, B DNF; resultado A');
+    expect(cells[0].getAttribute('aria-label')).toBe('Melbourne: Piloto 01 P1, Piloto 02 DNF; resultado Piloto 01');
   });
 
-  it('retains A/B markers for teammates and provides the live announcement and table inside an sr-only div', () => {
+  it('retains named markers for teammates and provides the live announcement and table inside an sr-only div', () => {
     const data = statisticsFixture(3);
     data.drivers[1].driver.team = data.drivers[0].driver.team;
     load(data);
     expect(root().textContent).toContain('Compañeros de equipo');
-    expect(root().querySelector('.legend')!.textContent).toContain('A · Piloto 01');
-    expect(root().querySelector('.legend')!.textContent).toContain('B · Piloto 02 · tono apagado');
+    expect(root().querySelector('.key')!.textContent).toBe('Piloto 01');
+    expect(root().querySelector('.key-b')!.textContent).toBe('Piloto 02');
     expect(root().querySelector('[aria-live="polite"]')!.textContent).toBe('Comparando Piloto 01 con Piloto 02');
     const table = root().querySelector('div.sr-only > table')!;
     expect(table).not.toBeNull();
@@ -495,6 +541,7 @@ describe('ComparativeStatsComponent', () => {
   it('LAYOUT fits every descendant at 320/390/768/1024/1296px in both themes for drivers, teams and teammates, with 44px mobile targets', async () => {
     const data = statisticsFixture(3);
     data.drivers[0].driver.name = 'Piloto con un nombre muy largo para comparar';
+    data.drivers[1].driver.name = 'Ricciardo Leon';
     load(data);
     await fixture.whenStable();
     const styles = Array.from(document.styleSheets).flatMap(sheet => {
@@ -539,11 +586,27 @@ describe('ComparativeStatsComponent', () => {
             }
             expect(doc.querySelectorAll('.contender').length).toBe(2);
             expect(doc.querySelectorAll('.race-cell').length).toBeGreaterThan(0);
+            for (const winner of Array.from(doc.querySelectorAll<HTMLElement>('.race-label > span:last-child'))) {
+              const style = view.getComputedStyle(winner);
+              expect(style.textOverflow).toBe('ellipsis');
+              expect(style.whiteSpace).toBe('nowrap');
+              expect(style.overflowX).toBe('hidden');
+            }
+            if (mode !== 'teams') {
+              const cell = doc.querySelector<HTMLElement>('.race-b')!;
+              const winner = cell.querySelector<HTMLElement>('.race-label > span:last-child')!;
+              expect(winner.textContent).toBe('Ricciardo Leon');
+              expect(cell.title).toBe('Ricciardo Leon');
+              expect(cell.getAttribute('aria-label')).toContain('resultado Ricciardo Leon');
+              if (width >= 1024) expect(winner.scrollWidth).withContext(context + '/winner').toBeLessThanOrEqual(winner.clientWidth);
+            }
             expect(doc.querySelector('div.sr-only > table')).not.toBeNull();
             const a = doc.querySelector('.contender')!, b = doc.querySelector('.contender-b')!;
             expect(view.getComputedStyle(a).borderTopStyle).toBe('solid');
             expect(view.getComputedStyle(b).borderTopStyle).toBe('solid');
             if (width < 640) {
+              const raceGrid = doc.querySelector<HTMLElement>('.race-grid')!;
+              expect(view.getComputedStyle(raceGrid).gridTemplateColumns.split(' ').length).withContext(context + '/race-grid-columns').toBe(2);
               expect(b.getBoundingClientRect().top).toBeGreaterThan(a.getBoundingClientRect().bottom);
               for (const target of Array.from(doc.querySelectorAll<HTMLElement>('button, p-select'))) {
                 expect(target.getBoundingClientRect().height).withContext(context + '/touch-height').toBeGreaterThanOrEqual(44);

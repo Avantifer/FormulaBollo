@@ -98,7 +98,7 @@ export class ComparativeStatsComponent implements OnChanges {
     return races.map((entry, index) => ({
       ...entry, code: codes[index].slice(0, 3),
       a: this.raceValue(entry.positionA), b: this.raceValue(entry.positionB),
-      winner: entry.result === 'NONE' ? entry.positionA === null && entry.positionB === null ? '×' : '=' : entry.result
+      winner: entry.result === 'NONE' ? entry.positionA === null && entry.positionB === null ? '×' : '=' : this.selected()[entry.result === 'A' ? 0 : 1].name
     }));
   });
   protected readonly chart = computed(() => buildComparisonChart(

@@ -22,8 +22,8 @@
 		<header class="section-heading"><h2>Dos nombres. Un duelo.</h2><p>{{ isTeams() ? 'Duelo entre escuderías' : a.team === b.team ? 'Compañeros de equipo' : 'Cara a cara de pilotos' }}</p></header>
 		<div class="hero">
 			@for (contender of selected(); track $index; let index = $index) {
-				<article class="contender" [class.contender-b]="index === 1" [attr.aria-label]="(index ? 'B · ' : 'A · ') + contender.name">
-					<div class="contender-top"><span>{{ index ? 'B' : 'A' }} · {{ isTeams() ? 'Escudería' : 'Piloto' }}</span><span class="rank">{{ contender.rank }}.º en la temporada</span></div>
+				<article class="contender" [class.contender-b]="index === 1" [attr.aria-label]="contender.name">
+					<div class="contender-top"><span>{{ isTeams() ? 'Escudería' : 'Piloto' }}</span><span class="rank">{{ contender.rank }}.º en la temporada</span></div>
 					<div class="picker">
 						@if (contender.image && !failedImages().includes(contender.image)) {
 							<img class="avatar" [class.team-avatar]="isTeams()" [src]="contender.image" alt="" width="64" height="64" (error)="imageFailed(contender.image)" />
@@ -31,10 +31,10 @@
 							<span class="avatar" [class.team-avatar]="isTeams()" aria-hidden="true">{{ contender.initials }}</span>
 						}
 						<div class="picker-control">
-							<label [for]="'comparison-picker-' + index">{{ isTeams() ? 'Escudería' : 'Piloto' }} {{ index ? 'B' : 'A' }}</label>
+							<label [for]="'comparison-picker-' + index">{{ isTeams() ? 'Escudería' : 'Piloto' }}</label>
 							<p-select [inputId]="'comparison-picker-' + index" [options]="candidates()" optionLabel="name" optionValue="id"
 								[ngModel]="contender.id" (ngModelChange)="select($event, index)" [filter]="candidates().length > 6" filterBy="name,team"
-								[ariaLabel]="'Cambiar ' + (isTeams() ? 'escuderia ' : 'piloto ') + (index ? 'B' : 'A')" ariaFilterLabel="Filtrar participantes" [motionOptions]="{ disabled: true }" appendTo="body">
+								[ariaLabel]="'Cambiar ' + (isTeams() ? 'escudería' : 'piloto') + ' (' + contender.name + ')'" ariaFilterLabel="Filtrar participantes" [motionOptions]="{ disabled: true }" appendTo="body">
 								<ng-template #item let-option><span class="select-option">{{ option.name }}<small>{{ option.team }}</small></span></ng-template>
 							</p-select>
 							<p class="team-name"><span class="marker" [class.marker-b]="index === 1" aria-hidden="true"></span>{{ contender.team }}</p>
@@ -52,7 +52,7 @@
 						} @else if (duel(); as result) {
 							<h2 class="duel-headline">{{ headline() }}</h2>
 							<p class="score" [attr.aria-label]="a.name + ' ' + result.aheadA + ', ' + b.name + ' ' + result.aheadB">{{ result.aheadA }} <span>-</span> {{ result.aheadB }}</p>
-							<div class="result-bar" role="img" [attr.aria-label]="'Reparto: ' + result.aheadA + ' para A, ' + result.aheadB + ' para B; ' + (result.comparable - result.aheadA - result.aheadB) + ' empates'">
+							<div class="result-bar" role="img" [attr.aria-label]="'Reparto: ' + result.aheadA + ' para ' + a.name + ', ' + result.aheadB + ' para ' + b.name + '; ' + (result.comparable - result.aheadA - result.aheadB) + ' empates'">
 								<span class="fill-a" [style.width.%]="split()[0]"></span><span class="fill-equal" [style.width.%]="split()[2]"></span><span class="fill-b" [class.zero]="!split()[1]" [style.width.%]="split()[1]"></span>
 							</div>
 							<p class="help">{{ isTeams() ? 'Adelanta = suma más puntos en la carrera.' : 'Adelanta = termina por delante. Terminar gana a abandonar.' }}<br>{{ result.comparable }} comparables de {{ result.races.length }} comunes{{ isTeams() ? '.' : ' · ' + result.bothDnf + ' excluidas por doble abandono.' }}</p>
@@ -62,10 +62,10 @@
 				}
 			}
 		</div>
-		<div class="legend"><span class="key">A · {{ a.name }}</span><span class="key key-b">B · {{ b.name }}{{ sameColor() ? ' · tono apagado' : '' }}</span></div>
-		<header class="section-heading"><h2>Tira y afloja</h2><p class="metric-legend"><span class="metric-key">Gana la fila: color de equipo</span><span class="metric-key metric-key-flat">Pierde la fila: color apagado</span><span>= empate · cada fila tiene su propia escala</span></p></header>
-		<section class="duel-metrics" aria-label="Estadísticas enfrentadas de A y B">
-			<div class="metric-heading" aria-hidden="true"><span>A · {{ a.name }}</span><span>Estadística</span><span>B · {{ b.name }}</span></div>
+		<div class="legend"><span class="key">{{ a.name }}</span><span class="key key-b">{{ b.name }}</span></div>
+		<header class="section-heading"><h2>Tira y afloja</h2></header>
+		<section class="duel-metrics" [attr.aria-label]="'Estadísticas enfrentadas de ' + a.name + ' y ' + b.name">
+			<div class="metric-heading" aria-hidden="true"><span>{{ a.name }}</span><span>Estadística</span><span>{{ b.name }}</span></div>
 			@for (row of metrics(); track row.key) {
 				<div class="metric-row" [attr.data-metric]="row.key" role="group" [attr.aria-label]="metricLabel(row, a.name, b.name)">
 					<span class="metric-value" [class.win]="row.winner === 'A'">{{ row.a }}</span>
@@ -75,12 +75,10 @@
 					<span class="metric-value metric-value-b" [class.win]="row.winner === 'B'">{{ row.b }}</span>
 				</div>
 			}
-			<p class="note">Las barras parten del centro. En penalizaciones{{ isTeams() ? '' : ' y regularidad' }}, menos es mejor. {{ isTeams() ? 'Dos llegadas posibles por gran premio.' : 'σ describe la dispersión de las llegadas; no incluye abandonos.' }}</p>
 		</section>
 		@let card = chart();
 		<article class="card chart-card">
-			<header class="card-heading"><h3>Puntos acumulados</h3><span>Líneas superpuestas</span></header>
-			<p class="help">El mismo calendario, dos trayectorias. Cada punto suma lo obtenido hasta ese gran premio.</p>
+			<header class="card-heading"><h3>Puntos acumulados</h3></header>
 			<div class="chart-container" role="img" [attr.aria-label]="card.ariaLabel" aria-describedby="comparison-points-values">
 				<p-chart type="line" [data]="card.data" [options]="card.options" [plugins]="card.plugins" width="100%" height="100%" aria-hidden="true" />
 			</div>
@@ -101,16 +99,16 @@
 		@if (duel(); as result) {
 			<article class="card races-card">
 				<header class="card-heading"><h3>Cada gran premio cuenta</h3><span>Rejilla de resultados</span></header>
-				<p class="help">{{ isTeams() ? 'Puntos por carrera' : 'Posición de llegada' }}: A a la izquierda, B a la derecha. = indica igualdad. {{ isTeams() ? '' : 'DNF significa abandono; × excluye dos abandonos.' }} La letra marca quién gana el duelo.</p>
+				<p class="help">{{ isTeams() ? 'Puntos por carrera' : 'Posición de llegada' }}: {{ a.name }} a la izquierda, {{ b.name }} a la derecha. = indica igualdad. {{ isTeams() ? '' : 'DNF significa abandono; × excluye dos abandonos.' }}</p>
 				<div class="race-grid">
 					@for (cell of raceCells(); track $index) {
-						<div class="race-cell" [class.race-a]="cell.result === 'A'" [class.race-b]="cell.result === 'B'" [attr.aria-label]="cell.race.name + ': A ' + cell.a + ', B ' + cell.b + '; resultado ' + cell.winner">
+						<div class="race-cell" [class.race-a]="cell.result === 'A'" [class.race-b]="cell.result === 'B'" [attr.aria-label]="cell.race.name + ': ' + a.name + ' ' + cell.a + ', ' + b.name + ' ' + cell.b + '; resultado ' + cell.winner" [title]="cell.winner">
 							<div class="race-label"><span [title]="cell.race.name">{{ cell.code }}</span><span>{{ cell.winner }}</span></div>
 							<div class="race-values"><span [class.win]="cell.result === 'A'">{{ cell.a }}</span><span aria-hidden="true">/</span><span [class.win]="cell.result === 'B'">{{ cell.b }}</span></div>
 						</div>
 					}
 				</div>
-				<p class="note">{{ result.aheadA }} carreras para A · {{ result.aheadB }} para B · {{ result.comparable - result.aheadA - result.aheadB }} empates. Puntos en carreras comunes: A {{ result.pointsA }} / B {{ result.pointsB }} pts.</p>
+				<p class="note">{{ a.name }}: {{ result.aheadA }} carreras · {{ b.name }}: {{ result.aheadB }} carreras · {{ result.comparable - result.aheadA - result.aheadB }} empates. Puntos en carreras comunes: {{ a.name }} {{ result.pointsA }} / {{ b.name }} {{ result.pointsB }} pts.</p>
 			</article>
 		}
 	</div>

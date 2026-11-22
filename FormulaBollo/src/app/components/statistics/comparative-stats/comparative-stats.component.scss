@@ -46,10 +46,6 @@ p-select { display: flex; width: 100%; min-height: 44px; box-shadow: none; }
 .key { display: flex; align-items: center; gap: 7px; overflow-wrap: anywhere; }
 .key::before { content: ''; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--a); }
 .key-b::before { border-radius: 0; background: var(--b); }
-.metric-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; }
-.metric-key { display: flex; align-items: center; gap: 7px; }
-.metric-key::before { content: ''; width: 20px; height: 6px; flex-shrink: 0; background: var(--a); }
-.metric-key-flat::before { background: color-mix(in srgb, var(--team-a) var(--muted-team-percent), var(--sector-flat)); }
 .metric-fill { display: block; height: 12px; background: color-mix(in srgb, var(--team-color) var(--muted-team-percent), var(--sector-flat)); }
 .metric-fill.result-color { background: var(--team-color); }
 .duel-metrics { padding: 0 16px; border: 1px solid var(--rule); border-radius: var(--radius-panel); background: var(--panel); }
@@ -64,7 +60,6 @@ p-select { display: flex; width: 100%; min-height: 44px; box-shadow: none; }
 .track { display: flex; align-items: center; height: 14px; border-bottom: 1px solid var(--rule); border-left: 1px solid var(--ink-soft); }
 .track-a { justify-content: flex-end; border-left: 0; border-right: 1px solid var(--ink-soft); }
 .note { padding-top: 12px; margin-top: 12px; border-top: 1px solid var(--rule); color: var(--ink-soft); font-size: 11px; line-height: 1.6; overflow-wrap: anywhere; }
-.duel-metrics .note { padding-bottom: 14px; margin-top: 0; }
 .card { min-width: 0; padding: 18px; margin-top: 18px; border: 1px solid var(--rule); border-radius: var(--radius-panel); background: var(--panel); }
 .card-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 8px; }
 .card-heading > span { color: var(--ink-soft); font-size: 12px; }
@@ -77,13 +72,14 @@ p-chart { position: absolute; inset: 0; display: block; width: 100%; height: 100
 .value-label { display: flex; align-items: center; gap: 8px; }
 .swatch { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .swatch-b { border-radius: 0; }
-.race-grid { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+.race-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)); gap: 8px; margin-top: 16px; }
 .race-cell { padding: 9px; border: 1px solid var(--rule); border-top: 3px solid var(--rule); border-radius: var(--radius-row); background: var(--panel-alt); font-variant-numeric: tabular-nums; }
 .race-a { border-top-color: var(--a); }
 .race-b { border-top: 3px solid var(--b); }
 .race-label, .race-values { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
 .race-label { margin-bottom: 8px; font: 600 14px var(--font-display); text-transform: uppercase; }
-.race-label > span:last-child { font: 400 11px var(--font-sans); }
+.race-label > span:first-child { flex-shrink: 0; }
+.race-label > span:last-child { font: 400 11px var(--font-sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .race-values { font-size: 12px; flex-wrap: wrap; }
 .state-panel { display: flex; min-height: 240px; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; border: 1px solid var(--rule); border-radius: var(--radius-panel); background: var(--panel); text-align: center; }
 @media (min-width: 640px) and (max-width: 1023px) {
@@ -91,7 +87,6 @@ p-chart { position: absolute; inset: 0; display: block; width: 100%; height: 100
   .picker { grid-template-columns: minmax(0, 1fr); }
   .metric-row { grid-template-columns: 70px minmax(0, 1fr) 180px minmax(0, 1fr) 70px; }
   .metric-heading { grid-template-columns: minmax(0, 1fr) 180px minmax(0, 1fr); }
-  .race-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 }
 @media (max-width: 639px) {
   .hero { grid-template-columns: minmax(0, 1fr); gap: 12px; }
@@ -110,7 +105,7 @@ p-chart { position: absolute; inset: 0; display: block; width: 100%; height: 100
   .card-heading { flex-direction: column; gap: 5px; }
   .card-heading h3 { font-size: 21px; }
   .chart-container { height: 320px; }
-  .race-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+  .race-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
   .race-cell { padding: 8px 6px; }
   .race-values { font-size: 11px; }
 }
