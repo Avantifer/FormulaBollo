@@ -1,4 +1,4 @@
-import { DriverStats, StatisticsOverview, TeamStats } from '../../../shared/models/statistics';
+import { DriverStats, StatisticsHeadToHead, StatisticsOverview, TeamStats } from '../../../shared/models/statistics';
 import { Season } from '../../../shared/models/season';
 
 export function statisticsFixture(seasonNumber = 0): StatisticsOverview {
@@ -26,5 +26,17 @@ export function statisticsFixture(seasonNumber = 0): StatisticsOverview {
     drivers, teams,
     driverEvolution: { races: [{ id: 1, name: 'Carrera A', season: 1 }, { id: 2, name: 'Carrera B', season: 1 }], series: drivers.map((entry, index) => ({ driver: entry.driver, cumulative: index > 11 ? [0, 0] : index === 2 ? [23, 49] : [25 - index, 50 - index] })) },
     teamEvolution: { races: [{ id: 1, name: 'Carrera A', season: 1 }, { id: 2, name: 'Carrera B', season: 1 }], series: teams.map((entry, index) => ({ team: entry.team, cumulative: [50 - index, 100 - index] })) }
+  };
+}
+
+export function headToHeadFixture(season = 3, a = 'Piloto 01', b = 'Piloto 02'): StatisticsHeadToHead {
+  return {
+    season, a, b, aheadA: 1, aheadB: 1, comparable: 3, bothDnf: 1, pointsA: 20, pointsB: 18,
+    races: [
+      { race: { id: 1, name: 'Melbourne', season }, positionA: 1, positionB: null, result: 'A' },
+      { race: { id: 2, name: 'Shanghái', season }, positionA: 2, positionB: 1, result: 'B' },
+      { race: { id: 3, name: 'Suzuka', season }, positionA: null, positionB: null, result: 'NONE' },
+      { race: { id: 4, name: 'Bahréin', season }, positionA: 3, positionB: 3, result: 'NONE' }
+    ]
   };
 }

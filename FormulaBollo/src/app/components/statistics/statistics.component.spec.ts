@@ -24,8 +24,9 @@ describe('StatisticsComponent', () => {
   const type = (teams: boolean): void => { root().querySelectorAll<HTMLButtonElement>('.entity-switch button')[teams ? 1 : 0].click(); render(); };
 
   beforeEach(() => {
-    api = jasmine.createSpyObj('StatisticsApiService', ['getOverview']);
+    api = jasmine.createSpyObj('StatisticsApiService', ['getOverview', 'getHeadToHead']);
     api.getOverview.and.callFake(season => of(statisticsFixture(season)));
+    api.getHeadToHead.and.callFake((season, a, b) => of({ season, a, b, aheadA: 0, aheadB: 0, comparable: 0, bothDnf: 0, pointsA: 0, pointsB: 0, races: [] }));
     TestBed.configureTestingModule({
       imports: [StatisticsComponent],
       providers: [
@@ -102,8 +103,8 @@ describe('StatisticsComponent', () => {
     render();
     select('comparative');
     const comparative = fixture.debugElement.query(By.directive(ComparativeStatsComponent)).componentInstance as ComparativeStatsComponent;
-    expect(comparative.seasonSelected.number).toBe(3);
-    expect(comparative.typeSelected).toBe('Equipos');
+    expect(comparative.seasonSelected().number).toBe(3);
+    expect(comparative.typeSelected()).toBe('Equipos');
     select('records');
     expect(root().querySelector('app-records')).not.toBeNull();
     expect(root().querySelector('.statistics-controls')).toBeNull();

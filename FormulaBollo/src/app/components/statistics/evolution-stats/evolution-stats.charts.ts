@@ -13,7 +13,7 @@ export interface EvolutionChart {
   ariaLabel: string;
 }
 
-function raceCodes(races: { name: string }[]): string[] {
+export function raceCodes(races: { name: string }[]): string[] {
   const names = races.map(race => race.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z]/g, '') || 'GP');
   const unique = names.map((name, index) => names.filter(other => other === name).length > 1 ? name + (index + 1) : name);
   return unique.map((name, index) => {

@@ -1,298 +1,117 @@
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-	@if (typeSelected === 'Pilotos') {
-		@for (1 of [1, 2]; track $index) {
-			<div class="min-w-0 bg-panel border border-rule rounded-panel p-4">
-				<div class="my-3">
-					<div>
-						<span class="block font-display uppercase tracking-wide text-ink text-lg font-semibold mb-2">Piloto {{ $index + 1 }}</span>
-						<select-drivers (driverChanged)="onDriverChange($event, $index)" [position]="$index" [season]="seasonSelected" />
-					</div>
-				</div>
-			</div>
-		}
-	} @else {
-		@for (1 of [1, 2]; track $index) {
-			<div class="min-w-0 bg-panel border border-rule rounded-panel p-4">
-				<div class="my-3">
-					<div>
-						<span class="block font-display uppercase tracking-wide text-ink text-lg font-semibold mb-2">Escudería {{ $index + 1 }}</span>
-						<select-teams (teamChanged)="onTeamChange($event, $index)" [position]="$index" [season]="seasonSelected" />
-					</div>
-				</div>
-			</div>
-		}
-	}
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-	<div class="min-w-0 bg-panel border border-rule rounded-panel p-6">
-		<div class="flex items-center mb-4">
-			<i class="pi pi-chart-line text-accent-text mr-2" style="font-size: 18px"></i>
-			<h2 class="font-display uppercase tracking-wide text-ink text-xl font-bold">Comparativa de estadísticas</h2>
-		</div>
-		<div class="h-[600px] lg:h-[400px]">
-			<p-chart type="bar" [data]="comparisonChartData" [options]="comparisonChartOptions" class="hidden! lg:block!" />
-			<p-chart type="bar" [data]="comparisonChartData" [options]="comparisonChartOptionsMobile" class="block! lg:hidden!" />
-		</div>
+<p class="sr-only" aria-live="polite" aria-atomic="true">{{ announcement() }}</p>
+@if (loadError()) {
+	<div role="alert" class="state-panel">
+		<p>No se pudieron cargar las estadísticas.</p>
+		<button type="button" class="retry-button" (click)="retry()">Reintentar</button>
 	</div>
-	@if (typeSelected === 'Pilotos' ? driversInfo.length === 2 : teamsInfo.length === 2) {
-		<div class="min-w-0 bg-panel border border-rule rounded-panel p-6">
-			<div class="flex items-center mb-4">
-				<i class="pi pi-star text-accent-text mr-2" style="font-size: 18px"></i>
-				<h2 class="font-display uppercase tracking-wide text-ink text-xl font-bold">Detalles de la comparación</h2>
-			</div>
-			<div class="space-y-5">
-				<div class="flex flex-wrap justify-between items-center gap-2 bg-panel-alt border border-rule rounded-row p-4">
-					<span class="font-display uppercase tracking-wide text-ink-soft">Victorias</span>
-					<div class="flex items-center gap-4">
-						<div class="flex items-center gap-1">
-							<span
-								class="inline-block h-3 w-3 rounded-full"
-								[class]="
-									'bg-' +
-									(typeSelected === 'Pilotos'
-										? (driversInfo[0].driver.team!.name | SpaceToUnderscore)
-										: (teamsInfo[0].team!.name | SpaceToUnderscore))
-								"></span
-							><span class="font-display tabular-nums text-2xl font-bold text-ink">{{ typeSelected === 'Pilotos' ? driversInfo[0].victories : teamsInfo[0].victories }}</span>
-						</div>
-						<div class="flex items-center gap-1">
-							<span
-								class="inline-block h-3 w-3 rounded-full"
-								[class]="
-									'bg-' +
-									(typeSelected === 'Pilotos'
-										? (driversInfo[1].driver.team!.name | SpaceToUnderscore)
-										: (teamsInfo[1].team!.name | SpaceToUnderscore))
-								"></span
-							><span class="font-display tabular-nums text-2xl font-bold text-ink">{{ typeSelected === 'Pilotos' ? driversInfo[1].victories : teamsInfo[1].victories }}</span>
-						</div>
-					</div>
-				</div>
-				<div class="flex flex-wrap justify-between items-center gap-2 bg-panel-alt border border-rule rounded-row p-4">
-					<span class="font-display uppercase tracking-wide text-ink-soft">Podios</span>
-					<div class="flex items-center gap-4">
-						<div class="flex items-center gap-1">
-							<span
-								class="inline-block h-3 w-3 rounded-full"
-								[class]="
-									'bg-' +
-									(typeSelected === 'Pilotos'
-										? (driversInfo[0].driver.team!.name | SpaceToUnderscore)
-										: (teamsInfo[0].team!.name | SpaceToUnderscore))
-								"></span
-							><span class="font-display tabular-nums text-2xl font-bold text-ink">{{ typeSelected === 'Pilotos' ? driversInfo[0].podiums : teamsInfo[0].podiums }}</span>
-						</div>
-						<div class="flex items-center gap-1">
-							<span
-								class="inline-block h-3 w-3 rounded-full"
-								[class]="
-									'bg-' +
-									(typeSelected === 'Pilotos'
-										? (driversInfo[1].driver.team!.name | SpaceToUnderscore | SpaceToUnderscore)
-										: (teamsInfo[1].team!.name | SpaceToUnderscore))
-								"></span
-							><span class="font-display tabular-nums text-2xl font-bold text-ink">{{ typeSelected === 'Pilotos' ? driversInfo[1].podiums : teamsInfo[1].podiums }}</span>
-						</div>
-					</div>
-				</div>
-				<div class="flex flex-wrap justify-between items-center gap-2 bg-panel-alt border border-rule rounded-row p-4">
-					<span class="font-display uppercase tracking-wide text-ink-soft">Poles</span>
-					<div class="flex items-center gap-4">
-						<div class="flex items-center gap-1">
-							<span
-								class="inline-block h-3 w-3 rounded-full"
-								[class]="
-									'bg-' +
-									(typeSelected === 'Pilotos'
-										? (driversInfo[0].driver.team!.name | SpaceToUnderscore)
-										: (teamsInfo[0].team!.name | SpaceToUnderscore))
-								"></span
-							><span class="font-display tabular-nums text-2xl font-bold text-ink">{{ typeSelected === 'Pilotos' ? driversInfo[0].poles : teamsInfo[0].poles }}</span>
-						</div>
-						<div class="flex items-center gap-1">
-							<span
-								class="inline-block h-3 w-3 rounded-full"
-								[class]="
-									'bg-' +
-									(typeSelected === 'Pilotos'
-										? (driversInfo[1].driver.team!.name | SpaceToUnderscore)
-										: (teamsInfo[1].team!.name | SpaceToUnderscore))
-								"></span
-							><span class="font-display tabular-nums text-2xl font-bold text-ink">{{ typeSelected === 'Pilotos' ? driversInfo[1].poles : teamsInfo[1].poles }}</span>
-						</div>
-					</div>
-				</div>
-				<div class="flex flex-wrap justify-between items-center gap-2 bg-panel-alt border border-rule rounded-row p-4">
-					<span class="font-display uppercase tracking-wide text-ink-soft">Vueltas rápidas</span>
-					<div class="flex items-center gap-4">
-						<div class="flex items-center gap-1">
-							<span
-								class="inline-block h-3 w-3 rounded-full"
-								[class]="
-									'bg-' +
-									(typeSelected === 'Pilotos'
-										? (driversInfo[0].driver.team!.name | SpaceToUnderscore)
-										: (teamsInfo[0].team!.name | SpaceToUnderscore))
-								"></span
-							><span class="font-display tabular-nums text-2xl font-bold text-ink">{{ typeSelected === 'Pilotos' ? driversInfo[0].fastlaps : teamsInfo[0].fastlaps }}</span>
-						</div>
-						<div class="flex items-center gap-1">
-							<span
-								class="inline-block h-3 w-3 rounded-full"
-								[class]="
-									'bg-' +
-									(typeSelected === 'Pilotos'
-										? (driversInfo[1].driver.team!.name | SpaceToUnderscore)
-										: (teamsInfo[1].team!.name | SpaceToUnderscore))
-								"></span
-							><span class="font-display tabular-nums text-2xl font-bold text-ink">{{ typeSelected === 'Pilotos' ? driversInfo[1].fastlaps : teamsInfo[1].fastlaps }}</span>
-						</div>
-					</div>
-				</div>
-				<div class="flex flex-wrap justify-between items-center gap-2 bg-panel-alt border border-rule rounded-row p-4">
-					<span class="font-display uppercase tracking-wide text-ink-soft">Carreras terminadas</span>
-					<div class="flex items-center gap-4">
-						<div class="flex items-center gap-1">
-							<span
-								class="inline-block h-3 w-3 rounded-full"
-								[class]="
-									'bg-' +
-									(typeSelected === 'Pilotos'
-										? (driversInfo[0].driver.team!.name | SpaceToUnderscore)
-										: (teamsInfo[0].team!.name | SpaceToUnderscore))
-								"></span
-							><span class="font-display tabular-nums text-2xl font-bold text-ink">{{
-								typeSelected === 'Pilotos' ? driversInfo[0].racesFinished : teamsInfo[0].racesFinished
-							}}</span>
-						</div>
-						<div class="flex items-center gap-1">
-							<span
-								class="inline-block h-3 w-3 rounded-full"
-								[class]="
-									'bg-' +
-									(typeSelected === 'Pilotos'
-										? (driversInfo[1].driver.team!.name | SpaceToUnderscore)
-										: (teamsInfo[1].team!.name | SpaceToUnderscore))
-								"></span
-							><span class="font-display tabular-nums text-2xl font-bold text-ink">{{
-								typeSelected === 'Pilotos' ? driversInfo[1].racesFinished : teamsInfo[1].racesFinished
-							}}</span>
-						</div>
-					</div>
-				</div>
-				<div class="flex flex-wrap justify-between items-center gap-2 bg-panel-alt border border-rule rounded-row p-4">
-					<span class="font-display uppercase tracking-wide text-ink-soft">Penalizaciones</span>
-					<div class="flex items-center gap-4">
-						<div class="flex items-center gap-1">
-							<span
-								class="inline-block h-3 w-3 rounded-full"
-								[class]="
-									'bg-' +
-									(typeSelected === 'Pilotos'
-										? (driversInfo[0].driver.team!.name | SpaceToUnderscore)
-										: (teamsInfo[0].team!.name | SpaceToUnderscore))
-								"></span
-							><span class="font-display tabular-nums text-2xl font-bold text-ink">{{ typeSelected === 'Pilotos' ? driversInfo[0].penalties : teamsInfo[0].penalties }}</span>
-						</div>
-						<div class="flex items-center gap-1">
-							<span
-								class="inline-block h-3 w-3 rounded-full"
-								[class]="
-									'bg-' +
-									(typeSelected === 'Pilotos'
-										? (driversInfo[1].driver.team!.name | SpaceToUnderscore)
-										: (teamsInfo[1].team!.name | SpaceToUnderscore))
-								"></span
-							><span class="font-display tabular-nums text-2xl font-bold text-ink">{{ typeSelected === 'Pilotos' ? driversInfo[1].penalties : teamsInfo[1].penalties }}</span>
-						</div>
-					</div>
-				</div>
-				<div class="flex flex-wrap justify-between items-center gap-2 bg-panel-alt border border-rule rounded-row p-4">
-					<span class="font-display uppercase tracking-wide text-ink-soft">Mejor posición</span>
-					<div class="flex items-center gap-4">
-						<div class="flex items-center gap-1">
-							<span
-								class="inline-block h-3 w-3 rounded-full"
-								[class]="
-									'bg-' +
-									(typeSelected === 'Pilotos'
-										? (driversInfo[0].driver.team!.name | SpaceToUnderscore)
-										: (teamsInfo[0].team!.name | SpaceToUnderscore))
-								"></span
-							><span class="font-display tabular-nums text-2xl font-bold text-ink">{{ typeSelected === 'Pilotos' ? driversInfo[0].bestPosition : teamsInfo[0].bestPosition }}</span>
-						</div>
-						<div class="flex items-center gap-1">
-							<span
-								class="inline-block h-3 w-3 rounded-full"
-								[class]="
-									'bg-' +
-									(typeSelected === 'Pilotos'
-										? (driversInfo[1].driver.team!.name | SpaceToUnderscore)
-										: (teamsInfo[1].team!.name | SpaceToUnderscore))
-								"></span
-							><span class="font-display tabular-nums text-2xl font-bold text-ink">{{ typeSelected === 'Pilotos' ? driversInfo[1].bestPosition : teamsInfo[1].bestPosition }}</span>
-						</div>
-					</div>
-				</div>
-				<div class="flex flex-wrap justify-between items-center gap-2 bg-panel-alt border border-rule rounded-row p-4">
-					<span class="font-display uppercase tracking-wide text-ink-soft">Posición media</span>
-					<div class="flex items-center gap-4">
-						<div class="flex items-center gap-1">
-							<span
-								class="inline-block h-3 w-3 rounded-full"
-								[class]="
-									'bg-' +
-									(typeSelected === 'Pilotos'
-										? (driversInfo[0].driver.team!.name | SpaceToUnderscore)
-										: (teamsInfo[0].team!.name | SpaceToUnderscore))
-								"></span
-							><span class="font-display tabular-nums text-2xl font-bold text-ink">{{
-								(typeSelected === 'Pilotos' ? driversInfo[0].averagePosition : teamsInfo[0].averagePosition) | number:'1.2-2':'es-ES'
-							}}</span>
-						</div>
-						<div class="flex items-center gap-1">
-							<span
-								class="inline-block h-3 w-3 rounded-full"
-								[class]="
-									'bg-' +
-									(typeSelected === 'Pilotos'
-										? (driversInfo[1].driver.team!.name | SpaceToUnderscore)
-										: (teamsInfo[1].team!.name | SpaceToUnderscore))
-								"></span
-							><span class="font-display tabular-nums text-2xl font-bold text-ink">{{
-								(typeSelected === 'Pilotos' ? driversInfo[1].averagePosition : teamsInfo[1].averagePosition) | number:'1.2-2':'es-ES'
-							}}</span>
-						</div>
-					</div>
-				</div>
-				<div class="flex flex-wrap justify-between items-center gap-2 bg-panel-alt border border-rule rounded-row p-4">
-					<span class="font-display uppercase tracking-wide text-ink-soft">Puntos totales</span>
-					<div class="flex items-center gap-4">
-						<div class="flex items-center gap-1">
-							<span
-								class="inline-block h-3 w-3 rounded-full"
-								[class]="
-									'bg-' +
-									(typeSelected === 'Pilotos'
-										? (driversInfo[0].driver.team!.name | SpaceToUnderscore)
-										: (teamsInfo[0].team!.name | SpaceToUnderscore))
-								"></span
-							><span class="font-display tabular-nums text-2xl font-bold text-ink">{{ typeSelected === 'Pilotos' ? driversInfo[0].totalPoints : teamsInfo[0].totalPoints }}</span>
-						</div>
-						<div class="flex items-center gap-1">
-							<span
-								class="inline-block h-3 w-3 rounded-full"
-								[class]="
-									'bg-' +
-									(typeSelected === 'Pilotos'
-										? (driversInfo[1].driver.team!.name | SpaceToUnderscore)
-										: (teamsInfo[1].team!.name | SpaceToUnderscore))
-								"></span
-							><span class="font-display tabular-nums text-2xl font-bold text-ink">{{ typeSelected === 'Pilotos' ? driversInfo[1].totalPoints : teamsInfo[1].totalPoints }}</span>
-						</div>
-					</div>
-				</div>
-			</div>
+} @else if (loading()) {
+	<div aria-busy="true" aria-label="Cargando estadísticas">
+		<div class="hero skeleton-hero" aria-hidden="true">
+			@for (side of ['A', 'VS', 'B']; track side) {
+				<div class="contender"><p-skeleton width="100%" height="15rem" animation="none" /></div>
+			}
 		</div>
-	}
-</div>
+		<div class="card" aria-hidden="true"><p-skeleton width="100%" height="24rem" animation="none" /></div>
+	</div>
+} @else if (candidates().length < 2) {
+	<div class="state-panel" role="status">No hay suficientes participantes para comparar en esta temporada.</div>
+} @else {
+	@let a = selected()[0];
+	@let b = selected()[1];
+	<div class="comparison" [style.--a]="a.color" [style.--b]="b.color">
+		<header class="section-heading"><h2>Dos nombres. Un duelo.</h2><p>{{ isTeams() ? 'Duelo entre escuderías' : a.team === b.team ? 'Compañeros de equipo' : 'Cara a cara de pilotos' }}</p></header>
+		<div class="hero">
+			@for (contender of selected(); track $index; let index = $index) {
+				<article class="contender" [class.contender-b]="index === 1" [attr.aria-label]="(index ? 'B · ' : 'A · ') + contender.name">
+					<div class="contender-top"><span>{{ index ? 'B' : 'A' }} · {{ isTeams() ? 'Escudería' : 'Piloto' }}</span><span class="rank">{{ contender.rank }}.º en la temporada</span></div>
+					<div class="picker">
+						@if (contender.image && !failedImages().includes(contender.image)) {
+							<img class="avatar" [class.team-avatar]="isTeams()" [src]="contender.image" alt="" width="64" height="64" (error)="imageFailed(contender.image)" />
+						} @else {
+							<span class="avatar" [class.team-avatar]="isTeams()" aria-hidden="true">{{ contender.initials }}</span>
+						}
+						<div class="picker-control">
+							<label [for]="'comparison-picker-' + index">{{ isTeams() ? 'Escudería' : 'Piloto' }} {{ index ? 'B' : 'A' }}</label>
+							<p-select [inputId]="'comparison-picker-' + index" [options]="candidates()" optionLabel="name" optionValue="id"
+								[ngModel]="contender.id" (ngModelChange)="select($event, index)" [filter]="candidates().length > 6" filterBy="name,team"
+								[ariaLabel]="'Cambiar ' + (isTeams() ? 'escuderia ' : 'piloto ') + (index ? 'B' : 'A')" ariaFilterLabel="Filtrar participantes" [motionOptions]="{ disabled: true }" appendTo="body">
+								<ng-template #item let-option><span class="select-option">{{ option.name }}<small>{{ option.team }}</small></span></ng-template>
+							</p-select>
+							<p class="team-name"><span class="marker" [class.marker-b]="index === 1" aria-hidden="true"></span>{{ contender.team }}</p>
+						</div>
+					</div>
+					<div class="points"><strong>{{ contender.stats.totalPoints.toLocaleString('es-ES') }}</strong><span>puntos totales</span></div>
+				</article>
+				@if (index === 0) {
+					<section class="versus" aria-label="Cara a cara">
+						<span class="vs">VERSUS</span>
+						@if (duelError()) {
+							<div class="duel-error" role="alert"><p>No se pudo cargar el cara a cara.</p><button type="button" class="retry-button" (click)="loadDuel()">Reintentar</button></div>
+						} @else if (duelLoading()) {
+							<div class="duel-skeleton" aria-busy="true" aria-label="Cargando cara a cara"><p-skeleton width="100%" height="9rem" animation="none" /></div>
+						} @else if (duel(); as result) {
+							<h2 class="duel-headline">{{ headline() }}</h2>
+							<p class="score" [attr.aria-label]="a.name + ' ' + result.aheadA + ', ' + b.name + ' ' + result.aheadB">{{ result.aheadA }} <span>-</span> {{ result.aheadB }}</p>
+							<div class="result-bar" role="img" [attr.aria-label]="'Reparto: ' + result.aheadA + ' para A, ' + result.aheadB + ' para B; ' + (result.comparable - result.aheadA - result.aheadB) + ' empates'">
+								<span class="fill-a" [style.width.%]="split()[0]"></span><span class="fill-equal" [style.width.%]="split()[2]"></span><span class="fill-b" [class.zero]="!split()[1]" [style.width.%]="split()[1]"></span>
+							</div>
+							<p class="help">{{ isTeams() ? 'Adelanta = suma más puntos en la carrera.' : 'Adelanta = termina por delante. Terminar gana a abandonar.' }}<br>{{ result.comparable }} comparables de {{ result.races.length }} comunes{{ isTeams() ? '.' : ' · ' + result.bothDnf + ' excluidas por doble abandono.' }}</p>
+						}
+						<button type="button" class="swap-button" (click)="swap()"><span aria-hidden="true">⇄</span> Intercambiar</button>
+					</section>
+				}
+			}
+		</div>
+		<div class="legend"><span class="key">A · {{ a.name }} · relleno continuo</span><span class="key key-b">B · {{ b.name }} · contorno y trazo discontinuo</span></div>
+		<header class="section-heading"><h2>Tira y afloja</h2><p>✓ Mejor cifra · = Empate · cada fila tiene su propia escala</p></header>
+		<section class="duel-metrics" aria-label="Estadísticas enfrentadas de A y B">
+			<div class="metric-heading" aria-hidden="true"><span>A · {{ a.name }}</span><span>Estadística</span><span>B · {{ b.name }}</span></div>
+			@for (row of metrics(); track row.key) {
+				<div class="metric-row" [attr.data-metric]="row.key" role="group" [attr.aria-label]="row.label + ': ' + a.name + ' ' + row.a + ', ' + b.name + ' ' + row.b">
+					<span class="metric-value" [class.win]="row.winner === 'A'">@if (row.winner === 'A') { <span class="check" aria-label="Mejor cifra">✓</span> }{{ row.a }}</span>
+					<div class="track track-a" aria-hidden="true"><span class="fill-a" [style.width.%]="row.widthA"></span></div>
+					<div class="metric-label">{{ row.label }}<small>{{ row.winner === '=' ? '= Empate · ' : row.winner === null ? 'Sin dato suficiente · ' : '' }}{{ row.unit }}</small></div>
+					<div class="track" aria-hidden="true"><span class="fill-b" [class.zero]="!row.widthB" [style.width.%]="row.widthB"></span></div>
+					<span class="metric-value metric-value-b" [class.win]="row.winner === 'B'">{{ row.b }}@if (row.winner === 'B') { <span class="check" aria-label="Mejor cifra">✓</span> }</span>
+				</div>
+			}
+			<p class="note">Las barras parten del centro. En penalizaciones{{ isTeams() ? '' : ' y regularidad' }}, menos es mejor. {{ isTeams() ? 'Dos llegadas posibles por gran premio.' : 'σ describe la dispersión de las llegadas; no incluye abandonos.' }}</p>
+		</section>
+		@let card = chart();
+		<article class="card chart-card">
+			<header class="card-heading"><h3>Puntos acumulados</h3><span>Líneas superpuestas</span></header>
+			<p class="help">El mismo calendario, dos trayectorias. Cada punto suma lo obtenido hasta ese gran premio.</p>
+			<div class="chart-container" role="img" [attr.aria-label]="card.ariaLabel" aria-describedby="comparison-points-values">
+				<p-chart type="line" [data]="card.data" [options]="card.options" [plugins]="card.plugins" width="100%" height="100%" aria-hidden="true" />
+			</div>
+			<ul class="chart-values" id="comparison-points-values">
+				@for (value of card.values; track value.label) {
+					<li><span class="value-label"><svg class="swatch" viewBox="0 0 22 8" aria-hidden="true"><line x1="0" y1="4" x2="22" y2="4" [attr.stroke]="value.color" [attr.stroke-dasharray]="value.dash.join(' ') || null" /></svg>{{ value.label }}</span><span class="tabular-nums">{{ value.value }}</span></li>
+				}
+			</ul>
+			<div class="sr-only">
+				<table>
+					<caption>Puntos acumulados por carrera de {{ seasonSelected().name }}</caption>
+					<thead><tr><th scope="col">Carrera</th>@for (dataset of card.data.datasets; track $index) { <th scope="col">{{ dataset.label }}</th> }</tr></thead>
+					<tbody>@for (row of card.rows; track $index) { <tr><th scope="row">{{ row.race }}</th>@for (points of row.points; track $index) { <td>{{ points }}</td> }</tr> }</tbody>
+				</table>
+			</div>
+			<p class="note">Incluye puntos de carrera, vuelta rápida y sprint. Pasa el cursor o toca el gráfico para ver cada carrera.</p>
+		</article>
+		@if (duel(); as result) {
+			<article class="card races-card">
+				<header class="card-heading"><h3>Cada gran premio cuenta</h3><span>Rejilla de resultados</span></header>
+				<p class="help">{{ isTeams() ? 'Puntos por carrera' : 'Posición de llegada' }}: A a la izquierda, B a la derecha. = indica igualdad. {{ isTeams() ? '' : 'DNF significa abandono; × excluye dos abandonos.' }} La letra marca quién gana el duelo.</p>
+				<div class="race-grid">
+					@for (cell of raceCells(); track $index) {
+						<div class="race-cell" [class.race-a]="cell.result === 'A'" [class.race-b]="cell.result === 'B'" [attr.aria-label]="cell.race.name + ': A ' + cell.a + ', B ' + cell.b + '; resultado ' + cell.winner">
+							<div class="race-label"><span [title]="cell.race.name">{{ cell.code }}</span><span>{{ cell.winner }}</span></div>
+							<div class="race-values"><span [class.win]="cell.result === 'A'">{{ cell.a }}</span><span aria-hidden="true">/</span><span [class.win]="cell.result === 'B'">{{ cell.b }}</span></div>
+						</div>
+					}
+				</div>
+				<p class="note">{{ result.aheadA }} carreras para A · {{ result.aheadB }} para B · {{ result.comparable - result.aheadA - result.aheadB }} empates. Puntos en carreras comunes: A {{ result.pointsA }} / B {{ result.pointsB }} pts.</p>
+			</article>
+		}
+	</div>
+}
