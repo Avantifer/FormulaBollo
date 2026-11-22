@@ -66,3 +66,21 @@ export interface StatisticsOverview {
   driverEvolution: StatisticsEvolution<{ driver: Driver; cumulative: number[] }>;
   teamEvolution: StatisticsEvolution<{ team: Team; cumulative: number[] }>;
 }
+
+export interface StatisticsHeadToHead {
+  season: number;
+  a: string;
+  b: string;
+  aheadA: number;
+  aheadB: number;
+  comparable: number;
+  bothDnf: number;
+  pointsA: number;
+  pointsB: number;
+  races: {
+    race: { id: number; name: string; season: number };
+    positionA: number | null;
+    positionB: number | null;
+    result: 'A' | 'B' | 'NONE';
+  }[];
+}

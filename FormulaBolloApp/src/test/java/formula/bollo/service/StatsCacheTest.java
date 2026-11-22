@@ -2,6 +2,7 @@ package formula.bollo.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -137,6 +138,39 @@ class StatsCacheTest {
         statisticsController.getOverview(2);
         verify(resultRepository, times(2)).findForStatistics(1);
         verify(resultRepository, times(2)).findForStatistics(2);
+    }
+
+    @Test
+    void headToHeadIsCachedPerSeasonAndPairAndPublishingEvictsIt() {
+        cacheNotifier.publish();
+        clearInvocations(resultRepository);
+        statisticsController.getHeadToHead(31, "Ana", "Bea");
+        statisticsController.getHeadToHead(31, "Ana", "Bea");
+        statisticsController.getHeadToHead(31, "Bea", "Ana");
+        statisticsController.getHeadToHead(32, "Ana", "Bea");
+        verify(resultRepository, times(2)).findForStatistics(31);
+        verify(resultRepository, times(1)).findForStatistics(32);
+
+        cacheNotifier.publish();
+
+        statisticsController.getHeadToHead(31, "Ana", "Bea");
+        statisticsController.getHeadToHead(31, "Bea", "Ana");
+        statisticsController.getHeadToHead(32, "Ana", "Bea");
+        verify(resultRepository, times(4)).findForStatistics(31);
+        verify(resultRepository, times(2)).findForStatistics(32);
+    }
+
+    @Test
+    void headToHeadIsEvictedWhenResultsChange() {
+        clearInvocations(resultRepository);
+        statisticsController.getHeadToHead(33, "Ana", "Bea");
+        statisticsController.getHeadToHead(33, "Ana", "Bea");
+        verify(resultRepository, times(1)).findForStatistics(33);
+
+        resultService.deleteResults(1);
+
+        statisticsController.getHeadToHead(33, "Ana", "Bea");
+        verify(resultRepository, times(2)).findForStatistics(33);
     }
 
     @Test

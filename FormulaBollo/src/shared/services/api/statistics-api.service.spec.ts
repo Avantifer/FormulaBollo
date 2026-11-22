@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { environment } from '../../../enviroments/enviroment';
-import { statisticsFixture } from '../../../app/components/statistics/statistics.fixture';
+import { headToHeadFixture, statisticsFixture } from '../../../app/components/statistics/statistics.fixture';
 import { CacheService } from '../cache.service';
 import { StatisticsApiService } from './statistics-api.service';
 
@@ -51,5 +51,55 @@ describe('StatisticsApiService', () => {
     const request = http.expectOne(request => request.params.get('season') === '3');
     subscription.unsubscribe();
     expect(request.cancelled).toBeTrue();
+  });
+
+  it('requests headToHead with season and ordered names, sharing pending and cached responses', () => {
+    const response = headToHeadFixture();
+    const received = jasmine.createSpy('received');
+    const cache = spyOn(TestBed.inject(CacheService), 'getOrLoad').and.callThrough();
+    service.getHeadToHead(3, 'Piloto 01', 'Piloto 02').subscribe(received);
+    service.getHeadToHead(3, 'Piloto 01', 'Piloto 02').subscribe(received);
+    const request = http.expectOne(request => request.url === environment.apiUrl + '/statistics/headToHead'
+      && request.params.get('season') === '3'
+      && request.params.get('a') === 'Piloto 01'
+      && request.params.get('b') === 'Piloto 02');
+    expect(request.request.method).toBe('GET');
+    request.flush(response);
+    expect(received).toHaveBeenCalledTimes(2);
+    expect(received).toHaveBeenCalledWith(response);
+    service.getHeadToHead(3, 'Piloto 01', 'Piloto 02').subscribe();
+    http.expectNone(request => request.url.endsWith('/statistics/headToHead'));
+    expect(cache).toHaveBeenCalledWith('statisticsHeadToHead-v1-3-Piloto 01-Piloto 02', jasmine.any(Function));
+    const cases: [number, string, string][] = [[3, 'Piloto 02', 'Piloto 01'], [2, 'Piloto 01', 'Piloto 02'], [3, 'Piloto 01', 'Piloto 03']];
+    for (const [season, a, b] of cases) {
+      service.getHeadToHead(season, a, b).subscribe();
+      http.expectOne(request => request.url === environment.apiUrl + '/statistics/headToHead'
+        && request.params.get('season') === String(season)
+        && request.params.get('a') === a && request.params.get('b') === b).flush(headToHeadFixture(season, a, b));
+    }
+  });
+
+  it('preserves driver names including case, spaces and special characters in HTTP params', () => {
+    const a = 'SmokingWeed & +';
+    const b = 'Moraga / Pe\u00f1a';
+    const response = headToHeadFixture(3, a, b);
+    const received = jasmine.createSpy('received');
+    service.getHeadToHead(3, a, b).subscribe(received);
+    const request = http.expectOne(request => request.url === environment.apiUrl + '/statistics/headToHead'
+      && request.params.get('season') === '3'
+      && request.params.get('a') === a && request.params.get('b') === b);
+    request.flush(response);
+    expect(received).toHaveBeenCalledOnceWith(response);
+  });
+
+  it('cancels pending duels and retries failed responses without caching errors', () => {
+    const pending = service.getHeadToHead(3, 'Piloto 01', 'Piloto 02').subscribe();
+    const cancelled = http.expectOne(request => request.url.endsWith('/statistics/headToHead'));
+    pending.unsubscribe();
+    expect(cancelled.cancelled).toBeTrue();
+    service.getHeadToHead(3, 'Piloto 01', 'Piloto 02').subscribe({ error: () => undefined });
+    http.expectOne(request => request.url.endsWith('/statistics/headToHead')).flush({}, { status: 500, statusText: 'Error' });
+    service.getHeadToHead(3, 'Piloto 01', 'Piloto 02').subscribe();
+    http.expectOne(request => request.url.endsWith('/statistics/headToHead')).flush(headToHeadFixture());
   });
 });

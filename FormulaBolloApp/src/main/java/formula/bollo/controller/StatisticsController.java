@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import formula.bollo.model.StatisticsHeadToHeadDTO;
 import formula.bollo.model.StatisticsOverviewDTO;
 import formula.bollo.service.StatisticsService;
 import formula.bollo.utils.Constants;
@@ -24,6 +25,17 @@ public class StatisticsController {
 
     public StatisticsController(StatisticsService statisticsService) {
         this.statisticsService = statisticsService;
+    }
+
+    @Operation(summary = Constants.STATISTICS_HEAD_TO_HEAD_SUMMARY, tags = Constants.TAG_STATISTICS)
+    @Transactional(readOnly = true)
+    @GetMapping(path = "/headToHead", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Cacheable(cacheNames = Constants.CACHE_STATS, sync = true,
+            key = "'statistics:h2h:' + #season + ':' + #a + ':' + #b")
+    public StatisticsHeadToHeadDTO getHeadToHead(@RequestParam Integer season,
+            @RequestParam String a, @RequestParam String b) {
+        log.info("Se compara la informacion de {} y {} de la temporada {}", a, b, season);
+        return statisticsService.getHeadToHead(season, a, b);
     }
 
     @Operation(summary = Constants.STATISTICS_OVERVIEW_SUMMARY, tags = Constants.TAG_STATISTICS)

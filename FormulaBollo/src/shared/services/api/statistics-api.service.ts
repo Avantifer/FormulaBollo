@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../enviroments/enviroment';
-import { StatisticsOverview } from '../../models/statistics';
+import { StatisticsHeadToHead, StatisticsOverview } from '../../models/statistics';
 import { BaseApiService } from '../baseApiService.service';
 import { CacheService } from '../cache.service';
 
@@ -17,5 +17,11 @@ export class StatisticsApiService {
     // Increment v2 if the overview response shape changes again.
     return this.cacheService.getOrLoad('statisticsOverview-v2-' + season, () =>
       this.httpClient.get<StatisticsOverview>(environment.apiUrl + '/statistics/overview', { params }));
+  }
+
+  getHeadToHead(season: number, a: string, b: string): Observable<StatisticsHeadToHead> {
+    const params = this.baseApiService.createParams({ season, a, b });
+    return this.cacheService.getOrLoad('statisticsHeadToHead-v1-' + season + '-' + a + '-' + b, () =>
+      this.httpClient.get<StatisticsHeadToHead>(environment.apiUrl + '/statistics/headToHead', { params }));
   }
 }

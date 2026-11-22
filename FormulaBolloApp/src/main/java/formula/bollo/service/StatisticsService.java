@@ -9,7 +9,9 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import formula.bollo.entity.Penalty;
 import formula.bollo.entity.Race;
@@ -122,6 +124,52 @@ public class StatisticsService {
                 rows.isEmpty() ? 0 : round((double) dnfs / rows.size(), 3), margin);
         return new StatisticsOverviewDTO(season, summary, driverStats, teamStats,
                 new StatisticsEvolutionDTO<>(axis, driverSeries), new StatisticsEvolutionDTO<>(axis, teamSeries));
+    }
+
+    public StatisticsHeadToHeadDTO getHeadToHead(int season, String a, String b) {
+        if (a == null || b == null || a.isBlank() || b.isBlank() || a.strip().equalsIgnoreCase(b.strip())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Two distinct driver names are required");
+        }
+        StatisticsHeadToHeadDTO dto = new StatisticsHeadToHeadDTO(season, a, b, 0, 0, 0, 0, 0, 0,
+                new ArrayList<>());
+        if (season <= 0)
+            return dto;
+
+        List<Result> rows = deduplicate(resultRepository.findForStatistics(season));
+        Map<Long, Result> byA = new HashMap<>();
+        Map<Long, Result> byB = new HashMap<>();
+        for (Result row : rows) {
+            if (row.getRace().getFinished() != 1)
+                continue;
+            String name = row.getDriver().getName();
+            if (name.strip().equalsIgnoreCase(a.strip()))
+                byA.put(row.getRace().getId(), row);
+            if (name.strip().equalsIgnoreCase(b.strip()))
+                byB.put(row.getRace().getId(), row);
+        }
+        Map<String, Map<Long, Integer>> points = racePoints(rows, sprintRepository.findForStatistics(season), false);
+        List<Result> common = byA.values().stream().filter(row -> byB.containsKey(row.getRace().getId()))
+                .sorted(Comparator.comparing(Result::getRace, CHRONOLOGICAL)).toList();
+        for (Result rowA : common) {
+            Race race = rowA.getRace();
+            Result rowB = byB.get(race.getId());
+            int compared = Integer.compare(position(rowA), position(rowB));
+            String result = compared < 0 ? "A" : compared > 0 ? "B" : "NONE";
+            if (compared < 0)
+                dto.setAheadA(dto.getAheadA() + 1);
+            else if (compared > 0)
+                dto.setAheadB(dto.getAheadB() + 1);
+            if (rowA.getPosition() == null && rowB.getPosition() == null)
+                dto.setBothDnf(dto.getBothDnf() + 1);
+            dto.setPointsA(dto.getPointsA() + points.get(rowA.getDriver().getName()).get(race.getId()));
+            dto.setPointsB(dto.getPointsB() + points.get(rowB.getDriver().getName()).get(race.getId()));
+            dto.getRaces().add(new StatisticsHeadToHeadRaceDTO(
+                    new StatisticsRaceDTO(race.getId(), race.getName(), race.getSeason().getNumber()),
+                    rowA.getPosition() == null ? null : position(rowA),
+                    rowB.getPosition() == null ? null : position(rowB), result));
+        }
+        dto.setComparable(dto.getAheadA() + dto.getAheadB());
+        return dto;
     }
 
     private record DriverRace(String name, Long race) { }

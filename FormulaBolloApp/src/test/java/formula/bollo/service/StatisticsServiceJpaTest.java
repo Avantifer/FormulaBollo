@@ -354,6 +354,160 @@ class StatisticsServiceJpaTest {
             assertThat(driver(overview, "Ana 0").getPointsBySeason()).containsEntry(1, 26).containsEntry(2, 19);
     }
 
+    @Test
+    void headToHeadCountsFinishesDnfsTiesAndCommonRacePointsInChronologicalOrder() {
+        Season season = season(3);
+        Team team = team("Team", season);
+        Driver a = driver("Ana", team);
+        Driver b = driver("Bea", team);
+        Driver duplicate = driver("Ana", team("Other", season));
+        Position winner = position(1, 25);
+        Position second = position(2, 18);
+        SprintPosition sprintWinner = persist(new SprintPosition(null, 1, 8));
+        Race later = race(season, 2, 1);
+        Race first = race(season, 1, 1);
+        Race sameDate = race(season, 2, 1);
+        Race bFinishes = race(season, 3, 1);
+        Race bothDnf = race(season, 4, 1);
+        Race tied = race(season, 5, 1);
+        Race unfinished = race(season, 6, 0);
+        Race onlyA = race(season, 7, 1);
+        Race onlyB = race(season, 8, 1);
+        result(duplicate, first, null, 1, 0);
+        result(a, first, winner, 1, 0);
+        result(b, first, second, 0, 0);
+        result(a, later, second, 0, 0);
+        result(b, later, winner, 1, 0);
+        result(a, sameDate, second, 0, 0);
+        result(b, sameDate, null, 1, 0);
+        result(a, bFinishes, null, 1, 0);
+        result(b, bFinishes, second, 0, 0);
+        result(duplicate, bothDnf, null, 1, 0);
+        result(a, bothDnf, null, 0, 0);
+        result(b, bothDnf, null, 0, 0);
+        result(a, tied, second, 0, 0);
+        result(b, tied, second, 0, 0);
+        result(a, unfinished, winner, 1, 0);
+        result(b, unfinished, second, 0, 0);
+        result(a, onlyA, winner, 1, 0);
+        result(b, onlyB, winner, 1, 0);
+        persist(new Sprint(null, first, a, sprintWinner));
+        persist(new Sprint(null, bFinishes, a, sprintWinner));
+        persist(new Sprint(null, later, b, sprintWinner));
+        persist(new Sprint(null, unfinished, a, sprintWinner));
+        persist(new Sprint(null, onlyA, a, sprintWinner));
+        Season otherSeason = season(4);
+        Team otherTeam = team("Team", otherSeason);
+        Race otherRace = race(otherSeason, 1, 1);
+        result(driver("Ana", otherTeam), otherRace, winner, 0, 0);
+        result(driver("Bea", otherTeam), otherRace, second, 0, 0);
+        flushAndClear();
+
+        StatisticsHeadToHeadDTO dto = service.getHeadToHead(3, "Ana", "Bea");
+        assertThat(dto.getSeason()).isEqualTo(3);
+        assertThat(dto.getA()).isEqualTo("Ana");
+        assertThat(dto.getB()).isEqualTo("Bea");
+        assertThat(dto.getAheadA()).isEqualTo(2);
+        assertThat(dto.getAheadB()).isEqualTo(2);
+        assertThat(dto.getComparable()).isEqualTo(4);
+        assertThat(dto.getBothDnf()).isEqualTo(1);
+        assertThat(dto.getPointsA()).isEqualTo(96);
+        assertThat(dto.getPointsB()).isEqualTo(88);
+        assertThat(dto.getRaces()).extracting(row -> row.getRace().getId())
+                .containsExactly(first.getId(), later.getId(), sameDate.getId(), bFinishes.getId(),
+                        bothDnf.getId(), tied.getId());
+        assertThat(dto.getRaces()).extracting(StatisticsHeadToHeadRaceDTO::getResult)
+                .containsExactly("A", "B", "A", "B", "NONE", "NONE");
+        assertThat(dto.getRaces()).extracting(StatisticsHeadToHeadRaceDTO::getPositionA)
+                .containsExactly(1, 2, 2, null, null, 2);
+        assertThat(dto.getRaces()).extracting(StatisticsHeadToHeadRaceDTO::getPositionB)
+                .containsExactly(2, 1, null, 2, null, 2);
+        assertThat(dto.getRaces()).allSatisfy(row -> assertThat(row.getRace().getSeason()).isEqualTo(3));
+        StatisticsHeadToHeadDTO reverse = service.getHeadToHead(3, "Bea", "Ana");
+        assertThat(reverse.getPointsA()).isEqualTo(dto.getPointsB());
+        assertThat(reverse.getPointsB()).isEqualTo(dto.getPointsA());
+        assertThat(reverse.getRaces()).extracting(StatisticsHeadToHeadRaceDTO::getResult)
+                .containsExactly("B", "A", "B", "A", "NONE", "NONE");
+    }
+
+    @Test
+    void headToHeadMatchesDriverNamesWithTrailingSpacesAndPreservesRequestedNames() {
+        Season season = season(5);
+        Team team = team("Team", season);
+        Driver a = driver("Chamann ", team);
+        Driver b = driver("Bea", team);
+        Position winner = position(1, 25);
+        Position second = position(2, 18);
+        Race first = race(season, 1, 1);
+        Race secondRace = race(season, 2, 1);
+        result(a, first, winner, 0, 0);
+        result(b, first, second, 0, 0);
+        result(a, secondRace, second, 0, 0);
+        result(b, secondRace, winner, 0, 0);
+        flushAndClear();
+
+        StatisticsHeadToHeadDTO withoutSpace = service.getHeadToHead(5, "Chamann", "Bea");
+        assertThat(withoutSpace.getA()).isEqualTo("Chamann");
+        assertThat(withoutSpace.getB()).isEqualTo("Bea");
+        assertThat(withoutSpace.getRaces()).extracting(row -> row.getRace().getId())
+                .containsExactly(first.getId(), secondRace.getId());
+        assertThat(withoutSpace.getAheadA()).isEqualTo(1);
+        assertThat(withoutSpace.getAheadB()).isEqualTo(1);
+
+        StatisticsHeadToHeadDTO withSpace = service.getHeadToHead(5, "Chamann ", "Bea");
+        assertThat(withSpace.getA()).isEqualTo("Chamann ");
+        assertThat(withSpace.getB()).isEqualTo("Bea");
+        assertThat(withSpace.getRaces()).extracting(row -> row.getRace().getId())
+                .containsExactly(first.getId(), secondRace.getId());
+        assertThat(withSpace.getAheadA()).isEqualTo(1);
+        assertThat(withSpace.getAheadB()).isEqualTo(1);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {-1, 0, 1, 2, 3, 99})
+    void headToHeadReturnsZeroesWithoutCommonFinishedRaces(int scope) {
+        seedTeams(1);
+        Season separate = season(2);
+        Team team = team("Separate", separate);
+        Driver a = driver("Ana 0", team);
+        Driver b = driver("Bea 0", team);
+        Position winner = position(1, 25);
+        result(a, race(separate, 1, 1), winner, 1, 0);
+        result(b, race(separate, 2, 1), winner, 1, 0);
+        Race unfinished = race(separate, 3, 0);
+        result(a, unfinished, winner, 1, 0);
+        result(b, unfinished, winner, 1, 0);
+        Season pending = season(3);
+        Team pendingTeam = team("Pending", pending);
+        Race pendingRace = race(pending, 1, 0);
+        result(driver("Ana 0", pendingTeam), pendingRace, winner, 0, 0);
+        result(driver("Bea 0", pendingTeam), pendingRace, winner, 0, 0);
+        flushAndClear();
+
+        String bName = scope == 1 ? "Unknown" : "Bea 0";
+        assertThat(service.getHeadToHead(scope, "Ana 0", bName))
+                .isEqualTo(new StatisticsHeadToHeadDTO(scope, "Ana 0", bName, 0, 0, 0, 0, 0, 0, List.of()));
+        assertThat(service.getHeadToHead(scope, "Unknown A", "Unknown B").getRaces()).isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 10})
+    void headToHeadUsesTwoBatchQueriesRegardlessOfSeasonSize(int count) {
+        seedTeams(count);
+        flushAndClear();
+        var statistics = em.getEntityManagerFactory().unwrap(SessionFactory.class).getStatistics();
+        statistics.clear();
+
+        StatisticsHeadToHeadDTO dto = service.getHeadToHead(1, " ana 0 ", "BEA 0");
+        em.clear();
+        json.writeValueAsString(dto);
+
+        assertThat(dto.getAheadA()).isEqualTo(1);
+        assertThat(statistics.getPrepareStatementCount()).isEqualTo(2);
+        System.out.println("statistics/headToHead: " + count + " teams, "
+                + statistics.getPrepareStatementCount() + " SELECTs");
+    }
+
     private void assertLegacyFields(int season, StatisticsOverviewDTO overview) {
         List<String> fields = List.of("poles", "fastlaps", "racesFinished", "totalPoints", "penalties",
                 "victories", "podiums", "averagePosition");

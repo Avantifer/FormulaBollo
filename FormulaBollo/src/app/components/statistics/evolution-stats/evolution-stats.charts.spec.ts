@@ -36,6 +36,17 @@ describe('Evolution points chart', () => {
     }
   });
 
+  it('can disable all dashes including legend values and cursor without changing the default', () => {
+    const solid = buildEvolutionChart(races, all, [1, 2], false, palette, { dashes: false });
+    expect(solid.data.datasets.map(dataset => dataset.borderDash)).toEqual([[], []]);
+    expect(solid.values.map(value => value.dash)).toEqual([[], []]);
+    const ctx = jasmine.createSpyObj<CanvasRenderingContext2D>('context', ['save', 'beginPath', 'setLineDash', 'moveTo', 'lineTo', 'stroke', 'restore']);
+    const simulated = { ctx, chartArea: { top: 30, bottom: 280 }, scales: { x: { getPixelForValue: () => 125 } }, getActiveElements: () => [{ index: 1 }] } as unknown as Chart<'line'>;
+    solid.plugins.find(plugin => plugin.id === 'evolutionCursor')!.afterDatasetsDraw!(simulated, {}, {}, false);
+    expect(ctx.setLineDash).toHaveBeenCalledOnceWith([]);
+    expect(chart().data.datasets[1].borderDash).toEqual([6, 3]);
+  });
+
   it('uses full race names, descending points and race gains including the first race in tooltips', () => {
     const tooltip = chart().options.plugins!.tooltip!;
     const callbacks = tooltip.callbacks!;

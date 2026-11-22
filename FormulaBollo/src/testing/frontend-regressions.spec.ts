@@ -1,4 +1,3 @@
-import { SimpleChange } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { of, Subject, throwError } from 'rxjs';
@@ -9,6 +8,7 @@ import { FantasyRecoverPasswordComponent } from '../app/components/fantasy/fanta
 import { AccountApiService } from '../shared/services/api/account-api.service';
 import { SeasonApiService } from '../shared/services/api/season-api.service';
 import { SelectSeasonsComponent } from '../shared/components/select-seasons/select-seasons.component';
+import { headToHeadFixture, statisticsFixture } from '../app/components/statistics/statistics.fixture';
 import { ComparativeStatsComponent } from '../app/components/statistics/comparative-stats/comparative-stats.component';
 import { TeamsRankingComponent } from '../app/components/teams/teams-ranking/teams-ranking.component';
 import { DriverApiService } from '../shared/services/api/driver-api.service';
@@ -96,17 +96,32 @@ describe('Frontend regressions', () => {
     expect(fixture.componentInstance.seasons().some(s => s.name === 'Obsolete')).toBeFalse();
   });
 
-  it('clears comparison data and hides details on type or season changes', () => {
+  it('resets comparison selection and clears stale duel data on type or season changes', () => {
     const fixture = TestBed.createComponent(ComparativeStatsComponent);
     const component = fixture.componentInstance as any;
-    component.driversInfoState.set([{ driver: driverPointsFixture.driver }, { driver: driverPointsFixture.driver }]);
+    const http = TestBed.inject(HttpTestingController);
+    fixture.componentRef.setInput('seasonSelected', new Season(3, 'Temporada 3', 3));
+    fixture.componentRef.setInput('typeSelected', 'Pilotos');
+    fixture.detectChanges();
+    http.expectOne(request => request.url.endsWith('/statistics/overview')).flush(statisticsFixture(3));
+    http.expectOne(request => request.url.endsWith('/statistics/headToHead')).flush(headToHeadFixture());
+    fixture.detectChanges();
     fixture.componentRef.setInput('typeSelected', 'Equipos');
-    expect(() => fixture.detectChanges()).not.toThrow();
-    expect(component.driversInfo).toEqual([]);
-    component.teamsInfoState.set([{}, {}]);
-    component.ngOnChanges({ seasonSelected: new SimpleChange(null, new Season(1, 'One', 1), false) });
-    expect(component.teamsInfo).toEqual([]);
-    expect(component.comparisonChartData).toBeUndefined();
+    fixture.detectChanges();
+    component.select(4, 1);
+    expect(component.selectedIds()).toEqual([1, 4]);
+    fixture.componentRef.setInput('seasonSelected', new Season(1, 'Temporada 1', 1));
+    fixture.detectChanges();
+    expect(component.overview()).toBeNull();
+    expect(component.selectedIds()).toEqual([]);
+    expect(component.duel()).toBeNull();
+    expect(fixture.nativeElement.querySelector('.duel-metrics')).toBeNull();
+    http.expectOne(request => request.url.endsWith('/statistics/overview')).flush(statisticsFixture(1));
+    fixture.detectChanges();
+    expect(component.selectedIds()).toEqual([1, 2]);
+    http.expectNone(request => request.url.endsWith('/statistics/headToHead'));
+    http.verify();
+    fixture.destroy();
   });
 
   it('uses the requested historical season for participant fallbacks', async () => {

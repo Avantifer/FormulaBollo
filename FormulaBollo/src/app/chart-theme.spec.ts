@@ -4,8 +4,6 @@ import {
   chartLabelColor,
   getBarChartOptions,
   getBarMobileChartOptions,
-  getComparisonChartOptions,
-  getComparisonChartOptionsMobile,
   getLineChartOptions,
   getPieChartOptions,
 } from './constants';
@@ -77,8 +75,6 @@ describe('Chart theme', () => {
         getBarMobileChartOptions,
         getPieChartOptions,
         getLineChartOptions,
-        getComparisonChartOptions,
-        getComparisonChartOptionsMobile,
       ]) {
         it(`uses semantic colors throughout ${factory.name}`, () => {
           const options = factory(isDarkMode);
