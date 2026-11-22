@@ -63,16 +63,16 @@
 			}
 		</div>
 		<div class="legend"><span class="key">A · {{ a.name }} · relleno continuo</span><span class="key key-b">B · {{ b.name }} · contorno y trazo discontinuo</span></div>
-		<header class="section-heading"><h2>Tira y afloja</h2><p>✓ Mejor cifra · = Empate · cada fila tiene su propia escala</p></header>
+		<header class="section-heading"><h2>Tira y afloja</h2><p class="metric-legend"><span class="metric-key">Gana la fila: color de equipo</span><span class="metric-key metric-key-flat">Pierde la fila: gris</span><span>= empate · cada fila tiene su propia escala</span></p></header>
 		<section class="duel-metrics" aria-label="Estadísticas enfrentadas de A y B">
 			<div class="metric-heading" aria-hidden="true"><span>A · {{ a.name }}</span><span>Estadística</span><span>B · {{ b.name }}</span></div>
 			@for (row of metrics(); track row.key) {
-				<div class="metric-row" [attr.data-metric]="row.key" role="group" [attr.aria-label]="row.label + ': ' + a.name + ' ' + row.a + ', ' + b.name + ' ' + row.b">
-					<span class="metric-value" [class.win]="row.winner === 'A'">@if (row.winner === 'A') { <span class="check" aria-label="Mejor cifra">✓</span> }{{ row.a }}</span>
-					<div class="track track-a" aria-hidden="true"><span class="fill-a" [style.width.%]="row.widthA"></span></div>
+				<div class="metric-row" [attr.data-metric]="row.key" role="group" [attr.aria-label]="metricLabel(row, a.name, b.name)">
+					<span class="metric-value" [class.win]="row.winner === 'A'">{{ row.a }}</span>
+					<div class="track track-a" aria-hidden="true"><span class="metric-fill metric-fill-a" [class.result-color]="row.winner === 'A' || row.winner === '='" [style.width.%]="row.widthA"></span></div>
 					<div class="metric-label">{{ row.label }}<small>{{ row.winner === '=' ? '= Empate · ' : row.winner === null ? 'Sin dato suficiente · ' : '' }}{{ row.unit }}</small></div>
-					<div class="track" aria-hidden="true"><span class="fill-b" [class.zero]="!row.widthB" [style.width.%]="row.widthB"></span></div>
-					<span class="metric-value metric-value-b" [class.win]="row.winner === 'B'">{{ row.b }}@if (row.winner === 'B') { <span class="check" aria-label="Mejor cifra">✓</span> }</span>
+					<div class="track" aria-hidden="true"><span class="metric-fill metric-fill-b" [class.result-color]="row.winner === 'B' || row.winner === '='" [style.width.%]="row.widthB"></span></div>
+					<span class="metric-value metric-value-b" [class.win]="row.winner === 'B'">{{ row.b }}</span>
 				</div>
 			}
 			<p class="note">Las barras parten del centro. En penalizaciones{{ isTeams() ? '' : ' y regularidad' }}, menos es mejor. {{ isTeams() ? 'Dos llegadas posibles por gran premio.' : 'σ describe la dispersión de las llegadas; no incluye abandonos.' }}</p>

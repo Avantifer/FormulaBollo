@@ -13,7 +13,7 @@ import { environment } from '../../../../enviroments/enviroment';
 import { colorsMappings } from '../../../constants';
 import { EvolutionPalette, raceCodes } from '../evolution-stats/evolution-stats.charts';
 import { isVacant } from '../general-stats/general-stats.charts';
-import { buildComparisonChart, comparisonMetrics, Contender, duelHeadline, teamHeadToHead } from './comparative-stats.helpers';
+import { buildComparisonChart, comparisonMetricLabel, comparisonMetrics, Contender, duelHeadline, teamHeadToHead } from './comparative-stats.helpers';
 
 @Component({
   selector: 'app-comparative-stats',
@@ -43,6 +43,7 @@ export class ComparativeStatsComponent implements OnChanges {
   private duelRequest?: Subscription;
   private loadedSeason?: number;
   protected readonly isTeams = computed(() => this.typeSelected() === 'Equipos');
+  protected readonly metricLabel = comparisonMetricLabel;
   protected readonly palette = computed<EvolutionPalette>(() => {
     this.theme.isDarkTheme();
     const styles = getComputedStyle(document.documentElement);

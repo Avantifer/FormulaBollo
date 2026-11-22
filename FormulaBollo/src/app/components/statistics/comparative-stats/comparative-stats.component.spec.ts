@@ -210,26 +210,100 @@ describe('ComparativeStatsComponent', () => {
     expect(request.cancelled).toBeTrue();
   });
 
-  it('renders row values, individual bar scales and non-color winner marks including lower-is-better', () => {
+  it('renders solid result-colored bars and bold winners, including lower-is-better, ties and missing data', () => {
     const data = statisticsFixture(3);
     data.drivers[0].victories = data.drivers[1].victories;
     load(data);
     const row = (key: string) => root().querySelector<HTMLElement>('[data-metric="' + key + '"]')!;
     expect(root().querySelectorAll('.metric-row').length).toBe(11);
-    expect(row('totalPoints').getAttribute('aria-label')).toBe('Puntos: Piloto 01 1000, Piloto 02 970');
-    expect(row('totalPoints').querySelector<HTMLElement>('.fill-b')!.style.width).toBe('97%');
-    expect(row('poles').querySelector<HTMLElement>('.fill-a')!.style.width).toBe('50%');
-    expect(row('poles').querySelector<HTMLElement>('.fill-b')!.style.width).toBe('100%');
+    expect(row('totalPoints').getAttribute('aria-label')).toBe('Puntos: Piloto 01 1000, Piloto 02 970. Gana Piloto 01.');
+    expect(row('totalPoints').querySelector<HTMLElement>('.metric-fill-b')!.style.width).toBe('97%');
+    expect(row('poles').querySelector<HTMLElement>('.metric-fill-a')!.style.width).toBe('50%');
+    expect(row('poles').querySelector<HTMLElement>('.metric-fill-b')!.style.width).toBe('100%');
     expect(row('penalties').querySelector('.metric-value-b.win')!.textContent).toContain('19');
-    expect(row('penalties').querySelector('.metric-value-b .check')!.textContent).toBe('✓');
+    expect(row('penalties').getAttribute('aria-label')).toContain('Gana Piloto 02.');
     expect(row('posStd').querySelector('.metric-value.win')!.textContent).toContain('1,0');
     expect(row('victories').textContent).toContain('= Empate');
-    expect(row('victories').querySelector('.check')).toBeNull();
+    expect(row('victories').getAttribute('aria-label')).toContain('. Empate.');
+    expect(row('victories').querySelectorAll('.result-color').length).toBe(2);
+    expect(row('victories').querySelector('.win')).toBeNull();
+    expect(row('totalPoints').querySelector('.metric-fill-a.result-color')).not.toBeNull();
+    expect(row('totalPoints').querySelector('.metric-fill-b.result-color')).toBeNull();
+    expect(row('penalties').querySelector('.metric-fill-a.result-color')).toBeNull();
+    expect(row('penalties').querySelector('.metric-fill-b.result-color')).not.toBeNull();
+    expect(root().querySelector('.duel-metrics .check')).toBeNull();
+    expect(root().textContent).not.toContain('✓');
+    expect(root().textContent).not.toContain('Mejor cifra');
+    const legend = root().querySelector('.metric-legend')!;
+    expect(legend.textContent).toContain('Gana la fila: color de equipo');
+    expect(legend.textContent).toContain('Pierde la fila: gris');
+    expect(legend.textContent).toContain('= empate');
+    expect(legend.querySelectorAll('.metric-key').length).toBe(2);
     expect(Array.from(row('totalPoints').querySelectorAll('.track')).every(track => track.getAttribute('aria-hidden') === 'true')).toBeTrue();
     choose(4, 0);
     flushDuel();
     expect(row('posStd').textContent).toContain('—');
-    expect(row('posStd').querySelector('.check')).toBeNull();
+    expect(row('posStd').getAttribute('aria-label')).toContain('. Sin dato suficiente.');
+    expect(row('posStd').querySelector<HTMLElement>('.metric-fill-a')!.style.width).toBe('0%');
+    expect(row('posStd').querySelectorAll('.result-color, .win').length).toBe(0);
+    component['swap']();
+    render();
+    flushDuel();
+    expect(row('posStd').querySelector<HTMLElement>('.metric-fill-b')!.style.width).toBe('0%');
+    expect(row('posStd').querySelectorAll('.result-color, .win').length).toBe(0);
+  });
+
+  it('uses team colors and neutral gray for teammates with accessible contrast in both themes', () => {
+    const data = statisticsFixture(3);
+    data.drivers[1].driver.team = data.drivers[0].driver.team;
+    data.drivers[0].victories = data.drivers[1].victories;
+    load(data);
+    const rgb = (color: string) => color.match(/[\d.]+/g)!.slice(0, 3).map(Number);
+    const luminance = (color: string) => rgb(color).map(value => {
+      const channel = value / 255;
+      return channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4;
+    }).reduce((sum, value, index) => sum + value * [.2126, .7152, .0722][index], 0);
+    const contrast = (a: string, b: string) => (Math.max(luminance(a), luminance(b)) + .05) / (Math.min(luminance(a), luminance(b)) + .05);
+    const resolved = (color: string) => {
+      const probe = document.createElement('span');
+      probe.style.color = color;
+      root().append(probe);
+      const result = getComputedStyle(probe).color;
+      probe.remove();
+      return result;
+    };
+    for (const dark of [false, true]) {
+      TestBed.inject(ThemeService).setDarkTheme(dark);
+      render();
+      const panel = getComputedStyle(root().querySelector('.duel-metrics')!).backgroundColor;
+      const gray = resolved('var(--sector-flat)');
+      const ink = resolved('var(--ink)'), soft = resolved('var(--ink-soft)');
+      expect(contrast(gray, panel)).withContext('gray/panel, dark=' + dark).toBeGreaterThanOrEqual(3);
+      expect(contrast(soft, panel)).withContext('ink-soft/panel, dark=' + dark).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(ink, panel)).withContext('ink/panel, dark=' + dark).toBeGreaterThanOrEqual(4.5);
+      const [a, b] = component['selected']();
+      expect(a.color).toBe(b.color);
+      for (const metric of component['metrics']()) {
+        const row = root().querySelector('[data-metric="' + metric.key + '"]')!;
+        for (const [index, side] of ['A', 'B'].entries()) {
+          const bar = row.querySelector<HTMLElement>(index ? '.metric-fill-b' : '.metric-fill-a')!;
+          const style = getComputedStyle(bar);
+          const colored = metric.winner === side || metric.winner === '=';
+          expect(style.backgroundColor).withContext(metric.key + '/' + side).toBe(colored ? resolved(index ? b.color : a.color) : gray);
+          expect(style.backgroundImage).toBe('none');
+          expect(style.borderWidth).toBe('0px');
+          expect(style.borderStyle).not.toContain('dashed');
+          expect(getComputedStyle(bar, '::before').content).toBe('none');
+          expect(getComputedStyle(bar, '::after').content).toBe('none');
+          const value = row.querySelectorAll('.metric-value')[index];
+          expect(getComputedStyle(value).fontWeight).toBe(metric.winner === side ? '700' : '400');
+          expect(getComputedStyle(value).color).toBe(metric.winner === side ? ink : soft);
+        }
+      }
+      expect(getComputedStyle(root().querySelector('.metric-key-flat')!, '::before').backgroundColor).toBe(gray);
+      expect(getComputedStyle(root().querySelector('.contender-b')!).borderTopStyle).toBe('dashed');
+      expect(getComputedStyle(root().querySelector('.result-bar .fill-b')!).borderTopStyle).toBe('dashed');
+    }
   });
 
   for (const [aheadA, aheadB, comparable, headline] of [

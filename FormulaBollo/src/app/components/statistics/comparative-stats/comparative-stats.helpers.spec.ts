@@ -2,11 +2,20 @@ import Chart from 'chart.js/auto';
 import { TooltipItem, TooltipModel } from 'chart.js';
 import { Context } from 'chartjs-plugin-datalabels';
 import { headToHeadFixture, statisticsFixture } from '../statistics.fixture';
-import { buildComparisonChart, comparisonMetrics, duelHeadline, teamHeadToHead } from './comparative-stats.helpers';
+import { buildComparisonChart, comparisonMetricLabel, comparisonMetrics, duelHeadline, teamHeadToHead } from './comparative-stats.helpers';
 
 describe('Comparative statistics helpers', () => {
   const data = statisticsFixture(3);
   const palette = { ink: 'var(--ink)', soft: 'var(--ink-soft)', rule: 'var(--rule)', panel: 'var(--panel)' };
+
+  it('announces either winner, ties and insufficient data without check marks', () => {
+    const rows = comparisonMetrics(data.drivers[0], data.drivers[1], false);
+    expect(comparisonMetricLabel(rows[0], 'SmokingWeed', 'Moraga')).toBe('Puntos: SmokingWeed 1000, Moraga 970. Gana SmokingWeed.');
+    expect(comparisonMetricLabel(rows[7], 'SmokingWeed', 'Moraga')).toContain('. Gana Moraga.');
+    expect(comparisonMetricLabel({ ...rows[0], winner: '=' }, 'A', 'B')).toContain('. Empate.');
+    expect(comparisonMetricLabel({ ...rows[0], winner: null }, 'A', 'B')).toContain('. Sin dato suficiente.');
+    expect(rows.every(row => !comparisonMetricLabel(row, 'A', 'B').includes('✓'))).toBeTrue();
+  });
 
   it('uses the specified driver order, units, precision and a separate scale for every metric', () => {
     const rows = comparisonMetrics(data.drivers[0], data.drivers[1], false);
@@ -26,8 +35,9 @@ describe('Comparative statistics helpers', () => {
     expect(rows[0]).toEqual(jasmine.objectContaining({ widthA: 0, widthB: 0, winner: '=' }));
     expect(rows[1].a).toBe('0,00');
     expect(rows[7]).toEqual(jasmine.objectContaining({ winner: '=', widthA: 0, widthB: 0 }));
-    expect(rows[10]).toEqual(jasmine.objectContaining({ a: '—', winner: null, widthA: 0 }));
-    expect(comparisonMetrics(b, a, false)[10].winner).toBeNull();
+    expect(rows[10]).toEqual(jasmine.objectContaining({ a: '—', winner: null, widthA: 0, widthB: 100 }));
+    expect(comparisonMetrics(b, a, false)[10]).toEqual(jasmine.objectContaining({ b: '—', winner: null, widthA: 100, widthB: 0 }));
+    expect(comparisonMetrics(a, a, false)[10]).toEqual(jasmine.objectContaining({ a: '—', b: '—', winner: null, widthA: 0, widthB: 0 }));
   });
 
   it('uses all D2 team metrics, including reliability from participations and retirements', () => {

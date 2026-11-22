@@ -24,6 +24,11 @@ export interface ComparisonMetric {
   winner: 'A' | 'B' | '=' | null;
 }
 
+export function comparisonMetricLabel(row: ComparisonMetric, a: string, b: string): string {
+  const result = row.winner === null ? 'Sin dato suficiente.' : row.winner === '=' ? 'Empate.' : 'Gana ' + (row.winner === 'A' ? a : b) + '.';
+  return row.label + ': ' + a + ' ' + row.a + ', ' + b + ' ' + row.b + '. ' + result;
+}
+
 export function comparisonMetrics(a: DriverStats | TeamStats, b: DriverStats | TeamStats, teams: boolean): ComparisonMetric[] {
   type Stats = DriverStats | TeamStats;
   type Metric = [string, string, string, number, boolean, (stats: Stats) => number | null, string?];

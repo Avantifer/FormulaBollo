@@ -46,13 +46,20 @@ p-select { display: flex; width: 100%; min-height: 44px; box-shadow: none; }
 .key { display: flex; align-items: center; gap: 7px; overflow-wrap: anywhere; }
 .key::before { content: ''; width: 20px; height: 6px; flex-shrink: 0; background: var(--a); }
 .key-b::before { height: 8px; border: 2px dashed var(--b); background: var(--panel); }
+.metric-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.metric-key { display: flex; align-items: center; gap: 7px; }
+.metric-key::before { content: ''; width: 20px; height: 6px; flex-shrink: 0; background: var(--a); }
+.metric-key-flat::before { background: var(--sector-flat); }
+.metric-fill { display: block; height: 12px; background: var(--sector-flat); }
+.metric-fill-a.result-color { background: var(--a); }
+.metric-fill-b.result-color { background: var(--b); }
 .duel-metrics { padding: 0 16px; border: 1px solid var(--rule); border-radius: var(--radius-panel); background: var(--panel); }
 .metric-heading { display: grid; grid-template-columns: minmax(0, 1fr) 250px minmax(0, 1fr); gap: 8px; align-items: center; min-height: 48px; color: var(--ink-soft); font: 600 14px var(--font-display); text-transform: uppercase; text-align: center; }
 .metric-row { display: grid; grid-template-columns: 90px minmax(0, 1fr) 250px minmax(0, 1fr) 90px; align-items: center; min-height: 64px; border-top: 1px solid var(--rule); }
-.metric-value { font: 600 24px var(--font-display); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.metric-value { font: 400 24px var(--font-display); color: var(--ink-soft); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.metric-value.win { font-weight: 700; color: var(--ink); }
 .metric-value-b { text-align: right; }
 .win { font-weight: 700; }
-.check { font-size: 13px; margin: 0 3px; }
 .metric-label { padding: 10px; font-size: 13px; text-align: center; overflow-wrap: anywhere; }
 .metric-label small { display: block; color: var(--ink-soft); font-size: 11px; margin-top: 2px; }
 .track { display: flex; align-items: center; height: 14px; border-bottom: 1px solid var(--rule); border-left: 1px solid var(--ink-soft); }
@@ -99,7 +106,6 @@ p-chart { position: absolute; inset: 0; display: block; width: 100%; height: 100
   .metric-row { grid-template-columns: minmax(0, 48px) minmax(8px, 1fr) minmax(0, 116px) minmax(8px, 1fr) minmax(0, 48px); min-height: 82px; }
   .metric-heading { grid-template-columns: minmax(0, 1fr) minmax(0, 116px) minmax(0, 1fr); font-size: 12px; }
   .metric-value { font-size: 18px; }
-  .check { font-size: 11px; margin: 0 1px; }
   .metric-label { padding: 10px 5px; font-size: 12px; line-height: 1.35; }
   .card { padding: 12px; margin-top: 14px; }
   .card-heading { flex-direction: column; gap: 5px; }
