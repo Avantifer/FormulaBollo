@@ -93,18 +93,29 @@ export function duelHeadline(duel: StatisticsHeadToHead, a: string, b: string): 
   return leader + ' adelanta a ' + other + ' en ' + wins + ' de ' + duel.comparable + ' carreras comunes';
 }
 
-export function buildComparisonChart(races: { name: string }[], selected: EvolutionSeries[], mobile: boolean, palette: EvolutionPalette) {
-  const chart = buildEvolutionChart(races, selected, selected.map(entry => entry.id), mobile, palette);
+export type ComparisonPalette = EvolutionPalette & { flat: string };
+
+// 35% keeps every team mix above 3:1 against both theme panels (55% fails in light mode).
+export const MUTED_TEAM_WEIGHT = 0.35;
+
+export function mixHex(team: string, flat: string, weight = MUTED_TEAM_WEIGHT): string {
+  const channel = (hex: string, offset: number) => parseInt(hex.slice(offset, offset + 2), 16);
+  return '#' + [1, 3, 5].map(offset => Math.round(channel(team, offset) * weight + channel(flat, offset) * (1 - weight)).toString(16).padStart(2, '0')).join('');
+}
+
+export function comparisonColors(selected: EvolutionSeries[], flat: string): string[] {
+  return selected.map((entry, index) => index === 1 && entry.color.toLowerCase() === selected[0].color.toLowerCase() ? mixHex(entry.color, flat) : entry.color);
+}
+
+export function buildComparisonChart(races: { name: string }[], selected: EvolutionSeries[], mobile: boolean, palette: ComparisonPalette) {
+  const colors = comparisonColors(selected, palette.flat);
+  const series = selected.map((entry, index) => ({ ...entry, color: colors[index] }));
+  const chart = buildEvolutionChart(races, series, series.map(entry => entry.id), mobile, palette, { dashes: false });
   chart.data.datasets.forEach((dataset, index) => {
     dataset.pointRadius = 3;
-    dataset.pointBackgroundColor = index ? palette.panel : selected[index].color;
-    dataset.pointBorderColor = selected[index].color;
+    dataset.pointBackgroundColor = colors[index];
+    dataset.pointBorderColor = colors[index];
     dataset.pointBorderWidth = 2;
   });
-  const colors = selected.map((entry, index) => ({
-    borderColor: entry.color, backgroundColor: index ? palette.panel : entry.color,
-    borderDash: (index ? [6, 3] : [0, 0]) as [number, number], borderWidth: 2
-  }));
-  chart.options.plugins!.tooltip!.callbacks!.labelColor = context => colors[context.datasetIndex];
   return chart;
 }

@@ -23,7 +23,7 @@ export function raceCodes(races: { name: string }[]): string[] {
   });
 }
 
-export function buildEvolutionChart(races: { name: string }[], all: EvolutionSeries[], selectedIds: number[], mobile: boolean, palette: EvolutionPalette): EvolutionChart {
+export function buildEvolutionChart(races: { name: string }[], all: EvolutionSeries[], selectedIds: number[], mobile: boolean, palette: EvolutionPalette, { dashes = true }: { dashes?: boolean } = {}): EvolutionChart {
   const selected = selectedIds.flatMap(id => all.filter(entry => entry.id === id));
   const format = (value: number): string => value.toLocaleString('es-ES', { maximumFractionDigits: 1 });
   const gain = (entry: EvolutionSeries, index: number): number => (entry.cumulative[index] ?? 0) - (entry.cumulative[index - 1] ?? 0);
@@ -55,7 +55,7 @@ export function buildEvolutionChart(races: { name: string }[], all: EvolutionSer
       const x = chart.scales['x'].getPixelForValue(active.index);
       ctx.save();
       ctx.beginPath();
-      ctx.setLineDash([3, 4]);
+      ctx.setLineDash(dashes ? [3, 4] : []);
       ctx.strokeStyle = palette.soft;
       ctx.lineWidth = 1;
       ctx.moveTo(x, chartArea.top);
@@ -68,7 +68,7 @@ export function buildEvolutionChart(races: { name: string }[], all: EvolutionSer
     .sort((a, b) => finals[b.index] - finals[a.index] || a.entry.name.localeCompare(b.entry.name, 'es'))
     .map(({ entry, index }) => ({
       label: entry.name, value: format(finals[index]) + ' pts', gain: '+' + format(gain(entry, races.length - 1)) + ' en la última',
-      color: entry.color, dash: LINE_DASHES[index]
+      color: entry.color, dash: dashes ? LINE_DASHES[index] : []
     }));
   const leader = [...all].sort((a, b) => (b.cumulative.at(-1) ?? 0) - (a.cumulative.at(-1) ?? 0) || a.name.localeCompare(b.name, 'es'))[0];
   return {
@@ -80,7 +80,7 @@ export function buildEvolutionChart(races: { name: string }[], all: EvolutionSer
       labels: raceCodes(races),
       datasets: selected.map<ChartDataset<'line', number[]>>((entry, index) => ({
         label: entry.name, data: entry.cumulative, borderColor: entry.color, backgroundColor: entry.color,
-        borderWidth: 2.5, borderDash: LINE_DASHES[index], tension: 0, fill: false,
+        borderWidth: 2.5, borderDash: dashes ? LINE_DASHES[index] : [], tension: 0, fill: false,
         pointRadius: (context: ScriptableContext<'line'>) => context.dataIndex === races.length - 1 ? 4 : 0,
         pointHoverRadius: 4, pointStyle: (['circle', 'rect', 'triangle'] as const)[index % 3],
         datalabels: { align: context => placement(context).align, offset: context => placement(context).offset }

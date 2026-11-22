@@ -6,7 +6,7 @@ h2, h3 { font: 600 23px/1.2 var(--font-display); text-transform: uppercase; lett
 .section-heading p, .help, .legend { color: var(--ink-soft); font-size: 12px; line-height: 1.6; }
 .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) minmax(0, 1fr); gap: 16px; }
 .contender { display: flex; flex-direction: column; gap: 16px; padding: 20px; border: 1px solid var(--rule); border-top: 4px solid var(--a, var(--rule)); border-radius: var(--radius-panel); background: var(--panel); }
-.contender-b { border-top: 4px dashed var(--b); }
+.contender-b { border-top: 4px solid var(--b); }
 .contender-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--ink-soft); font-size: 12px; flex-wrap: wrap; }
 .rank { padding: 4px 8px; border: 1px solid var(--rule); border-radius: var(--radius-row); background: var(--panel-alt); }
 .picker { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 14px; align-items: center; }
@@ -20,7 +20,7 @@ p-select { display: flex; width: 100%; min-height: 44px; box-shadow: none; }
 .select-option small { color: var(--ink-soft); }
 .team-name { display: flex; align-items: center; gap: 6px; margin-top: 6px; color: var(--ink-soft); font-size: 12px; overflow-wrap: anywhere; }
 .marker { width: 8px; height: 8px; flex-shrink: 0; border-radius: 50%; background: var(--a); }
-.marker-b { border-radius: 0; background: var(--panel); border: 2px dashed var(--b); }
+.marker-b { border-radius: 0; background: var(--b); }
 .points { display: flex; flex-wrap: wrap; align-items: baseline; gap: 9px; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--rule); }
 .points strong { font: 700 56px/1 var(--font-display); font-variant-numeric: tabular-nums; }
 .points > span { color: var(--ink-soft); font-size: 12px; }
@@ -32,7 +32,7 @@ p-select { display: flex; width: 100%; min-height: 44px; box-shadow: none; }
 .result-bar { display: flex; gap: 3px; width: 100%; height: 12px; background: var(--panel-alt); }
 .fill-a, .fill-b { display: block; height: 12px; }
 .fill-a { background: var(--a); }
-.fill-b { border: 2px dashed var(--b); background: var(--panel-alt); }
+.fill-b { background: var(--b); }
 .fill-equal { background: var(--ink-soft); }
 .zero { border: 0; }
 .versus .help { font-size: 11px; }
@@ -44,15 +44,14 @@ p-select { display: flex; width: 100%; min-height: 44px; box-shadow: none; }
 .duel-skeleton { width: 100%; }
 .legend { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
 .key { display: flex; align-items: center; gap: 7px; overflow-wrap: anywhere; }
-.key::before { content: ''; width: 20px; height: 6px; flex-shrink: 0; background: var(--a); }
-.key-b::before { height: 8px; border: 2px dashed var(--b); background: var(--panel); }
+.key::before { content: ''; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--a); }
+.key-b::before { border-radius: 0; background: var(--b); }
 .metric-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; }
 .metric-key { display: flex; align-items: center; gap: 7px; }
 .metric-key::before { content: ''; width: 20px; height: 6px; flex-shrink: 0; background: var(--a); }
-.metric-key-flat::before { background: var(--sector-flat); }
-.metric-fill { display: block; height: 12px; background: var(--sector-flat); }
-.metric-fill-a.result-color { background: var(--a); }
-.metric-fill-b.result-color { background: var(--b); }
+.metric-key-flat::before { background: color-mix(in srgb, var(--team-a) var(--muted-team-percent), var(--sector-flat)); }
+.metric-fill { display: block; height: 12px; background: color-mix(in srgb, var(--team-color) var(--muted-team-percent), var(--sector-flat)); }
+.metric-fill.result-color { background: var(--team-color); }
 .duel-metrics { padding: 0 16px; border: 1px solid var(--rule); border-radius: var(--radius-panel); background: var(--panel); }
 .metric-heading { display: grid; grid-template-columns: minmax(0, 1fr) 250px minmax(0, 1fr); gap: 8px; align-items: center; min-height: 48px; color: var(--ink-soft); font: 600 14px var(--font-display); text-transform: uppercase; text-align: center; }
 .metric-row { display: grid; grid-template-columns: 90px minmax(0, 1fr) 250px minmax(0, 1fr) 90px; align-items: center; min-height: 64px; border-top: 1px solid var(--rule); }
@@ -76,12 +75,12 @@ p-chart { position: absolute; inset: 0; display: block; width: 100%; height: 100
 .chart-values li { display: flex; justify-content: space-between; gap: 12px; }
 .chart-values span { overflow-wrap: anywhere; }
 .value-label { display: flex; align-items: center; gap: 8px; }
-.swatch { width: 22px; height: 8px; flex-shrink: 0; }
-.swatch line { stroke-width: 4; }
+.swatch { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.swatch-b { border-radius: 0; }
 .race-grid { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
 .race-cell { padding: 9px; border: 1px solid var(--rule); border-top: 3px solid var(--rule); border-radius: var(--radius-row); background: var(--panel-alt); font-variant-numeric: tabular-nums; }
 .race-a { border-top-color: var(--a); }
-.race-b { border-top: 3px dashed var(--b); }
+.race-b { border-top: 3px solid var(--b); }
 .race-label, .race-values { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
 .race-label { margin-bottom: 8px; font: 600 14px var(--font-display); text-transform: uppercase; }
 .race-label > span:last-child { font: 400 11px var(--font-sans); }

@@ -1,12 +1,46 @@
+import { colorsMappings } from '../../../constants';
 import Chart from 'chart.js/auto';
 import { TooltipItem, TooltipModel } from 'chart.js';
 import { Context } from 'chartjs-plugin-datalabels';
 import { headToHeadFixture, statisticsFixture } from '../statistics.fixture';
-import { buildComparisonChart, comparisonMetricLabel, comparisonMetrics, duelHeadline, teamHeadToHead } from './comparative-stats.helpers';
+import { buildComparisonChart, mixHex, MUTED_TEAM_WEIGHT, comparisonMetricLabel, comparisonMetrics, duelHeadline, teamHeadToHead } from './comparative-stats.helpers';
 
 describe('Comparative statistics helpers', () => {
   const data = statisticsFixture(3);
-  const palette = { ink: 'var(--ink)', soft: 'var(--ink-soft)', rule: 'var(--rule)', panel: 'var(--panel)' };
+  const palette = { ink: '#14171B', soft: '#4A525C', rule: '#DEE1E5', panel: '#FFFFFF', flat: '#646D79' };
+
+  it('keeps every muted team mark distinct and above 3:1 against light and dark panels', () => {
+    const channels = (hex: string) => [1, 3, 5].map(offset => parseInt(hex.slice(offset, offset + 2), 16));
+    const luminance = (hex: string) => channels(hex).map(value => {
+      const channel = value / 255;
+      return channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4;
+    }).reduce((sum, value, index) => sum + value * [.2126, .7152, .0722][index], 0);
+    for (const [flat, panel] of [['#646D79', '#FFFFFF'], ['#8E96A1', '#1D2127']]) {
+      for (const [team, full] of Object.entries(colorsMappings)) {
+        const muted = mixHex(full, flat);
+        const ratio = (Math.max(luminance(muted), luminance(panel)) + .05) / (Math.min(luminance(muted), luminance(panel)) + .05);
+        expect(ratio).withContext(team + '/' + panel).toBeGreaterThanOrEqual(3);
+        expect(muted).not.toBe(full.toLowerCase());
+        expect(muted).not.toBe(flat.toLowerCase());
+      }
+    }
+  });
+
+  it('mixes opaque hex channels with rounding, endpoints and the contrast-safe default', () => {
+    expect(MUTED_TEAM_WEIGHT).toBe(.35);
+    expect(mixHex('#ffffff', '#000000', .55)).toBe('#8c8c8c');
+    expect(mixHex('#f58020', '#646D79')).toBe('#97745a');
+    expect(mixHex('#3671c6', '#8E96A1', 0)).toBe('#8e96a1');
+    expect(mixHex('#3671c6', '#8E96A1', 1)).toBe('#3671c6');
+  });
+
+  it('keeps different team colors full with continuous circle/square series', () => {
+    const selected = [{ id: 1, name: 'A', color: '#f58020', cumulative: [25] }, { id: 2, name: 'B', color: '#3671c6', cumulative: [18] }];
+    const chart = buildComparisonChart([{ name: 'Melbourne' }], selected, false, palette);
+    expect(chart.data.datasets.map(dataset => dataset.borderColor)).toEqual(selected.map(entry => entry.color));
+    expect(chart.data.datasets.map(dataset => dataset.borderDash)).toEqual([[], []]);
+    expect(chart.data.datasets.map(dataset => dataset.pointStyle)).toEqual(['circle', 'rect']);
+  });
 
   it('announces either winner, ties and insufficient data without check marks', () => {
     const rows = comparisonMetrics(data.drivers[0], data.drivers[1], false);
@@ -78,15 +112,17 @@ describe('Comparative statistics helpers', () => {
   ];
   const races = [{ name: 'Melbourne' }, { name: 'Shanghái' }];
 
-  it('reuses evolution labels, sorted tooltip, cursor and theme, with solid circles and hollow dashed squares for teammates', () => {
+  it('reuses evolution labels, sorted tooltip, cursor and theme, with solid circles and muted solid squares for teammates', () => {
     const chart = buildComparisonChart(races, series, false, palette);
     const [a, b] = chart.data.datasets;
     expect(a.borderDash).toEqual([]);
-    expect(b.borderDash).toEqual([6, 3]);
+    expect(b.borderDash).toEqual([]);
     expect(a.pointStyle).toBe('circle');
     expect(b.pointStyle).toBe('rect');
     expect(a.pointBackgroundColor).toBe(palette.ink);
-    expect(b.pointBackgroundColor).toBe(palette.panel);
+    expect(b.pointBackgroundColor).toBe(mixHex(palette.ink, palette.flat));
+    expect(b.borderColor).toBe(mixHex(palette.ink, palette.flat));
+    expect(chart.values.every(value => value.dash.length === 0)).toBeTrue();
     expect(chart.data.labels).toEqual(['MEL', 'SHA']);
     expect(chart.plugins.map(plugin => plugin.id)).toContain('evolutionCursor');
     expect(chart.options.plugins!.datalabels!.formatter!(50, { datasetIndex: 0 } as Context)).toEqual(['Ana 50']);
@@ -100,12 +136,12 @@ describe('Comparative statistics helpers', () => {
     expect(tooltip.itemSort!(item(1), item(0), chart.data)).toBe(7);
     expect(tooltip.callbacks!.title!.call(model, [item(0)])).toBe('Carrera 2 · Shanghái');
     expect(tooltip.callbacks!.label!.call(model, item(1))).toBe('Bea: 43 pts (+25)');
-    expect(tooltip.callbacks!.labelColor!.call(model, item(1))).toEqual(jasmine.objectContaining({ backgroundColor: palette.panel, borderDash: [6, 3] }));
+    expect(tooltip.callbacks!.labelColor!.call(model, item(1))).toEqual(jasmine.objectContaining({ backgroundColor: mixHex(palette.ink, palette.flat), borderColor: mixHex(palette.ink, palette.flat) }));
   });
 
   it('renders separated final labels within mobile and desktop canvases even for equal teammate totals', () => {
     const styles = getComputedStyle(document.documentElement);
-    const tokens = { ink: styles.getPropertyValue('--ink').trim(), soft: styles.getPropertyValue('--ink-soft').trim(), panel: styles.getPropertyValue('--panel').trim(), rule: styles.getPropertyValue('--rule').trim() };
+    const tokens = { ink: styles.getPropertyValue('--ink').trim(), soft: styles.getPropertyValue('--ink-soft').trim(), panel: styles.getPropertyValue('--panel').trim(), rule: styles.getPropertyValue('--rule').trim(), flat: styles.getPropertyValue('--sector-flat').trim() };
     for (const width of [230, 300, 700, 1200]) {
       const selected = series.map(entry => ({ ...entry, color: tokens.ink, cumulative: [25, 50] }));
       const chart = buildComparisonChart(races, selected, width < 640, tokens);

@@ -18,7 +18,7 @@
 } @else {
 	@let a = selected()[0];
 	@let b = selected()[1];
-	<div class="comparison" [style.--a]="a.color" [style.--b]="b.color">
+	<div class="comparison" [style.--a]="markColors()[0]" [style.--b]="markColors()[1]" [style.--muted-team-percent]="mutedTeamPercent" [style.--team-a]="a.color" [style.--team-b]="b.color">
 		<header class="section-heading"><h2>Dos nombres. Un duelo.</h2><p>{{ isTeams() ? 'Duelo entre escuderías' : a.team === b.team ? 'Compañeros de equipo' : 'Cara a cara de pilotos' }}</p></header>
 		<div class="hero">
 			@for (contender of selected(); track $index; let index = $index) {
@@ -62,16 +62,16 @@
 				}
 			}
 		</div>
-		<div class="legend"><span class="key">A · {{ a.name }} · relleno continuo</span><span class="key key-b">B · {{ b.name }} · contorno y trazo discontinuo</span></div>
-		<header class="section-heading"><h2>Tira y afloja</h2><p class="metric-legend"><span class="metric-key">Gana la fila: color de equipo</span><span class="metric-key metric-key-flat">Pierde la fila: gris</span><span>= empate · cada fila tiene su propia escala</span></p></header>
+		<div class="legend"><span class="key">A · {{ a.name }}</span><span class="key key-b">B · {{ b.name }}{{ sameColor() ? ' · tono apagado' : '' }}</span></div>
+		<header class="section-heading"><h2>Tira y afloja</h2><p class="metric-legend"><span class="metric-key">Gana la fila: color de equipo</span><span class="metric-key metric-key-flat">Pierde la fila: color apagado</span><span>= empate · cada fila tiene su propia escala</span></p></header>
 		<section class="duel-metrics" aria-label="Estadísticas enfrentadas de A y B">
 			<div class="metric-heading" aria-hidden="true"><span>A · {{ a.name }}</span><span>Estadística</span><span>B · {{ b.name }}</span></div>
 			@for (row of metrics(); track row.key) {
 				<div class="metric-row" [attr.data-metric]="row.key" role="group" [attr.aria-label]="metricLabel(row, a.name, b.name)">
 					<span class="metric-value" [class.win]="row.winner === 'A'">{{ row.a }}</span>
-					<div class="track track-a" aria-hidden="true"><span class="metric-fill metric-fill-a" [class.result-color]="row.winner === 'A' || row.winner === '='" [style.width.%]="row.widthA"></span></div>
+					<div class="track track-a" aria-hidden="true"><span class="metric-fill metric-fill-a" [style.--team-color]="a.color" [class.result-color]="row.winner === 'A' || row.winner === '='" [style.width.%]="row.widthA"></span></div>
 					<div class="metric-label">{{ row.label }}<small>{{ row.winner === '=' ? '= Empate · ' : row.winner === null ? 'Sin dato suficiente · ' : '' }}{{ row.unit }}</small></div>
-					<div class="track" aria-hidden="true"><span class="metric-fill metric-fill-b" [class.result-color]="row.winner === 'B' || row.winner === '='" [style.width.%]="row.widthB"></span></div>
+					<div class="track" aria-hidden="true"><span class="metric-fill metric-fill-b" [style.--team-color]="b.color" [class.result-color]="row.winner === 'B' || row.winner === '='" [style.width.%]="row.widthB"></span></div>
 					<span class="metric-value metric-value-b" [class.win]="row.winner === 'B'">{{ row.b }}</span>
 				</div>
 			}
@@ -86,7 +86,7 @@
 			</div>
 			<ul class="chart-values" id="comparison-points-values">
 				@for (value of card.values; track value.label) {
-					<li><span class="value-label"><svg class="swatch" viewBox="0 0 22 8" aria-hidden="true"><line x1="0" y1="4" x2="22" y2="4" [attr.stroke]="value.color" [attr.stroke-dasharray]="value.dash.join(' ') || null" /></svg>{{ value.label }}</span><span class="tabular-nums">{{ value.value }}</span></li>
+					<li><span class="value-label"><span class="swatch" [class.swatch-b]="value.label === b.name" [style.background]="value.color" aria-hidden="true"></span>{{ value.label }}</span><span class="tabular-nums">{{ value.value }}</span></li>
 				}
 			</ul>
 			<div class="sr-only">

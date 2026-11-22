@@ -11,9 +11,9 @@ import { ImageService } from '../../../../shared/services/image.service';
 import { ThemeService } from '../../../../shared/services/theme.service';
 import { environment } from '../../../../enviroments/enviroment';
 import { colorsMappings } from '../../../constants';
-import { EvolutionPalette, raceCodes } from '../evolution-stats/evolution-stats.charts';
+import { raceCodes } from '../evolution-stats/evolution-stats.charts';
 import { isVacant } from '../general-stats/general-stats.charts';
-import { buildComparisonChart, comparisonMetricLabel, comparisonMetrics, Contender, duelHeadline, teamHeadToHead } from './comparative-stats.helpers';
+import { buildComparisonChart, comparisonMetricLabel, comparisonMetrics, comparisonColors, ComparisonPalette, MUTED_TEAM_WEIGHT, Contender, duelHeadline, teamHeadToHead } from './comparative-stats.helpers';
 
 @Component({
   selector: 'app-comparative-stats',
@@ -44,11 +44,11 @@ export class ComparativeStatsComponent implements OnChanges {
   private loadedSeason?: number;
   protected readonly isTeams = computed(() => this.typeSelected() === 'Equipos');
   protected readonly metricLabel = comparisonMetricLabel;
-  protected readonly palette = computed<EvolutionPalette>(() => {
+  protected readonly palette = computed<ComparisonPalette>(() => {
     this.theme.isDarkTheme();
     const styles = getComputedStyle(document.documentElement);
     const token = (name: string) => styles.getPropertyValue('--' + name).trim();
-    return { ink: token('ink'), soft: token('ink-soft'), rule: token('rule'), panel: token('panel') };
+    return { ink: token('ink'), soft: token('ink-soft'), rule: token('rule'), panel: token('panel'), flat: token('sector-flat') };
   });
   protected readonly source = computed(() => {
     const data = this.overview();
@@ -73,6 +73,12 @@ export class ComparativeStatsComponent implements OnChanges {
       .map((entry, index) => ({ ...entry, rank: index + 1 }));
   });
   protected readonly selected = computed(() => this.selectedIds().flatMap(id => this.candidates().filter(entry => entry.id === id)));
+  protected readonly mutedTeamPercent = MUTED_TEAM_WEIGHT * 100 + '%';
+  protected readonly sameColor = computed(() => {
+    const [a, b] = this.selected();
+    return !!a && !!b && a.color.toLowerCase() === b.color.toLowerCase();
+  });
+  protected readonly markColors = computed(() => comparisonColors(this.selected(), this.palette().flat));
   protected readonly metrics = computed(() => {
     const [a, b] = this.selected();
     return a && b ? comparisonMetrics(a.stats, b.stats, this.isTeams()) : [];

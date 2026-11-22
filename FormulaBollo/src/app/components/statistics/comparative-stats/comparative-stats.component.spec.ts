@@ -9,6 +9,7 @@ import { CacheService } from '../../../../shared/services/cache.service';
 import { StatisticsApiService } from '../../../../shared/services/api/statistics-api.service';
 import { ThemeService } from '../../../../shared/services/theme.service';
 import { headToHeadFixture, statisticsFixture } from '../statistics.fixture';
+import { mixHex } from './comparative-stats.helpers';
 import { ComparativeStatsComponent } from './comparative-stats.component';
 
 describe('ComparativeStatsComponent', () => {
@@ -56,6 +57,27 @@ describe('ComparativeStatsComponent', () => {
     http.verify();
     TestBed.inject(CacheService).clearCache();
     document.documentElement.classList.toggle('dark', originalDark);
+  });
+
+  it('uses solid borders and circle/square legend marks for different teams throughout the tab', () => {
+    load();
+    expect(component['sameColor']()).toBeFalse();
+    expect(component['markColors']()).toEqual(component['selected']().map(entry => entry.color));
+    expect(root().querySelector('.legend')!.textContent).not.toMatch(/discontinuo|contorno|relleno continuo|tono apagado/);
+    for (const element of Array.from(root().querySelectorAll('*'))) {
+      for (const pseudo of [null, '::before', '::after']) {
+        const style = getComputedStyle(element, pseudo);
+        for (const property of ['border-top-style', 'border-right-style', 'border-bottom-style', 'border-left-style', 'outline-style']) {
+          expect(style.getPropertyValue(property)).withContext(element.className + '/' + property).not.toMatch(/dashed|dotted/);
+        }
+      }
+    }
+    expect(component['chart']().data.datasets.map(dataset => dataset.borderDash)).toEqual([[], []]);
+    const [a, b] = Array.from(root().querySelectorAll('.chart-values .swatch'));
+    expect(getComputedStyle(a).borderRadius).toBe('50%');
+    expect(getComputedStyle(b).borderRadius).toBe('0px');
+    const losing = root().querySelector<HTMLElement>('[data-metric="totalPoints"] .metric-fill-b')!;
+    expect(losing.style.getPropertyValue('--team-color')).toBe(component['selected']()[1].color);
   });
 
   it('requests duels with selected driver names while keeping selection by ID', () => {
@@ -236,7 +258,7 @@ describe('ComparativeStatsComponent', () => {
     expect(root().textContent).not.toContain('Mejor cifra');
     const legend = root().querySelector('.metric-legend')!;
     expect(legend.textContent).toContain('Gana la fila: color de equipo');
-    expect(legend.textContent).toContain('Pierde la fila: gris');
+    expect(legend.textContent).toContain('Pierde la fila: color apagado');
     expect(legend.textContent).toContain('= empate');
     expect(legend.querySelectorAll('.metric-key').length).toBe(2);
     expect(Array.from(row('totalPoints').querySelectorAll('.track')).every(track => track.getAttribute('aria-hidden') === 'true')).toBeTrue();
@@ -253,7 +275,7 @@ describe('ComparativeStatsComponent', () => {
     expect(row('posStd').querySelectorAll('.result-color, .win').length).toBe(0);
   });
 
-  it('uses team colors and neutral gray for teammates with accessible contrast in both themes', () => {
+  it('uses full and muted team colors for teammates with accessible contrast in both themes', () => {
     const data = statisticsFixture(3);
     data.drivers[1].driver.team = data.drivers[0].driver.team;
     data.drivers[0].victories = data.drivers[1].victories;
@@ -289,7 +311,7 @@ describe('ComparativeStatsComponent', () => {
           const bar = row.querySelector<HTMLElement>(index ? '.metric-fill-b' : '.metric-fill-a')!;
           const style = getComputedStyle(bar);
           const colored = metric.winner === side || metric.winner === '=';
-          expect(style.backgroundColor).withContext(metric.key + '/' + side).toBe(colored ? resolved(index ? b.color : a.color) : gray);
+          expect(style.backgroundColor).withContext(metric.key + '/' + side).toBe(colored ? resolved(index ? b.color : a.color) : resolved('color-mix(in srgb, ' + (index ? b.color : a.color) + ' 35%, var(--sector-flat))'));
           expect(style.backgroundImage).toBe('none');
           expect(style.borderWidth).toBe('0px');
           expect(style.borderStyle).not.toContain('dashed');
@@ -300,9 +322,16 @@ describe('ComparativeStatsComponent', () => {
           expect(getComputedStyle(value).color).toBe(metric.winner === side ? ink : soft);
         }
       }
-      expect(getComputedStyle(root().querySelector('.metric-key-flat')!, '::before').backgroundColor).toBe(gray);
-      expect(getComputedStyle(root().querySelector('.contender-b')!).borderTopStyle).toBe('dashed');
-      expect(getComputedStyle(root().querySelector('.result-bar .fill-b')!).borderTopStyle).toBe('dashed');
+      expect(getComputedStyle(root().querySelector('.metric-key-flat')!, '::before').backgroundColor).toBe(resolved('color-mix(in srgb, ' + a.color + ' 35%, var(--sector-flat))'));
+      const muted = mixHex(b.color, component['palette']().flat);
+      expect(muted).not.toBe(b.color);
+      expect(resolved(muted)).not.toBe(gray);
+      expect(getComputedStyle(root().querySelector('.contender-b')!).borderTopColor).toBe(resolved(muted));
+      expect(getComputedStyle(root().querySelector('.fill-b')!).backgroundColor).toBe(resolved(muted));
+      expect(getComputedStyle(root().querySelector('.race-b')!).borderTopColor).toBe(resolved(muted));
+      expect(getComputedStyle(root().querySelector('.key-b')!, '::before').backgroundColor).toBe(resolved(muted));
+      expect(getComputedStyle(root().querySelector('.contender-b')!).borderTopStyle).toBe('solid');
+      expect(getComputedStyle(root().querySelector('.result-bar .fill-b')!).borderTopStyle).toBe('solid');
     }
   });
 
@@ -393,7 +422,7 @@ describe('ComparativeStatsComponent', () => {
     expect(root().querySelector('p-select')).toBeNull();
   });
 
-  it('renders chronological race cells, DNF, winners and distinct solid/dashed borders', () => {
+  it('renders chronological race cells, DNF, winners and solid borders', () => {
     load();
     const cells = Array.from(root().querySelectorAll<HTMLElement>('.race-cell'));
     expect(cells.length).toBe(4);
@@ -402,19 +431,19 @@ describe('ComparativeStatsComponent', () => {
     expect(cells[0].classList.contains('race-a')).toBeTrue();
     expect(cells[1].classList.contains('race-b')).toBeTrue();
     expect(getComputedStyle(cells[0]).borderTopStyle).toBe('solid');
-    expect(getComputedStyle(cells[1]).borderTopStyle).toBe('dashed');
+    expect(getComputedStyle(cells[1]).borderTopStyle).toBe('solid');
     expect(cells[2].textContent).toContain('×');
     expect(cells[3].textContent).toContain('=');
     expect(cells[0].getAttribute('aria-label')).toBe('Melbourne: A P1, B DNF; resultado A');
   });
 
-  it('retains A/B patterns for teammates and provides the live announcement and table inside an sr-only div', () => {
+  it('retains A/B markers for teammates and provides the live announcement and table inside an sr-only div', () => {
     const data = statisticsFixture(3);
     data.drivers[1].driver.team = data.drivers[0].driver.team;
     load(data);
     expect(root().textContent).toContain('Compañeros de equipo');
-    expect(root().querySelector('.legend')!.textContent).toContain('A · Piloto 01 · relleno continuo');
-    expect(root().querySelector('.legend')!.textContent).toContain('B · Piloto 02 · contorno y trazo discontinuo');
+    expect(root().querySelector('.legend')!.textContent).toContain('A · Piloto 01');
+    expect(root().querySelector('.legend')!.textContent).toContain('B · Piloto 02 · tono apagado');
     expect(root().querySelector('[aria-live="polite"]')!.textContent).toBe('Comparando Piloto 01 con Piloto 02');
     const table = root().querySelector('div.sr-only > table')!;
     expect(table).not.toBeNull();
@@ -422,9 +451,13 @@ describe('ComparativeStatsComponent', () => {
     expect(table.querySelectorAll('tbody tr').length).toBe(2);
     expect(table.querySelectorAll('thead th').length).toBe(3);
     const [a, b] = component['chart']().data.datasets;
-    expect(a.borderColor).toBe(b.borderColor);
+    expect(a.borderColor).not.toBe(b.borderColor);
+    expect(b.borderColor).toBe(mixHex(component['selected']()[1].color, component['palette']().flat));
+    expect(root().querySelector('.legend')!.textContent).not.toMatch(/discontinuo|contorno|relleno continuo/);
+    expect(getComputedStyle(root().querySelector('.key')!, '::before').borderRadius).toBe('50%');
+    expect(getComputedStyle(root().querySelector('.key-b')!, '::before').borderRadius).toBe('0px');
     expect(a.borderDash).toEqual([]);
-    expect(b.borderDash).toEqual([6, 3]);
+    expect(b.borderDash).toEqual([]);
     expect(a.pointStyle).toBe('circle');
     expect(b.pointStyle).toBe('rect');
   });
@@ -438,7 +471,7 @@ describe('ComparativeStatsComponent', () => {
       const palette = component['palette']();
       expect(component['chart']().options.color).toBe(palette.ink);
       expect(component['chart']().options.plugins!.tooltip).toEqual(jasmine.objectContaining({ backgroundColor: palette.panel, bodyColor: palette.ink }));
-      expect(component['chart']().data.datasets[1].pointBackgroundColor).toBe(palette.panel);
+      expect(component['chart']().data.datasets[1].pointBackgroundColor).toBe(component['markColors']()[1]);
     }
     expect(component['chart']().options).not.toBe(light);
     component['mobile'].set(true);
@@ -509,7 +542,7 @@ describe('ComparativeStatsComponent', () => {
             expect(doc.querySelector('div.sr-only > table')).not.toBeNull();
             const a = doc.querySelector('.contender')!, b = doc.querySelector('.contender-b')!;
             expect(view.getComputedStyle(a).borderTopStyle).toBe('solid');
-            expect(view.getComputedStyle(b).borderTopStyle).toBe('dashed');
+            expect(view.getComputedStyle(b).borderTopStyle).toBe('solid');
             if (width < 640) {
               expect(b.getBoundingClientRect().top).toBeGreaterThan(a.getBoundingClientRect().bottom);
               for (const target of Array.from(doc.querySelectorAll<HTMLElement>('button, p-select'))) {
