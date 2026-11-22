@@ -89,6 +89,51 @@ class StatisticsControllerTest {
     }
 
     @Test
+    void headToHeadSerializesContractIncludingNullPositions() throws Exception {
+        when(service.getHeadToHead(3, "Ana", "Bea")).thenReturn(new StatisticsHeadToHeadDTO(
+                3, "Ana", "Bea", 2, 1, 3, 1, 51, 33, List.of(
+                        new StatisticsHeadToHeadRaceDTO(new StatisticsRaceDTO(7L, "Race", 3), 1, null, "A"),
+                        new StatisticsHeadToHeadRaceDTO(new StatisticsRaceDTO(8L, "Next", 3), null, null, "NONE"))));
+        var mvc = MockMvcBuilders.standaloneSetup(controller).build();
+        mvc.perform(get("/statistics/headToHead").param("season", "3").param("a", "Ana").param("b", "Bea"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith("application/json"))
+                .andExpect(jsonPath("$.length()").value(10))
+                .andExpect(jsonPath("$.season").value(3))
+                .andExpect(jsonPath("$.a").value("Ana"))
+                .andExpect(jsonPath("$.b").value("Bea"))
+                .andExpect(jsonPath("$.aheadA").value(2))
+                .andExpect(jsonPath("$.aheadB").value(1))
+                .andExpect(jsonPath("$.comparable").value(3))
+                .andExpect(jsonPath("$.bothDnf").value(1))
+                .andExpect(jsonPath("$.pointsA").value(51))
+                .andExpect(jsonPath("$.pointsB").value(33))
+                .andExpect(jsonPath("$.races.length()").value(2))
+                .andExpect(jsonPath("$.races[0].length()").value(4))
+                .andExpect(jsonPath("$.races[0].race.length()").value(3))
+                .andExpect(jsonPath("$.races[0].race.id").value(7))
+                .andExpect(jsonPath("$.races[0].race.name").value("Race"))
+                .andExpect(jsonPath("$.races[0].race.season").value(3))
+                .andExpect(jsonPath("$.races[0].positionA").value(1))
+                .andExpect(jsonPath("$.races[0].positionB").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.races[0].result").value("A"))
+                .andExpect(jsonPath("$.races[1].positionA").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.races[1].result").value("NONE"));
+        verify(service).getHeadToHead(3, "Ana", "Bea");
+    }
+
+    @Test
+    void headToHeadRejectsEqualAndBlankNamesThroughRealServiceValidation() throws Exception {
+        var mvc = MockMvcBuilders.standaloneSetup(new StatisticsController(
+                mock(StatisticsService.class, CALLS_REAL_METHODS))).build();
+        for (String[] names : List.of(new String[]{"Ana", "Ana"}, new String[]{" Ana ", "aNA"},
+                new String[]{" ", "Bea"}, new String[]{"Ana", "\t"})) {
+            mvc.perform(get("/statistics/headToHead").param("season", "3")
+                    .param("a", names[0]).param("b", names[1])).andExpect(status().isBadRequest());
+        }
+    }
+
+    @Test
     void missingAndMalformedSeasonAreBadRequests() throws Exception {
         var mvc = MockMvcBuilders.standaloneSetup(controller).build();
         mvc.perform(get("/statistics/overview")).andExpect(status().isBadRequest());
