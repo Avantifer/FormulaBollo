@@ -51,6 +51,7 @@ public class Constants {
 
     public static final String TAG_FANTASY = "Fantasy";
     public static final String TAG_FANTASY_SUMMARY = "Operations related with fantasy section";
+    public static final String FANTASY_CLASIFICATION_SUMMARY = "Get complete fantasy clasification dataset of a season";
 
     public static final String TAG_SPRINT = "Sprint";
     public static final String TAG_SPRINT_SUMMARY = "Operations related with sprint section";

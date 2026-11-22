@@ -72,7 +72,7 @@ describe('SelectRacesComponent', () => {
     expect(emit).toHaveBeenCalledOnceWith(last);
   });
 
-  it('adds Total for Fantasy and emits it through the form and explicitly', () => {
+  it('adds Total for Fantasy and emits the selection once', () => {
     // La respuesta llega después de la suscripción, como en una petición HTTP.
     const response = new Subject<Race[]>();
     api.getAllRaces.and.returnValue(response);
@@ -85,7 +85,24 @@ describe('SelectRacesComponent', () => {
     expect(total).toEqual(jasmine.objectContaining({ id: 0, name: 'Total' }));
     expect(component.races()).toEqual([total, first, last]);
     expect(component.racesForm.get('race')!.value).toBe(total);
-    expect(emit.calls.allArgs()).toEqual([[total], [total]]);
+    expect(emit.calls.allArgs()).toEqual([[total]]);
+  });
+
+  it('accepts supplied races without HTTP and keeps Total after options or seasons change', () => {
+    fixture.componentRef.setInput('fantasy', true);
+    fixture.componentRef.setInput('raceOptions', [first, last]);
+    fixture.detectChanges();
+    expect(api.getAllRaces).not.toHaveBeenCalled();
+    expect(component.races()[0].id).toBe(0);
+    component.racesForm.get('race')!.setValue(last);
+    const replacement = { ...last, id: 22 };
+    fixture.componentRef.setInput('season', new Season(43, 'Siguiente', 3));
+    fixture.componentRef.setInput('raceOptions', [replacement]);
+    fixture.detectChanges();
+    expect(component.races().map(race => race.id)).toEqual([0, 22]);
+    expect(component.racesForm.get('race')!.value).toBe(replacement);
+    fixture.componentRef.setInput('raceOptions', []); fixture.detectChanges();
+    expect(component.racesForm.get('race')!.value.id).toBe(0);
   });
 
   for (const fantasyTeam of [false, true]) {

@@ -5,7 +5,7 @@ import { AuthJWTService } from '../authJWT.service';
 import { environment } from '../../../enviroments/enviroment';
 import { BaseApiService } from "../baseApiService.service";
 import { CacheService } from "../cache.service";
-import { FantasyPointsUser } from "../../models/fantasyPointsUser";
+import { FantasyClasificationDTO } from '../../models/fantasy-clasification';
 import { FantasyPointsDriver } from "../../models/fantasyPointsDriver";
 import { FantasyPointsTeam } from "../../models/fantasyPointsTeam";
 import { FantasyPricesDriver } from "../../models/fantasyPricesDriver";
@@ -65,32 +65,10 @@ export class FantasyApiService {
     return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<FantasyPricesTeam[]>(`${environment.apiUrl}${this.endpoint}/teamPrice`, { params }));
   }
 
-  getFantasyPointsSeason(season: number): Observable<FantasyPointsUser[]> {
-    const cacheKey: string = `fantasyPointsSeason-${season}`;
-
+  getFantasyClasification(season: number): Observable<FantasyClasificationDTO> {
+    const cacheKey = 'fantasyClasification-v1-' + season;
     const params = this.baseApiService.createParams({ numberSeason: season });
-    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<FantasyPointsUser[]>(`${environment.apiUrl}${this.endpoint}/getFantasyPointsSeason`, { params }));
-  }
-
-  getFantasyPointsRace(raceId: number): Observable<FantasyPointsUser[]> {
-    const cacheKey: string = `fantasyPointsRace-${raceId}`;
-
-    const params = this.baseApiService.createParams({ raceId: raceId });
-    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<FantasyPointsUser[]>(`${environment.apiUrl}${this.endpoint}/getFantasyPointsRace`, { params }));
-  }
-
-  getDriverPointsSpecificRace(driverId: number, raceId: number): Observable<FantasyPointsDriver> {
-    const cacheKey: string = `fantasyDriverPointsSpecificRace-${driverId}-${raceId}`;
-
-    const params = this.baseApiService.createParams({ driverId: driverId, raceId: raceId });
-    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<FantasyPointsDriver>(`${environment.apiUrl}${this.endpoint}/driverPointsSpecificRace`, { params }));
-  }
-
-  getTeamPointsSpecificRace(teamId: number, raceId: number): Observable<FantasyPointsTeam> {
-    const cacheKey: string = `fantasyTeamPointsSpecificRace-${teamId}-${raceId}`;
-
-    const params = this.baseApiService.createParams({ teamId: teamId, raceId: raceId });
-    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<FantasyPointsTeam>(`${environment.apiUrl}${this.endpoint}/teamsPointsSpecificRace`, { params }));
+    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<FantasyClasificationDTO>(`${environment.apiUrl}${this.endpoint}/clasification`, { params }));
   }
 
   saveDriverTeamPoints(raceId: number): Observable<string> {

@@ -26,6 +26,7 @@ export class SelectSeasonsComponent {
   @Input() fantasy: boolean = false; 
   readonly variant = input<'default' | 'select' | 'pill' | 'row' | 'tabs'>('default');
   readonly initialSeasonNumber = input<number>();
+  readonly labelId = input<string>();
 
   public readonly seasons: WritableSignal<Season[]> = signal<Season[]>([]);
 

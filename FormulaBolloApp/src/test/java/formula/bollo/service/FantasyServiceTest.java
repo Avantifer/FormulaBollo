@@ -55,6 +55,8 @@ import formula.bollo.entity.Result;
 import formula.bollo.entity.Season;
 import formula.bollo.entity.Team;
 import formula.bollo.impl.AccountImpl;
+import formula.bollo.impl.DriverImpl;
+import formula.bollo.impl.TeamImpl;
 import formula.bollo.impl.FantasyElectionImpl;
 import formula.bollo.impl.FantasyPriceImpl;
 import formula.bollo.impl.RaceImpl;
@@ -118,6 +120,12 @@ class FantasyServiceTest {
 
     @Mock
     private RaceImpl raceImpl;
+
+    @Mock
+    private DriverImpl driverImpl;
+
+    @Mock
+    private TeamImpl teamImpl;
 
     @Mock
     private Clock clock;

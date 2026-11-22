@@ -1,44 +1,48 @@
-::ng-deep .fantasy-dialog {
-  overflow: hidden;
+:host { display: block; min-width: 0; --focus: var(--fantasy-text); }
+.ranking { table-layout: fixed; border-collapse: collapse; }
+.ranking th, .ranking td { padding: 0.5rem 0.35rem; }
+.position-column { width: 2.5rem; }
+.points-column { width: 3rem; }
+.movement-column { width: 2.5rem; }
+.action-column { width: 5.25rem; }
+.ranking tbody tr { border-top: 1px solid var(--rule); border-left: 3px solid var(--panel); }
+.ranking tbody tr:hover { background: var(--panel-alt); }
+.ranking tbody tr.selected { border-left-color: var(--fantasy); background: var(--panel-alt); outline: 1px solid var(--fantasy); outline-offset: -1px; }
+.ranking td:first-child { width: 2.5rem; }
+.ranking td:nth-child(n+3), .ranking thead th:nth-child(n+2) { text-align: right; }
+.ranking .username { overflow-wrap: anywhere; }
+.view-team { width: 100%; }
+.filters { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); }
+.filter-note { grid-column: 1 / -1; }
+:host ::ng-deep .filters .p-select { min-width: 0; min-height: 44px; width: 100%; }
+:host ::ng-deep .filters .p-select-label { min-width: 0; }
+:host ::ng-deep .fantasy-sheet.p-drawer { height: 90dvh; max-height: 90dvh; width: 100%; border-radius: 1rem 1rem 0 0; box-shadow: none; background: var(--panel); color: var(--ink); }
+.sheet-content { height: 100%; width: 100%; }
+.league-notes { margin-top: 1rem; }
+@media (max-width: 767px) {
+  .ranking, .ranking thead, .ranking tbody { display: block; }
+  .ranking colgroup { display: none; }
+  .ranking tr { display: grid; grid-template-columns: 32px minmax(0, 1fr) 43px 30px; gap: 0.5rem; padding: 0.65rem; }
+  .ranking th, .ranking td { padding: 0; }
+  .ranking thead th:first-child { grid-column: 1 / 3; }
+  .ranking thead th:last-child { display: none; }
+  .ranking td:first-child { width: auto; }
+  .ranking td:last-child { grid-column: 2 / -1; }
+  .view-team { text-align: left; padding-inline: 0.75rem; }
 }
-
-::ng-deep .fantasy-dialog .p-dialog-header {
-  background: var(--pit);
-  color: var(--on-pit);
-  border-bottom: 2px solid var(--fantasy);
+@media (min-width: 640px) {
+  .filters { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); }
+  .filter-note { grid-column: 1 / -1; }
 }
-
-::ng-deep .fantasy-dialog .closeDialog .p-button {
-  color: var(--on-pit);
+@media (min-width: 768px) {
+  .workspace { grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.6fr); }
+  .detail-column { position: sticky; top: 1rem; }
+  .ranking .position { min-width: 1.5rem; }
+  .ranking th, .ranking td { padding-inline: 0.25rem; }
 }
-
-::ng-deep .fantasy-dialog .closeDialog .p-button:hover {
-  background: color-mix(in srgb, var(--on-pit) 15%, transparent);
-}
-
-/* En móvil la tabla debe caber entera: la columna de puntos es la importante. */
-@media (max-width: 640px) {
-  :host ::ng-deep .p-datatable-table {
-    table-layout: fixed;
-    width: 100%;
-  }
-
-  :host ::ng-deep .p-datatable-table th,
-  :host ::ng-deep .p-datatable-table td {
-    padding-inline: 0.5rem;
-    overflow-wrap: anywhere;
-  }
-
-  :host ::ng-deep .p-datatable-table th:first-child {
-    width: 18%;
-  }
-
-  :host ::ng-deep .fantasyClasificationButton .p-button {
-    max-width: 100%;
-    padding-inline: 0.5rem;
-  }
-
-  :host ::ng-deep .fantasyClasificationButton .p-button-label {
-    white-space: normal;
-  }
+@media (min-width: 1200px) {
+  .workspace { grid-template-columns: minmax(0, 438fr) minmax(0, 810fr); }
+  .filters { grid-template-columns: 200px 300px minmax(0, 1fr); }
+  .filter-note { grid-column: auto; justify-self: end; }
+  .ranking th, .ranking td { padding-inline: 0.5rem; }
 }

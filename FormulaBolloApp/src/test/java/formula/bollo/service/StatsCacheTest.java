@@ -9,6 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import java.util.ArrayList;
+import java.time.Clock;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -29,6 +30,13 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import formula.bollo.impl.DriverImpl;
 import formula.bollo.impl.ResultImpl;
+import formula.bollo.impl.AccountImpl;
+import formula.bollo.impl.TeamImpl;
+import formula.bollo.impl.RaceImpl;
+import formula.bollo.impl.FantasyElectionImpl;
+import formula.bollo.impl.FantasyPointsImpl;
+import formula.bollo.impl.FantasyPriceImpl;
+import formula.bollo.controller.FantasyController;
 import formula.bollo.controller.StatisticsController;
 import formula.bollo.config.WebSocketConfig;
 import formula.bollo.repository.CacheRepository;
@@ -38,6 +46,12 @@ import formula.bollo.repository.RaceRepository;
 import formula.bollo.repository.PenaltyRepository;
 import formula.bollo.repository.ResultRepository;
 import formula.bollo.repository.SprintRepository;
+import formula.bollo.repository.AccountRepository;
+import formula.bollo.repository.FantasyElectionRepository;
+import formula.bollo.repository.FantasyPointsDriverRepository;
+import formula.bollo.repository.FantasyPointsTeamRepository;
+import formula.bollo.repository.FantasyPriceDriverRepository;
+import formula.bollo.repository.FantasyPriceTeamRepository;
 import formula.bollo.utils.Constants;
 
 /**
@@ -89,6 +103,26 @@ class StatsCacheTest {
         }
 
         @Bean
+        RaceRepository raceRepository() {
+            return mock(RaceRepository.class);
+        }
+
+        @Bean
+        FantasyController fantasyController(RaceRepository races) {
+            FantasyPointsDriverRepository driverPoints = mock(FantasyPointsDriverRepository.class);
+            FantasyPointsTeamRepository teamPoints = mock(FantasyPointsTeamRepository.class);
+            FantasyPriceDriverRepository driverPrices = mock(FantasyPriceDriverRepository.class);
+            FantasyPriceTeamRepository teamPrices = mock(FantasyPriceTeamRepository.class);
+            FantasyPriceImpl priceMapper = mock(FantasyPriceImpl.class);
+            FantasyService service = new FantasyService(mock(AccountRepository.class), races, mock(ResultRepository.class),
+                    mock(FantasyElectionRepository.class), driverPrices, teamPrices, driverPoints, teamPoints,
+                    mock(FantasyElectionImpl.class), priceMapper, mock(AccountImpl.class), mock(RaceImpl.class),
+                    mock(DriverImpl.class), mock(TeamImpl.class), Clock.systemUTC());
+            return new FantasyController(driverPoints, driverPrices, teamPrices, teamPoints, priceMapper,
+                    mock(FantasyPointsImpl.class), service);
+        }
+
+        @Bean
         CacheNotifier cacheNotifier(CacheService cacheService) {
             return new CacheNotifier(cacheService, mock(WebSocketConfig.CacheWebSocketHandler.class));
         }
@@ -127,6 +161,34 @@ class StatsCacheTest {
 
     @Autowired
     private CacheNotifier cacheNotifier;
+
+    @Autowired
+    private FantasyController fantasyController;
+
+    @Autowired
+    private RaceRepository raceRepository;
+
+    @Test
+    void fantasyClasificationIsCachedPerSeasonAndPublishingEvictsIt() {
+        cacheNotifier.publish();
+        clearInvocations(raceRepository);
+
+        var dataset = fantasyController.getFantasyClasification(41);
+        assertSame(dataset, fantasyController.getFantasyClasification(41));
+        fantasyController.getFantasyClasification(42);
+        verify(raceRepository, times(1)).findBySeason(41);
+        verify(raceRepository, times(1)).findBySeason(42);
+        assertTrue(cacheManager.getCache(Constants.CACHE_STATS).get("fantasyClasification:41") != null);
+        assertEquals(41, dataset.getSeason());
+
+        cacheNotifier.publish();
+
+        assertTrue(cacheManager.getCache(Constants.CACHE_STATS).get("fantasyClasification:41") == null);
+        fantasyController.getFantasyClasification(41);
+        fantasyController.getFantasyClasification(42);
+        verify(raceRepository, times(2)).findBySeason(41);
+        verify(raceRepository, times(2)).findBySeason(42);
+    }
 
     @Test
     void recordsAreCachedAndPublishingEvictsTheirKey() {

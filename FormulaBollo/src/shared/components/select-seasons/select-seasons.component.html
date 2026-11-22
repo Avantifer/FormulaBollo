@@ -17,6 +17,7 @@
 		[options]="seasons()"
 		optionLabel="name"
 		dataKey="id"
+		[ariaLabelledBy]="labelId()"
 		[dt]="variant() === 'pill' || variant() === 'row' ? { root: { borderRadius: variant() === 'row' ? 'var(--radius-row)' : '9999px', background: 'var(--panel)', borderColor: 'var(--rule)', color: 'var(--ink)' }, dropdown: { color: 'var(--ink-soft)' } } : undefined"
 		[style.min-height]="variant() === 'pill' || variant() === 'row' ? '2.75rem' : null"
 		class="text-sm w-full xs:min-w-[150px]">

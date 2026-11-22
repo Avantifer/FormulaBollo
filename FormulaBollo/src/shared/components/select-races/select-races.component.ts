@@ -1,5 +1,5 @@
 import { UtilsService } from './../../services/utils.service';
-import { Component, EventEmitter, inject, input, Output, InputSignal, effect, Input, signal, WritableSignal } from '@angular/core';
+import { Component, EventEmitter, inject, input, Output, InputSignal, effect, Input, signal, WritableSignal, untracked } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
 import { Race } from '../../models/race';
@@ -25,6 +25,8 @@ export class SelectRacesComponent {
   @Input() fantasyTeam: boolean = false;
 
   readonly season: InputSignal<Season> = input(environment.seasonActual);
+  readonly raceOptions = input<Race[] | undefined>();
+  readonly labelId = input<string>();
   public readonly races: WritableSignal<Race[]> = signal<Race[]>([]);
   public racesForm: FormGroup = new FormGroup({
     race: new FormControl()
@@ -33,6 +35,12 @@ export class SelectRacesComponent {
   constructor() {
     effect(() => {
       const currentSeason = this.season();
+      const options = this.raceOptions();
+
+      if (options !== undefined) {
+        this.setRaceOptions(options);
+        return;
+      }
 
       if (currentSeason && !this.fantasyTeam) {
         this.obtainAllRaces();
@@ -78,21 +86,15 @@ export class SelectRacesComponent {
       })
     )
     .subscribe((races: Race[]) => {
-        this.races.set(races);
-        const findRace: Race | undefined = this.races().find((race: Race) => race.name === this.racesForm.get('race')?.value?.name);
-        
-        if (this.racesForm.get('race')?.value?.name && !findRace) {
-          this.racesForm.get('race')?.setValue(this.races()[0]);
-        } else if (findRace) {
-          this.racesForm.get('race')?.setValue(findRace);
-        } else if (this.fantasy) {
-          const raceOfTotal: Race = new Race(0, "Total", "", "", new Date(), new Season(0, "", 0), 0);
-          this.racesForm.get('race')?.setValue(raceOfTotal);
-          this.races.set([raceOfTotal, ...races]);
-          this.raceChanged.emit(raceOfTotal);
-        } else {
-          this.racesForm.get('race')?.setValue(this.races()[0]);
-        }
+        this.setRaceOptions(races);
       }); 
+  }
+
+  private setRaceOptions(races: Race[]): void {
+    const total = new Race(0, 'Total', '', '', new Date(), this.season(), 0);
+    const options = this.fantasy ? [total, ...races.filter(race => race.id !== 0)] : races;
+    this.races.set(options);
+    const selected = options.find(race => race.name === this.racesForm.get('race')?.value?.name) ?? options[0];
+    untracked(() => this.racesForm.get('race')?.setValue(selected));
   }
 }

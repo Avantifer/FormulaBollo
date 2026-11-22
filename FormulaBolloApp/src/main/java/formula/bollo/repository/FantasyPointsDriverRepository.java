@@ -14,6 +14,8 @@ public interface FantasyPointsDriverRepository extends JpaRepository<FantasyPoin
     @Query(value = "SELECT fpd FROM FantasyPointsDriver fpd WHERE fpd.race.id = :raceId")
     List<FantasyPointsDriver> findByRaceId(int raceId);
 
+    List<FantasyPointsDriver> findByRaceIdIn(List<Long> raceIds);
+
     @Query(value = "SELECT fpd FROM FantasyPointsDriver fpd WHERE fpd.driver.id = :driverId")
     List<FantasyPointsDriver> findByDriverId(int driverId);
 

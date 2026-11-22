@@ -4,6 +4,7 @@
 		[options]="races()"
 		optionLabel="name"
 		dataKey="name"
+		[ariaLabelledBy]="labelId()"
 		class="text-sm w-full min-w-[184px]">
 		<ng-template pTemplate="item" let-race>
 			<div class="flex items-center gap-2">
@@ -12,7 +13,7 @@
 				} @else {
 					<div class="w-[14px]"></div>
 				}
-				<div>{{ race.name }}</div>
+				<div>{{ race.name }}@if (fantasy && race.id !== 0 && !race.finished) { · Sin datos}</div>
 			</div>
 		</ng-template>
 	</p-select>
