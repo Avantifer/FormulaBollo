@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input
 import { Subscription } from 'rxjs';
 import { ChartModule } from 'primeng/chart';
 import { SkeletonModule } from 'primeng/skeleton';
-import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Season } from '../../../../shared/models/season';
 import { StatisticsOverview } from '../../../../shared/models/statistics';
 import { StatisticsApiService } from '../../../../shared/services/api/statistics-api.service';
@@ -11,7 +10,7 @@ import { environment } from '../../../../enviroments/enviroment';
 import { colorsMappings } from '../../../constants';
 import { LINE_DASHES } from '../chart-labels';
 import { isVacant } from '../general-stats/general-stats.charts';
-import { buildEvolutionCharts, EvolutionPalette } from './evolution-stats.charts';
+import { buildEvolutionChart, EvolutionPalette } from './evolution-stats.charts';
 
 @Component({
   selector: 'app-evolution-stats',
@@ -30,7 +29,6 @@ export class EvolutionStatsComponent implements OnChanges {
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
   protected readonly selectedIds = signal<number[]>([]);
-  protected readonly plugins = [ChartDataLabels];
   private readonly media = window.matchMedia('(max-width: 639px)');
   protected readonly mobile = signal(this.media.matches);
   private request?: Subscription;
@@ -59,8 +57,8 @@ export class EvolutionStatsComponent implements OnChanges {
     return { ...entry, selected: index !== -1, dash: LINE_DASHES[Math.max(0, index)], disabled: index === -1 && this.selectedIds().length === 6 };
   }));
   protected readonly empty = computed(() => !this.overview()?.summary.finishedRaces || !this.source()?.races.length || !this.participants().length);
-  protected readonly cards = computed(() => buildEvolutionCharts(
-    this.source()?.races ?? [], this.series(), this.selectedIds(), this.mobile(), this.palette()
+  protected readonly chart = computed(() => buildEvolutionChart(
+    this.source()?.races ?? [], this.participants(), this.selectedIds(), this.mobile(), this.palette()
   ));
   protected readonly announcement = computed(() => 'Mostrando ' + this.selectedIds().length + ' ' + this.noun());
 

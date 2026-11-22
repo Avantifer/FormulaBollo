@@ -18,7 +18,7 @@ describe('EvolutionStatsComponent', () => {
   let originalDark: boolean;
   const root = (): HTMLElement => fixture.nativeElement;
   const render = (): void => { fixture.detectChanges(); fixture.detectChanges(); };
-  const card = (id: string): EvolutionChart => component['cards']().find(card => card.id === id)!;
+  const card = (): EvolutionChart => component['chart']();
   const chips = (): HTMLButtonElement[] => Array.from(root().querySelectorAll<HTMLButtonElement>('.comparison-chip'));
   const selected = (): HTMLButtonElement[] => chips().filter(chip => chip.getAttribute('aria-pressed') === 'true');
   const click = (index: number): void => { chips()[index].click(); render(); };
@@ -91,6 +91,7 @@ describe('EvolutionStatsComponent', () => {
     expect(chips().map(chip => chip.textContent!.trim())).toEqual(data.drivers.slice(0, 12).map(entry => entry.driver.name));
     expect(selected().map(chip => chip.textContent!.trim())).toEqual(['Piloto 01', 'Piloto 02', 'Piloto 03', 'Piloto 04']);
     expect(root().textContent).not.toMatch(/vacante/i);
+    expect(root().querySelector('[role="img"]')!.getAttribute('aria-label')).toContain('Líder: Piloto 01 con 50 pts');
     expect(root().querySelector('[role="group"]')!.getAttribute('aria-label')).toBe('Pilotos a comparar');
     expect(root().textContent).toContain('Elige hasta 6 pilotos para comparar su evolución.');
   });
@@ -120,7 +121,7 @@ describe('EvolutionStatsComponent', () => {
     click(7);
     click(4);
     click(5);
-    const datasets = card('points').data.datasets as ChartDataset<'line'>[];
+    const datasets = card().data.datasets as ChartDataset<'line'>[];
     expect(datasets.map(dataset => dataset.label)).toEqual(['Piloto 02', 'Piloto 03', 'Piloto 04', 'Piloto 08', 'Piloto 05', 'Piloto 06']);
     expect(new Set(datasets.map(dataset => JSON.stringify(dataset.borderDash))).size).toBe(6);
     for (const chip of selected()) {
@@ -128,7 +129,7 @@ describe('EvolutionStatsComponent', () => {
       expect(chip.querySelector('line')!.getAttribute('stroke')).toBe(String(datasets[index].borderColor));
       const dash = datasets[index].borderDash as number[];
       expect(chip.querySelector('line')!.getAttribute('stroke-dasharray')).toBe(dash.join(' ') || null);
-      expect(card('points').values[index].dash).toEqual(dash);
+      expect(card().values.find(value => value.label === datasets[index].label)!.dash).toEqual(dash);
     }
     root().querySelector<HTMLButtonElement>('.reset-button')!.click();
     render();
@@ -194,85 +195,42 @@ describe('EvolutionStatsComponent', () => {
     http.expectNone(request => request.url.endsWith('/statistics/overview'));
   });
 
-  it('passes actual cumulative data to three accessible p-charts and visible associated value lists', async () => {
-    load();
+  it('renders only cumulative points with its cursor, sorted values, gains and an accessible race table', async () => {
+    const data = load();
     await fixture.whenStable();
-    expect(component['cards']().map(card => card.id)).toEqual(['points', 'gap', 'position']);
-    expect(card('points').data.datasets.map(dataset => dataset.data)).toEqual([[25, 50], [24, 49], [23, 49], [22, 47]]);
-    expect(card('points').values[0].value).toBe('50 pts');
-    for (const element of fixture.debugElement.queryAll(element => element.name === 'p-chart')) {
-      const chart = element.componentInstance as { data: ChartData; options: ChartOptions };
-      expect(component['cards']().some(card => card.data === chart.data && card.options === chart.options)).toBeTrue();
-    }
-    expect(root().querySelectorAll('canvas').length).toBe(3);
-    for (const article of Array.from(root().querySelectorAll('article'))) {
-      const image = article.querySelector('[role="img"]')!;
-      expect(image.getAttribute('aria-label')).toContain(article.querySelector('h3')!.textContent!);
-      expect(image.getAttribute('aria-describedby')).toBe(article.querySelector('ul')!.id);
-      expect(article.querySelectorAll('.chart-values li').length).toBe(4);
-      expect(article.querySelectorAll('.chart-values .swatch').length).toBe(4);
-    }
-    expect(root().textContent).not.toContain('Media de puntos por carrera');
-  });
-
-  it('calculates gaps and shared ranks against every driver, including an unselected driver beyond eight', () => {
-    const data = statisticsFixture(3);
-    data.driverEvolution.series[9].cumulative = [40, 45];
-    load(data);
-    expect(component['selectedIds']()).not.toContain(10);
-    expect(card('gap').data.datasets.map(dataset => dataset.data)).toEqual([[-15, 0], [-16, -1], [-17, -1], [-18, -3]]);
-    expect(card('position').data.datasets.map(dataset => dataset.data)).toEqual([[2, 1], [3, 2], [4, 2], [5, 4]]);
-    expect(card('gap').options.scales!['y']!.max).toBe(0);
-    expect(card('gap').note).toBe('Cero significa liderar la clasificación tras esa carrera.');
+    expect(root().querySelectorAll('article').length).toBe(1);
+    expect(root().querySelectorAll('canvas').length).toBe(1);
+    expect(root().querySelector('h3')!.textContent).toBe('Puntos acumulados');
+    expect(root().textContent).not.toMatch(/Distancia al líder|Posición en el campeonato/);
+    expect(card().data.datasets.map(dataset => dataset.data)).toEqual([[25, 50], [24, 49], [23, 49], [22, 47]]);
+    const chart = fixture.debugElement.query(element => element.name === 'p-chart').componentInstance as { data: ChartData; options: ChartOptions; plugins: { id: string }[] };
+    expect(chart.data).toBe(card().data);
+    expect(chart.options).toBe(card().options);
+    expect(chart.plugins.some(plugin => plugin.id === 'evolutionCursor')).toBeTrue();
+    const image = root().querySelector('[role="img"]')!;
+    expect(image.getAttribute('aria-label')).toContain('Líder: Piloto 01 con 50 pts');
+    expect(image.getAttribute('aria-describedby')).toBe(root().querySelector('ul')!.id);
+    expect(root().querySelectorAll('.chart-values .swatch').length).toBe(4);
+    expect(root().querySelector('.chart-values li')!.textContent).toContain('50 pts');
+    expect(root().querySelector('.value-gain')!.textContent).toBe('+25 en la última');
+    expect(root().querySelector('.chart-note')!.textContent).toBe('Incluye puntos de carrera, vuelta rápida y sprint. Pasa el cursor o toca el gráfico para ver cada carrera.');
+    const table = root().querySelector('div.sr-only > table')!;
+    expect(table.querySelector('caption')!.textContent).toBe('Puntos acumulados por carrera de Temporada 3');
+    expect(Array.from(table.querySelectorAll('thead th'), cell => cell.textContent)).toEqual(['Carrera', 'Piloto 01', 'Piloto 02', 'Piloto 03', 'Piloto 04']);
+    expect(table.querySelectorAll('tbody tr').length).toBe(data.driverEvolution.races.length);
+    expect(Array.from(table.querySelectorAll('tbody tr')[0].children, cell => cell.textContent)).toEqual(['Carrera 1 · Carrera A', '25', '24', '23', '22']);
+    expect(Array.from(table.querySelectorAll('tbody tr')[1].children, cell => cell.textContent)).toEqual(['Carrera 2 · Carrera B', '50', '49', '49', '47']);
+    expect(table.querySelectorAll('th[scope="col"]').length).toBe(5);
+    expect(table.querySelectorAll('th[scope="row"]').length).toBe(2);
     click(0);
-    expect(card('gap').data.datasets[0].data).toEqual([-16, -1]);
-    expect(card('position').data.datasets[0].data).toEqual([3, 2]);
-    expect(card('position').values[0].value).toBe('2º');
-    const scale = card('position').options.scales!['y']!;
-    expect(scale.reverse).toBeTrue();
-    expect(scale.min).toBe(1);
-    expect(scale.max).toBe(6);
-    expect(scale.ticks).toEqual(jasmine.objectContaining({ precision: 0, stepSize: 1 }));
-    expect(card('position').note).toBe('Un empate comparte posición.');
-    expect((card('position').data.datasets as ChartDataset<'line'>[]).every(dataset => dataset.stepped === true)).toBeTrue();
-  });
-
-  it('uses every team for gaps and ranks, keeps ties and excludes vacant team chips', () => {
-    const data = statisticsFixture(3);
-    data.teamEvolution.series[9].cumulative = [80, 96];
-    data.teamEvolution.series[2].cumulative = [48, 99];
-    data.teamEvolution.series.push({ team: { ...data.teams[0].team, id: 99, name: 'vAcAnTe2' }, cumulative: [0, 0] });
-    load(data);
+    click(4);
+    expect(card().values.map(value => value.label)).toEqual(['Piloto 02', 'Piloto 03', 'Piloto 04', 'Piloto 05']);
+    expect(root().querySelectorAll('thead th').length).toBe(5);
     teams();
-    expect(chips().length).toBe(10);
-    expect(card('points').data.datasets[0].data).toEqual([50, 100]);
-    expect(card('gap').data.datasets.map(dataset => dataset.data)).toEqual([[-30, 0], [-32, -1], [-31, -1], [-33, -3]]);
-    expect(card('position').data.datasets.map(dataset => dataset.data)).toEqual([[2, 1], [4, 2], [3, 2], [5, 4]]);
-    expect(card('position').options.scales!['y']!.max).toBe(6);
-    expect(root().querySelector('[aria-live="polite"]')!.textContent).toBe('Mostrando 4 escuderías');
-  });
-
-  it('labels only final points with names and values, separates tied labels and uses race titles in tooltips', () => {
-    load();
-    for (const item of component['cards']()) {
-      const labels = item.options.plugins!.datalabels!;
-      const display = labels.display as (context: unknown) => boolean;
-      expect(display({ dataIndex: 0, dataset: { data: [25, 50] } })).toBeFalse();
-      expect(display({ dataIndex: 1, dataset: { data: [25, 50] } })).toBeTrue();
-      const formatter = labels.formatter as (value: number, context: unknown) => string;
-      expect(formatter(item.id === 'gap' ? -69 : 2, { dataset: { label: 'Bubapu' } })).toBe(item.id === 'gap' ? 'Bubapu -69' : 'Bubapu 2');
-      const datasets = item.data.datasets as ChartDataset<'line'>[];
-      expect(datasets[1].datalabels).not.toEqual(datasets[2].datalabels);
-      const radius = datasets[0].pointRadius as (context: unknown) => number;
-      expect(radius({ dataIndex: 0 })).toBe(item.id === 'position' ? 4 : 0);
-      expect(radius({ dataIndex: 1 })).toBe(4);
-      const title = item.options.plugins!.tooltip!.callbacks!.title as (items: unknown[]) => string;
-      expect(title([{ dataIndex: 1 }])).toBe('Carrera B');
-      expect(item.data.labels).toEqual(['1', '2']);
-      expect(item.options.scales!['x']!.ticks!.maxTicksLimit).toBe(3);
-      expect(item.options.scales!['x']!.title!.text).toBe('Carrera disputada');
-      expect(item.options.animation).toBeFalse();
-    }
+    expect(card().data.datasets[0].data).toEqual([50, 100]);
+    expect(root().querySelector('thead')!.textContent).toContain('McLaren');
+    expect(root().querySelector('tbody td')!.textContent).toBe('50');
+    expect(root().querySelector('.value-gain')!.textContent).toBe('+50 en la última');
   });
 
   it('announces data and selection changes in a persistent polite live region', () => {
@@ -293,7 +251,7 @@ describe('EvolutionStatsComponent', () => {
   it('shows skeletons, error with retry, then an empty season without charts', () => {
     render();
     expect(root().querySelector('[aria-busy="true"]')).not.toBeNull();
-    expect(root().querySelectorAll('p-skeleton').length).toBe(4);
+    expect(root().querySelectorAll('p-skeleton').length).toBe(2);
     http.expectOne(request => request.url.endsWith('/statistics/overview')).flush({}, { status: 500, statusText: 'Error' });
     render();
     expect(root().querySelector('[role="alert"]')!.textContent).toContain('No se pudieron cargar las estadísticas.');
@@ -322,31 +280,36 @@ describe('EvolutionStatsComponent', () => {
     expect(selected().length).toBe(1);
     click(0);
     expect(selected().length).toBe(1);
-    expect(card('gap').data.datasets[0].data).toEqual([0]);
-    expect(card('position').data.datasets[0].data).toEqual([1]);
-    expect(card('position').options.scales!['y']!.max).toBe(1);
+    expect(card().data.datasets[0].data).toEqual([25]);
+    expect(root().querySelector('.value-gain')!.textContent).toBe('+25 en la última');
+    expect(root().querySelectorAll('tbody tr').length).toBe(1);
   });
 
-  it('rebuilds options from theme tokens without resetting selection or requesting data, and adapts mobile heights', () => {
+  it('rebuilds options from theme tokens without resetting selection or requesting data, and adapts mobile ticks', () => {
     load();
     click(0);
     click(6);
     const ids = [...component['selectedIds']()];
     const light = component['palette']().ink;
-    const previous = card('points').options;
+    const previous = card().options;
     TestBed.inject(ThemeService).setDarkTheme(true);
     render();
-    expect(card('points').options).not.toBe(previous);
+    expect(card().options).not.toBe(previous);
     expect(component['palette']().ink).not.toBe(light);
     expect(component['selectedIds']()).toEqual(ids);
-    for (const item of component['cards']()) {
-      expect(item.options.color).toBe(component['palette']().ink);
-      expect(item.options.scales!['x']!.grid!.color).toBe(component['palette']().rule);
+    expect(card().options.color).toBe(component['palette']().ink);
+    expect(card().options.scales!['y']!.grid!.color).toBe(component['palette']().rule);
+    for (const dark of [false, true]) {
+      TestBed.inject(ThemeService).setDarkTheme(dark);
+      render();
+      const palette = component['palette']();
+      expect(card().options.plugins!.tooltip).toEqual(jasmine.objectContaining({
+        backgroundColor: palette.panel, borderColor: palette.rule, titleColor: palette.ink, bodyColor: palette.ink
+      }));
     }
     component['mobile'].set(true);
     render();
-    expect(card('points').height).toBeLessThan(350);
-    expect(card('points').options.layout!.padding).toEqual(jasmine.objectContaining({ right: 138 }));
+    expect(card().options.scales!['x']!.ticks!.maxTicksLimit).toBe(6);
     expect(selected().length).toBe(4);
     http.expectNone(request => request.url.endsWith('/statistics/overview'));
   });
@@ -381,11 +344,23 @@ describe('EvolutionStatsComponent', () => {
             const view = frame.contentWindow!;
             const context = (isTeams ? 'teams' : 'drivers') + '/' + (dark ? 'dark' : 'light') + '/' + width;
             expect(doc.documentElement.scrollWidth).withContext(context + '/document').toBeLessThanOrEqual(doc.documentElement.clientWidth);
-            for (const element of Array.from(doc.querySelectorAll<HTMLElement>('.selection-panel, .selection-heading, .comparison-chips, .comparison-chip, .dashboard-grid, .chart-card, .chart-container, .chart-values, .chart-values li'))) {
+            const host = doc.querySelector('.my-container')!.firstElementChild!;
+            const descendants = host.querySelectorAll('*');
+            expect(descendants.length).withContext(context + '/descendants').toBeGreaterThan(0);
+            for (const element of Array.from(descendants)) {
+              let right = element.getBoundingClientRect().right;
+              // Count every descendant, respecting content clipped by its ancestors (including sr-only).
+              for (let parent = element.parentElement; parent && host.contains(parent); parent = parent.parentElement) {
+                if (view.getComputedStyle(parent).overflowX !== 'visible') {
+                  right = Math.min(right, parent.getBoundingClientRect().right);
+                }
+              }
+              expect(right).withContext(context + '/' + element.tagName + '/right edge').toBeLessThanOrEqual(doc.documentElement.clientWidth);
+            }
+            for (const element of Array.from(doc.querySelectorAll<HTMLElement>('.selection-panel, .selection-heading, .comparison-chips, .comparison-chip, .chart-card, .chart-container, .chart-values, .chart-values li'))) {
               expect(element.scrollWidth).withContext(context + '/' + element.className).toBeLessThanOrEqual(element.clientWidth);
             }
-            const grid = doc.querySelector<HTMLElement>('.dashboard-grid')!;
-            expect(view.getComputedStyle(grid).gridTemplateColumns.split(' ').length).toBe(width >= 1024 ? 12 : 1);
+            expect(doc.querySelectorAll('.chart-card').length).toBe(1);
             expect(view.getComputedStyle(doc.querySelector('.comparison-chips')!).flexWrap).toBe('wrap');
             if (width < 640) {
               for (const button of Array.from(doc.querySelectorAll<HTMLButtonElement>('button'))) {
@@ -396,16 +371,12 @@ describe('EvolutionStatsComponent', () => {
                 }
               }
             }
-            if (width >= 1024) {
-              const cards = Array.from(doc.querySelectorAll<HTMLElement>('.chart-card'));
-              expect(cards[1].getBoundingClientRect().top).toBe(cards[2].getBoundingClientRect().top);
-              expect(cards[1].getBoundingClientRect().height).toBe(cards[2].getBoundingClientRect().height);
-              for (const article of cards) {
-                const container = article.querySelector<HTMLElement>('.chart-container')!;
-                const chart = article.querySelector<HTMLElement>('p-chart')!;
-                expect(chart.getBoundingClientRect().height).toBe(container.getBoundingClientRect().height);
-              }
-            }
+            const article = doc.querySelector<HTMLElement>('.chart-card')!;
+            const container = article.querySelector<HTMLElement>('.chart-container')!;
+            const chart = article.querySelector<HTMLElement>('p-chart')!;
+            expect(chart.getBoundingClientRect().height).withContext(context + '/fill').toBe(container.getBoundingClientRect().height);
+            expect(container.getBoundingClientRect().height).withContext(context + '/height').toBe(width < 640 ? 320 : 420);
+            expect(article.getBoundingClientRect().width).withContext(context + '/full-width').toBe(doc.querySelector<HTMLElement>('.selection-panel')!.getBoundingClientRect().width);
           } finally { frame.remove(); }
         }
       }

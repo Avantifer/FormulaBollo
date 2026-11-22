@@ -7,11 +7,7 @@
 } @else if (loading()) {
 	<div aria-busy="true" aria-label="Cargando estadísticas">
 		<div class="selection-panel" aria-hidden="true"><p-skeleton width="100%" height="6rem" /></div>
-		<div class="dashboard-grid" aria-hidden="true">
-			@for (item of [0, 1, 2]; track item) {
-				<div class="chart-card" [class.span-12]="item === 0"><p-skeleton width="100%" height="20rem" /></div>
-			}
-		</div>
+		<div class="chart-card" aria-hidden="true"><p-skeleton width="100%" height="20rem" /></div>
 	</div>
 } @else if (empty()) {
 	<div class="state-panel" role="status">Todavía no hay carreras disputadas en esta temporada.</div>
@@ -34,29 +30,49 @@
 		</div>
 		<p id="evolution-selection-limit" class="selection-limit">Máximo 6 · {{ selectedIds().length }} seleccionados · Mantén al menos uno.</p>
 	</section>
-	<div class="dashboard-grid">
-		@for (card of cards(); track card.id) {
-			<article class="chart-card" [class.span-12]="card.span === 12" [attr.data-chart]="card.id">
-				<header class="card-heading">
-					<h3 [id]="'evolution-heading-' + card.id">{{ card.title }}</h3>
-					<p>{{ card.description }}</p>
-				</header>
-				<div class="chart-container" role="img" [attr.aria-label]="card.ariaLabel" [attr.aria-describedby]="'evolution-values-' + card.id" [style.min-height.px]="card.height">
-					<p-chart type="line" [data]="card.data" [options]="card.options" [plugins]="plugins" width="100%" height="100%" aria-hidden="true" />
-				</div>
-				<ul class="chart-values" [id]="'evolution-values-' + card.id">
-					@for (value of card.values; track value.label) {
-						<li>
-							<span class="value-label">
-								<svg class="swatch" viewBox="0 0 22 8" aria-hidden="true"><line x1="0" y1="4" x2="22" y2="4" [attr.stroke]="value.color" [attr.stroke-dasharray]="value.dash?.join(' ') || null" /></svg>
-								{{ value.label }}
-							</span>
-							<span class="tabular-nums">{{ value.value }}</span>
-						</li>
+	@let card = chart();
+	<article class="chart-card" data-chart="points">
+		<header class="card-heading">
+			<h3 id="evolution-points-heading">Puntos acumulados</h3>
+			<p>Puntos sumados tras cada carrera disputada.</p>
+		</header>
+		<div class="chart-container" role="img" [attr.aria-label]="card.ariaLabel" aria-describedby="evolution-points-values">
+			<p-chart type="line" [data]="card.data" [options]="card.options" [plugins]="card.plugins" width="100%" height="100%" aria-hidden="true" />
+		</div>
+		<ul class="chart-values" id="evolution-points-values">
+			@for (value of card.values; track value.label) {
+				<li>
+					<span class="value-label">
+						<svg class="swatch" viewBox="0 0 22 8" aria-hidden="true"><line x1="0" y1="4" x2="22" y2="4" [attr.stroke]="value.color" [attr.stroke-dasharray]="value.dash.join(' ') || null" /></svg>
+						{{ value.label }}
+					</span>
+					<span class="value-points tabular-nums"><span>{{ value.value }}</span><span class="value-gain">{{ value.gain }}</span></span>
+				</li>
+			}
+		</ul>
+		<div class="sr-only">
+			<table>
+				<caption>Puntos acumulados por carrera de {{ seasonSelected().name }}</caption>
+				<thead>
+					<tr>
+						<th scope="col">Carrera</th>
+						@for (dataset of card.data.datasets; track $index) {
+							<th scope="col">{{ dataset.label }}</th>
+						}
+					</tr>
+				</thead>
+				<tbody>
+					@for (row of card.rows; track $index) {
+						<tr>
+							<th scope="row">{{ row.race }}</th>
+							@for (points of row.points; track $index) {
+								<td>{{ points }}</td>
+							}
+						</tr>
 					}
-				</ul>
-				<p class="chart-note">{{ card.note }}</p>
-			</article>
-		}
-	</div>
+				</tbody>
+			</table>
+		</div>
+		<p class="chart-note">Incluye puntos de carrera, vuelta rápida y sprint. Pasa el cursor o toca el gráfico para ver cada carrera.</p>
+	</article>
 }
