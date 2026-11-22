@@ -23,6 +23,7 @@ import formula.bollo.entity.FantasyPointsTeam;
 import formula.bollo.impl.FantasyPointsImpl;
 import formula.bollo.impl.FantasyPriceImpl;
 import formula.bollo.model.FantasyElectionDTO;
+import formula.bollo.model.FantasyClasificationDTO;
 import formula.bollo.model.FantasyPointsAccountDTO;
 import formula.bollo.model.FantasyPointsDriverDTO;
 import formula.bollo.model.FantasyPointsTeamDTO;
@@ -161,6 +162,15 @@ public class FantasyController {
     public List<FantasyPointsAccountDTO> getFantasyPointsSeason(@RequestParam Integer numberSeason) {
         log.info("Coger los puntos del fantasy de la temporada " + numberSeason);
         return this.fantasyService.sumAllFantasyPoints(numberSeason);
+    }
+
+    @Operation(summary = Constants.FANTASY_CLASIFICATION_SUMMARY, tags = Constants.TAG_FANTASY)
+    @Transactional(readOnly = true)
+    @GetMapping(path = "/clasification", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Cacheable(cacheNames = Constants.CACHE_STATS, sync = true, key = "'fantasyClasification:' + #numberSeason")
+    public FantasyClasificationDTO getFantasyClasification(@RequestParam Integer numberSeason) {
+        log.info("Coger la clasificacion completa del fantasy de la temporada " + numberSeason);
+        return this.fantasyService.getFantasyClasification(numberSeason);
     }
 
     @Operation(summary = "Get all fantasy points of reace", tags = Constants.TAG_FANTASY)

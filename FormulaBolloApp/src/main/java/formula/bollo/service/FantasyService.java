@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatusCode;
@@ -26,6 +27,8 @@ import org.springframework.http.HttpStatus;
 
 import formula.bollo.entity.FantasyElection;
 import formula.bollo.entity.Account;
+import formula.bollo.entity.Driver;
+import formula.bollo.entity.Team;
 import formula.bollo.entity.FantasyPointsDriver;
 import formula.bollo.entity.FantasyPointsTeam;
 import formula.bollo.entity.FantasyPriceDriver;
@@ -33,12 +36,19 @@ import formula.bollo.entity.FantasyPriceTeam;
 import formula.bollo.entity.Race;
 import formula.bollo.entity.Result;
 import formula.bollo.impl.AccountImpl;
+import formula.bollo.impl.DriverImpl;
+import formula.bollo.impl.TeamImpl;
 import formula.bollo.impl.FantasyElectionImpl;
 import formula.bollo.impl.FantasyPriceImpl;
 import formula.bollo.impl.RaceImpl;
 import formula.bollo.model.AccountDTO;
 import formula.bollo.model.DriverDTO;
 import formula.bollo.model.FantasyElectionDTO;
+import formula.bollo.model.FantasyClasificationDTO;
+import formula.bollo.model.FantasyClasificationRaceDTO;
+import formula.bollo.model.FantasyClasificationEntryDTO;
+import formula.bollo.model.FantasyClasificationDriverPickDTO;
+import formula.bollo.model.FantasyClasificationTeamPickDTO;
 import formula.bollo.model.FantasyInfoDTO;
 import formula.bollo.model.FantasyPointsAccountDTO;
 import formula.bollo.model.FantasyPriceDriverDTO;
@@ -78,6 +88,8 @@ public class FantasyService {
     private FantasyPriceImpl fantasyPriceImpl;
     private AccountImpl accountImpl;
     private RaceImpl raceImpl;
+    private final DriverImpl driverImpl;
+    private final TeamImpl teamImpl;
 
     public FantasyService(
             AccountRepository accountRepository,
@@ -92,6 +104,8 @@ public class FantasyService {
             FantasyPriceImpl fantasyPriceImpl,
             AccountImpl accountImpl,
             RaceImpl raceImpl,
+            DriverImpl driverImpl,
+            TeamImpl teamImpl,
             Clock clock) {
         this.accountRepository = accountRepository;
         this.raceRepository = raceRepository;
@@ -105,6 +119,8 @@ public class FantasyService {
         this.fantasyPriceImpl = fantasyPriceImpl;
         this.accountImpl = accountImpl;
         this.raceImpl = raceImpl;
+        this.driverImpl = driverImpl;
+        this.teamImpl = teamImpl;
         this.clock = clock;
     }
 
@@ -711,6 +727,64 @@ public class FantasyService {
 
         return fantasyPriceTeamDTOs;
     }
+
+    /**
+     * Loads the season calendar and published elections in batches, including every pick's points.
+     */
+    public FantasyClasificationDTO getFantasyClasification(int numberSeason) {
+        List<Race> races = this.raceRepository.findBySeason(numberSeason).stream().sorted(CALENDAR_ORDER).toList();
+        List<FantasyClasificationRaceDTO> calendar = new ArrayList<>();
+        Map<Long, Integer> raceOrder = new HashMap<>();
+        for (Race race : races) {
+            int order = calendar.size() + 1;
+            calendar.add(new FantasyClasificationRaceDTO(race.getId(), race.getName(), order, race.getFinished() == 1));
+            raceOrder.put(race.getId(), order);
+        }
+
+        List<Long> finishedRaceIds = races.stream().filter(race -> race.getFinished() == 1).map(Race::getId).toList();
+        if (finishedRaceIds.isEmpty()) {
+            return new FantasyClasificationDTO(numberSeason, calendar, List.of(), List.of(), List.of());
+        }
+        List<FantasyElection> elections = this.fantasyElectionRepository.findCompleteByRaceIds(finishedRaceIds);
+        Map<FantasyPickKey, Integer> driverPoints = this.fantasyPointsDriverRepository.findByRaceIdIn(finishedRaceIds)
+                .stream().collect(Collectors.toMap(
+                        points -> new FantasyPickKey(points.getRace().getId(), points.getDriver().getId()),
+                        FantasyPointsDriver::getPoints, Integer::sum));
+        Map<FantasyPickKey, Integer> teamPoints = this.fantasyPointsTeamRepository.findByRaceIdIn(finishedRaceIds)
+                .stream().collect(Collectors.toMap(
+                        points -> new FantasyPickKey(points.getRace().getId(), points.getTeam().getId()),
+                        FantasyPointsTeam::getPoints, Integer::sum));
+
+        Map<Long, DriverDTO> drivers = new TreeMap<>();
+        Map<Long, TeamDTO> teams = new TreeMap<>();
+        List<FantasyClasificationEntryDTO> entries = new ArrayList<>();
+        for (FantasyElection election : elections) {
+            Long raceId = election.getRace().getId();
+            List<FantasyClasificationDriverPickDTO> driverPicks = new ArrayList<>();
+            for (Driver driver : List.of(election.getDriverOne(), election.getDriverTwo(), election.getDriverThree())) {
+                drivers.computeIfAbsent(driver.getId(), id -> this.driverImpl.driverToDriverDTO(driver));
+                driverPicks.add(new FantasyClasificationDriverPickDTO(driver.getId(),
+                        driverPoints.getOrDefault(new FantasyPickKey(raceId, driver.getId()), 0)));
+            }
+            List<FantasyClasificationTeamPickDTO> teamPicks = new ArrayList<>();
+            for (Team team : List.of(election.getTeamOne(), election.getTeamTwo())) {
+                teams.computeIfAbsent(team.getId(), id -> this.teamImpl.teamToTeamDTO(team));
+                teamPicks.add(new FantasyClasificationTeamPickDTO(team.getId(),
+                        teamPoints.getOrDefault(new FantasyPickKey(raceId, team.getId()), 0)));
+            }
+            int points = driverPicks.stream().mapToInt(FantasyClasificationDriverPickDTO::getPoints).sum()
+                    + teamPicks.stream().mapToInt(FantasyClasificationTeamPickDTO::getPoints).sum();
+            entries.add(new FantasyClasificationEntryDTO(raceId, this.accountImpl.accountToAccountDTO(election.getAccount()),
+                    points, driverPicks, teamPicks));
+        }
+        entries.sort(Comparator.comparingInt((FantasyClasificationEntryDTO entry) -> raceOrder.get(entry.getRaceId()))
+                .thenComparing(Comparator.comparingInt(FantasyClasificationEntryDTO::getPoints).reversed())
+                .thenComparing(entry -> entry.getAccount().getUsername()));
+        return new FantasyClasificationDTO(numberSeason, calendar, new ArrayList<>(drivers.values()),
+                new ArrayList<>(teams.values()), entries);
+    }
+
+    private record FantasyPickKey(Long raceId, Long pickId) { }
 
     /**
      * Exposes race rankings and elections only after the race has finished.
