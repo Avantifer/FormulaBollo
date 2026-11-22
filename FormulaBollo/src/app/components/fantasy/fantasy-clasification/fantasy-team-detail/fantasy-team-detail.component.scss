@@ -1,0 +1,40 @@
+:host { display: block; min-width: 0; }
+.team-detail { overflow-wrap: anywhere; }
+.total-score { width: 100%; display: flex; align-items: baseline; gap: 0.75rem; border-top: 1px solid var(--rule); padding-top: 0.75rem; }
+.metrics > div { padding: 0.75rem 1rem; border-right: 1px solid var(--rule); }
+.metrics > div:nth-child(-n+2) { border-bottom: 1px solid var(--rule); }
+.metrics > div:nth-child(even) { border-right: 0; }
+.metrics dt, .metrics small { color: var(--ink-soft); font-size: 0.8125rem; }
+.metrics dd { font: 700 2rem/1.2 var(--font-display); margin: 0.4rem 0 0.1rem; }
+.pick { display: grid; grid-template-columns: 60px minmax(0, 1fr) 60px; column-gap: 0.5rem; }
+.team-stripe { width: 3px; left: -1px; top: 0; bottom: 0; border-radius: 4px 0 0 4px; }
+.pick-top { grid-column: 1; grid-row: 1 / 4; flex-direction: column; align-items: center; }
+.photo { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; object-position: 50% 20%; }
+.car { width: 60px; height: 48px; object-fit: contain; }
+.pick-name { grid-column: 2; grid-row: 1; overflow-wrap: anywhere; }
+.pick-team { grid-column: 2; grid-row: 2; }
+.pick-score { grid-column: 3; grid-row: 1 / 4; flex-direction: column; align-items: end; justify-content: center; text-align: right; }
+.share { grid-column: 2 / 4; grid-row: 4; }
+.race-chart text { font: 11px var(--font-sans); fill: var(--ink-soft); }
+.race-chart rect { fill: var(--ink-soft); }
+.race-chart .active-race rect { fill: var(--fantasy); }
+.race-chart .unplayed text { fill: var(--sector-flat); }
+.chart-rule { stroke: var(--rule); }
+.active-mark { stroke: var(--fantasy); stroke-width: 3px; }
+@media (min-width: 1024px) {
+  .drivers { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .teams { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pick { display: block; }
+  .pick-top { flex-direction: row; align-items: start; min-height: 58px; }
+  .photo { width: 52px; height: 52px; }
+  .car { width: 112px; height: 58px; }
+  .pick-score { flex-direction: row; align-items: baseline; justify-content: start; text-align: left; }
+  .team-stripe { width: auto; height: 3px; left: 0; right: 0; top: -1px; border-radius: 4px 4px 0 0; }
+  .metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .metrics > div:nth-child(n) { border-bottom: 0; border-right: 1px solid var(--rule); }
+  .metrics > div:last-child { border-right: 0; }
+}
+@media (min-width: 1200px) {
+  .detail-header { flex-wrap: nowrap; }
+  .total-score { width: auto; display: block; flex: none; border: 0; padding: 0; text-align: right; }
+}

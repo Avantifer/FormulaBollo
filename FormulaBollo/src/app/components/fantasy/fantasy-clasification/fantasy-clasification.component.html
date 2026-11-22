@@ -1,219 +1,91 @@
-<div class="bg-canvas">
-	<div class="container mx-auto px-4 py-8">
-		<div class="mb-8">
-			<h1 class="font-display uppercase tracking-wide text-ink text-display-md mb-2">Clasificación Fantasy</h1>
-			<p class="text-lg text-ink-soft">Consulta las clasificaciones por temporada y circuito</p>
-		</div>
-		<div class="bg-panel border border-rule rounded-panel p-6 mb-8">
-			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-				<div>
-					<p class="text-sm font-medium text-ink-soft mb-2">Temporada</p>
-					<select-seasons (seasonChanged)="onSeasonChange($event)" [fantasy]="true" />
-				</div>
-				<div>
-					<p class="text-sm font-medium text-ink-soft mb-2">Circuito</p>
-					<select-races (raceChanged)="onRaceChange($event)" [season]="seasonSelected()!" [fantasy]="true" />
-				</div>
+<div class="bg-canvas text-ink">
+	<div class="container mx-auto px-4 py-8 tabular-nums">
+		<header class="mb-6 flex flex-wrap items-end justify-between gap-4">
+			<div>
+				<h1 class="mb-2 font-display text-display-md uppercase tracking-wide">Clasificación Fantasy</h1>
+				<p class="text-sm text-ink-soft">Consulta la clasificación y descubre qué elecciones marcan la diferencia.</p>
 			</div>
-		</div>
-		<div class="bg-panel border border-rule rounded-panel">
-			<div class="p-6">
-				<h2 class="text-xl font-display uppercase font-semibold text-ink">Clasificación General</h2>
-				<p class="text-sm text-ink-soft mt-1">Selecciona temporada y circuito para ver resultados específicos</p>
+			@if (seasonSelected(); as selectedSeason) {
+				<p class="rounded-row border border-rule px-3 py-2 font-display text-sm uppercase">{{ selectedSeason.name }}@if (selectedSeason.year) { · {{ selectedSeason.year }}}</p>
+			}
+		</header>
+		<section class="filters mb-6 grid gap-4 rounded-panel border border-rule bg-panel p-4" aria-label="Filtros de clasificación">
+			<div class="min-w-0">
+				<p id="fantasy-season-label" class="mb-1 text-xs text-ink-soft">Temporada</p>
+				<select-seasons [fantasy]="true" labelId="fantasy-season-label" (seasonChanged)="onSeasonChange($event)" />
 			</div>
-			<p-table styleClass="timing-tower" [value]="fantasyPointsUsers()" [scrollable]="true" [tableStyle]="{ 'min-width': '20rem' }" class="mb-4">
-				<ng-template #header>
-					<tr>
-						<th scope="col">
-							Posición
-						</th>
-						<th scope="col">
-							Nombre de usuario
-						</th>
-						<th scope="col">
-							Equipo
-						</th>
-						<th class="tt-points" scope="col">
-							Puntos totales
-						</th>
-					</tr>
+			<div class="min-w-0">
+				<p id="fantasy-race-label" class="mb-1 text-xs text-ink-soft">Circuito</p>
+				@if (seasonSelected(); as selectedSeason) {
+					<select-races [fantasy]="true" [season]="selectedSeason" [raceOptions]="raceOptions()" labelId="fantasy-race-label" (raceChanged)="onRaceChange($event)" />
+				}
+			</div>
+			<p class="filter-note self-center text-xs text-ink-soft"><strong class="font-display text-2xl text-ink">{{ played() }} / {{ season()?.races?.length ?? 0 }}</strong> carreras con datos<span class="block">Las carreras pendientes aparecen como «Sin datos».</span></p>
+		</section>
+		@if (loading()) {
+			<p role="status" aria-busy="true" class="rounded-panel border border-rule bg-panel p-6">Cargando clasificación Fantasy…</p>
+		} @else if (failed()) {
+			<p role="alert" class="rounded-panel border border-rule bg-panel p-6">{{ errorMessage }}</p>
+		} @else {
+			<div class="workspace grid items-start gap-6">
+				<section class="min-w-0 rounded-panel border border-rule bg-panel" aria-labelledby="fantasy-ranking-title">
+					<div class="p-4">
+						<h2 id="fantasy-ranking-title" class="font-display text-2xl uppercase">Clasificación general</h2>
+						<p class="mt-1 text-xs text-ink-soft">{{ rows().length }} usuarios · {{ scenario() }}</p>
+					</div>
+					<table class="ranking w-full text-sm">
+						<colgroup><col class="position-column" /><col /><col class="points-column" /><col class="movement-column" /><col class="action-column" /></colgroup>
+						<caption class="sr-only">Clasificación Fantasy · {{ scenario() }}</caption>
+						<thead class="bg-pit font-display text-xs uppercase text-on-pit">
+							<tr><th scope="col" colspan="2" class="text-left">Posición / usuario</th><th scope="col">Puntos</th><th scope="col">Mov.</th><th scope="col">Equipo</th></tr>
+						</thead>
+						<tbody>
+							@for (row of rows(); track row.userId) {
+								<tr [class.selected]="selected()?.userId === row.userId">
+									<td><span class="position inline-flex h-8 min-w-8 items-center justify-center rounded-row font-display text-xl font-bold" [class]="row.rank === 1 ? 'bg-fantasy text-on-fantasy' : 'bg-pit text-on-pit'">{{ row.rank }}</span></td>
+									<th scope="row" class="username text-left font-normal"><strong>{{ row.username }}</strong><span class="mt-1 block text-xs text-ink-soft">{{ row.rank === 1 ? 'Líder' : row.tied ? 'Empate a puntos' : selected()?.userId === row.userId ? 'Equipo seleccionado' : 'Fantasy' }}</span></th>
+									<td class="font-display text-2xl font-bold">{{ row.points }}</td>
+									<td class="whitespace-nowrap font-display" [class.text-sector-up]="row.movement !== null && row.movement! > 0" [class.text-sector-down]="row.movement !== null && row.movement! < 0" [attr.aria-label]="row.movement === null ? 'Primera carrera, sin referencia anterior' : row.movement! > 0 ? 'Sube ' + row.movement + ' posiciones' : row.movement! < 0 ? 'Baja ' + -row.movement! + ' posiciones' : 'Mantiene posición'">{{ row.movement === null ? '—' : row.movement! > 0 ? '↑ ' + row.movement : row.movement! < 0 ? '↓ ' + -row.movement! : '= 0' }}</td>
+									<td><button #viewButton type="button" class="view-team min-h-11 cursor-pointer rounded-row border border-rule px-2 text-xs focus-visible:outline-fantasy-text" [class]="selected()?.userId === row.userId ? 'bg-fantasy text-on-fantasy' : 'bg-panel-alt text-ink'" [attr.aria-label]="'Ver equipo de ' + row.username" [attr.aria-pressed]="selected()?.userId === row.userId" (click)="viewTeam(row.userId, viewButton)">Ver equipo</button></td>
+								</tr>
+							}
+						</tbody>
+					</table>
+					@if (!rows().length) {<p role="status" class="p-6 text-sm text-ink-soft">Sin elecciones en esta {{ raceSelected()?.id ? 'carrera' : 'temporada' }}.</p>}
+					<div class="border-t border-rule p-4 text-xs leading-relaxed text-ink-soft">
+						<p><strong class="text-ink">Evolución</strong> Posición acumulada respecto a la carrera anterior. «—»: primera carrera.</p>
+						@if (ties().length) {@for (tie of ties(); track tie) {<p class="mt-2">Igualdad: {{ tie }}</p>}} @else {<p class="mt-2">Los empates comparten posición. Se conserva el orden publicado.</p>}
+					</div>
+				</section>
+				<div class="detail-column hidden min-w-0 md:block">
+					<app-fantasy-team-detail [detail]="detail()" (closed)="closeDetail()" />
+					<ng-container [ngTemplateOutlet]="leagueNotes" [ngTemplateOutletContext]="{ id: 'fantasy-notes-desktop' }" />
+				</div>
+				<div class="min-w-0 md:hidden"><ng-container [ngTemplateOutlet]="leagueNotes" [ngTemplateOutletContext]="{ id: 'fantasy-notes-mobile' }" /></div>
+				<ng-template #leagueNotes let-id="id">
+				@if (season(); as summary) {
+					@if (summary.comeback || latestLeader()) {
+						<section class="league-notes min-w-0 rounded-panel border border-rule bg-panel p-4" [attr.aria-labelledby]="id">
+							<h2 [id]="id" class="font-display text-xl uppercase">Lecturas de la liga</h2>
+							<div class="mt-4 grid gap-4 sm:grid-cols-2">
+								@if (summary.comeback; as comeback) {<article><p class="font-display text-xs uppercase text-ink-soft">Mayor remontada</p><strong class="my-1 block">{{ comeback.username }} <span class="text-sector-up">↑ {{ comeback.positions }}</span></strong><p class="text-xs text-ink-soft">{{ comeback.from }}.º → {{ comeback.to }}.º en {{ comeback.raceName }}. Posición acumulada.</p></article>}
+								@if (latestLeader(); as leader) {<article><p class="font-display text-xs uppercase text-ink-soft">Última carrera · {{ leader.raceName }}</p><strong class="my-1 block">{{ leader.username }} · {{ leader.points }} puntos</strong><p class="text-xs text-ink-soft">{{ leader.participated ? 'Puntos de la última alineación del líder.' : 'Sin elección en esta carrera. El cero no implica una alineación sin aciertos.' }}</p></article>}
+							</div>
+						</section>
+					}
+				}
 				</ng-template>
-				<ng-template #body let-fantasyPointUser let-index="rowIndex">
-					<tr>
-						<td class="border-l-4 tt-tab-fantasy">
-							<div
-								class="inline-flex min-w-8 h-8 items-center justify-center rounded-row font-display tabular-nums font-bold"
-								[class]="index === 0 ? 'bg-fantasy text-on-fantasy' : 'bg-pit text-on-pit'">
-								{{ index + 1 }}
-							</div>
-						</td>
-						<td>
-							<p>{{ fantasyPointUser.account.username }}</p>
-						</td>
-						<td>
-							<p-button label="Ver Equipo" class="fantasyClasificationButton" (click)="openDialog(fantasyPointUser)" />
-						</td>
-						<td class="tt-points">
-							{{ fantasyPointUser.totalPoints }}
-						</td>
-					</tr>
-				</ng-template>
-			</p-table>
-		</div>
-	</div>
-	<p-dialog styleClass="fantasy-dialog" [(visible)]="showDialog" [modal]="true" [dismissableMask]="true" [closable]="false" [style]="{ width: '60rem' }">
-		@if (fantasyPointsUserSelected && !!fantasyPointsUserSelected) {
-			<ng-template #header>
-				<div class="flex flex-wrap items-center justify-between gap-4 w-full">
-					<div class="flex min-w-0 items-center gap-3">
-						<div class="size-12 bg-on-pit/15 rounded-row shrink-0 flex items-center justify-center">
-							<i class="pi pi-user text-on-pit"></i>
-						</div>
-						<div>
-							<h3 class="text-xl font-display uppercase font-bold text-on-pit">Equipo de {{ fantasyPointsUserSelected.account.username }}</h3>
-							<p class="text-on-pit/80 text-sm">{{ fantasyPointsUserSelected.fantasyElection.race!.name }}</p>
-						</div>
-					</div>
-					<div class="flex items-center gap-4">
-						<div class="text-center">
-							<div class="text-2xl font-display tabular-nums font-bold text-on-pit">{{ showAllPoints() }}</div>
-							<div class="text-xs text-on-pit/80">Puntos Totales</div>
-						</div>
-						<p-button icon="pi pi-times" (click)="showDialog = false" class="closeDialog" />
-					</div>
-				</div>
-			</ng-template>
-			<div class="p-6">
-				<div class="mb-8">
-					<div class="flex items-center gap-2 mb-4">
-						<div class="size-6 rounded-row bg-panel-alt text-fantasy-text shrink-0 flex items-center justify-center">
-							<i class="pi pi-trophy" style="font-size: 14px"></i>
-						</div>
-						<h4 class="text-lg font-display uppercase font-semibold text-ink">Pilotos Seleccionados</h4>
-						<p class="bg-panel-alt text-fantasy-text border border-rule rounded-row px-2 py-1 text-xs font-medium tabular-nums">3/3</p>
-					</div>
-					<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-						<div class="relative bg-panel-alt border border-rule rounded-panel p-4">
-							<div class="absolute top-2 right-2 bg-fantasy text-on-fantasy rounded-row font-display tabular-nums text-xs font-bold px-2 py-1 tracking-wider">#1</div>
-							<div class="flex flex-col items-center text-center">
-								<div
-									class="size-16 bg-panel rounded-full border border-rule flex items-center justify-center overflow-hidden mb-3">
-									<img
-										[alt]="fantasyPointsUserSelected.fantasyElection.driverOne!.name"
-										[src]="
-											imageService.getImageUrl(fantasyPointsUserSelected.fantasyElection.driverOne!.driverImage | SpaceToUnderscore)
-										" />
-								</div>
-								<h5 class="font-display uppercase font-bold text-ink text-sm mb-1">
-									{{ fantasyPointsUserSelected.fantasyElection.driverOne!.name }}
-								</h5>
-								<p class="text-xs text-ink-soft mb-3">
-									{{ fantasyPointsUserSelected.fantasyElection.driverOne!.team.name }}
-								</p>
-								<div class="bg-panel border border-rule rounded-row px-3 py-2 w-full">
-									<div class="text-lg font-display tabular-nums font-bold text-fantasy-text">{{ pointsDriverArray[0] }}</div>
-									<div class="text-xs text-ink-soft">puntos</div>
-								</div>
-							</div>
-						</div>
-						<div class="relative bg-panel-alt border border-rule rounded-panel p-4">
-							<div class="absolute top-2 right-2 bg-fantasy text-on-fantasy rounded-row font-display tabular-nums text-xs font-bold px-2 py-1 tracking-wider">#2</div>
-							<div class="flex flex-col items-center text-center">
-								<div
-									class="size-16 bg-panel rounded-full border border-rule flex items-center justify-center overflow-hidden mb-3">
-									<img
-										[alt]="fantasyPointsUserSelected.fantasyElection.driverTwo!.name"
-										[src]="
-											imageService.getImageUrl(fantasyPointsUserSelected.fantasyElection.driverTwo!.driverImage | SpaceToUnderscore)
-										" />
-								</div>
-								<h5 class="font-display uppercase font-bold text-ink text-sm mb-1">
-									{{ fantasyPointsUserSelected.fantasyElection.driverTwo!.name }}
-								</h5>
-								<p class="text-xs text-ink-soft mb-3">
-									{{ fantasyPointsUserSelected.fantasyElection.driverTwo!.team.name }}
-								</p>
-								<div class="bg-panel border border-rule rounded-row px-3 py-2 w-full">
-									<div class="text-lg font-display tabular-nums font-bold text-fantasy-text">{{ pointsDriverArray[1] }}</div>
-									<div class="text-xs text-ink-soft">puntos</div>
-								</div>
-							</div>
-						</div>
-						<div class="relative bg-panel-alt border border-rule rounded-panel p-4">
-							<div class="absolute top-2 right-2 bg-fantasy text-on-fantasy rounded-row font-display tabular-nums text-xs font-bold px-2 py-1 tracking-wider">#3</div>
-							<div class="flex flex-col items-center text-center">
-								<div
-									class="size-16 bg-panel rounded-full border border-rule flex items-center justify-center overflow-hidden mb-3">
-									<img
-										[alt]="fantasyPointsUserSelected.fantasyElection.driverThree!.name"
-										[src]="
-											imageService.getImageUrl(fantasyPointsUserSelected.fantasyElection.driverThree!.driverImage | SpaceToUnderscore)
-										" />
-								</div>
-								<h5 class="font-display uppercase font-bold text-ink text-sm mb-1">
-									{{ fantasyPointsUserSelected.fantasyElection.driverThree!.name }}
-								</h5>
-								<p class="text-xs text-ink-soft mb-3">
-									{{ fantasyPointsUserSelected.fantasyElection.driverThree!.team.name }}
-								</p>
-								<div class="bg-panel border border-rule rounded-row px-3 py-2 w-full">
-									<div class="text-lg font-display tabular-nums font-bold text-fantasy-text">{{ pointsDriverArray[2] }}</div>
-									<div class="text-xs text-ink-soft">puntos</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div>
-					<div class="flex items-center gap-2 mb-4">
-						<div class="size-6 rounded-row bg-panel-alt text-fantasy-text shrink-0 flex items-center justify-center">
-							<i class="pi pi-trophy" style="font-size: 14px"></i>
-						</div>
-						<h4 class="text-lg font-display uppercase font-semibold text-ink">Equipos Seleccionados</h4>
-						<p class="bg-panel-alt text-fantasy-text border border-rule rounded-row px-2 py-1 text-xs font-medium tabular-nums">
-							2/2
-						</p>
-					</div>
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-						<div class="relative bg-panel-alt border border-rule rounded-panel p-4">
-							<div class="absolute top-3 right-3 bg-fantasy text-on-fantasy rounded-row font-display tabular-nums text-xs font-bold px-2 py-1 tracking-wider">#1</div>
-							<div class="flex flex-col items-center text-center">
-								<div
-									class="w-32 h-20 bg-panel border border-rule rounded-row flex items-center justify-center overflow-hidden mb-4">
-									<img
-										[alt]="fantasyPointsUserSelected.fantasyElection.teamOne!.name"
-										[src]="imageService.getImageUrl(fantasyPointsUserSelected.fantasyElection.teamOne!.carImage | SpaceToUnderscore)" />
-								</div>
-								<h5 class="font-display uppercase font-bold text-ink text-sm mb-3 leading-tight">
-									{{ fantasyPointsUserSelected.fantasyElection.teamOne!.name }}
-								</h5>
-								<div class="bg-panel border border-rule rounded-row px-4 py-3 w-full">
-									<div class="text-xl font-display tabular-nums font-bold text-fantasy-text">{{ pointsTeamArray[0] }}</div>
-									<div class="text-xs text-ink-soft">puntos de equipo</div>
-								</div>
-							</div>
-						</div>
-						<div class="relative bg-panel-alt border border-rule rounded-panel p-4">
-							<div class="absolute top-3 right-3 bg-fantasy text-on-fantasy rounded-row font-display tabular-nums text-xs font-bold px-2 py-1 tracking-wider">#2</div>
-							<div class="flex flex-col items-center text-center">
-								<div
-									class="w-32 h-20 bg-panel border border-rule rounded-row flex items-center justify-center overflow-hidden mb-4">
-									<img
-										[alt]="fantasyPointsUserSelected.fantasyElection.teamTwo!.name"
-										[src]="imageService.getImageUrl(fantasyPointsUserSelected.fantasyElection.teamTwo!.carImage | SpaceToUnderscore)" />
-								</div>
-								<h5 class="font-display uppercase font-bold text-ink text-sm mb-3 leading-tight">
-									{{ fantasyPointsUserSelected.fantasyElection.teamTwo!.name }}
-								</h5>
-								<div class="bg-panel border border-rule rounded-row px-4 py-3 w-full">
-									<div class="text-xl font-display tabular-nums font-bold text-fantasy-text">{{ pointsTeamArray[1] }}</div>
-									<div class="text-xs text-ink-soft">puntos de equipo</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
 			</div>
 		}
-	</p-dialog>
+	</div>
 </div>
+@if (mobile()) {
+	<p-drawer position="bottom" styleClass="fantasy-sheet" [visible]="sheetOpen()" [modal]="true" [blockScroll]="true" [closeOnEscape]="true" [showCloseIcon]="false" (visibleChange)="onSheetVisible($event)" (onShow)="focusSheet()" (onHide)="restoreFocus()">
+		<ng-template #headless>
+			<div role="dialog" aria-modal="true" [attr.aria-label]="'Equipo de ' + (selected()?.username ?? '')" class="sheet-content overflow-y-auto" (keydown.escape)="closeDetail()">
+				<div class="mx-auto my-3 h-1 w-10 rounded-row bg-ink-soft" aria-hidden="true"></div>
+				<app-fantasy-team-detail [detail]="detail()" [mobile]="true" (closed)="closeDetail()" />
+			</div>
+		</ng-template>
+	</p-drawer>
+}
