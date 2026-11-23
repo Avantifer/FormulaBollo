@@ -1,0 +1,34 @@
+<div class="auth-layout grid min-h-[calc(100dvh-4rem)] bg-canvas text-ink md:grid-cols-2">
+	<aside class="welcome flex min-w-0 flex-col bg-pit px-4 pb-6 pt-[22px] text-on-pit md:px-[clamp(24px,4.7vw,64px)] md:pb-[42px] md:pt-[52px]" aria-label="Bienvenida a Fantasy">
+		<p class="brand flex items-center gap-3 font-display text-xs font-semibold uppercase tracking-widest"><span class="h-1 w-[22px] shrink-0 bg-fantasy" aria-hidden="true"></span>FormulaBollo / Fantasy</p>
+		<h2 class="hero mb-[9px] mt-[15px] font-display text-[37px] leading-[1.05] font-bold uppercase md:mb-[18px] md:mt-[27px] md:max-w-[350px] md:text-[clamp(64px,6vw,80px)] md:leading-[.96]">{{ title() }}</h2>
+		<p class="hidden max-w-[350px] text-[15px] text-ink-soft md:block">{{ help() }}</p>
+		<p class="text-xs text-ink-soft md:hidden">{{ compactHelp() }}</p>
+		<section class="mb-8 mt-8 hidden md:block" aria-labelledby="auth-how">
+			<h3 id="auth-how" class="font-display text-sm font-semibold uppercase tracking-wider text-ink-soft">Así se juega</h3>
+			<ol class="mt-4 grid gap-3 text-[13px]">
+				<li class="flex items-center gap-4"><span class="step grid h-8 w-8 shrink-0 place-items-center rounded-row border border-rule font-display text-lg font-semibold">01</span><p>Elige <strong>3 pilotos y 2 escuderías</strong></p></li>
+				<li class="flex items-center gap-4"><span class="step grid h-8 w-8 shrink-0 place-items-center rounded-row border border-rule font-display text-lg font-semibold">02</span><p>Mantente bajo <strong>80 millones</strong></p></li>
+				<li class="flex items-center gap-4"><span class="step grid h-8 w-8 shrink-0 place-items-center rounded-row border border-rule font-display text-lg font-semibold">03</span><p>Suma los <strong>puntos reales de cada carrera</strong></p></li>
+			</ol>
+		</section>
+		@if (podium().length) {
+			<section class="podium mt-auto hidden overflow-hidden rounded-panel border border-rule bg-panel-alt md:block" aria-labelledby="auth-podium">
+				<h3 id="auth-podium" class="px-[18px] py-4 font-display text-xl font-semibold uppercase">Podio · Temporada {{ season()?.data?.season }}</h3>
+				<ol>
+					@for (row of podium(); track row.userId; let i = $index) {
+						<li class="grid grid-cols-[34px_minmax(0,1fr)_auto] items-center gap-3 border-t border-rule px-[18px] py-2.5">
+							<span class="position grid h-[34px] place-items-center rounded-row border-l-[3px] font-display text-[21px] font-bold tabular-nums" [class.bg-fantasy]="i === 0" [style.border-left-color]="'var(--podium-' + (i + 1) + ')'">{{ row.rank.toString().padStart(2, '0') }}</span>
+							<strong class="wrap-anywhere text-sm font-medium">{{ row.username }}</strong>
+							<span class="font-display text-3xl font-bold tabular-nums">{{ row.points }} <small class="font-sans text-[11px] font-normal text-ink-soft">puntos</small></span>
+						</li>
+					}
+				</ol>
+				<p class="border-t border-rule px-[18px] py-3 text-[11px] text-ink-soft">{{ season()?.total?.length }} usuarios · {{ played() }} de {{ season()?.races?.length }} carreras con elecciones</p>
+			</section>
+		}
+	</aside>
+	<div class="auth-right flex min-w-0 items-center justify-center px-4 pb-8 pt-[30px] md:px-[clamp(24px,4.7vw,64px)] md:pb-12 md:pt-[74px]">
+		<div class="w-full max-w-[440px] min-w-0 wrap-anywhere"><ng-content /></div>
+	</div>
+</div>

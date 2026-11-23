@@ -1,121 +1,72 @@
-<div class="w-full bg-canvas">
-	<div class="flex items-center justify-center container h-[calc(100vh-10rem)] mx-auto">
-		<div
-			class="w-full max-w-md bg-panel border border-rule rounded-panel p-8 space-y-6">
-			<h1 class="font-display uppercase tracking-wide text-ink text-display-md text-center mb-8">Iniciar sesión</h1>
-			<form [formGroup]="loginForm" class="space-y-6">
-				<div class="space-y-2">
-					<label for="fantasy-login-username" class="block text-ink text-sm font-medium">Usuario</label>
-					<p-iconfield>
-						<p-inputicon class="pi pi-user text-ink-soft!" />
-						<input
-							id="fantasy-login-username"
-							type="text"
-							pInputText
-							[attr.aria-invalid]="loginForm.get('username')?.invalid"
-							aria-describedby="fantasy-login-username-error"
-							formControlName="username"
-							placeholder="Usuario"
-							class="h-10 w-full" />
-					</p-iconfield>
-					@if (loginForm.get('username')?.invalid && loginForm.get('username')?.dirty) {
-						<span id="fantasy-login-username-error" class="text-xs sm:text-sm text-sector-down"
-							>Necesitas poner el nombre de usuario</span
-						>
-					}
-				</div>
-				<div class="space-y-2">
-					<label for="fantasy-login-password" class="block text-ink text-sm font-medium">Contraseña</label>
-					<p-iconfield>
-						<p-inputicon aria-hidden="true" class="pi pi-lock text-ink-soft!" />
-						<input
-							id="fantasy-login-password"
-							[type]="showPassword ? 'text' : 'password'"
-							pInputText
-							[attr.aria-invalid]="loginForm.get('password')?.invalid"
-							aria-describedby="fantasy-login-password-error"
-							formControlName="password"
-							placeholder="Contraseña"
-							class="h-10 w-full" />
-						<p-inputicon>
-							<button
-								type="button"
-								class="text-ink-soft cursor-pointer leading-none inline-flex items-center justify-center min-w-6 min-h-6 md:-m-1 focus-visible:outline-2 focus-visible:outline-offset-2"
-								[attr.aria-label]="showPassword ? 'Ocultar contrase&#241;a' : 'Mostrar contrase&#241;a'"
-								[attr.aria-pressed]="showPassword"
-								(click)="showPassword = !showPassword">
-								<i [class]="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
-							</button>
-						</p-inputicon>
-					</p-iconfield>
-					@if (loginForm.get('password')?.invalid && loginForm.get('password')?.dirty) {
-						<span id="fantasy-login-password-error" class="text-xs sm:text-sm text-sector-down"
-							>Necesitas poner la contraseña</span
-						>
-					}
-				</div>
-			</form>
-			<button
-				type="button"
-				class="min-h-11 md:min-h-0 text-fantasy-text hover:underline text-sm transition-colors cursor-pointer"
-				(click)="recoveryPasswordDialog.set(true)">
-				Recuperar contraseña
-			</button>
-			<div class="flex w-full">
-				<p-button
-					label="Iniciar Sesión"
-					[disabled]="loginForm.invalid"
-					class="loginFantasyButton mt-6 w-full!"
-					(click)="login()" />
-			</div>
-			<div class="text-center mt-6">
-				<p class="text-ink-soft text-sm">
-					¿Eres nuevo?
-					<a
-						class="inline-flex min-h-11 md:min-h-0 items-center text-fantasy-text hover:underline transition-colors cursor-pointer"
-						[routerLink]="['/fantasy/register']"
-						>Create una cuenta.</a
-					>
-				</p>
-			</div>
-		</div>
-	</div>
-	<p-dialog
-		[visible]="recoveryPasswordDialog()"
-		(visibleChange)="recoveryPasswordDialog.set($event)"
-		[modal]="true"
-		[dismissableMask]="true"
-		[closable]="false"
-		[style]="{ width: '30rem' }">
-		<ng-template #header>
-			<h2 class="text-xl font-bold text-ink font-display uppercase flex-1">Recuperar Contraseña</h2>
-			<p-button icon="pi pi-times" ariaLabel="Cerrar" (click)="recoveryPasswordDialog.set(false)" class="closeDialog" />
-		</ng-template>
-		<p class="text-ink-soft text-sm mb-4">
-			Introduce tu correo electrónico y te enviaremos un enlace a tu correo para restablecer tu contraseña.
-		</p>
-		<form [formGroup]="mailForm" class="space-y-4 formDialogRecoveryPassword">
-			<div class="space-y-2">
+<app-fantasy-auth-layout [title]="step() === 'login' ? 'Arma tu parrilla' : 'Nos vemos en pista'" [help]="step() === 'login' ? 'Tu estrategia. Los puntos reales de cada carrera.' : 'Recupera el acceso a tu cuenta y sigue con tu equipo.'" [compactHelp]="step() === 'login' ? 'Tu equipo empieza con una cuenta.' : 'Recupera el acceso y sigue con tu equipo.'">
+	@if (step() === 'login') {
+		<header class="auth-heading mb-[27px]">
+			<p class="eyebrow font-display text-xs font-semibold uppercase tracking-widest text-ink-soft">Tu cuenta Fantasy</p>
+			<h1 class="my-3 font-display text-[34px] leading-[1.05] font-bold uppercase tracking-[.015em] md:text-[40px]">Iniciar sesión</h1>
+			<p class="text-sm leading-relaxed text-ink-soft">Entra para elegir tu equipo y seguir tus puntos.</p>
+		</header>
+		@if (loginError()) {
+			<div class="auth-alert mb-[23px] flex gap-[11px] rounded-panel border border-rule border-l-[6px] border-l-sector-down bg-panel px-3.5 py-[13px] text-[13px] [&>i]:mt-[3px] [&>i]:text-sector-down [&_p]:mt-[5px] [&_p]:text-xs [&_p]:text-ink-soft" role="alert"><i class="pi pi-times-circle" aria-hidden="true"></i><div><strong>No has podido entrar.</strong><p>Revisa tu usuario y tu contraseña antes de intentarlo de nuevo.</p></div></div>
+		}
+		<form [formGroup]="loginForm" (ngSubmit)="login()" class="auth-form grid gap-5" aria-label="Iniciar sesión">
+			<div class="auth-field">
+				<label class="mb-2 block text-[13px] font-semibold" for="fantasy-login-username">Usuario</label>
 				<p-iconfield>
-					<p-inputicon class="pi pi-user text-ink-soft!" />
-					<input
-						type="text"
-						pInputText
-						id="fantasy-login-mail"
-						aria-label="Correo electr&#243;nico"
-						[attr.aria-invalid]="mailForm.get('mail')?.invalid"
-						aria-describedby="fantasy-login-mail-error"
-						formControlName="mail"
-						placeholder="tu@email.com"
-						class="h-10 w-full" />
+					<p-inputicon class="pi pi-user text-ink-soft!" aria-hidden="true" />
+					<input pInputText id="fantasy-login-username" formControlName="username" autocomplete="username" placeholder="Tu nombre de usuario" [attr.aria-invalid]="loginForm.controls.username.invalid && (loginForm.controls.username.dirty || loginForm.controls.username.touched)" [attr.aria-describedby]="loginForm.controls.username.invalid && (loginForm.controls.username.dirty || loginForm.controls.username.touched) ? 'fantasy-login-username-error' : null" class="h-12! w-full min-w-0 text-base! aria-invalid:border-sector-down! md:text-sm!">
 				</p-iconfield>
-				@if (mailForm.get('mail')?.invalid && mailForm.get('mail')?.dirty) {
-					<span id="fantasy-login-mail-error" class="text-xs sm:text-sm text-sector-down"
-						>Necesitas poner un correo correcto.</span
-					>
+				@if (loginForm.controls.username.invalid && (loginForm.controls.username.dirty || loginForm.controls.username.touched)) {
+					<p id="fantasy-login-username-error" class="auth-error mt-2 flex items-baseline gap-[7px] text-xs text-sector-down"><i class="pi pi-times-circle" aria-hidden="true"></i>Necesitas poner el nombre de usuario</p>
 				}
 			</div>
-			<p-button label="Enviar enlace" [disabled]="mailForm.invalid" class="loginFantasyButton" (click)="recoverPassword()" />
+			<app-fantasy-password-field [control]="loginForm.controls.password" fieldId="fantasy-login-password" autocomplete="current-password" placeholder="Tu contraseña" [error]="loginForm.controls.password.invalid && (loginForm.controls.password.dirty || loginForm.controls.password.touched) ? 'Necesitas poner la contraseña' : ''" />
+			<button #recoveryLink type="button" class="auth-link -mt-3 w-fit inline-flex min-h-11 cursor-pointer items-center gap-2 text-[13px] text-fantasy-text hover:underline hover:underline-offset-4" (click)="openRecovery()">Recuperar contraseña</button>
+			<button type="submit" class="auth-primary flex min-h-12 w-full cursor-pointer items-center justify-between gap-3 rounded-row border border-fantasy bg-fantasy px-4 py-3 text-sm font-semibold text-on-fantasy enabled:hover:brightness-90 disabled:cursor-not-allowed disabled:border-dashed disabled:border-ink-soft disabled:bg-panel-alt disabled:text-ink-soft" [disabled]="!loginValue().username || loginForm.invalid || pending()">Iniciar sesión<i class="pi pi-arrow-right" aria-hidden="true"></i></button>
 		</form>
-	</p-dialog>
-</div>
+		@if (loginForm.invalid) { <p class="auth-note mt-[9px] text-center text-[11px] text-ink-soft">Completa ambos campos para continuar.</p> }
+		<p class="auth-alternative mt-[25px] border-t border-rule pt-[17px] text-[13px] text-ink-soft">¿Eres nuevo? <a class="auth-link inline-flex min-h-11 cursor-pointer items-center gap-2 text-[13px] text-fantasy-text hover:underline hover:underline-offset-4" routerLink="/fantasy/register">Crea una cuenta.</a></p>
+	} @else {
+		<button type="button" class="auth-link mb-5 inline-flex min-h-11 cursor-pointer items-center gap-2 text-[13px] text-fantasy-text hover:underline hover:underline-offset-4" (click)="back()"><i class="pi pi-arrow-left" aria-hidden="true"></i>Volver</button>
+		@if (step() === 'recover') {
+			<header class="auth-heading mb-[27px]">
+				<p class="eyebrow font-display text-xs font-semibold uppercase tracking-widest text-ink-soft">Tu cuenta Fantasy</p>
+				<h1 #stepHeading tabindex="-1" class="my-3 font-display text-[34px] leading-[1.05] font-bold uppercase tracking-[.015em] md:text-[40px]">Recuperar contraseña</h1>
+				<p class="text-sm leading-relaxed text-ink-soft">Introduce tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.</p>
+			</header>
+			<form [formGroup]="mailForm" (ngSubmit)="recoverPassword()" class="auth-form grid gap-5" aria-label="Solicitar enlace de recuperación">
+				<div class="auth-field">
+					<label class="mb-2 block text-[13px] font-semibold" for="fantasy-login-mail">Correo electrónico</label>
+					<p-iconfield>
+						<p-inputicon class="pi pi-envelope text-ink-soft!" aria-hidden="true" />
+						<input pInputText id="fantasy-login-mail" type="email" formControlName="mail" autocomplete="email" placeholder="tu@email.com" [attr.aria-invalid]="recoveryError() || (mailForm.controls.mail.invalid && (mailForm.controls.mail.dirty || mailForm.controls.mail.touched))" [attr.aria-describedby]="recoveryError() || (mailForm.controls.mail.invalid && (mailForm.controls.mail.dirty || mailForm.controls.mail.touched)) ? 'fantasy-login-mail-error' : null" class="h-12! w-full min-w-0 text-base! aria-invalid:border-sector-down! md:text-sm!">
+					</p-iconfield>
+					@if (recoveryError() || (mailForm.controls.mail.invalid && (mailForm.controls.mail.dirty || mailForm.controls.mail.touched))) {
+						<p id="fantasy-login-mail-error" class="auth-error mt-2 flex items-baseline gap-[7px] text-xs text-sector-down" [attr.role]="recoveryError() ? 'alert' : null"><i class="pi pi-times-circle" aria-hidden="true"></i>Correo incorrecto.</p>
+					}
+				</div>
+				<button type="submit" class="auth-primary flex min-h-12 w-full cursor-pointer items-center justify-between gap-3 rounded-row border border-fantasy bg-fantasy px-4 py-3 text-sm font-semibold text-on-fantasy enabled:hover:brightness-90 disabled:cursor-not-allowed disabled:border-dashed disabled:border-ink-soft disabled:bg-panel-alt disabled:text-ink-soft" [disabled]="!mailValue().mail || mailForm.invalid || pending()">Enviar enlace<i class="pi pi-arrow-right" aria-hidden="true"></i></button>
+			</form>
+			<p class="auth-note mt-[9px] text-center text-[11px] text-ink-soft">Introduce un correo correcto para enviar el enlace.</p>
+			<section class="mt-7 border-t border-rule pt-5"><h2 class="font-display text-xl font-semibold uppercase">Sin perder tu equipo</h2><p class="mt-2 text-xs leading-relaxed text-ink-soft">El enlace te permitirá crear una nueva contraseña para tu cuenta.</p></section>
+		} @else {
+			<div class="mb-6 grid h-16 w-16 place-items-center rounded-panel border border-rule border-t-[3px] border-t-fantasy bg-panel"><i class="pi pi-envelope text-3xl" aria-hidden="true"></i></div>
+			<header class="auth-heading mb-[27px]">
+				<p class="eyebrow font-display text-xs font-semibold uppercase tracking-widest text-ink-soft">Recuperar contraseña</p>
+				<h1 #stepHeading tabindex="-1" class="my-3 font-display text-[34px] leading-[1.05] font-bold uppercase tracking-[.015em] md:text-[40px]">Revisa tu correo</h1>
+				<p class="text-sm leading-relaxed text-ink-soft">Te hemos enviado un enlace para restablecer tu contraseña.</p>
+			</header>
+			<section class="rounded-panel border border-rule border-l-4 border-l-sector-up bg-panel p-[18px]" aria-label="Enlace enviado" role="status">
+				<h2 class="font-display text-xl font-semibold uppercase">Enlace enviado</h2><p class="mt-4 text-xs text-ink-soft">Enviado a</p><strong class="mt-1 block wrap-anywhere">{{ sentEmail() }}</strong><p class="mt-4 text-xs text-ink-soft">Revisa también la carpeta de spam.</p>
+			</section>
+			@if (recoveryError()) { <p class="auth-error my-4 mt-2 flex items-baseline gap-[7px] text-xs text-sector-down" role="alert"><i class="pi pi-times-circle" aria-hidden="true"></i>Correo incorrecto.</p> }
+			<button type="button" class="auth-primary mt-6 flex min-h-12 w-full cursor-pointer items-center justify-between gap-3 rounded-row border border-fantasy bg-fantasy px-4 py-3 text-sm font-semibold text-on-fantasy enabled:hover:brightness-90 disabled:cursor-not-allowed disabled:border-dashed disabled:border-ink-soft disabled:bg-panel-alt disabled:text-ink-soft" [disabled]="remaining() > 0 || pending()" (click)="recoverPassword()">Reenviar enlace<i class="pi pi-arrow-right" aria-hidden="true"></i></button>
+			<p class="sr-only" aria-live="polite">{{ countdownAnnouncement() }}</p>
+			@if (remaining()) { <p class="mt-4 text-center text-xs text-ink-soft" aria-hidden="true"><i class="pi pi-clock mr-2"></i>Disponible en <strong>{{ remaining() }} s</strong></p> }
+			<p class="auth-note mt-[9px] text-center text-[11px] text-ink-soft">Si no llega, podrás solicitar otro enlace cuando termine la espera.</p>
+		}
+		<button type="button" [class]="step() === 'sent' ? 'auth-secondary mt-[18px] flex min-h-12 w-full cursor-pointer items-center justify-between gap-3 rounded-row border border-rule bg-panel px-4 py-3 text-sm font-semibold text-ink' : 'auth-link mt-4 inline-flex min-h-11 cursor-pointer items-center gap-2 text-[13px] text-fantasy-text hover:underline hover:underline-offset-4'" (click)="back()">Volver al inicio de sesión<i class="pi pi-arrow-right" aria-hidden="true"></i></button>
+		@if (step() === 'sent') {
+			<button type="button" class="auth-link mt-3 inline-flex min-h-11 cursor-pointer items-center gap-2 text-[13px] text-fantasy-text hover:underline hover:underline-offset-4" (click)="changeEmail()">Cambiar correo</button>
+		}
+	}
+</app-fantasy-auth-layout>

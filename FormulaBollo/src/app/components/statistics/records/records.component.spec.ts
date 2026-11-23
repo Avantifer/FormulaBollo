@@ -161,6 +161,7 @@ describe('RecordsComponent', () => {
   });
 
   it('updates chart palette for light and dark themes and mobile ticks without HTTP reload', () => {
+    TestBed.inject(ThemeService).setDarkTheme(false);
     load();
     const initial = component['chart']();
     TestBed.inject(ThemeService).setDarkTheme(true);

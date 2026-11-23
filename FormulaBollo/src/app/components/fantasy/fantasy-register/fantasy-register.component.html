@@ -1,142 +1,27 @@
-<div class="w-full bg-canvas">
-	<div class="flex items-center justify-center container h-[calc(100vh-10rem)] mx-auto">
-		<div
-			class="w-full max-w-md bg-panel border border-rule rounded-panel p-8 space-y-6">
-			<h1 class="font-display uppercase tracking-wide text-ink text-display-md text-center mb-8">Registro</h1>
-			<form [formGroup]="registerForm" class="space-y-6">
-				<div class="space-y-2">
-					<label for="fantasy-register-username" class="block text-ink text-sm font-medium">Usuario</label>
-					<p-iconfield>
-						<p-inputicon class="pi pi-user text-ink-soft!" />
-						<input
-							id="fantasy-register-username"
-							type="text"
-							pInputText
-							[attr.aria-invalid]="registerForm.get('username')?.invalid"
-							aria-describedby="fantasy-register-username-error"
-							formControlName="username"
-							placeholder="Usuario"
-							class="h-10 w-full" />
-					</p-iconfield>
-					@if (registerForm.get('username')?.invalid && registerForm.get('username')?.dirty) {
-						<span id="fantasy-register-username-error" class="text-xs sm:text-sm text-sector-down"
-							>Necesitas poner el nombre de usuario</span
-						>
-					}
-				</div>
-				<div class="space-y-2">
-					<label for="fantasy-register-mail" class="block text-ink text-sm font-medium">Correo electrónico</label>
-					<p-iconfield>
-						<p-inputicon class="pi pi-envelope text-ink-soft!" />
-						<input
-							id="fantasy-register-mail"
-							type="text"
-							pInputText
-							[attr.aria-invalid]="registerForm.get('mail')?.invalid"
-							aria-describedby="fantasy-register-mail-error"
-							formControlName="mail"
-							placeholder="Correo electrónico"
-							class="h-10 w-full" />
-					</p-iconfield>
-					@if (registerForm.get('mail')?.invalid && registerForm.get('mail')?.dirty) {
-						<span id="fantasy-register-mail-error" class="text-xs sm:text-sm text-sector-down"
-							>Necesitas poner un correo correcto.</span
-						>
-					}
-				</div>
-				<div class="space-y-2">
-					<label for="fantasy-register-password" class="block text-ink text-sm font-medium">Contraseña</label>
-					<p-iconfield>
-						<p-inputicon aria-hidden="true" class="pi pi-lock text-ink-soft!" />
-						<input
-							id="fantasy-register-password"
-							[type]="showPassword ? 'text' : 'password'"
-							pInputText
-							[attr.aria-invalid]="registerForm.get('password')?.invalid"
-							aria-describedby="fantasy-register-password-error"
-							formControlName="password"
-							placeholder="Contraseña"
-							class="h-10 w-full" />
-						<p-inputicon>
-							<button
-								type="button"
-								class="text-ink-soft cursor-pointer leading-none inline-flex items-center justify-center min-w-6 min-h-6 md:-m-1 focus-visible:outline-2 focus-visible:outline-offset-2"
-								[attr.aria-label]="showPassword ? 'Ocultar contrase&#241;a' : 'Mostrar contrase&#241;a'"
-								[attr.aria-pressed]="showPassword"
-								(click)="showPassword = !showPassword">
-								<i [class]="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
-							</button>
-						</p-inputicon>
-					</p-iconfield>
-					@if (registerForm.get('password')?.invalid && registerForm.get('password')?.dirty) {
-						<span id="fantasy-register-password-error" class="text-xs sm:text-sm text-sector-down"
-							>{{ registerForm.get('password')?.hasError('passwordMin') ? 'La contraseña debe tener al menos 8 caracteres' : 'Introduce una contraseña de hasta 72 bytes UTF-8.' }}</span
-						>
-					}
-				</div>
-				<div class="space-y-2">
-					<label for="fantasy-register-passwordRepeated" class="block text-ink text-sm font-medium"
-						>Repite la Contraseña</label
-					>
-					<p-iconfield>
-						<p-inputicon aria-hidden="true" class="pi pi-lock text-ink-soft!" />
-						<input
-							id="fantasy-register-passwordRepeated"
-							[type]="showPasswordRepeated ? 'text' : 'password'"
-							pInputText
-							[attr.aria-invalid]="registerForm.get('passwordRepeated')?.invalid || registerForm.hasError('passwordMismatch')"
-							aria-describedby="fantasy-register-passwordRepeated-error"
-							formControlName="passwordRepeated"
-							placeholder="Repita la Contraseña"
-							class="h-10 w-full" />
-						<p-inputicon>
-							<button
-								type="button"
-								class="text-ink-soft cursor-pointer leading-none inline-flex items-center justify-center min-w-6 min-h-6 md:-m-1 focus-visible:outline-2 focus-visible:outline-offset-2"
-								[attr.aria-label]="showPasswordRepeated ? 'Ocultar contrase&#241;a' : 'Mostrar contrase&#241;a'"
-								[attr.aria-pressed]="showPasswordRepeated"
-								(click)="showPasswordRepeated = !showPasswordRepeated">
-								<i [class]="showPasswordRepeated ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
-							</button>
-						</p-inputicon>
-					</p-iconfield>
-					@if (
-						registerForm.get('passwordRepeated')?.invalid &&
-						(registerForm.get('passwordRepeated')?.dirty || registerForm.get('passwordRepeated')?.touched) &&
-						registerForm.get('password')?.value === registerForm.get('passwordRepeated')?.value
-					) {
-						<span id="fantasy-register-passwordRepeated-error" class="text-xs sm:text-sm text-sector-down"
-							>Necesitas poner la contraseña</span
-						>
-					}
-					@if (
-						registerForm.hasError('passwordMismatch') &&
-						(registerForm.get('passwordRepeated')?.dirty || registerForm.get('passwordRepeated')?.touched) &&
-						registerForm.get('passwordRepeated')?.value != registerForm.get('password')?.value
-					) {
-						<span id="fantasy-register-passwordRepeated-error" class="text-xs sm:text-sm text-sector-down"
-							>La contraseña debe ser igual a la anterior</span
-						>
-					}
-				</div>
-			</form>
-			<div class="flex w-full">
-				<p-button
-					label="Registrarme"
-					[disabled]="registerForm.invalid"
-					class="registerFantasyButton mt-6 w-full!"
-					(click)="register()" />
+<app-fantasy-auth-layout title="Tu primera parrilla" help="Crea tu cuenta y compite con tus amigos." compactHelp="Crea tu cuenta. Elige tu equipo.">
+	<header class="auth-heading mb-[27px]"><p class="eyebrow font-display text-xs font-semibold uppercase tracking-widest text-ink-soft">Tu cuenta Fantasy</p><h1 class="my-3 font-display text-[34px] leading-[1.05] font-bold uppercase tracking-[.015em] md:text-[40px]">Registro</h1><p class="text-sm leading-relaxed text-ink-soft">{{ registered() ? 'Tu cuenta ya está lista para entrar en Fantasy.' : 'Crea una cuenta para guardar tus elecciones y competir.' }}</p></header>
+	@if (registered()) {
+		<div class="auth-alert auth-success mb-[23px] flex gap-[11px] rounded-panel border border-rule border-l-[6px] border-l-sector-down bg-panel px-3.5 py-[13px] text-[13px] [&>i]:mt-[3px] [&>i]:text-sector-down [&_p]:mt-[5px] [&_p]:text-xs [&_p]:text-ink-soft border-l-sector-up! [&>i]:text-sector-up!" role="status"><i class="pi pi-check-circle" aria-hidden="true"></i><div><strong>Te has registrado correctamente</strong><p>Entra en Tu equipo y elige tus 3 pilotos y 2 escuderías. Tienes un presupuesto ficticio de 80 millones.</p></div></div>
+		<a class="auth-primary flex min-h-12 w-full cursor-pointer items-center justify-between gap-3 rounded-row border border-fantasy bg-fantasy px-4 py-3 text-sm font-semibold text-on-fantasy enabled:hover:brightness-90 disabled:cursor-not-allowed disabled:border-dashed disabled:border-ink-soft disabled:bg-panel-alt disabled:text-ink-soft" routerLink="/fantasy">Ir a Tu equipo<i class="pi pi-arrow-right" aria-hidden="true"></i></a>
+	} @else {
+		@if (serverError()) { <div class="auth-alert mb-[23px] flex gap-[11px] rounded-panel border border-rule border-l-[6px] border-l-sector-down bg-panel px-3.5 py-[13px] text-[13px] [&>i]:mt-[3px] [&>i]:text-sector-down [&_p]:mt-[5px] [&_p]:text-xs [&_p]:text-ink-soft" role="alert"><i class="pi pi-times-circle" aria-hidden="true"></i><div><strong>No se pudo completar el registro.</strong><p>{{ serverError() }}</p></div></div> }
+		<form [formGroup]="registerForm" (ngSubmit)="register()" class="auth-form grid gap-5" aria-label="Registro">
+			<div class="auth-field">
+				<label class="mb-2 block text-[13px] font-semibold" for="fantasy-register-username">Usuario</label>
+				<p-iconfield><p-inputicon class="pi pi-user text-ink-soft!" aria-hidden="true" /><input pInputText id="fantasy-register-username" type="text" formControlName="username" autocomplete="username" placeholder="Usuario" [attr.aria-invalid]="registerForm.controls.username.invalid && (registerForm.controls.username.dirty || registerForm.controls.username.touched)" [attr.aria-describedby]="registerForm.controls.username.invalid && (registerForm.controls.username.dirty || registerForm.controls.username.touched) ? 'fantasy-register-username-error' : null" class="h-12! w-full min-w-0 text-base! aria-invalid:border-sector-down! md:text-sm!"></p-iconfield>
+				@if (registerForm.controls.username.invalid && (registerForm.controls.username.dirty || registerForm.controls.username.touched)) { <p id="fantasy-register-username-error" class="auth-error mt-2 flex items-baseline gap-[7px] text-xs text-sector-down"><i class="pi pi-times-circle" aria-hidden="true"></i>Necesitas poner el nombre de usuario</p> }
 			</div>
-			<div class="text-center mt-6">
-				<p class="text-ink-soft text-sm">
-					¿Tienes cuenta?
-					<a
-						class="inline-flex min-h-11 md:min-h-0 items-center text-fantasy-text hover:underline transition-colors cursor-pointer"
-						[routerLink]="['/fantasy/login']"
-						>Inicia sesión.</a
-					>
-				</p>
+			<div class="auth-field">
+				<label class="mb-2 block text-[13px] font-semibold" for="fantasy-register-mail">Correo electrónico</label>
+				<p-iconfield><p-inputicon class="pi pi-envelope text-ink-soft!" aria-hidden="true" /><input pInputText id="fantasy-register-mail" type="email" formControlName="mail" autocomplete="email" placeholder="tu@email.com" [attr.aria-invalid]="registerForm.controls.mail.invalid && (registerForm.controls.mail.dirty || registerForm.controls.mail.touched)" [attr.aria-describedby]="registerForm.controls.mail.invalid && (registerForm.controls.mail.dirty || registerForm.controls.mail.touched) ? 'fantasy-register-mail-error' : null" class="h-12! w-full min-w-0 text-base! aria-invalid:border-sector-down! md:text-sm!"></p-iconfield>
+				@if (registerForm.controls.mail.invalid && (registerForm.controls.mail.dirty || registerForm.controls.mail.touched)) { <p id="fantasy-register-mail-error" class="auth-error mt-2 flex items-baseline gap-[7px] text-xs text-sector-down"><i class="pi pi-times-circle" aria-hidden="true"></i>Necesitas poner un correo correcto.</p> }
 			</div>
-		</div>
-	</div>
-</div>
+			<app-fantasy-password-field [control]="registerForm.controls.password" fieldId="fantasy-register-password" label="Contraseña" describedBy="password-policy" [error]="passwordError()" />
+			<app-fantasy-password-field [control]="registerForm.controls.passwordRepeated" fieldId="fantasy-register-passwordRepeated" label="Repite la contraseña" describedBy="password-policy" [error]="repeatedError()" />
+			<app-fantasy-password-requirements policyId="password-policy" [password]="formValue().password ?? ''" [repeated]="formValue().passwordRepeated ?? ''" />
+			<button type="submit" class="auth-primary flex min-h-12 w-full cursor-pointer items-center justify-between gap-3 rounded-row border border-fantasy bg-fantasy px-4 py-3 text-sm font-semibold text-on-fantasy enabled:hover:brightness-90 disabled:cursor-not-allowed disabled:border-dashed disabled:border-ink-soft disabled:bg-panel-alt disabled:text-ink-soft" [disabled]="registerForm.invalid || pending()">Regístrate<i class="pi pi-arrow-right" aria-hidden="true"></i></button>
+		</form>
+		@if (registerForm.invalid) { <p class="auth-note mt-[9px] text-center text-[11px] text-ink-soft">Cumple los tres requisitos para crear tu cuenta.</p> }
+		<p class="auth-alternative mt-[25px] border-t border-rule pt-[17px] text-[13px] text-ink-soft">¿Tienes cuenta? <a class="auth-link inline-flex min-h-11 cursor-pointer items-center gap-2 text-[13px] text-fantasy-text hover:underline hover:underline-offset-4" routerLink="/fantasy/login">Inicia sesión.</a></p>
+	}
+</app-fantasy-auth-layout>
