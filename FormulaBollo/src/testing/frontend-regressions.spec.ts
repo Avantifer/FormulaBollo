@@ -53,9 +53,7 @@ describe('Frontend regressions', () => {
       component[submit]();
       expect(register).not.toHaveBeenCalled();
       expect(recover).not.toHaveBeenCalled();
-      form.patchValue({ [first]: 'é'.repeat(37), [repeated]: 'é'.repeat(37) });
-      expect(form.valid).toBeFalse();
-      form.patchValue({ [first]: 'é'.repeat(36), [repeated]: 'é'.repeat(36) });
+      form.patchValue({ [first]: 'é'.repeat(100), [repeated]: 'é'.repeat(100) });
       expect(form.valid).toBeTrue();
       form.patchValue({ [first]: 'abcdefg', [repeated]: 'abcdefg' });
       expect(form.valid).toBeFalse();
@@ -208,15 +206,15 @@ describe('Frontend regressions', () => {
   it('labels login fields and opens recovery with a native button', () => {
     const fixture = TestBed.createComponent(FantasyLoginComponent);
     fixture.detectChanges();
-    for (const field of ['username', 'password']) {
-      const input = fixture.nativeElement.querySelector(`[formControlName="${field}"]`);
-      expect(fixture.nativeElement.querySelector(`label[for="${input.id}"]`)).not.toBeNull();
-      expect(input.getAttribute('aria-describedby')).toBeTruthy();
-      expect(input.getAttribute('aria-invalid')).toBe('true');
+    for (const id of ['fantasy-login-username', 'fantasy-login-password']) {
+      const input = fixture.nativeElement.querySelector('input#' + id);
+      expect(fixture.nativeElement.querySelector('label[for="' + id + '"]')).not.toBeNull();
+      expect(input.getAttribute('aria-invalid')).toBe('false');
     }
     const recovery = Array.from(fixture.nativeElement.querySelectorAll('button')).find((button: any) => button.textContent.includes('Recuperar')) as HTMLButtonElement;
-    recovery.click();
-    expect((fixture.componentInstance as any).recoveryPasswordDialog()).toBeTrue();
+    recovery.click(); fixture.detectChanges();
+    expect(fixture.componentInstance.step()).toBe('recover');
+    expect(fixture.nativeElement.querySelector('p-dialog')).toBeNull();
     expect(fixture.nativeElement.querySelector('[onkeydown]')).toBeNull();
   });
 

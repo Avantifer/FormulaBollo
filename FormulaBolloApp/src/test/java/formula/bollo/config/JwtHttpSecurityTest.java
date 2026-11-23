@@ -18,6 +18,7 @@ import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,7 +28,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -66,7 +66,7 @@ class JwtHttpSecurityTest {
     MockMvc mvc;
     Account user;
     Account admin;
-    final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    final TruncatingBCryptPasswordEncoder encoder = new TruncatingBCryptPasswordEncoder();
 
     @BeforeEach
     void setup() {
@@ -237,6 +237,33 @@ class JwtHttpSecurityTest {
         assertEquals(30 * 60 * 1000L, claims.getExpiration().getTime() - claims.getIssuedAt().getTime());
         assertTrue(claims.get("credentialFingerprint", String.class).matches("[0-9a-f]{16}"));
         mvc.perform(change(token)).andExpect(status().isOk());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"a", "é"})
+    void longPasswordsWorkThroughRegistrationLoginAndChange(String character) throws Exception {
+        String password = character.repeat(100);
+        mvc.perform(route("POST", "/account/register").characterEncoding("UTF-8")
+                .content("{\"username\":\"new\",\"password\":\"" + password
+                        + "\",\"email\":\"new@example.com\",\"admin\":0}"))
+                .andExpect(status().isOk());
+        ArgumentCaptor<Account> saved = ArgumentCaptor.forClass(Account.class);
+        verify(repository).save(saved.capture());
+        Account registered = saved.getValue();
+        assertTrue(encoder.matches(password, registered.getPassword()));
+        when(repository.findByUsername("new")).thenReturn(List.of(registered));
+        mvc.perform(route("POST", "/account/login").characterEncoding("UTF-8")
+                .content("{\"username\":\"new\",\"password\":\"" + password + "\",\"admin\":0}"))
+                .andExpect(status().isOk());
+
+        String changedPassword = "changed-" + password;
+        mvc.perform(change(session(user)).characterEncoding("UTF-8")
+                .content("{\"password\":\"" + changedPassword + "\"}"))
+                .andExpect(status().isOk());
+        assertTrue(encoder.matches(changedPassword, user.getPassword()));
+        mvc.perform(route("POST", "/account/login").characterEncoding("UTF-8")
+                .content("{\"username\":\"ana\",\"password\":\"" + changedPassword + "\",\"admin\":0}"))
+                .andExpect(status().isOk());
     }
 
     @Configuration

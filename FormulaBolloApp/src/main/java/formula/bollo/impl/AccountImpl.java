@@ -1,15 +1,15 @@
 package formula.bollo.impl;
 
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import formula.bollo.config.TruncatingBCryptPasswordEncoder;
 import formula.bollo.entity.Account;
 import formula.bollo.mapper.AccountMapper;
 import formula.bollo.model.AccountDTO;
 
 @Service
 public class AccountImpl {
-    private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final TruncatingBCryptPasswordEncoder passwordEncoder = new TruncatingBCryptPasswordEncoder();
 
     private AccountMapper accountMapper;
 

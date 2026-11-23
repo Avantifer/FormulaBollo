@@ -2,7 +2,6 @@ package formula.bollo.service;
 
 import java.util.List;
 import java.security.Principal;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.regex.Pattern;
 
@@ -11,10 +10,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import formula.bollo.config.JwtConfig;
+import formula.bollo.config.TruncatingBCryptPasswordEncoder;
 import formula.bollo.entity.Account;
 import formula.bollo.impl.AccountImpl;
 import formula.bollo.model.AccountDTO;
@@ -25,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class AccountService {
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final TruncatingBCryptPasswordEncoder passwordEncoder = new TruncatingBCryptPasswordEncoder();
     private static final Pattern EMAIL = Pattern.compile("^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*@[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?)*$");
     private AccountAttemptLimiter attemptLimiter = new AccountAttemptLimiter(Duration.ofMinutes(15), 10, 30, 3, 20, System::nanoTime);
 
@@ -192,7 +191,7 @@ public class AccountService {
     }
 
     private boolean validPassword(String password) {
-        return password != null && !password.isEmpty() && password.getBytes(StandardCharsets.UTF_8).length <= 72;
+        return password != null && !password.isEmpty();
     }
 
     private boolean validNewPassword(String password) {

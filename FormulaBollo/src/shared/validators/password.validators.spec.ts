@@ -7,9 +7,9 @@ describe('Password validators', () => {
     expect(newPasswordValidator(new FormControl('12345678'))).toBeNull();
   });
 
-  it('limits new passwords to 72 UTF-8 bytes', () => {
-    expect(newPasswordValidator(new FormControl('é'.repeat(36)))).toBeNull();
-    expect(newPasswordValidator(new FormControl('é'.repeat(36) + 'a'))).toEqual({ passwordBytes: true });
+  it('accepts long passwords', () => {
+    expect(newPasswordValidator(new FormControl('é'.repeat(100)))).toBeNull();
+    expect(passwordPolicyValidator(new FormControl('é'.repeat(100)))).toBeNull();
   });
 
   it('rejects blank new passwords', () => {

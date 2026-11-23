@@ -27,10 +27,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import formula.bollo.config.JwtConfig;
+import formula.bollo.config.TruncatingBCryptPasswordEncoder;
 import formula.bollo.entity.Account;
 import formula.bollo.impl.AccountImpl;
 import formula.bollo.model.AccountDTO;
@@ -56,7 +56,7 @@ class AccountServiceTest {
 
     AccountDTO accountDTO;
     Account account;
-    BCryptPasswordEncoder realEncoder = new BCryptPasswordEncoder();
+    TruncatingBCryptPasswordEncoder realEncoder = new TruncatingBCryptPasswordEncoder();
 
     @BeforeEach
     void beforeAll() {
@@ -146,6 +146,24 @@ class AccountServiceTest {
         ResponseEntity<String> response = accountService.register(accountDTO);
 
         assertEquals(200, response.getStatusCode().value());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"a", "é"})
+    void hundredCharacterPasswordIsAcceptedByRegistrationAndChange(String character) {
+        String password = character.repeat(100);
+        accountDTO = new AccountDTO(null, "ana", password, 0, "ana@example.com");
+        when(accountRepository.findByUsername("ana")).thenReturn(Collections.emptyList());
+        when(accountRepository.findByEmail("ana@example.com")).thenReturn(Collections.emptyList());
+
+        assertEquals(200, accountService.register(accountDTO).getStatusCode().value());
+
+        account = new Account(1L, "ana", "old-hash", 0, "ana@example.com");
+        when(accountRepository.findByUsername("ana")).thenReturn(Arrays.asList(account));
+
+        assertEquals(200, accountService.changePassword(() -> "ana", password).getStatusCode().value());
+        assertEquals(true, realEncoder.matches(password, account.getPassword()));
+        verify(accountRepository).save(account);
     }
 
     @Test
@@ -251,7 +269,7 @@ class AccountServiceTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {" ", "\t", "        ", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "ééééééééééééééééééééééééééééééééééééé"})
+    @ValueSource(strings = {" ", "\t", "        "})
     void invalidPasswordIsRejectedByRegistrationAndChange(String password) {
         AccountDTO input = new AccountDTO(null, "ana", password, 0, "ana@example.com");
         assertEquals(400, accountService.register(input).getStatusCode().value());
@@ -283,10 +301,10 @@ class AccountServiceTest {
     }
 
     @Test
-    void entityLengthBoundariesAndSeventyTwoUtf8BytesAreAccepted() {
+    void entityLengthBoundariesAreAccepted() {
         String email = "a".repeat(64) + "@" + "b".repeat(31) + ".com";
         assertEquals(100, email.length());
-        AccountDTO input = new AccountDTO(null, "a".repeat(25), "é".repeat(36), 0, email);
+        AccountDTO input = new AccountDTO(null, "a".repeat(25), "password", 0, email);
         assertEquals(200, accountService.register(input).getStatusCode().value());
         verify(accountRepository).save(any());
     }
