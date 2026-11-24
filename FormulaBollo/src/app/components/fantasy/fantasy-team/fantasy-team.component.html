@@ -88,7 +88,7 @@
 								<span class="flex min-w-0 flex-col items-start gap-2 sm:flex-row sm:items-center">
 									@if (slot.image) {
 										<img [src]="imageService.getImageUrl(slot.image | SpaceToUnderscore)" alt="" width="48" height="40" loading="lazy" decoding="async"
-											class="h-10 shrink-0 object-cover" [class]="slot.ref.kind === 'driver' ? 'w-10 rounded-full border border-rule' : 'w-12 object-contain'" />
+											class="shrink-0" [class]="slot.ref.kind === 'driver' ? 'size-10 rounded-full border border-rule object-cover' : 'h-auto w-24 max-w-full object-contain'" />
 									}
 									<span class="min-w-0">
 										<strong class="block font-display text-lg uppercase leading-tight tracking-wide wrap-anywhere">{{ slot.name }}</strong>
@@ -153,20 +153,23 @@
 					<span class="flex items-center gap-2 text-sm text-ink-soft"><span aria-hidden="true" class="inline-block size-2.5 rotate-45 bg-sector-best"></span>Mejor valor: más puntos por millón</span>
 				</div>
 
-				<div class="flex flex-wrap items-center gap-2" role="group" aria-label="Ordenar">
-					<span class="text-sm font-bold">Ordenar:</span>
-					<select class="h-11 rounded-row border border-ink-soft bg-panel px-2 text-ink sm:hidden" aria-label="Ordenar por" [value]="sortKey()" (change)="setSort($any($event.target).value)">
+				<div role="group" aria-label="Ordenar">
+					<div class="flex items-center gap-2 sm:hidden">
+						<span class="text-sm font-bold">Ordenar:</span>
+						<select class="h-11 min-w-0 flex-1 rounded-row border border-ink-soft bg-panel px-2 text-ink" aria-label="Ordenar por" [value]="sortKey()" (change)="setSort($any($event.target).value)">
+							@for (option of sortOptions; track option.key) {
+								<option [value]="option.key">{{ option.label }}</option>
+							}
+						</select>
+						<button type="button" class="grid size-11 shrink-0 place-items-center rounded-row border border-ink-soft" [attr.aria-label]="descending() ? 'Orden descendente, pulsa para invertir' : 'Orden ascendente, pulsa para invertir'" (click)="flipOrder()">
+							<i class="pi" [class]="descending() ? 'pi-angle-down' : 'pi-angle-up'" aria-hidden="true"></i>
+						</button>
+					</div>
+					<div class="hidden w-full overflow-hidden rounded-row border border-ink-soft sm:flex">
+						<span class="grid place-items-center border-r border-ink-soft bg-panel-alt px-4 text-sm font-bold">Ordenar</span>
 						@for (option of sortOptions; track option.key) {
-							<option [value]="option.key">{{ option.label }}</option>
-						}
-					</select>
-					<button type="button" class="grid size-11 place-items-center rounded-row border border-ink-soft sm:hidden" [attr.aria-label]="descending() ? 'Orden descendente, pulsa para invertir' : 'Orden ascendente, pulsa para invertir'" (click)="flipOrder()">
-						<i class="pi" [class]="descending() ? 'pi-angle-down' : 'pi-angle-up'" aria-hidden="true"></i>
-					</button>
-					<div class="hidden flex-wrap items-center gap-2 sm:flex">
-						@for (option of sortOptions; track option.key) {
-							<button type="button" class="inline-flex min-h-11 items-center gap-1 rounded-row px-2 text-sm" [attr.aria-pressed]="sortKey() === option.key" (click)="sortBy(option.key)"
-								[class]="sortKey() === option.key ? 'font-bold underline underline-offset-4' : ''">{{ option.label }}@if (sortKey() === option.key) { <i class="pi" [class]="descending() ? 'pi-angle-down' : 'pi-angle-up'" aria-hidden="true" style="font-size: 10px"></i> }</button>
+							<button type="button" class="flex min-h-11 flex-1 items-center justify-center gap-1 border-r border-ink-soft px-2 text-sm last:border-r-0" [attr.aria-pressed]="sortKey() === option.key" (click)="sortBy(option.key)"
+								[class]="sortKey() === option.key ? 'bg-fantasy font-bold text-on-fantasy' : 'bg-panel text-ink hover:bg-panel-alt'">{{ option.label }}@if (sortKey() === option.key) { <i class="pi" [class]="descending() ? 'pi-angle-down' : 'pi-angle-up'" aria-hidden="true" style="font-size: 10px"></i> }</button>
 						}
 					</div>
 				</div>
@@ -179,7 +182,7 @@
 								<div class="flex min-w-0 items-center gap-3">
 									@if (row.image) {
 										<img [src]="imageService.getImageUrl(row.image | SpaceToUnderscore)" alt="" width="56" height="40" loading="lazy" decoding="async"
-											class="h-10 shrink-0 object-cover" [class]="slot.kind === 'driver' ? 'w-10 rounded-full border border-rule' : 'w-14 object-contain'" />
+											class="shrink-0" [class]="slot.kind === 'driver' ? 'size-10 rounded-full border border-rule object-cover' : 'h-auto w-20 object-contain'" />
 									}
 									<div class="min-w-0">
 										<strong class="block font-display text-lg uppercase leading-tight tracking-wide wrap-anywhere">{{ row.name }}</strong>
@@ -237,7 +240,7 @@
 		<p-dialog [visible]="true" (visibleChange)="$event ? null : closeChart()" [modal]="true" [dismissableMask]="true" [closable]="false" [style]="{ width: '60rem', 'max-width': '95vw' }">
 			<ng-template #header let-labelId="ariaLabelledBy">
 				<h2 [id]="labelId" class="flex-1 font-display text-xl font-bold uppercase tracking-wide text-ink">Evolución - {{ candidateName(view.item) }}</h2>
-				<p-button icon="pi pi-times" (click)="closeChart()" class="closeDialog" ariaLabel="Cerrar" />
+				<button type="button" class="grid size-11 shrink-0 place-items-center rounded-full border border-ink-soft text-ink hover:bg-panel-alt" aria-label="Cerrar" (click)="closeChart()"><i class="pi pi-times" aria-hidden="true"></i></button>
 			</ng-template>
 			<div class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
 				<div class="flex gap-2" role="tablist" aria-label="Tipo de gráfico">

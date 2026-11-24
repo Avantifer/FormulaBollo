@@ -3,3 +3,13 @@
     min-height: 300px;
   }
 }
+
+:host button:not(:disabled),
+:host select,
+:host summary {
+  cursor: pointer;
+}
+
+:host button:disabled {
+  cursor: not-allowed;
+}
