@@ -1,595 +1,269 @@
-<div class="flex-1 min-w-0 bg-canvas text-ink p-4 relative">
-	<div class="container mx-auto">
-		<div class="bg-panel-alt border border-rule border-l-4 border-l-warn rounded-panel mt-2 mb-6">
-			<div class="p-4">
+<div class="flex-1 min-w-0 bg-canvas text-ink">
+	<div class="container mx-auto grid gap-6 px-4 py-6 tabular-nums lg:py-8">
+		@if (!electionEnabled) {
+			<div class="rounded-panel border border-l-4 border-rule border-l-warn bg-panel-alt p-4">
 				<div class="flex items-center gap-3">
-					<i class="pi pi-exclamation-triangle text-warn" style="font-size: 20px"></i>
+					<i class="pi pi-exclamation-triangle text-warn" aria-hidden="true" style="font-size: 20px"></i>
 					<div>
 						<p class="font-semibold text-ink">Fantasy no habilitado para esta temporada</p>
-						<p class="text-sm text-ink-soft mt-1">
-							El modo Fantasy no está disponible para la temporada actual. Mantente atento para futuras actualizaciones.
-						</p>
+						<p class="mt-1 text-sm text-ink-soft">El modo Fantasy no está disponible para la temporada actual. Mantente atento para futuras actualizaciones.</p>
 					</div>
 				</div>
 			</div>
-		</div>
-		<div class="bg-panel border border-rule rounded-panel mb-6">
-			<div class="p-4">
-				<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-					<div class="flex items-center gap-4 min-w-[225px]">
-						<select-races class="w-full" (raceChanged)="onRaceChange($event)" [fantasyTeam]="true" />
-					</div>
-					@if (isLastRace()) {
-						<div class="text-right">
-							<div class="text-sm text-ink-soft">Presupuesto restante</div>
-							<div
-								class="font-display tabular-nums text-display-md font-bold flex items-center gap-1"
-								[class]="utilsService.isNegative(totalMoney()) ? 'text-sector-down' : 'text-sector-up'">
-								<i class="pi pi-dollar"></i>
-								{{ totalMoney() | pricePipe }}
-							</div>
-						</div>
+		}
+
+		<section aria-labelledby="team-title" class="grid gap-5 rounded-panel border border-rule bg-panel p-4 md:p-6 lg:items-center lg:gap-8" [class]="isLastRace() ? 'lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,1fr)]' : ''">
+			<div class="grid min-w-0 gap-3">
+				<h1 id="team-title" class="font-display text-display-md font-bold uppercase tracking-wide">Tu equipo</h1>
+				<div class="min-w-0">
+					<p id="team-race-label" class="mb-1 text-xs text-ink-soft">Carrera</p>
+					<select-races class="w-full" [fantasyTeam]="true" labelId="team-race-label" (raceChanged)="onRaceChange($event)" />
+				</div>
+				@if (raceSelected?.dateStart) {
+					<ul class="grid gap-1 text-sm">
+						<li><strong>Salida:</strong> {{ departure() }}</li>
+						<li><strong>Plazo para guardar:</strong> hasta {{ deadlineHours }} horas antes de la carrera</li>
+					</ul>
+				}
+			</div>
+
+			@if (isLastRace()) {
+			<div class="grid min-w-0 gap-2">
+				<p class="text-ink-soft">Presupuesto restante</p>
+				<p class="font-display text-[3.5rem] font-bold leading-none" [class]="remaining() < 0 ? 'text-sector-down' : 'text-sector-up'">{{ formatMoney(remaining()) }}</p>
+				<p class="text-sm">Tu equipo cuesta <strong>{{ formatMoney(cost()) }}</strong> de {{ formatMoney(budget) }}</p>
+				<div class="flex h-3 overflow-hidden rounded-row border border-ink-soft bg-panel-alt" aria-hidden="true">
+					@for (segment of segments(); track segment.key) {
+						<span class="h-full border-r border-panel" [class]="'bg-' + (segment.teamName | SpaceToUnderscore)" [style.width.%]="segment.width"></span>
+					}
+				</div>
+				<p class="sr-only">{{ segments().length }} de 5 casillas con precio sobre un presupuesto de {{ formatMoney(budget) }}</p>
+				@if (remaining() < 0) {
+					<p class="text-sm font-semibold text-sector-down" role="status">Te pasas {{ formatMoney(-remaining()) }} del presupuesto</p>
+				}
+			</div>
+
+			<div class="grid min-w-0 gap-2">
+				<button type="button" class="inline-flex min-h-12 items-center justify-center rounded-row border px-6 font-semibold" [disabled]="!!block()" aria-describedby="save-reason"
+					[class]="block() ? 'cursor-not-allowed border-ink-soft bg-panel-alt text-ink-soft' : 'cursor-pointer border-fantasy bg-fantasy text-on-fantasy hover:brightness-90'">Guardar equipo</button>
+				<div id="save-reason" class="grid gap-1 text-sm">
+					@if (blockMessage()) {
+						<p class="flex items-start gap-2 font-semibold"><i class="pi pi-exclamation-triangle mt-0.5 text-warn" aria-hidden="true"></i>{{ blockMessage() }}</p>
+					} @else {
+						<p class="font-semibold text-sector-up">Equipo completo y válido</p>
+					}
+					@if (isLastRace() && missingText()) {
+						<p class="text-ink-soft">{{ missingText() }}</p>
 					}
 				</div>
 			</div>
-		</div>
-		<div class="grid grid-cols-1 gap-6 mb-2" [class]="isLastRace() ? 'xl:grid-cols-2' : 'xl:grid-cols-1'">
-			<div class="bg-panel border border-rule rounded-panel">
-				<div class="p-3 md:p-6">
-					<div class="text-center mb-6">
-						<h1 class="font-display uppercase tracking-wide text-ink text-display-md flex items-center justify-center gap-2">
-							<i class="pi pi-users" style="font-size: 25px"></i> Tu equipo Fantasy
-						</h1>
-						<p class="text-ink-soft mt-2">Selecciona 3 pilotos y 2 equipos para tu alineación</p>
-					</div>
-					<div class="mb-8">
-						<div class="flex">
-							<i class="pi pi-star mt-1" style="font-size: 18px"></i>
-							<h2 class="text-lg font-display uppercase tracking-wide text-ink font-semibold mb-4 ml-2 flex items-center gap-2">
-								Pilotos ({{ selectedDriversCount() }}/3)
-							</h2>
-						</div>
-						<div class="flex justify-center gap-2 md:gap-4">
-							@for (i of [0, 1, 2]; track $index) {
-								@if (driversSelected()[i] === undefined) {
-									<div class="relative group">
-										<div
-											class="w-20 h-30 xs:w-24 xs:h-32 sm:w-31 sm:h-38 rounded-panel border-2 border-dashed border-rule bg-panel-alt flex flex-col items-center justify-center">
-											<div class="flex flex-col text-center">
-												<i aria-hidden="true" class="pi pi-plus text-ink-soft mb-4" style="font-size: 22px"></i>
-												<p class="text-xs text-ink-soft cursor-default">Piloto {{ i + 1 }}</p>
-											</div>
-										</div>
-									</div>
-								} @else {
-									<div
-										class="w-20 h-30 xs:w-24 xs:h-32 sm:w-31 sm:h-38 relative flex flex-col rounded-panel border border-rule bg-panel overflow-hidden">
-										<div aria-hidden="true" class="h-1 shrink-0" [class]="'bg-' + (driversSelected()[i]!.team.name | SpaceToUnderscore)"></div>
-										<div class="w-full flex-1 min-h-0">
-											<button type="button" (click)="deleteDriverFromSelection(i)" [attr.aria-label]="'Quitar ' + driversSelected()[i]!.name" class="selection-remove absolute right-1.5 top-1.5 z-10">
-												<i
-													class="pi pi-times text-ink-soft hover:bg-panel-alt hover:text-ink p-0.5 transition-all duration-200 ease-out rounded-row cursor-pointer"
-													style="font-size: 8px"></i>
-											</button>
+			}
+		</section>
 
-											<div class="h-2/3 bg-panel-alt flex items-center justify-center p-1 md:p-2">
-												<div class="size-14 md:size-20 rounded-full bg-panel-alt overflow-hidden">
-													<img
-														[alt]="driversSelected()[i]!.name"
-														class="w-full h-full object-cover bg-panel-alt"
-														[src]="imageService.getImageUrl(driversSelected()[i]!.driverImage | SpaceToUnderscore)" />
-												</div>
-											</div>
-											<div class="h-1/3 p-1 md:p-2 flex flex-col justify-center bg-panel">
-												<h3 class="text-ink font-bold text-xs md:text-sm text-center truncate max-w-[70px] xs:max-w-none">
-													{{ driversSelected()[i]!.name }}
-												</h3>
-												<p class="text-xs text-ink-soft text-center truncate">{{ driversSelected()[i]!.team.name }}</p>
-											</div>
-										</div>
-									</div>
+		<section aria-labelledby="slots-title" class="grid gap-3">
+			<p class="sr-only" aria-live="polite">{{ announcement() }}</p>
+			<div class="flex flex-wrap items-baseline justify-between gap-2">
+				<h2 id="slots-title" class="font-display text-display-md font-bold uppercase tracking-wide">Tu alineación</h2>
+				@if (isLastRace()) {
+					<p class="text-sm text-ink-soft">{{ 5 - missing().length }} de 5 casillas</p>
+				} @else if (savedState() === 'loading') {
+					<p class="text-sm text-ink-soft" role="status">Cargando el equipo guardado…</p>
+				} @else if (savedState() === 'none') {
+					<p class="text-sm text-ink-soft">No hay equipo guardado en {{ raceSelected?.name }}. Solo se puede editar el equipo de la última carrera.</p>
+				} @else {
+					<p class="text-sm text-ink-soft">Equipo guardado en {{ raceSelected?.name }}. Solo se puede editar el equipo de la última carrera.</p>
+				}
+			</div>
+			<ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+				@for (slot of slots(); track slot.label) {
+					<li class="relative min-w-0">
+						<button type="button" class="flex h-full min-h-32 w-full min-w-0 flex-col gap-2 overflow-hidden rounded-panel border bg-panel p-3 text-left disabled:cursor-default"
+							[class]="slot.active ? 'border-2 border-fantasy' : slot.filled ? 'border-rule' : 'border-2 border-dashed border-ink-soft bg-panel-alt'"
+							[id]="'slot-' + slot.ref.kind + '-' + slot.ref.index" [disabled]="!isLastRace()" [attr.aria-pressed]="isLastRace() ? slot.active : null" (click)="activate(slot.ref)">
+							@if (slot.filled) {
+								<span aria-hidden="true" class="-mx-3 -mt-3 block h-1 shrink-0" [class]="'bg-' + (slot.teamName | SpaceToUnderscore)"></span>
+							}
+							<span class="font-display text-xs font-semibold uppercase tracking-wider text-ink-soft">{{ slot.label }}</span>
+							@if (slot.filled) {
+								<span class="flex min-w-0 flex-col items-start gap-2 sm:flex-row sm:items-center">
+									@if (slot.image) {
+										<img [src]="imageService.getImageUrl(slot.image | SpaceToUnderscore)" alt="" width="48" height="40" loading="lazy" decoding="async"
+											class="h-10 shrink-0 object-cover" [class]="slot.ref.kind === 'driver' ? 'w-10 rounded-full border border-rule' : 'w-12 object-contain'" />
+									}
+									<span class="min-w-0">
+										<strong class="block font-display text-lg uppercase leading-tight tracking-wide wrap-anywhere">{{ slot.name }}</strong>
+										@if (slot.detail) {
+											<span class="block text-xs text-ink-soft wrap-anywhere">{{ slot.detail }}</span>
+										}
+									</span>
+								</span>
+								@if (slot.price !== null) {
+									<span class="mt-auto font-display text-2xl font-bold leading-none text-fantasy-text">{{ formatMoney(slot.price) }}</span>
+								}
+							} @else {
+								<span class="my-auto grid justify-items-center gap-1 text-center">
+									<span aria-hidden="true" class="font-display text-3xl font-bold leading-none text-ink-soft">+</span>
+									<span class="font-display text-base font-semibold uppercase tracking-wide">{{ slot.ref.kind === 'driver' ? 'Elegir piloto' : 'Elegir equipo' }}</span>
+								</span>
+							}
+						</button>
+						@if (slot.filled && isLastRace()) {
+							<button type="button" class="absolute right-1 top-1 grid size-11 place-items-center rounded-row text-ink-soft hover:text-ink" [attr.aria-label]="'Quitar ' + slot.name" (click)="remove(slot.ref)">
+								<i class="pi pi-times" aria-hidden="true" style="font-size: 12px"></i>
+							</button>
+						}
+					</li>
+				}
+			</ul>
+		</section>
+
+		@if (isLastRace() && active(); as slot) {
+			<section aria-labelledby="panel-title" class="grid gap-4 rounded-panel border-2 border-fantasy bg-panel p-4 md:p-6">
+				<div class="flex flex-wrap items-start justify-between gap-3">
+					<div>
+						<h2 id="panel-title" class="font-display text-display-md font-bold uppercase tracking-wide">{{ panelTitle() }}</h2>
+						@if (activeSlot(); as current) {
+							@if (current.filled) {
+								<p class="text-ink-soft">Cada fila se compara con <strong class="text-ink">{{ current.name }}</strong> ({{ formatMoney(current.price ?? 0) }}).</p>
+								<p class="mt-1 text-sm font-semibold">Al cambiar, sigues en {{ slotLabel(slot) }}.</p>
+							} @else {
+								<p class="text-ink-soft">{{ pool().length }} {{ slot.kind === 'driver' ? 'pilotos' : 'equipos' }} para esta casilla.</p>
+								@if (nextLabel()) {
+									<p class="mt-1 text-sm font-semibold">Al fichar, pasas a {{ nextLabel() }}.</p>
 								}
 							}
-						</div>
+						}
 					</div>
-					<div class="mb-12">
-						<div class="flex">
-							<i class="pi pi-trophy mt-1" style="font-size: 18px"></i>
-							<h2 class="text-lg font-display uppercase tracking-wide text-ink font-semibold mb-4 ml-2 flex items-center gap-2">
-								Equipos ({{ selectedTeamsCount() }}/2)
-							</h2>
-						</div>
-						<div class="flex justify-center gap-4">
-							@for (i of [0, 1]; track $index) {
-								@if (teamsSelected()[i] === undefined) {
-									<div class="relative group">
-										<div
-											class="w-30 h-20 xs:w-36 xs:h-24 sm:w-44 sm:h-28 rounded-panel border-2 border-dashed border-rule bg-panel-alt flex items-center justify-center">
-											<div class="flex flex-col text-center">
-												<i aria-hidden="true" class="pi pi-plus text-ink-soft mb-4" style="font-size: 22px"></i>
-												<p class="text-xs text-ink-soft cursor-default">Equipo {{ i + 1 }}</p>
-											</div>
-										</div>
-									</div>
-								} @else {
-									<div
-										class="relative w-30 h-20 xs:w-36 xs:h-24 sm:w-44 sm:h-28 flex flex-col rounded-panel border border-rule bg-panel overflow-hidden">
-										<div aria-hidden="true" class="h-1 shrink-0" [class]="'bg-' + (teamsSelected()[i]!.name | SpaceToUnderscore)"></div>
-										<div class="w-full flex-1 min-h-0">
-											<button type="button" (click)="deleteTeamFromSelection(i)" [attr.aria-label]="'Quitar ' + teamsSelected()[i]!.name" class="selection-remove absolute right-1.5 top-1.5 z-10">
-												<i
-													class="pi pi-times text-ink-soft hover:bg-panel-alt hover:text-ink p-0.5 transition-all duration-200 ease-out rounded-row cursor-pointer"
-													style="font-size: 8px"></i>
-											</button>
-
-											<div class="h-2/3 bg-panel-alt flex items-center justify-center p-1 md:p-2">
-												<div class="relative w-34 h-12 rounded-panel overflow-hidden">
-													<img
-														[alt]="teamsSelected()[i]!.name"
-														class="w-27 xs:w-36 absolute max-w-none -left-1 top-3 xs:top-1"
-														[src]="imageService.getImageUrl(teamsSelected()[i]!.carImage | SpaceToUnderscore)" />
-												</div>
-											</div>
-											<div class="h-1/3 p-1 md:p-2 flex flex-col justify-center items-center bg-panel">
-												<h3 class="text-ink font-bold text-xs md:text-sm text-center truncate max-w-[70px] xs:max-w-none">
-													{{ teamsSelected()[i]!.name }}
-												</h3>
-											</div>
-										</div>
-									</div>
-								}
-							}
-						</div>
-					</div>
-					<p role="status" class="text-center my-3">La elección de Fantasy no está habilitada.</p>
-					<div class="flex justify-center w-full">
-						<div class="w-9/10 xs:w-1/2 md:w-1/3">
-							@if (isLastRace()) {
-								<p-button
-									label="Guardar equipo"
-									[disabled]="!electionEnabled"
-									class="saveElection font-bold"
-									(click)="saveFantasyElecion()" />
-							}
-						</div>
+					<div class="w-full min-w-0 sm:w-72">
+						<label for="team-search" class="sr-only">Buscar {{ slot.kind === 'driver' ? 'piloto' : 'equipo' }}</label>
+						<input id="team-search" type="search" class="h-11 w-full rounded-row border border-ink-soft bg-panel px-3 text-ink" [placeholder]="'Busca un ' + (slot.kind === 'driver' ? 'piloto' : 'equipo') + '...'"
+							[value]="query()" (input)="query.set($any($event.target).value)" />
 					</div>
 				</div>
-			</div>
-			@if (isLastRace()) {
-				<div class="bg-panel border border-rule rounded-panel p-3 md:p-6">
-					<p-selectbutton
-						[options]="listOptions"
-						[(ngModel)]="optionSelected"
-						(ngModelChange)="changeOptions()"
-						class="fantasyOptions w-full mb-3 md:mb-6"
-						allowEmpty="false">
-						<ng-template #item let-item>
-							<i [class]="item.icon" style="font-size: 1rem"></i>
-							<p>{{ item.value }}</p>
-						</ng-template>
-					</p-selectbutton>
 
-					<p-iconfield class="mb-6">
-						<p-inputicon class="pi pi-search" />
-						<input
-							type="text"
-							pInputText
-							[(ngModel)]="filtroString"
-							(ngModelChange)="filterItems($event)"
-							[placeholder]="'Busca un ' + this.optionSelected.toLowerCase().slice(0, -1) + '...'"
-							class="pl-10 h-10 w-full bg-panel text-ink border border-rule rounded-row" />
-					</p-iconfield>
+				@if (missing().length && remaining() > 0) {
+					<p class="rounded-row border border-l-4 border-rule border-l-ink-soft bg-panel-alt px-3 py-2 text-sm">Te quedan <strong>{{ formatMoney(remaining()) }}</strong> para {{ missing().length }} {{ missing().length === 1 ? 'casilla vacía' : 'casillas vacías' }}: unos <strong>{{ formatMoney(averagePerSlot()) }}</strong> por casilla.</p>
+				}
 
-					<div class="flex flex-wrap justify-center items-center gap-2 mb-6 p-2 bg-panel-alt border border-rule rounded-panel">
-						<span class="text-sm font-bold text-ink mr-2">Ordenar:</span>
-						@for (order of orders; track $index) {
-							<button class="min-h-11 min-w-11 md:min-h-0 md:min-w-0" (click)="changeOrder(order)">
-								<div
-									class="rounded-row p-1.5 flex items-center cursor-pointer"
-									[class]="
-										orderSelected.name === order.name
-											? 'font-bold underline underline-offset-4'
-											: ''
-									">
-									<i class="text-xs mr-1" [class]="order.icon" style="font-size: 10px"></i>
-									<p class="m-0 text-xs">{{ order.name }}</p>
-									@if (orderSelected.name === order.name) {
-										@if (order.value === 'ASC') {
-											<i class="pi pi-angle-up text-xs ml-1" style="font-size: 10px"></i>
-										} @else if (order.value === 'DESC') {
-											<i class="pi pi-angle-down text-xs ml-1" style="font-size: 10px"></i>
+				<div class="flex flex-wrap items-center gap-2" role="group" aria-label="Franja de precio">
+					@for (option of bandOptions; track option.key) {
+						<button type="button" class="inline-flex min-h-11 items-center gap-2 rounded-row border px-3 text-sm font-semibold" [attr.aria-pressed]="band() === option.key" (click)="band.set(option.key)"
+							[class]="band() === option.key ? 'border-fantasy bg-fantasy text-on-fantasy' : 'border-ink-soft bg-panel text-ink'">{{ option.label }} <span>{{ counts()[option.key] }}</span></button>
+					}
+					<span class="flex items-center gap-2 text-sm text-ink-soft"><span aria-hidden="true" class="inline-block size-2.5 rotate-45 bg-sector-best"></span>Mejor valor: más puntos por millón</span>
+				</div>
+
+				<div class="flex flex-wrap items-center gap-2" role="group" aria-label="Ordenar">
+					<span class="text-sm font-bold">Ordenar:</span>
+					<select class="h-11 rounded-row border border-ink-soft bg-panel px-2 text-ink sm:hidden" aria-label="Ordenar por" [value]="sortKey()" (change)="setSort($any($event.target).value)">
+						@for (option of sortOptions; track option.key) {
+							<option [value]="option.key">{{ option.label }}</option>
+						}
+					</select>
+					<button type="button" class="grid size-11 place-items-center rounded-row border border-ink-soft sm:hidden" [attr.aria-label]="descending() ? 'Orden descendente, pulsa para invertir' : 'Orden ascendente, pulsa para invertir'" (click)="flipOrder()">
+						<i class="pi" [class]="descending() ? 'pi-angle-down' : 'pi-angle-up'" aria-hidden="true"></i>
+					</button>
+					<div class="hidden flex-wrap items-center gap-2 sm:flex">
+						@for (option of sortOptions; track option.key) {
+							<button type="button" class="inline-flex min-h-11 items-center gap-1 rounded-row px-2 text-sm" [attr.aria-pressed]="sortKey() === option.key" (click)="sortBy(option.key)"
+								[class]="sortKey() === option.key ? 'font-bold underline underline-offset-4' : ''">{{ option.label }}@if (sortKey() === option.key) { <i class="pi" [class]="descending() ? 'pi-angle-down' : 'pi-angle-up'" aria-hidden="true" style="font-size: 10px"></i> }</button>
+						}
+					</div>
+				</div>
+
+				@if (rows().length) {
+					<ul class="grid gap-2">
+						@for (row of rows(); track row.id) {
+							<li class="relative grid gap-3 overflow-hidden rounded-row border border-rule bg-panel p-3 pl-4 lg:grid-cols-[minmax(0,2.2fr)_repeat(3,minmax(0,.8fr))_minmax(0,1.8fr)_11rem] lg:items-center">
+								<span aria-hidden="true" class="absolute inset-y-0 left-0 w-1" [class]="'bg-' + (row.teamName | SpaceToUnderscore)"></span>
+								<div class="flex min-w-0 items-center gap-3">
+									@if (row.image) {
+										<img [src]="imageService.getImageUrl(row.image | SpaceToUnderscore)" alt="" width="56" height="40" loading="lazy" decoding="async"
+											class="h-10 shrink-0 object-cover" [class]="slot.kind === 'driver' ? 'w-10 rounded-full border border-rule' : 'w-14 object-contain'" />
+									}
+									<div class="min-w-0">
+										<strong class="block font-display text-lg uppercase leading-tight tracking-wide wrap-anywhere">{{ row.name }}</strong>
+										@if (row.detail) {
+											<span class="block text-sm text-ink-soft wrap-anywhere">{{ row.detail }}</span>
+										}
+									</div>
+								</div>
+								<div class="grid grid-cols-3 gap-2 lg:contents">
+								<p class="block"><span class="block text-xs text-ink-soft">Puntos</span><strong class="font-display text-xl">{{ row.points }}</strong></p>
+								<p class="block"><span class="block text-xs text-ink-soft">Puntos por M</span>
+									<strong class="font-display text-xl">@if (row.best) { <span aria-hidden="true" class="mr-1 inline-block size-2.5 rotate-45 bg-sector-best"></span><span class="sr-only">Mejor valor: </span> }{{ decimals(row.ppm, 1) }}</strong></p>
+								<p class="block"><span class="block text-xs text-ink-soft">Precio</span>
+									<span class="block"><strong class="font-display text-xl text-fantasy-text">{{ formatMoney(row.price) }}</strong>
+									<span class="ml-1 block whitespace-nowrap text-xs sm:inline" [class]="row.diff > 0 ? 'text-sector-up' : row.diff < 0 ? 'text-sector-down' : 'text-sector-flat'">{{ row.diff > 0 ? '↗' : row.diff < 0 ? '↘' : '→' }} {{ decimals(row.diff, 2) }} %</span></span></p>
+								</div>
+								<div class="grid gap-0.5 text-sm">
+									@if (row.state === 'in-team') {
+										<span class="font-semibold">En tu equipo</span>
+									} @else {
+										@if (row.priceDelta !== null) {
+											<span class="text-ink-soft">Frente a lo que tienes: precio <strong>{{ formatSignedMoney(row.priceDelta) }}</strong>, puntos <strong>{{ row.pointsDelta! > 0 ? '+' : row.pointsDelta! < 0 ? '−' : '' }}{{ Math.abs(row.pointsDelta!) }}</strong></span>
+										}
+										@if (row.state === 'no-fit') {
+											<span class="font-semibold text-sector-down">Te pasas {{ formatMoney(-row.outcome!.remainingAfter) }}</span>
+										} @else if (row.outcome!.shortBy > 0) {
+											<span class="font-semibold text-warn">Cabe, pero faltarían {{ formatMoney(row.outcome!.shortBy) }} para completar el equipo</span>
+										} @else {
+											<span>Te quedarían {{ formatMoney(row.outcome!.remainingAfter) }}</span>
 										}
 									}
 								</div>
-							</button>
-						}
-					</div>
-					<div class="space-y-2 xs:space-y-3 max-h-64 xs:max-h-80 sm:max-h-96 overflow-y-auto pr-3">
-						@if (optionSelected === 'Pilotos') {
-							@for (fantasyPricesDriver of fantasyPricesDriversFiltered(); track $index) {
-								<div
-									class="relative bg-panel border border-rule rounded-row overflow-hidden"
-									[class.opacity-60]="isDriverSelected(fantasyPricesDriver.driver)">
-									<div aria-hidden="true" class="absolute inset-y-0 left-0 w-1" [class]="'bg-' + (fantasyPricesDriver.driver.team.name | SpaceToUnderscore)"></div>
-									<div class="p-2 pl-3 xs:p-3 xs:pl-4">
-										<div class="flex items-center justify-between gap-2">
-											<div class="flex items-center gap-2 xs:gap-3 min-w-0 flex-1">
-												<div
-													class="w-8 h-8 xs:w-10 xs:h-10 sm:w-12 sm:h-12 rounded-full bg-panel-alt overflow-hidden border-1 shrink-0"
-													[class]="'border-' + (fantasyPricesDriver.driver.team.name | SpaceToUnderscore)">
-													<img
-														[alt]="fantasyPricesDriver.driver.name"
-														class="w-full h-full object-cover"
-														[src]="imageService.getImageUrl(fantasyPricesDriver.driver.driverImage | SpaceToUnderscore)" />
-												</div>
-												<div class="flex-1 min-w-0">
-													<div class="flex flex-wrap items-center gap-1 xs:gap-2">
-														<h4 class="font-bold text-xs xs:text-base text-ink truncate max-w-[75px] md:max-w-none">
-															{{ fantasyPricesDriver.driver.name }}
-														</h4>
-														<p
-															class="hidden sm:block text-xs xs:text-sm text-ink-soft font-medium px-2 py-0.5 rounded-row border border-rule bg-panel-alt">
-															{{ fantasyPricesDriver.driver.team.name }}
-														</p>
-													</div>
-
-													<div class="font-display tabular-nums text-xs xs:text-sm text-ink-soft mt-0.5">
-														{{ fantasyPricesDriver.fantasyInfo.totalPoints }} puntos
-													</div>
-												</div>
-											</div>
-											<div class="flex items-center gap-1 xs:gap-2 flex-shrink-0">
-												<div class="text-right">
-													<div class="font-display tabular-nums text-sm xs:text-lg font-bold text-fantasy-text">
-														${{ fantasyPricesDriver.price | pricePipe }}
-													</div>
-													<div class="font-display tabular-nums text-xs flex justify-end gap-1 bg-panel-alt border border-rule rounded-row px-1">
-														@if (fantasyPricesDriver.fantasyInfo.differencePrice > 0) {
-															<span class="text-sector-up">
-																<i class="pi pi-arrow-up-right" style="font-size: 8px"></i>
-																{{ fantasyPricesDriver.fantasyInfo.differencePrice | number:'1.2-2':'es-ES' }} %</span
-															>
-														} @else if (fantasyPricesDriver.fantasyInfo.differencePrice < 0) {
-															<span class="text-sector-down"
-																><i class="pi pi-arrow-down-right" style="font-size: 8px"></i>
-																{{ fantasyPricesDriver.fantasyInfo.differencePrice | number:'1.2-2':'es-ES' }} %</span
-															>
-														} @else {
-															<span class="text-sector-flat"
-																><i class="pi pi-arrow-right" style="font-size: 8px"></i>
-																{{ fantasyPricesDriver.fantasyInfo.differencePrice | number:'1.2-2':'es-ES' }} %</span
-															>
-														}
-													</div>
-												</div>
-												<div class="flex flex-col gap-2">
-													<button class="h-3.5 flex mt-1.5" (click)="generateEvolutionPointDriverChart(fantasyPricesDriver)">
-														<i
-															class="pi pi-chart-bar cursor-pointer text-ink-soft hover:text-fantasy-text"
-															style="font-size: 12px"
-															pTooltip="Gráfico de puntos"></i>
-													</button>
-
-													<button class="h-3.5 flex" (click)="generateEvolutionDriverPriceChart(fantasyPricesDriver)">
-														<i
-															class="pi pi-chart-line cursor-pointer text-ink-soft hover:text-fantasy-text"
-															style="font-size: 12px"
-															pTooltip="Gráfico de precios"></i>
-													</button>
-												</div>
-												<p-button
-													icon="pi pi-plus"
-													class="addDriver"
-													(click)="addDriverToSelection(fantasyPricesDriver)"
-													[disabled]="isDriverSelected(fantasyPricesDriver.driver) || selectedDriversCount() === 3" />
-											</div>
-										</div>
-									</div>
+								<div class="flex items-center gap-2">
+									<button type="button" class="grid min-h-11 min-w-11 place-items-center rounded-row border border-ink-soft text-ink-soft hover:text-ink" [attr.aria-label]="'Ver gráficos de ' + row.name" (click)="openChart(row.item)">
+										<i class="pi pi-chart-line" aria-hidden="true"></i>
+									</button>
+									<button type="button" class="inline-flex min-h-11 flex-1 items-center justify-center rounded-row border px-4 font-semibold lg:flex-none"
+										[disabled]="row.state === 'in-team' || row.state === 'no-fit'" (click)="choose(row)"
+										[attr.aria-label]="row.state === 'in-team' ? row.name + ': ya está en tu equipo' : row.state === 'no-fit' ? row.name + ': no cabe, te pasas por ' + formatMoney(-row.outcome!.remainingAfter) : (row.state === 'swap' ? 'Cambiar por ' : 'Añadir a ' + panelTitle().replace('Elegir ', '') + ': ') + row.name"
+										[class]="row.state === 'add' || row.state === 'swap' ? 'cursor-pointer border-fantasy bg-fantasy text-on-fantasy hover:brightness-90' : 'cursor-not-allowed border-ink-soft bg-panel-alt text-ink-soft'">
+										{{ row.state === 'in-team' ? 'En tu equipo' : row.state === 'no-fit' ? 'No cabe' : row.state === 'swap' ? 'Cambiar' : 'Añadir' }}
+									</button>
 								</div>
-							}
-						} @else {
-							@for (fantasyPricesTeam of fantasyPricesTeamsFiltered(); track $index) {
-								<div
-									class="relative bg-panel border border-rule rounded-row overflow-hidden"
-									[class.opacity-60]="isTeamSelected(fantasyPricesTeam.team)">
-									<div aria-hidden="true" class="absolute inset-y-0 left-0 w-1" [class]="'bg-' + (fantasyPricesTeam.team.name | SpaceToUnderscore)"></div>
-									<div class="p-2 pl-3 xs:p-3 xs:pl-4">
-										<div class="flex items-center justify-between gap-2">
-											<div class="flex items-center gap-2 xs:gap-3 min-w-0 flex-1">
-												<div
-													class="relative w-11 h-8 xs:w-14 xs:h-10 sm:w-14 sm:h-12 bg-panel-alt overflow-hidden border-1 rounded-row shrink-0"
-													[class]="'border-' + (fantasyPricesTeam.team.name | SpaceToUnderscore)">
-													<img
-														[alt]="fantasyPricesTeam.team.name"
-														class="w-27 xs:w-32 absolute max-w-none -left-16 xs:top-1"
-														[src]="imageService.getImageUrl(fantasyPricesTeam.team.carImage | SpaceToUnderscore)" />
-												</div>
-												<div class="flex-1 min-w-0">
-													<div class="flex flex-wrap items-center gap-1 xs:gap-2">
-														<h4 class="font-bold text-xs xs:text-base text-ink truncate max-w-[75px] md:max-w-none">
-															{{ fantasyPricesTeam.team.name }}
-														</h4>
-														<div
-															class="hidden sm:block rounded-row border border-rule bg-panel-alt py-0.5 px-2">
-															<img
-																[alt]="'Logo ' + fantasyPricesTeam.team.name"
-																class="w-4"
-																[class.reverse-color]="
-																	fantasyPricesTeam.team.name === 'Alpine' ||
-																	fantasyPricesTeam.team.name === 'AlphaTauri' ||
-																	fantasyPricesTeam.team.name === 'Aston Martin'
-																"
-																[src]="imageService.getImageUrl(fantasyPricesTeam.team.logoImage | SpaceToUnderscore)" />
-														</div>
-													</div>
-													<div class="font-display tabular-nums text-xs xs:text-sm text-ink-soft mt-0.5">
-														{{ fantasyPricesTeam.fantasyInfo.totalPoints }} puntos
-													</div>
-												</div>
-											</div>
-											<div class="flex items-center gap-1 xs:gap-2 shrink-0">
-												<div class="text-right min-w-18">
-													<div class="font-display tabular-nums text-sm xs:text-lg font-bold text-fantasy-text">
-														${{ fantasyPricesTeam.price | pricePipe }}
-													</div>
-													<div class="font-display tabular-nums text-xs flex justify-end gap-1 bg-panel-alt border border-rule rounded-row px-1">
-														@if (fantasyPricesTeam.fantasyInfo.differencePrice > 0) {
-															<span class="text-sector-up">
-																<i class="pi pi-arrow-up-right" style="font-size: 8px"></i>
-																{{ fantasyPricesTeam.fantasyInfo.differencePrice | number:'1.2-2':'es-ES' }} %</span
-															>
-														} @else if (fantasyPricesTeam.fantasyInfo.differencePrice < 0) {
-															<span class="text-sector-down"
-																><i class="pi pi-arrow-down-right" style="font-size: 8px"></i>
-																{{ fantasyPricesTeam.fantasyInfo.differencePrice | number:'1.2-2':'es-ES' }} %</span
-															>
-														} @else {
-															<span class="text-sector-flat"
-																><i class="pi pi-arrow-right" style="font-size: 8px"></i>
-																{{ fantasyPricesTeam.fantasyInfo.differencePrice | number:'1.2-2':'es-ES' }} %</span
-															>
-														}
-													</div>
-												</div>
-												<div class="flex flex-col gap-2">
-													<button class="h-3.5 flex mt-1.5" (click)="generateEvolutionPointTeamChart(fantasyPricesTeam)">
-														<i
-															class="pi pi-chart-bar cursor-pointer text-ink-soft hover:text-fantasy-text"
-															style="font-size: 12px"
-															pTooltip="Gráfico de puntos"></i>
-													</button>
-
-													<button class="h-3.5 flex" (click)="generateEvolutionTeamPriceChart(fantasyPricesTeam)">
-														<i
-															class="pi pi-chart-line cursor-pointer text-ink-soft hover:text-fantasy-text"
-															style="font-size: 12px"
-															pTooltip="Gráfico de precios"></i>
-													</button>
-												</div>
-												<p-button
-													icon="pi pi-plus"
-													class="addTeam"
-													(click)="addTeamToSelection(fantasyPricesTeam)"
-													[disabled]="isTeamSelected(fantasyPricesTeam.team) || selectedTeamsCount() === 2" />
-											</div>
-										</div>
-									</div>
-								</div>
-							}
+							</li>
 						}
-					</div>
-				</div>
-			}
-		</div>
+					</ul>
+				} @else {
+					<p class="rounded-row border border-rule bg-panel-alt p-4 text-ink-soft" role="status">{{ pool().length ? 'Ningún resultado con estos filtros.' : 'No hay precios para esta carrera.' }}</p>
+				}
+			</section>
+		}
 	</div>
 
-	@if (showDriverPricesData()) {
-		<p-dialog
-			[(visible)]="showDriverPricesData"
-			[modal]="true"
-			[dismissableMask]="true"
-			[closable]="false"
-			[style]="{ width: '60rem', 'max-width': '95vw' }">
-			<ng-template #header>
-				<h2 class="text-xl font-bold text-ink font-display uppercase tracking-wide flex-1">Evolución de Precio - {{ driverPriceData().driver.name }}</h2>
-				<p-button icon="pi pi-times" (click)="showDriverPricesData.set(false)" class="closeDialog" />
+	@if (chart(); as view) {
+		<p-dialog [visible]="true" (visibleChange)="$event ? null : closeChart()" [modal]="true" [dismissableMask]="true" [closable]="false" [style]="{ width: '60rem', 'max-width': '95vw' }">
+			<ng-template #header let-labelId="ariaLabelledBy">
+				<h2 [id]="labelId" class="flex-1 font-display text-xl font-bold uppercase tracking-wide text-ink">Evolución - {{ candidateName(view.item) }}</h2>
+				<p-button icon="pi pi-times" (click)="closeChart()" class="closeDialog" ariaLabel="Cerrar" />
 			</ng-template>
-			<div class="mb-2 xs:mb-3 sm:mb-4">
-				<div class="flex items-center gap-3">
-					<div
-						class="relative w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden flex-shrink-0 bg-panel-alt border-1"
-						[class]="'border-' + (driverPriceData().driver.team.name | SpaceToUnderscore)">
-						<img
-							[alt]="driverPriceData().driver.name"
-							class="w-full h-full object-cover"
-							[src]="imageService.getImageUrl(driverPriceData().driver.driverImage | SpaceToUnderscore)" />
-					</div>
-					<div class="flex flex-col">
-						<div class="font-semibold text-sm xs:text-base sm:text-lg text-ink">{{ driverPriceData().driver.name }}</div>
-						<p
-							class="hidden sm:block text-xs xs:text-sm text-ink-soft font-medium px-2 py-0.5 rounded-row border border-rule bg-panel-alt">
-							{{ driverPriceData().driver.team.name }}
-						</p>
-					</div>
+			<div class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+				<div class="flex gap-2" role="tablist" aria-label="Tipo de gráfico">
+					<button type="button" role="tab" id="chart-tab-points" aria-controls="chart-panel" [attr.tabindex]="view.tab === 'points' ? 0 : -1" (keydown)="onTabKey($event, 'points')" class="inline-flex min-h-11 items-center rounded-row border px-4 font-semibold" [attr.aria-selected]="view.tab === 'points'" (click)="chartTab('points')"
+						[class]="view.tab === 'points' ? 'border-fantasy bg-fantasy text-on-fantasy' : 'border-ink-soft bg-panel text-ink'">Puntos</button>
+					<button type="button" role="tab" id="chart-tab-prices" aria-controls="chart-panel" [attr.tabindex]="view.tab === 'prices' ? 0 : -1" (keydown)="onTabKey($event, 'prices')" class="inline-flex min-h-11 items-center rounded-row border px-4 font-semibold" [attr.aria-selected]="view.tab === 'prices'" (click)="chartTab('prices')"
+						[class]="view.tab === 'prices' ? 'border-fantasy bg-fantasy text-on-fantasy' : 'border-ink-soft bg-panel text-ink'">Precio</button>
 				</div>
-				<div class="text-base xs:text-lg sm:text-xl text-ink-soft">
-					Precio actual: $ <span class="font-display tabular-nums font-bold text-ink">{{ driverPriceData().price | pricePipe }}</span>
-				</div>
+				<p class="text-ink-soft">Precio actual: <strong class="font-display tabular-nums text-ink">{{ formatMoney(view.item.price) }}</strong></p>
 			</div>
-			<div class="bg-panel-alt border border-rule rounded-panel p-2 xs:p-3 sm:p-4">
-				<p-chart type="line" [data]="dataDriversEvolutionPrice()" [options]="lineChartOptions()" style="width: 100%; height: 100%" />
-				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
-					<div class="bg-panel border border-rule p-2 sm:p-3 rounded-row">
-						<div class="text-ink-soft">Precio inicial</div>
-						<div class="font-display tabular-nums font-bold text-ink">${{ showDriverStartPriceData() | pricePipe }}</div>
-					</div>
-					<div class="bg-panel border border-rule p-2 sm:p-3 rounded-row">
-						<div class="text-ink-soft">Precio máximo</div>
-						<div class="font-display tabular-nums font-bold text-ink">${{ showDriverMaxPriceData() | pricePipe }}</div>
-					</div>
-				</div>
-			</div>
-		</p-dialog>
-	}
-
-	@if (showTeamPricesData()) {
-		<p-dialog
-			[(visible)]="showTeamPricesData"
-			[modal]="true"
-			[dismissableMask]="true"
-			[closable]="false"
-			[style]="{ width: '60rem', 'max-width': '95vw' }">
-			<ng-template #header>
-				<h2 class="text-xl font-bold text-ink font-display uppercase tracking-wide flex-1">Evolución de Precio - {{ teamPriceData().team.name }}</h2>
-				<p-button icon="pi pi-times" (click)="showTeamPricesData.set(false)" class="closeDialog" />
-			</ng-template>
-			<div class="mb-2 xs:mb-3 sm:mb-4">
-				<div class="flex items-center gap-3">
-					<div
-						class="relative w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 rounded-row overflow-hidden flex-shrink-0 bg-panel-alt border-1"
-						[class]="'border-' + (teamPriceData().team.name | SpaceToUnderscore)">
-						<img
-							[alt]="teamPriceData().team.name"
-							class="w-full h-full object-cover"
-							[src]="imageService.getImageUrl(teamPriceData().team.carImage | SpaceToUnderscore)" />
-					</div>
-					<div class="flex flex-col">
-						<div class="font-semibold text-sm xs:text-base sm:text-lg text-ink">{{ teamPriceData().team.name }}</div>
-						<div
-							class="flex justify-center rounded-row border border-rule bg-panel-alt py-0.5 px-2">
-							<img
-								[alt]="'Logo ' + teamPriceData().team.name"
-								class="w-4.5"
-								[class.reverse-color]="
-									teamPriceData().team.name === 'Alpine' ||
-									teamPriceData().team.name === 'AlphaTauri' ||
-									teamPriceData().team.name === 'Aston Martin'
-								"
-								[src]="imageService.getImageUrl(teamPriceData().team.logoImage | SpaceToUnderscore)" />
-						</div>
-					</div>
-				</div>
-				<div class="text-base xs:text-lg sm:text-xl text-ink-soft">
-					Precio actual: $ <span class="font-display tabular-nums font-bold text-ink">{{ teamPriceData().price | pricePipe }}</span>
-				</div>
-			</div>
-			<div class="bg-panel-alt border border-rule rounded-panel p-2 xs:p-3 sm:p-4">
-				<p-chart type="line" [data]="dataTeamsEvolutionPrice()" [options]="lineChartOptions()" style="width: 100%; height: 100%" />
-				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
-					<div class="bg-panel border border-rule p-2 sm:p-3 rounded-row">
-						<div class="text-ink-soft">Precio inicial</div>
-						<div class="font-display tabular-nums font-bold text-ink">${{ showTeamStartPriceData() | pricePipe }}</div>
-					</div>
-					<div class="bg-panel border border-rule p-2 sm:p-3 rounded-row">
-						<div class="text-ink-soft">Precio máximo</div>
-						<div class="font-display tabular-nums font-bold text-ink">${{ showTeamMaxPriceData() | pricePipe }}</div>
-					</div>
-				</div>
-			</div>
-		</p-dialog>
-	}
-
-	@if (showDriverPointsData()) {
-		<p-dialog
-			[(visible)]="showDriverPointsData"
-			[modal]="true"
-			[dismissableMask]="true"
-			[closable]="false"
-			[style]="{ width: '60rem', 'max-width': '95vw' }">
-			<ng-template #header>
-				<h2 class="text-xl font-bold text-ink font-display uppercase tracking-wide flex-1">Evolución de Puntos - {{ driverPointData().driver.name }}</h2>
-				<p-button icon="pi pi-times" (click)="showDriverPointsData.set(false)" class="closeDialog" />
-			</ng-template>
-			<div class="mb-2 xs:mb-3 sm:mb-4">
-				<div class="flex items-center gap-3">
-					<div
-						class="relative w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden flex-shrink-0 bg-panel-alt border-1"
-						[class]="'border-' + (driverPointData().driver.team.name | SpaceToUnderscore)">
-						<img
-							[alt]="driverPointData().driver.name"
-							class="w-full h-full object-cover"
-							[src]="imageService.getImageUrl(driverPointData().driver.driverImage | SpaceToUnderscore)" />
-					</div>
-					<div class="flex flex-col">
-						<div class="font-semibold text-sm xs:text-base sm:text-lg text-ink">{{ driverPointData().driver.name }}</div>
-						<p
-							class="hidden sm:block text-xs xs:text-sm text-ink-soft font-medium px-2 py-0.5 rounded-row border border-rule bg-panel-alt">
-							{{ driverPointData().driver.team.name }}
-						</p>
-					</div>
-				</div>
-				<div class="text-base xs:text-lg sm:text-xl text-ink-soft">
-					Puntos actuales: <span class="font-display tabular-nums font-bold text-ink">{{ driverPointData().fantasyInfo.totalPoints }}</span>
-				</div>
-			</div>
-			<div class="bg-panel-alt border border-rule rounded-panel p-2 xs:p-3 sm:p-4">
-				<p-chart type="line" [data]="dataDriversEvolutionPoints()" [options]="lineChartOptions()" style="width: 100%; height: 100%" />
-				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
-					<div class="bg-panel border border-rule p-2 sm:p-3 rounded-row">
-						<div class="text-ink-soft">Puntos por carrera</div>
-						<div class="font-display tabular-nums font-bold text-ink">{{ showDriverMedianPointsData() | number:'1.1-1':'es-ES' }}</div>
-					</div>
-					<div class="bg-panel border border-rule p-2 sm:p-3 rounded-row">
-						<div class="text-ink-soft">Mejor resultado</div>
-						<div class="font-display tabular-nums font-bold text-ink">{{ showDriverBestPointsData() }}</div>
-					</div>
-				</div>
-			</div>
-		</p-dialog>
-	}
-
-	@if (showTeamPointsData()) {
-		<p-dialog
-			[(visible)]="showTeamPointsData"
-			[modal]="true"
-			[dismissableMask]="true"
-			[closable]="false"
-			[style]="{ width: '60rem', 'max-width': '95vw' }">
-			<ng-template #header>
-				<h2 class="text-xl font-bold text-ink font-display uppercase tracking-wide flex-1">Evolución de Puntos - {{ teamPointData().team.name }}</h2>
-				<p-button icon="pi pi-times" (click)="showTeamPointsData.set(false)" class="closeDialog" />
-			</ng-template>
-			<div class="mb-2 xs:mb-3 sm:mb-4">
-				<div class="flex items-center gap-3">
-					<div
-						class="relative w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 rounded-row overflow-hidden flex-shrink-0 bg-panel-alt border-1"
-						[class]="'border-' + (teamPointData().team.name | SpaceToUnderscore)">
-						<img
-							[alt]="teamPointData().team.name"
-							class="w-full h-full object-cover"
-							[src]="imageService.getImageUrl(teamPointData().team.carImage | SpaceToUnderscore)" />
-					</div>
-					<div class="flex flex-col">
-						<div class="font-semibold text-sm xs:text-base sm:text-lg text-ink">{{ teamPointData().team.name }}</div>
-						<div
-							class="flex justify-center rounded-row border border-rule bg-panel-alt py-0.5 px-2">
-							<img
-								[alt]="'Logo ' + teamPointData().team.name"
-								class="w-4.5"
-								[class.reverse-color]="
-									teamPointData().team.name === 'Alpine' ||
-									teamPointData().team.name === 'AlphaTauri' ||
-									teamPointData().team.name === 'Aston Martin'
-								"
-								[src]="imageService.getImageUrl(teamPointData().team.logoImage | SpaceToUnderscore)" />
-						</div>
-					</div>
-				</div>
-				<div class="text-base xs:text-lg sm:text-xl text-ink-soft">
-					Puntos actuales: <span class="font-display tabular-nums font-bold text-ink">{{ teamPointData().fantasyInfo.totalPoints }}</span>
-				</div>
-			</div>
-			<div class="bg-panel-alt border border-rule rounded-panel p-2 xs:p-3 sm:p-4">
-				<p-chart type="line" [data]="dataTeamsEvolutionPoints()" [options]="lineChartOptions()" style="width: 100%; height: 100%" />
-				<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
-					<div class="bg-panel border border-rule p-2 sm:p-3 rounded-row">
-						<div class="text-ink-soft">Puntos por carrera</div>
-						<div class="font-display tabular-nums font-bold text-ink">{{ showTeamMedianPointsData() | number:'1.1-1':'es-ES' }}</div>
-					</div>
-					<div class="bg-panel border border-rule p-2 sm:p-3 rounded-row">
-						<div class="text-ink-soft">Mejor resultado</div>
-						<div class="font-display tabular-nums font-bold text-ink">{{ showTeamBestPointsData() }}</div>
-					</div>
+			<div class="rounded-panel border border-rule bg-panel-alt p-2 sm:p-4" role="tabpanel" id="chart-panel" [attr.aria-labelledby]="'chart-tab-' + view.tab">
+				@if (view.loading) {
+					<p class="p-4 text-ink-soft" role="status">Cargando gráfico…</p>
+				} @else if (view.tab === 'points' ? view.points : view.prices; as data) {
+					<div role="img" [attr.aria-label]="'Gráfico de ' + (view.tab === 'points' ? 'puntos' : 'precio') + ' de ' + candidateName(view.item)"><p-chart type="line" [data]="data" [options]="lineChartOptions()" style="width: 100%; height: 100%" /></div>
+				} @else {
+					<p class="p-4 text-ink-soft" role="status">No hay datos para este gráfico.</p>
+				}
+				<div class="mt-3 grid grid-cols-2 gap-2 text-sm sm:gap-4" [class.hidden]="view.loading">
+					@if (view.tab === 'points') {
+						<div class="rounded-row border border-rule bg-panel p-3"><div class="text-ink-soft">Puntos por carrera</div><div class="font-display font-bold tabular-nums text-ink">{{ decimals(view.average, 1) }}</div></div>
+						<div class="rounded-row border border-rule bg-panel p-3"><div class="text-ink-soft">Mejor resultado</div><div class="font-display font-bold tabular-nums text-ink">{{ view.best }}</div></div>
+					} @else {
+						<div class="rounded-row border border-rule bg-panel p-3"><div class="text-ink-soft">Precio inicial</div><div class="font-display font-bold tabular-nums text-ink">{{ formatMoney(view.start) }}</div></div>
+						<div class="rounded-row border border-rule bg-panel p-3"><div class="text-ink-soft">Precio máximo</div><div class="font-display font-bold tabular-nums text-ink">{{ formatMoney(view.max) }}</div></div>
+					}
 				</div>
 			</div>
 		</p-dialog>
