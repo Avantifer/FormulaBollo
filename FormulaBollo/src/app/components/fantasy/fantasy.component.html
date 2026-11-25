@@ -1,57 +1,193 @@
-<div class="principal-image relative flex h-56 md:h-72 lg:h-[360px] items-center justify-center border-b-3 border-fantasy bg-pit">
-	<h1
-		class="relative z-10 w-full px-4 text-center font-display font-bold uppercase tracking-wide text-on-pit text-5xl sm:text-display-lg lg:text-display-xl">
-		Fantasy Bollo
-	</h1>
-	<img [ngSrc]="imageService.getImageUrl('fantasy/fantasyImage.avif')" alt="" class="brightness-70 object-cover" fill priority />
-</div>
-<div>
-	@for (howToPlay of howToPlayList; track $index) {
-		<div class="border-y border-rule" [class.bg-panel]="$even" [class.bg-panel-alt]="$odd">
-			<div class="container mx-auto px-4 py-16">
-				<div class="flex lg:flex-row items-center gap-12" [class]="howToPlay.styleClass">
-					<div class="flex-1 min-w-0">
-						<h2 class="font-display uppercase tracking-wide text-display-md text-ink mb-6">{{ howToPlay.title }}</h2>
-						<p class="text-lg text-ink-soft">{{ howToPlay.label }}</p>
+<div class="bg-canvas text-ink">
+	<div class="container mx-auto grid gap-8 px-4 py-6 tabular-nums sm:py-8 lg:gap-10 lg:py-12">
+		<header class="grid gap-2">
+			<h1 class="font-display text-[2.5rem] font-bold uppercase leading-[1.1] tracking-wide wrap-anywhere sm:text-display-lg lg:text-display-xl">Fantasy Bollo</h1>
+			<p class="max-w-[56ch] text-ink-soft lg:text-lg">Elige 3 pilotos y 2 escuderías sin pasar de 80 millones y suma los puntos reales de tu equipo en cada carrera.</p>
+		</header>
+
+		<section aria-label="Por dónde empezar" class="grid gap-4 lg:gap-5" [class]="isLogged ? 'md:grid-cols-2 lg:grid-cols-[1.7fr_1.25fr]' : 'md:grid-cols-[3fr_2fr] lg:grid-cols-[1.7fr_1.25fr_.85fr]'">
+			<article class="zone-dark relative isolate flex min-w-0 flex-col gap-4 overflow-hidden rounded-panel border border-rule bg-pit p-5 text-on-pit md:p-6" [class]="isLogged ? '' : 'md:col-span-full lg:col-auto'">
+				<img [ngSrc]="imageService.getImageUrl('fantasy/fantasyImage.avif')" alt="" fill priority class="-z-10 object-cover object-[62%_50%] brightness-[.3] saturate-[.8]" />
+				<h2 class="font-display text-display-md font-bold uppercase tracking-wide">Tu equipo</h2>
+				<p class="flex flex-wrap items-baseline gap-x-3">
+					<span class="font-display text-[3.25rem] font-bold leading-none">$80M</span>
+					<span class="text-ink-soft">de presupuesto ficticio para 3 pilotos y 2 escuderías</span>
+				</p>
+				@if (picks(); as picks) {
+					<div class="grid gap-2">
+						<h3 class="font-display text-sm font-semibold uppercase tracking-wider text-ink-soft">Lo más elegido de la temporada</h3>
+						<ul class="grid grid-cols-6 gap-2" aria-label="Pilotos y escuderías más elegidos">
+							@for (pick of picks.drivers; track pick.id) {
+								<li class="col-span-2 max-xs:col-span-6 flex min-w-0 flex-col items-center gap-1 rounded-row border border-rule bg-panel p-2 text-center">
+									@if (pick.image) {
+										<img [src]="imageService.getImageUrl(pick.image)" alt="" width="40" height="40" loading="lazy" decoding="async" class="size-10 rounded-full border border-rule object-cover" />
+									}
+									<strong class="font-display text-sm uppercase leading-tight tracking-wide wrap-anywhere">{{ pick.name }}</strong>
+									<span class="text-xs text-ink-soft wrap-anywhere">{{ pick.detail }}</span>
+									<span class="font-display text-xl font-bold leading-none">{{ pick.count }} <small class="font-sans text-xs font-normal text-ink-soft">{{ pick.count === 1 ? 'vez' : 'veces' }}</small></span>
+								</li>
+							}
+							@for (pick of picks.teams; track pick.id) {
+								<li class="col-span-3 max-xs:col-span-6 flex min-w-0 flex-col items-center gap-1 rounded-row border border-rule bg-panel p-2 text-center">
+									@if (pick.image) {
+										<img [src]="imageService.getImageUrl(pick.image)" alt="" width="135" height="40" loading="lazy" decoding="async" class="h-10 w-auto max-w-full object-contain" />
+									}
+									<strong class="font-display text-sm uppercase leading-tight tracking-wide wrap-anywhere">{{ pick.name }}</strong>
+									<span class="font-display text-xl font-bold leading-none">{{ pick.count }} <small class="font-sans text-xs font-normal text-ink-soft">{{ pick.count === 1 ? 'vez' : 'veces' }}</small></span>
+								</li>
+							}
+						</ul>
 					</div>
-					<div class="flex-1 min-w-0 w-full lg:w-auto flex justify-center">
-						<img
-							[src]="imageService.getImageUrl(howToPlay.badge!)"
-							[alt]="howToPlay.target"
-							class="max-w-full rounded-panel border border-rule"
-							loading="lazy"
-							decoding="async" />
+				} @else {
+					<ul class="grid grid-cols-6 gap-2" aria-label="Cinco casillas vacías: tres para pilotos y dos para escuderías">
+						@for (slot of ['Piloto', 'Piloto', 'Piloto']; track $index) {
+							<li class="col-span-2 max-xs:col-span-6 grid min-h-[132px] place-content-center justify-items-center rounded-row border-2 border-dashed border-ink-soft bg-canvas"><span aria-hidden="true" class="font-display text-2xl font-bold leading-none text-ink-soft">+</span><span class="font-display text-sm font-semibold uppercase tracking-wider">{{ slot }}</span></li>
+						}
+						@for (slot of ['Escudería', 'Escudería']; track $index) {
+							<li class="col-span-3 max-xs:col-span-6 grid min-h-[112px] place-content-center justify-items-center rounded-row border-2 border-dashed border-ink-soft bg-canvas"><span aria-hidden="true" class="font-display text-2xl font-bold leading-none text-ink-soft">+</span><span class="font-display text-sm font-semibold uppercase tracking-wider">{{ slot }}</span></li>
+						}
+					</ul>
+				}
+				@if (upcoming()[0]; as next) {
+					<p class="text-[0.9375rem] leading-snug"><span class="block font-display text-sm font-semibold uppercase tracking-wider text-ink-soft">Próxima jornada</span>{{ next.name }}@if (next.date) {, {{ formatDayLong(next.date) }}} (jornada {{ next.order }})</p>
+				}
+				<a [routerLink]="startLink" class="go mt-auto inline-flex min-h-12 items-center justify-center self-start rounded-row bg-fantasy px-6 font-semibold text-on-fantasy after:absolute after:inset-0 after:z-10 after:content-[''] hover:bg-[color-mix(in_srgb,var(--fantasy),black_15%)] max-md:self-stretch">Crear mi equipo</a>
+			</article>
+
+			<article class="relative isolate flex min-w-0 flex-col gap-4 rounded-panel border border-rule bg-panel p-5 md:p-6">
+				<h2 class="font-display text-display-md font-bold uppercase tracking-wide">Clasificación</h2>
+				@if (top().length) {
+					<p class="text-sm text-ink-soft">Temporada {{ season()?.data?.season }}, {{ top().length === 1 ? 'el primero' : 'los ' + top().length + ' primeros' }} de {{ season()?.total?.length }}</p>
+					<table class="w-full text-sm">
+						<caption class="sr-only">Los cinco primeros de la clasificación Fantasy</caption>
+						<thead class="bg-pit font-display text-xs uppercase tracking-wider text-on-pit">
+							<tr>
+								<th scope="col" class="px-2 py-2 text-left font-semibold">Pos.</th>
+								<th scope="col" class="px-2 py-2 text-left font-semibold">Usuario</th>
+								<th scope="col" class="px-2 py-2 text-right font-semibold">Puntos</th>
+								<th scope="col" class="px-2 py-2 text-right font-semibold">Dif.</th>
+							</tr>
+						</thead>
+						<tbody>
+							@for (row of top(); track row.userId) {
+								<tr class="border-b border-rule">
+									<td class="px-2 py-2"><span class="inline-flex h-8 min-w-8 items-center justify-center rounded-row font-display font-bold" [class]="row.rank === 1 ? 'bg-fantasy text-on-fantasy' : 'bg-pit text-on-pit'">{{ row.rank }}</span></td>
+									<td class="px-2 py-2 wrap-anywhere">{{ row.username }}</td>
+									<td class="px-2 py-2 text-right font-display text-lg font-bold">{{ row.points }}</td>
+									<td class="px-2 py-2 text-right text-ink-soft">@if (row.gapToLeader) {−{{ row.gapToLeader }}} @else {Líder}</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				} @else if (loading()) {
+					<div class="min-h-[18rem]" aria-hidden="true"></div>
+				} @else {
+					<p class="text-ink-soft">Consulta cómo va la liga y descubre qué elecciones marcan la diferencia.</p>
+				}
+				<a routerLink="/fantasy/clasification" class="go mt-auto inline-flex min-h-12 items-center justify-center rounded-row border border-ink-soft bg-panel px-6 font-semibold text-ink after:absolute after:inset-0 after:z-10 after:content-[''] hover:bg-panel-alt">Ver clasificación completa</a>
+			</article>
+
+			@if (!isLogged) {
+				<article class="relative isolate flex min-w-0 flex-col gap-4 rounded-panel border border-rule bg-panel-alt p-5 md:p-6">
+					<h2 class="font-display text-display-md font-bold uppercase tracking-wide">Iniciar sesión</h2>
+					<p class="text-ink-soft">Accede a tu cuenta Fantasy.</p>
+					@if (figures(); as figures) {
+						<p class="flex items-baseline gap-2.5"><span class="font-display text-4xl font-bold leading-none">{{ figures.users }}</span><span class="text-ink-soft">usuarios en la misma liga</span></p>
+					}
+					<ul class="grid gap-2 text-[0.9375rem] leading-snug">
+						<li class="relative pl-4 before:absolute before:left-0 before:top-[0.55em] before:size-1.5 before:bg-fantasy before:content-['']">Guarda tu equipo cada jornada</li>
+						<li class="relative pl-4 before:absolute before:left-0 before:top-[0.55em] before:size-1.5 before:bg-fantasy before:content-['']">Mira los equipos que eligieron los demás</li>
+					</ul>
+					<div class="mt-auto grid gap-2">
+						<a routerLink="/fantasy/login" class="go inline-flex min-h-12 items-center justify-center rounded-row border border-ink-soft bg-panel px-6 font-semibold text-ink after:absolute after:inset-0 after:z-10 after:content-[''] hover:bg-panel-alt">Iniciar sesión</a>
+						<a routerLink="/fantasy/register" class="relative z-20 inline-flex min-h-11 items-center justify-center font-semibold text-fantasy-text underline underline-offset-4">¿Nuevo? Regístrate</a>
 					</div>
-				</div>
-			</div>
-		</div>
-	}
-</div>
-<div class="bg-canvas py-16">
-	<div class="container mx-auto px-4">
-		<h2 class="font-display uppercase tracking-wide text-display-md text-center text-ink mb-12">Comienza tu aventura Fantasy</h2>
-		<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-			@for (adventure of adventureFantasy; track $index) {
-				<a
-					class="block bg-panel border border-rule rounded-panel hover:border-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2"
-					[routerLink]="adventure.routerLink">
-					<div class="flex flex-col space-y-1.5 p-6">
-						<div class="flex gap-3">
-							<i [class]="adventure.icon" class="text-fantasy-text" style="font-size: 1.75rem"></i>
-							<h3 class="font-display uppercase text-2xl font-semibold leading-none tracking-tight flex items-center gap-3 text-fantasy-text">
-								{{ adventure.title }}
-							</h3>
-						</div>
-					</div>
-					<div class="p-6 pt-0">
-						<p class="text-ink-soft mb-4">{{ adventure.label }}</p>
-						<div class="flex items-center gap-2 text-sm text-ink-soft tabular-nums">
-							<i [class]="adventure.badge"></i>
-							<span>{{ adventure.fragment }}</span>
-						</div>
-					</div>
-				</a>
+				</article>
 			}
-		</div>
+		</section>
+
+		@if (figures(); as figures) {
+			<section aria-labelledby="fantasy-season-title" class="grid gap-5">
+				<h2 id="fantasy-season-title" class="font-display text-display-md font-bold uppercase tracking-wide">Temporada {{ season()?.data?.season }}</h2>
+				<dl class="grid grid-cols-2 border-y border-rule md:grid-cols-4">
+					<div class="flex min-w-0 flex-col-reverse justify-end gap-0.5 py-4 pr-4 md:pr-6">
+						<dt class="text-ink-soft wrap-anywhere">usuarios</dt>
+						<dd class="font-display text-[2.5rem] font-bold uppercase leading-none md:text-[3.25rem]">{{ figures.users }}</dd>
+					</div>
+					<div class="flex min-w-0 flex-col-reverse justify-end gap-0.5 border-l border-rule py-4 pl-4 md:px-6">
+						<dt class="text-ink-soft wrap-anywhere">carreras jugadas</dt>
+						<dd class="font-display text-[2.5rem] font-bold uppercase leading-none md:text-[3.25rem]">{{ figures.played }} <span class="text-2xl text-ink-soft">de {{ figures.total }}</span></dd>
+					</div>
+					<div class="flex min-w-0 flex-col-reverse justify-end gap-0.5 border-t border-rule py-4 pr-4 md:border-l md:border-t-0 md:px-6">
+						<dt class="text-ink-soft wrap-anywhere">puntos repartidos</dt>
+						<dd class="font-display text-[2.5rem] font-bold uppercase leading-none md:text-[3.25rem]">{{ formatNumber(figures.points) }}</dd>
+					</div>
+					@if (figures.best; as best) {
+						<div class="flex min-w-0 flex-col-reverse justify-end gap-0.5 border-l border-t border-rule py-4 pl-4 md:border-t-0 md:px-6">
+							<dt class="text-ink-soft wrap-anywhere">mejor puntuación en una carrera</dt>
+							<dd class="font-display text-[2.5rem] font-bold uppercase leading-none wrap-anywhere md:text-[3.25rem]">{{ best.points }} <small class="font-sans text-sm font-normal normal-case text-ink-soft">{{ best.username }}</small></dd>
+						</div>
+					}
+				</dl>
+
+				<div class="grid gap-3">
+					<div class="flex flex-wrap items-baseline justify-between gap-2">
+						<h3 class="font-display text-2xl font-semibold uppercase tracking-wide">@if (remaining()) {Quedan {{ remaining() }} {{ remaining() === 1 ? 'carrera' : 'carreras' }}} @else {Temporada terminada}</h3>
+						<p class="text-sm text-ink-soft"><strong class="text-ink">{{ figures.played }}</strong> de {{ figures.total }} carreras jugadas ({{ progress() }} %)</p>
+					</div>
+					<ol class="flex gap-0.5" aria-hidden="true">
+						@for (segment of segments(); track segment.id) {
+							<li class="h-3 min-w-0 flex-1 border" [class]="segment.state === 'played' ? 'border-fantasy bg-fantasy' : segment.state === 'next' ? 'border-ink bg-ink' : 'border-ink-soft'"></li>
+						}
+					</ol>
+					@if (upcoming().length) {
+						<ol class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4" aria-label="Próximas carreras">
+							@for (race of upcoming(); track race.order) {
+								<li class="flex min-w-0 items-baseline gap-3 rounded-row border bg-panel px-3 py-3" [class]="race.next ? 'border-2 border-ink' : 'border-rule'">
+									<span class="font-display text-2xl font-bold leading-none">{{ race.order }}</span>
+									<span class="min-w-0">
+										<strong class="block wrap-anywhere">{{ race.name }}</strong>
+										@if (race.date) {
+											<span class="text-sm text-ink-soft">{{ formatDay(race.date) }}, {{ formatTime(race.date) }}</span>
+										}
+									</span>
+								</li>
+							}
+						</ol>
+					}
+				</div>
+			</section>
+		} @else if (loading()) {
+			<div class="min-h-[22rem]" aria-hidden="true"></div>
+		}
+
+		<section aria-labelledby="fantasy-how-title" class="grid content-start gap-4">
+			<div>
+				<h2 id="fantasy-how-title" class="font-display text-display-md font-bold uppercase tracking-wide">Cómo se juega</h2>
+				<p class="mt-1.5 text-ink-soft">Lo que necesitas saber antes de tu primera jornada.</p>
+			</div>
+			<div class="overflow-hidden rounded-panel border border-rule bg-panel">
+				@for (item of howToPlay; track item.title; let i = $index) {
+					<details class="group border-t border-rule first:border-t-0" [attr.open]="i === 0 ? '' : null">
+						<summary class="flex min-h-16 cursor-pointer list-none items-center gap-3.5 px-4 py-2.5 hover:bg-panel-alt focus-visible:-outline-offset-2! sm:px-5 [&::-webkit-details-marker]:hidden after:ml-auto after:size-2.5 after:shrink-0 after:-translate-y-0.5 after:rotate-45 after:border-b-2 after:border-r-2 after:border-ink-soft after:content-[''] group-open:after:translate-y-0.5 group-open:after:-rotate-135">
+							<span class="inline-flex h-8 min-w-8 shrink-0 items-center justify-center rounded-row bg-pit font-display text-lg font-bold text-on-pit" aria-hidden="true">{{ i + 1 }}</span>
+							<span class="grid min-w-0 gap-0.5">
+								<b class="font-display text-[1.375rem] font-bold uppercase leading-tight tracking-wide">{{ item.title }}</b>
+								<span class="text-[0.9375rem] leading-snug text-ink-soft">{{ item.summary }}</span>
+							</span>
+						</summary>
+						<div class="grid gap-4 px-4 pb-5 pt-1 sm:px-5 sm:pb-6 md:pl-[66px] lg:grid-cols-[4fr_8fr] lg:items-start lg:gap-8">
+							<ul class="grid max-w-[68ch] gap-2">
+								@for (rule of item.rules; track $index) {
+									<li class="relative pl-4 before:absolute before:left-0 before:top-[0.55em] before:size-1.5 before:bg-fantasy before:content-['']">{{ rule }}</li>
+								}
+							</ul>
+							<img [src]="imageService.getImageUrl(item.imageLight)" [width]="item.width" [height]="item.height" [alt]="item.imageAlt" loading="lazy" decoding="async" class="h-auto w-full rounded-row border border-rule dark:hidden" [style.max-width.px]="item.width" />
+							<img [src]="imageService.getImageUrl(item.image)" [width]="item.width" [height]="item.height" [alt]="item.imageAlt" loading="lazy" decoding="async" class="hidden h-auto w-full rounded-row border border-rule dark:block" [style.max-width.px]="item.width" />
+						</div>
+					</details>
+				}
+			</div>
+		</section>
 	</div>
 </div>
