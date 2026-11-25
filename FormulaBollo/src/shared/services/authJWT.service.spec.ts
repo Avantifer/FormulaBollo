@@ -9,6 +9,8 @@ export function sessionToken(exp: number): string {
 
 describe('AuthJWTService session validation', () => {
   beforeEach(() => {
+    // Otro spec puede dejar un saveCache() pendiente (temporizador real de 300 ms) que escribe apiCache entre tests.
+    localStorage.clear();
     jasmine.clock().install();
     TestBed.configureTestingModule({ providers: [
     { provide: MessageInfoService, useValue: { showInfo: () => {} } }
