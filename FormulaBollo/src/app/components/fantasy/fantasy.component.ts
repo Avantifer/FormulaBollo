@@ -93,7 +93,7 @@ export class FantasyComponent {
         'El equipo NO se guarda automáticamente, se tendrá que guardar y crear cada jornada.',
         'Puedes guardar el equipo hasta 12 horas antes de la carrera, después no dejará.'
       ],
-      image: 'fantasy/fantasyHowToPlay1.avif',
+      image: 'fantasy/fantasyHowToPlay1.avif?v=2',
       imageAlt: 'Selector de equipo con tres pilotos y dos escuderías elegidos',
       width: 632,
       height: 378
@@ -106,7 +106,7 @@ export class FantasyComponent {
         'De esta manera vas a poder variar tu equipo y analizar cuál puede ser el mejor equipo para la jornada que viene.',
         'Al igual también va cambiando el precio de los equipos teniendo en cuenta los pilotos de la escudería en específico.'
       ],
-      image: 'fantasy/fantasyHowToPlay2.avif',
+      image: 'fantasy/fantasyHowToPlay2.avif?v=2',
       imageAlt: 'Lista de pilotos con su precio y su variación',
       width: 964,
       height: 488
@@ -119,7 +119,7 @@ export class FantasyComponent {
         'Cuanto más arriba quede el piloto más puntos obtendrán al igual que si tiene la vuelta rápida o haya obtenido una pole.',
         'No obtendrá puntos si consiguió hacer un DNF o si ni siquiera participó.'
       ],
-      image: 'fantasy/fantasyHowToPlay3.avif',
+      image: 'fantasy/fantasyHowToPlay3.avif?v=2',
       imageAlt: 'Tarjetas de los pilotos y escuderías elegidos con los puntos de cada uno',
       width: 791,
       height: 576
@@ -132,7 +132,7 @@ export class FantasyComponent {
         'Todos estarán en la misma liga y aunque no juegues al F1 Bollo puedes seguir jugando al Fantasy Bollo y estar pendiente de la competición.',
         'También podrás ver el equipo que escogieron para obtener inspiración.'
       ],
-      image: 'fantasy/fantasyHowToPlay4.avif',
+      image: 'fantasy/fantasyHowToPlay4.avif?v=2',
       imageAlt: 'Clasificación general con posición, usuario y puntos, junto al detalle del equipo del líder',
       width: 1265,
       height: 439

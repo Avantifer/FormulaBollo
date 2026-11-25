@@ -51,7 +51,7 @@
 				@if (upcoming()[0]; as next) {
 					<p class="text-[0.9375rem] leading-snug"><span class="block font-display text-sm font-semibold uppercase tracking-wider text-ink-soft">Próxima jornada</span>{{ next.name }}@if (next.date) {, {{ formatDayLong(next.date) }}} (jornada {{ next.order }})</p>
 				}
-				<a [routerLink]="startLink" class="go mt-auto inline-flex min-h-12 items-center justify-center self-start rounded-row bg-fantasy px-6 font-semibold text-on-fantasy after:absolute after:inset-0 after:z-10 after:content-[''] hover:brightness-90 max-md:self-stretch">Crear mi equipo</a>
+				<a [routerLink]="startLink" class="go mt-auto inline-flex min-h-12 items-center justify-center self-start rounded-row bg-fantasy px-6 font-semibold text-on-fantasy after:absolute after:inset-0 after:z-10 after:content-[''] hover:bg-[color-mix(in_srgb,var(--fantasy),black_15%)] max-md:self-stretch">Crear mi equipo</a>
 			</article>
 
 			<article class="relative isolate flex min-w-0 flex-col gap-4 rounded-panel border border-rule bg-panel p-5 md:p-6">
