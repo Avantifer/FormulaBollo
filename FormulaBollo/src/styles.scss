@@ -131,6 +131,12 @@ body {
   padding-block: 0.6rem;
 }
 
+/* Tailwind v4 deja los botones con cursor por defecto */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
 :focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
