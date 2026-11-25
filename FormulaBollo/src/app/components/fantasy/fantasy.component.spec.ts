@@ -78,6 +78,26 @@ describe('FantasyComponent', () => {
       }
     });
 
+    it('shows a light and a dark screenshot per rule and the theme class picks which one is visible', () => {
+      const items = fixture.componentInstance.howToPlay;
+
+      expect(items.length).toBe(4);
+      for (const item of items) {
+        expect(item.image).toMatch(/^fantasy\/fantasyHowToPlay\d\.avif/);
+        expect(item.imageLight).toBe(item.image.replace('.avif', '-light.avif'));
+      }
+      for (const item of Array.from(root().querySelectorAll('details'))) {
+        const images = Array.from(item.querySelectorAll<HTMLImageElement>('img'));
+        const light = images.filter(image => image.classList.contains('dark:hidden'));
+        const dark = images.filter(image => image.classList.contains('dark:block') && image.classList.contains('hidden'));
+
+        expect(images.length).toBe(2);
+        expect(light.length).toBe(1);
+        expect(dark.length).toBe(1);
+        expect(light[0].alt).toBe(dark[0].alt);
+      }
+    });
+
     it('degrades silently when the seasons request fails', () => {
       http.expectOne(request => request.url.endsWith('/seasons/fantasy')).flush('failed', { status: 500, statusText: 'Error' });
       fixture.detectChanges();

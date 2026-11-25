@@ -182,7 +182,8 @@
 									<li class="relative pl-4 before:absolute before:left-0 before:top-[0.55em] before:size-1.5 before:bg-fantasy before:content-['']">{{ rule }}</li>
 								}
 							</ul>
-							<img [src]="imageService.getImageUrl(item.image)" [width]="item.width" [height]="item.height" [alt]="item.imageAlt" loading="lazy" decoding="async" class="h-auto w-full rounded-row border border-rule" [style.max-width.px]="item.width" />
+							<img [src]="imageService.getImageUrl(item.imageLight)" [width]="item.width" [height]="item.height" [alt]="item.imageAlt" loading="lazy" decoding="async" class="h-auto w-full rounded-row border border-rule dark:hidden" [style.max-width.px]="item.width" />
+							<img [src]="imageService.getImageUrl(item.image)" [width]="item.width" [height]="item.height" [alt]="item.imageAlt" loading="lazy" decoding="async" class="hidden h-auto w-full rounded-row border border-rule dark:block" [style.max-width.px]="item.width" />
 						</div>
 					</details>
 				}

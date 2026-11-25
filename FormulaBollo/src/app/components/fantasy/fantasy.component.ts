@@ -17,6 +17,7 @@ interface HowToPlayItem {
   summary: string;
   rules: string[];
   image: string;
+  imageLight: string;
   imageAlt: string;
   width: number;
   height: number;
@@ -94,6 +95,7 @@ export class FantasyComponent {
         'Puedes guardar el equipo hasta 12 horas antes de la carrera, después no dejará.'
       ],
       image: 'fantasy/fantasyHowToPlay1.avif?v=2',
+      imageLight: 'fantasy/fantasyHowToPlay1-light.avif?v=2',
       imageAlt: 'Selector de equipo con tres pilotos y dos escuderías elegidos',
       width: 632,
       height: 378
@@ -107,6 +109,7 @@ export class FantasyComponent {
         'Al igual también va cambiando el precio de los equipos teniendo en cuenta los pilotos de la escudería en específico.'
       ],
       image: 'fantasy/fantasyHowToPlay2.avif?v=2',
+      imageLight: 'fantasy/fantasyHowToPlay2-light.avif?v=2',
       imageAlt: 'Lista de pilotos con su precio y su variación',
       width: 964,
       height: 488
@@ -120,6 +123,7 @@ export class FantasyComponent {
         'No obtendrá puntos si consiguió hacer un DNF o si ni siquiera participó.'
       ],
       image: 'fantasy/fantasyHowToPlay3.avif?v=2',
+      imageLight: 'fantasy/fantasyHowToPlay3-light.avif?v=2',
       imageAlt: 'Tarjetas de los pilotos y escuderías elegidos con los puntos de cada uno',
       width: 791,
       height: 576
@@ -133,6 +137,7 @@ export class FantasyComponent {
         'También podrás ver el equipo que escogieron para obtener inspiración.'
       ],
       image: 'fantasy/fantasyHowToPlay4.avif?v=2',
+      imageLight: 'fantasy/fantasyHowToPlay4-light.avif?v=2',
       imageAlt: 'Clasificación general con posición, usuario y puntos, junto al detalle del equipo del líder',
       width: 1265,
       height: 439
