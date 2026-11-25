@@ -281,8 +281,8 @@ describe('Frontend regressions', () => {
     theme.toggleTheme();
     fixture.detectChanges();
     expect(component.raceSelected.id).toBe(1);
-    expect(fixture.nativeElement.textContent).toContain('no está habilitada');
-    const save = Array.from(fixture.nativeElement.querySelectorAll('button')).find((button: any) => button.textContent.includes('Guardar equipo')) as HTMLButtonElement;
-    expect(save.disabled).toBeTrue();
+    expect(fixture.nativeElement.textContent).toContain('Solo se puede editar el equipo de la última carrera');
+    const save = Array.from(fixture.nativeElement.querySelectorAll('button')).find((button: any) => button.textContent.includes('Guardar equipo'));
+    expect(save).toBeUndefined();
   });
 });
