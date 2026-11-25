@@ -95,8 +95,8 @@ export class FantasyComponent {
       ],
       image: 'fantasy/fantasyHowToPlay1.avif',
       imageAlt: 'Selector de equipo con tres pilotos y dos escuderías elegidos',
-      width: 685,
-      height: 409
+      width: 632,
+      height: 378
     },
     {
       title: 'Precios dinámicos',
@@ -108,8 +108,8 @@ export class FantasyComponent {
       ],
       image: 'fantasy/fantasyHowToPlay2.avif',
       imageAlt: 'Lista de pilotos con su precio y su variación',
-      width: 716,
-      height: 362
+      width: 964,
+      height: 488
     },
     {
       title: 'Sistema de puntuación',
@@ -121,8 +121,8 @@ export class FantasyComponent {
       ],
       image: 'fantasy/fantasyHowToPlay3.avif',
       imageAlt: 'Tarjetas de los pilotos y escuderías elegidos con los puntos de cada uno',
-      width: 953,
-      height: 640
+      width: 791,
+      height: 576
     },
     {
       title: 'Clasificación',
@@ -133,9 +133,9 @@ export class FantasyComponent {
         'También podrás ver el equipo que escogieron para obtener inspiración.'
       ],
       image: 'fantasy/fantasyHowToPlay4.avif',
-      imageAlt: 'Tabla de clasificación general con posición, usuario y puntos totales',
-      width: 1277,
-      height: 443
+      imageAlt: 'Clasificación general con posición, usuario y puntos, junto al detalle del equipo del líder',
+      width: 1265,
+      height: 439
     }
   ];
 }
