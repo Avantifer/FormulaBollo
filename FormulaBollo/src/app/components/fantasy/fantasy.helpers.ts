@@ -1,4 +1,5 @@
 import { Race } from '../../../shared/models/race';
+import { parseRaceWallClock } from '../../../shared/helpers/race-time';
 import { FantasySeason } from './fantasy-clasification/fantasy-clasification.helpers';
 
 export interface FantasyHomePick {
@@ -83,7 +84,7 @@ export function raceSegments(season: FantasySeason): FantasyHomeSegment[] {
 }
 
 export function upcomingRaces(season: FantasySeason, races: Race[], limit = 4): FantasyHomeRace[] {
-  const dates = new Map(races.map(race => [race.id, new Date(race.dateStart)]));
+  const dates = new Map(races.map(race => [race.id, parseRaceWallClock(race.dateStart)]));
   const pending = season.races.filter(race => !race.finished).slice(0, limit);
   return pending.map((race, index) => {
     const date = dates.get(race.id);
@@ -96,13 +97,13 @@ export function formatNumber(value: number): string {
 }
 
 export function formatRaceDay(date: Date): string {
-  return date.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '');
+  return date.toLocaleDateString('es-ES', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '');
 }
 
 export function formatRaceDayLong(date: Date): string {
-  return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+  return date.toLocaleDateString('es-ES', { timeZone: 'UTC', day: 'numeric', month: 'long' });
 }
 
 export function formatRaceTime(date: Date): string {
-  return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false });
+  return date.toLocaleTimeString('es-ES', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', hour12: false });
 }

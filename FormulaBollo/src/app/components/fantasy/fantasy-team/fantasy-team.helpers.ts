@@ -1,5 +1,6 @@
 import { FantasyPricesDriver } from '../../../../shared/models/fantasyPricesDriver';
 import { FantasyPricesTeam } from '../../../../shared/models/fantasyPricesTeam';
+import { parseRaceWallClock, raceStartInstant } from '../../../../shared/helpers/race-time';
 import { WARNING_ELECTION_NOT_COMPLETED, WARNING_FANTASY_SAVE_LATE, WARNING_MONEY_NEGATIVE } from '../../../constants';
 
 const M = 1_000_000;
@@ -137,13 +138,13 @@ export function sortCandidates<T extends Candidate>(candidates: T[], key: SortKe
   });
 }
 
-export const hoursUntil = (start: Date | string, now: Date): number => (new Date(start).getTime() - now.getTime()) / 3_600_000;
+export const hoursUntil = (start: Date | string, now: Date): number => (raceStartInstant(start) - now.getTime()) / 3_600_000;
 
 export function saveBlock(enabled: boolean, state: TeamState, raceStart: Date | string | undefined, now: Date): SaveBlock | null {
   if (!enabled) return 'disabled';
   if (!isComplete(state)) return 'incomplete';
   if (remainingBudget(state) < 0) return 'negative';
-  if (raceStart && hoursUntil(raceStart, now) < SAVE_DEADLINE_HOURS) return 'late';
+  if (raceStart && hoursUntil(raceStart, now) <= SAVE_DEADLINE_HOURS) return 'late';
   return null;
 }
 
@@ -166,9 +167,9 @@ export function formatSignedMoney(amount: number): string {
 }
 
 export function formatDeparture(date: Date | string): string {
-  const start = new Date(date);
-  const day = start.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }).replace(',', '');
-  return day + ', ' + start.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false });
+  const start = parseRaceWallClock(date);
+  const day = start.toLocaleDateString('es-ES', { timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long' }).replace(',', '');
+  return day + ', ' + start.toLocaleTimeString('es-ES', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
 export const SAVE_BLOCK_MESSAGE: Record<SaveBlock, string> = {

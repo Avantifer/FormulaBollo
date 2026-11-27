@@ -90,6 +90,20 @@ describe('TeamsInfoComponent', () => {
     fixture.detectChanges();
   }
 
+  it('displays the API wall-clock day in recent team results at 00:30', () => {
+    infoRequest.and.returnValue(of({ ...info, last5Results: info.last5Results.map(result => ({
+      ...result, race: { ...result.race, dateStart: '2025-10-05T00:30:00' as unknown as Date },
+    })) }));
+    create();
+    const selector: SelectSeasonsComponent = fixture.debugElement.query(By.directive(SelectSeasonsComponent)).componentInstance;
+    selector.seasonChanged.emit(season1);
+    fixture.detectChanges();
+    const times: HTMLTimeElement[] = Array.from(fixture.nativeElement.querySelectorAll('time'));
+    expect(times.length).toBe(5);
+    expect(times.map(time => time.textContent)).toEqual(Array(5).fill('05/10/2025'));
+    expect(times.map(time => time.getAttribute('datetime'))).toEqual(Array(5).fill('2025-10-05'));
+  });
+
   function select(season = season1): void {
     component['onSeasonChange'](season);
     fixture.detectChanges();

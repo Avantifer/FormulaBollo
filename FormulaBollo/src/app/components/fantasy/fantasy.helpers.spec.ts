@@ -1,10 +1,19 @@
 import { Race } from '../../../shared/models/race';
 import { buildFantasySeason } from './fantasy-clasification/fantasy-clasification.helpers';
 import { fantasyEntry, fantasyFixture } from './fantasy-clasification/fantasy-clasification.fixture';
-import { formatNumber, formatRaceDay, formatRaceTime, leagueFigures, mostPicked, raceSegments, upcomingRaces } from './fantasy.helpers';
+import { formatNumber, formatRaceDay, formatRaceDayLong, formatRaceTime, leagueFigures, mostPicked, raceSegments, upcomingRaces } from './fantasy.helpers';
 
 describe('Fantasy home helpers', () => {
   const season = () => buildFantasySeason(fantasyFixture());
+
+  it('shows the API wall-clock day and time in the upcoming calendar, including a browser DST gap', () => {
+    const data = fantasyFixture();
+    const race = { id: 28, dateStart: '2025-03-09T02:30:00' } as unknown as Race;
+    const upcoming = upcomingRaces(buildFantasySeason(data), [race]);
+    expect(upcoming[0].date).not.toBeNull();
+    expect(formatRaceDayLong(upcoming[0].date!)).toBe('9 de marzo');
+    expect(formatRaceTime(upcoming[0].date!)).toBe('02:30');
+  });
 
   it('counts the most picked drivers and teams, most repeated first', () => {
     const data = fantasyFixture();
@@ -76,7 +85,7 @@ describe('Fantasy home helpers', () => {
     const upcoming = upcomingRaces(buildFantasySeason(data), races);
 
     expect(upcoming.map(race => [race.order, race.name, race.next])).toEqual([[4, 'Monza', true], [5, 'Spa', false], [6, 'Zandvoort', false]]);
-    expect(upcoming[0].date?.getHours()).toBe(15);
+    expect(formatRaceTime(upcoming[0].date!)).toBe('15:00');
     expect(upcoming[1].date).toBeNull();
     expect(upcoming[2].date).toBeNull();
     expect(upcomingRaces(buildFantasySeason(data), races, 1).length).toBe(1);
@@ -86,7 +95,7 @@ describe('Fantasy home helpers', () => {
     expect(formatNumber(6647)).toBe('6.647');
     expect(formatNumber(999)).toBe('999');
     expect(formatNumber(1234567)).toBe('1.234.567');
-    const date = new Date(2024, 10, 10, 18, 0);
+    const date = new Date('2024-11-10T18:00:00Z');
     expect(formatRaceTime(date)).toBe('18:00');
     expect(formatRaceDay(date)).toMatch(/^dom\.? 10 nov/);
   });

@@ -41,6 +41,13 @@ describe('ResultsComponent', () => {
   const tab = (index: number): HTMLButtonElement => query<HTMLButtonElement>('#results-tab-' + index);
   const select = (index: number): void => { tab(index).click(); fixture.detectChanges(); };
 
+  it('displays the API wall-clock day for a race shortly after midnight', () => {
+    races.getAllRaces.and.returnValue(of([{ ...race, dateStart: '2025-10-05T00:30:00' as unknown as Date }]));
+    render();
+    expect(query('time').textContent).toBe('05/10/2025');
+    expect(query('time').getAttribute('datetime')).toBe('2025-10-05');
+  });
+
   beforeEach(() => {
     results = jasmine.createSpyObj('ResultApiService', ['getAllResultsPerRacePilots', 'getAllResultsPerRaceTeams']);
     penalties = jasmine.createSpyObj('PenaltiesApiService', ['getPenaltiesByRace']);

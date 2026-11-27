@@ -1,6 +1,7 @@
 import { CacheService } from '../../../shared/services/cache.service';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, effect, inject, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RaceDatePipe } from '../../../shared/pipes/raceDate.pipe';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { catchError, of, Subscription } from 'rxjs';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -24,7 +25,7 @@ type ResultsTab = 'Pilotos' | 'Equipos' | 'Penalizaciones';
 
 @Component({
   selector: 'app-results',
-  imports: [CommonModule, RouterLink, SkeletonModule, SpaceToUnderscorePipe, SelectSeasonsComponent, SelectRacesComponent],
+  imports: [CommonModule, RaceDatePipe, RouterLink, SkeletonModule, SpaceToUnderscorePipe, SelectSeasonsComponent, SelectRacesComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './results.component.html',
   styleUrl: './results.component.scss'

@@ -6,6 +6,7 @@ import { environment } from '../../../../enviroments/enviroment';
 import { DatePicker } from 'primeng/datepicker';
 
 import { Race } from '../../../../shared/models/race';
+import { RaceDate, serializeRaceDate } from '../../../../shared/helpers/race-time';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SelectDriversComponent } from '../../../../shared/components/select-drivers/select-drivers.component';
 import { Driver } from '../../../../shared/models/driver';
@@ -53,7 +54,16 @@ export class AdminResultsComponent {
   private readonly fantasyApiService: FantasyApiService = inject(FantasyApiService);
   
   actualSeason: Season = environment.seasonActual;
-  raceDate: Date | undefined;
+  private pickerDate: Date | undefined;
+  // Keep the loaded text separate: a local Date normalizes nonexistent browser times.
+  private raceDateToSave: RaceDate | undefined;
+  get raceDate(): Date | undefined {
+    return this.pickerDate;
+  }
+  set raceDate(value: Date | null | undefined) {
+    this.pickerDate = value ?? undefined;
+    this.raceDateToSave = value ?? undefined;
+  }
   raceSelected: Race | undefined;
   readonly results: WritableSignal<Result[]> = signal<Result[]>([]);
   readonly sprints: WritableSignal<Sprint[]> = signal<Sprint[]>([]);
@@ -149,8 +159,9 @@ export class AdminResultsComponent {
   }
 
   private resetValuesRaceChange(newRace: Race): void {
-    this.raceSelected = { ...newRace, dateStart: new Date(newRace.dateStart) };
-    this.raceDate = new Date(newRace.dateStart);
+    this.raceSelected = { ...newRace };
+    this.pickerDate = new Date(newRace.dateStart);
+    this.raceDateToSave = newRace.dateStart;
     this.fastlapDriver.set(undefined);
     this.poleDriver.set(undefined);
     this.driversSelected = new Array(20).fill(null);
@@ -173,7 +184,9 @@ export class AdminResultsComponent {
   saveResults(): void {
     if (!this.canSave() || !this.validateForm()) return;
 
-    const race: Race = { ...this.raceSelected!, dateStart: new Date(this.raceDate!) };
+    const dateStart = typeof this.raceDateToSave === 'string'
+      ? this.raceDateToSave : serializeRaceDate(this.raceDateToSave!);
+    const race: Race = { ...this.raceSelected!, dateStart };
     if (this.isSprint ? this.sprints().length : this.results().length) this.updateResultsToSave(race);
     else this.createResultsToSave(race);
 

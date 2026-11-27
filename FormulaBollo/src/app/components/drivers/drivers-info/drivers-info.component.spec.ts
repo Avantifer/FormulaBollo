@@ -51,6 +51,23 @@ describe('DriversInfoComponent', () => {
 
   afterEach(() => fixture.destroy());
 
+  it('displays the API wall-clock day in recent driver results at 00:30', () => {
+    const value: DriverInfo = { ...info, last5Results: info.last5Results.map(result => ({
+      ...result, race: { ...result.race, dateStart: '2025-10-05T00:30:00' as unknown as Date },
+    })) as DriverInfo['last5Results'] };
+    spyOn(TestBed.inject(DriverApiService), 'getInfoByDriverName').and.returnValue(of(value));
+    spyOn(TestBed.inject(DriverApiService), 'getTeamHistoryByDriverName').and.returnValue(of([]));
+    spyOn(TestBed.inject(ResultApiService), 'getAllDriverPoints').and.returnValue(of([]));
+    spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+    const selector: SelectSeasonsComponent = fixture.debugElement.query(By.directive(SelectSeasonsComponent)).componentInstance;
+    selector.seasonChanged.emit(driverPointsFixture.driver.season);
+    fixture.detectChanges();
+    const times: HTMLTimeElement[] = Array.from(fixture.nativeElement.querySelectorAll('time'));
+    expect(times.length).toBe(5);
+    expect(times.map(time => time.textContent)).toEqual(Array(5).fill('05/10/2025'));
+    expect(times.map(time => time.getAttribute('datetime'))).toEqual(Array(5).fill('2025-10-05'));
+  });
+
   function render(value = info): void {
     component['driverInfo'].set(value);
     component['_mapDriverStats'](value);
