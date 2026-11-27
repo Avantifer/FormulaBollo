@@ -4,8 +4,10 @@
 -- Válido justo tras aplicar la migración. Si la aplicación ya escribió datos nuevos,
 -- el script rellena season_id desde race_id donde es posible (result, sprint,
 -- fantasy_*) pero fallará en championship/constructor/configuration si hay filas
--- nuevas sin season_id. Las imágenes vuelven a las columnas *_legacy (BLOB/URL); lo
--- escrito en las columnas de ruta se descarta.
+-- nuevas sin season_id. Las imágenes vuelven a las columnas *_legacy (BLOB/URL).
+-- Los coches sin imagen legacy conservan la ruta actual (o '' si es NULL):
+-- de esas imágenes escritas tras V001 solo queda la ruta, no los bytes.
+-- Las rutas nuevas de pilotos y logos se descartan; sus legacy admiten NULL.
 -- =============================================================================
 SET NAMES utf8mb4;
 
@@ -29,6 +31,7 @@ ALTER TABLE fantasy_price_team    MODIFY season_id TINYINT(2) NOT NULL;
 ALTER TABLE fantasy_election CHANGE COLUMN account_id user_id TINYINT(4) NOT NULL;
 ALTER TABLE penalty CHANGE COLUMN penalty_severity_id severity_id TINYINT(2) NOT NULL;
 
+UPDATE team SET car_image_legacy = COALESCE(car_image, '') WHERE car_image_legacy IS NULL;
 ALTER TABLE team DROP COLUMN logo_image, DROP COLUMN car_image;
 ALTER TABLE team
   CHANGE COLUMN logo_image_legacy logo_image BLOB NULL,

@@ -108,7 +108,7 @@ Esto es infraestructura: no se arregla con código y lo tienes que hacer tú en 
       el puerto 3306 al exterior (cortafuegos o red privada) y deja entrar solo a la máquina de la aplicación.
       Comprueba desde fuera con `nc -vz <ip-de-la-bd> 3306`: debe fallar.
 - [ ] **Usuario de BD con permisos mínimos.** La aplicación no ejecuta DDL (no hay `ddl-auto`), solo datos. Las
-      migraciones (`V001`) se siguen aplicando a mano con un usuario administrador.
+      migraciones SQL se siguen aplicando a mano con un usuario administrador.
 
       ```sql
       CREATE USER 'fb_app'@'<ip-de-la-app>' IDENTIFIED BY '<clave larga y aleatoria>';
@@ -137,11 +137,11 @@ Esto es infraestructura: no se arregla con código y lo tienes que hacer tú en 
 ## 3. Base de datos
 
 - [ ] Para la aplicación.
-- [ ] `mariadb <bd> < FormulaBolloApp/db/migration/V001__align_schema_with_code.sql` (no destructiva; si se repite,
-      falla antes de tocar nada). Detalle y comprobaciones en `FormulaBolloApp/db/migration/README.md`.
-- [ ] **Temporada 3**: el frontend la usa como actual (`environment.seasonActual`) y la base solo tiene la 1 y la 2.
-      Sin ella la portada sale vacía y guardar sanciones falla por una clave foránea. Hay un `INSERT` comentado al
-      final de V001; el `id` que se cree debe ser el que usa el frontend (3).
+- [ ] **Comprueba el esquema antes de nada:** `SHOW TABLES LIKE 'schema_migration'` (y su contenido),
+      `SHOW COLUMNS FROM season LIKE 'year'`, `SHOW CREATE TABLE account` y `fantasy_election`.
+- [ ] **V001 solo para una base con el esquema anterior** (si `season.year` ya existe, **sáltatela**; el volcado de
+      producción del 18/11/2026 ya lo tiene). Detalle en `FormulaBolloApp/db/migration/README.md`.
+- [ ] **Temporada actual**: el frontend usa la 3 (`environment.seasonActual`). Confirma que existe en `season`.
 - [ ] **V002: claves únicas (auditoría del backend).** Sin ellas un doble envío podía duplicar resultados (hay
       duplicados reales en la copia local) y sumar puntos de más. Con la aplicación parada y copia hecha
       (`mariadb-dump --single-transaction <bd> > antes_V002.sql`):
@@ -214,8 +214,8 @@ Pendientes de la auditoría global:
 ## 6. Vuelta atrás
 
 - Aplicación: vuelve al `.jar` y a la configuración anteriores.
-- Base de datos: `mariadb <bd> < FormulaBolloApp/db/migration/V001__rollback.sql` (válido justo tras migrar; ver el
-  README de migración para sus límites) o restaura `antes_migracion.sql`.
+- Base de datos: `V002__rollback.sql` quita las claves; `V001__rollback.sql` solo si aplicaste V001 (válido justo
+  tras migrar; ver el README de migración para sus límites). O restaura la copia previa.
 
 ## 7. Limpieza (cuando todo esté validado)
 

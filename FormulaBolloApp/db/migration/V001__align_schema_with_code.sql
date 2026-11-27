@@ -3,13 +3,15 @@
 --
 -- Origen:  esquema anterior (copia de seguridad backup_20261102050001.sql, MariaDB 10.6)
 -- Destino: el que esperan las entidades JPA de src/main/java/formula/bollo/entity
+-- Solo para ese esquema anterior, no para producción ya alineada.
 --
 -- NO destructiva: lo que el código ya no usa se conserva (tabla circuit, columnas
 -- *_legacy, season_id relajado a NULL). Vuelta atrás: V001__rollback.sql.
 -- Ejecutar UNA vez, con la aplicación parada y tras hacer copia de seguridad:
 --   mariadb-dump --single-transaction <bd> > antes_V001.sql
 --   mariadb <bd> < V001__align_schema_with_code.sql
--- Si se repite, falla en el primer INSERT (clave duplicada) sin modificar nada.
+-- Ejecutar sin --force: si se repite tras completarse, el primer ALTER falla
+-- porque season.year ya existe, antes de modificar datos o tablas existentes.
 -- =============================================================================
 SET NAMES utf8mb4;
 
@@ -17,7 +19,6 @@ CREATE TABLE IF NOT EXISTS schema_migration (
   version VARCHAR(20) NOT NULL PRIMARY KEY,
   applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-INSERT INTO schema_migration (version) VALUES ('V001');
 
 -- 1) season.year (obligatorio y único en la entidad): año de la primera carrera
 ALTER TABLE season ADD COLUMN year INT NULL;
@@ -210,3 +211,5 @@ INSERT IGNORE INTO cache (name, version) VALUES ('general_cache', 0);
 -- 7) La temporada actual del frontend es la 3 (environment.seasonActual). Si aún no existe,
 --    créala cuando empiece (el año debe ser único):
 -- INSERT INTO season (name, number, year) VALUES ('Temporada 3', 3, 2025);
+
+INSERT INTO schema_migration (version) VALUES ('V001');
