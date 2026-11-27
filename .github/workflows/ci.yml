@@ -49,6 +49,31 @@ jobs:
         env:
           MARIADB_HOST: 127.0.0.1
           MARIADB_PWD: ci-solo-pruebas
+      # La estructura de producción (sin datos): V001 no debe marcarse y V002 debe aplicarse.
+      - run: bash FormulaBolloApp/db/migration/test/run_production.sh
+        env:
+          MARIADB_HOST: 127.0.0.1
+          MARIADB_PWD: ci-solo-pruebas
+      # Y la aplicación lee y escribe sobre esa estructura con V002 puesta (los demás tests usan H2).
+      - name: Cargar la estructura de producción
+        working-directory: FormulaBolloApp/db/migration
+        env:
+          MYSQL_PWD: ci-solo-pruebas
+        run: |
+          mariadb -h 127.0.0.1 -u root -e "CREATE DATABASE production_jpa CHARACTER SET utf8mb4"
+          mariadb -h 127.0.0.1 -u root production_jpa < test/production_schema.sql
+          mariadb -h 127.0.0.1 -u root production_jpa < V002__unique_keys.sql
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      - run: sh ./mvnw -B test -Dtest=ProductionSchemaTest
+        working-directory: FormulaBolloApp
+        env:
+          PRODUCTION_SCHEMA_JDBC_URL: jdbc:mariadb://127.0.0.1:3306/production_jpa
+          PRODUCTION_SCHEMA_USER: root
+          PRODUCTION_SCHEMA_PASSWORD: ci-solo-pruebas
 
   frontend:
     runs-on: ubuntu-latest
