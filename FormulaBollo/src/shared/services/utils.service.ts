@@ -9,23 +9,6 @@ import { Position } from '../models/position';
 export class UtilsService {
   private readonly messageInfoService: MessageInfoService = inject(MessageInfoService);
 
-  public getContrastingTextColor(className: string): string {
-    const element = document.getElementsByClassName(`bg-${className}`)[0];
-    if (!element) return '#000000';
-    
-    const backgroundColor = window.getComputedStyle(element).backgroundColor;
-    const rgb = backgroundColor.match(/\d+/g) || [];
-    
-    if (rgb.length < 3) return '#000000';
-    
-    const r = parseInt(rgb[0]!, 10);
-    const g = parseInt(rgb[1], 10);
-    const b = parseInt(rgb[2], 10);
-
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance > 0.5 ? '#000000' : '#FFFFFF';
-  }
-
   public handleError<T>(errorString: string, errorMessage: any, valueReturn?: T): Observable<T> {
     this.messageInfoService.showError(errorString, errorMessage);
     console.error(errorMessage);
