@@ -130,7 +130,7 @@ export class AdminPenaltiesComponent {
 
     this.cleanPenalties();
 
-    this.penaltyApiService.savePenalties(this.penaltiesToSave, this.driverSelected!.id, this.raceSelected!.id).pipe(
+    this.penaltyApiService.savePenalties(this.penaltiesToSave, this.driverSelected!.id, this.raceSelected!.id, this.penaltySeveritySelected!.id).pipe(
       takeUntil(this.destroy$),
       catchError((error) => {
         this.messageInfoService.showError(error, error);

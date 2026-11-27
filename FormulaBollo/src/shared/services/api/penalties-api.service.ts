@@ -34,7 +34,7 @@ export class PenaltiesApiService {
     return this.httpClient.get<Penalty[]>(`${environment.apiUrl}${this.endpoint}/perDriverPerRace`, { params });
   }
 
-  savePenalties(penalties: Penalty[], driverId: number, raceId: number): Observable<string> {
+  savePenalties(penalties: Penalty[], driverId: number, raceId: number, severityId: number): Observable<string> {
     this.cacheService.clearCache();
     
     const headers = new HttpHeaders({
@@ -42,7 +42,7 @@ export class PenaltiesApiService {
       'Authorization': `Bearer ${localStorage.getItem('auth')}`,
       Accept: "text/plain",
     });
-     const params = this.baseApiService.createParams({ driverId: driverId, raceId: raceId });
+     const params = this.baseApiService.createParams({ driverId: driverId, raceId: raceId, severityId: severityId });
     return this.httpClient.put<string>(`${environment.apiUrl}${this.endpoint}/save`, penalties, { params, headers, responseType: "text" as "json" });
   }
 }

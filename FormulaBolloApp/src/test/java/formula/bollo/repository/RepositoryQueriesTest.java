@@ -190,7 +190,8 @@ class RepositoryQueriesTest {
                 .isEmpty();
         assertThat(penalties.recordPenaltiesDriver()).hasSize(2)
                 .allSatisfy(record -> assertThat(record.getValue().longValue()).isEqualTo(1));
-        assertThat(penalties.findByDriverAndRace(id(driver.getId()), id(latest.getId()))).containsExactly(penalty);
+        assertThat(penalties.findByDriverAndRaceAndSeverity(id(driver.getId()), id(latest.getId()), id(severity.getId())))
+                .containsExactly(penalty);
     }
 
     @Test
