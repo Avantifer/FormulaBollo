@@ -5,17 +5,13 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import formula.bollo.impl.AccountImpl;
 import formula.bollo.model.AccountDTO;
-import formula.bollo.repository.AccountRepository;
 import formula.bollo.service.AccountService;
 import formula.bollo.utils.Constants;
 
@@ -29,16 +25,10 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = Constants.TAG_ACCOUNT, description = Constants.TAG_ACCOUNT_SUMMARY)
 public class AccountController {
 
-    private AccountRepository accountRepository;
-    private AccountImpl accountImpl;
     private AccountService accountService;
 
     public AccountController(
-            AccountRepository accountRepository,
-            AccountImpl accountImpl,
             AccountService accountService) {
-        this.accountRepository = accountRepository;
-        this.accountImpl = accountImpl;
         this.accountService = accountService;
     }
 
@@ -76,13 +66,5 @@ public class AccountController {
     public ResponseEntity<String> recoverPassword(@RequestParam String email, HttpServletRequest request) {
         log.info("Solicitud de recuperacion de contraseña");
         return this.accountService.recoverPassword(email, request.getRemoteAddr());
-    }
-
-    @Operation(summary = "Get account by id", tags = Constants.TAG_ACCOUNT)
-    @Transactional(readOnly = true)
-    @GetMapping(path = "/id", produces = MediaType.APPLICATION_JSON_VALUE)
-    public AccountDTO getUserById(@RequestParam Integer id) {
-        log.info("Se va a coge el usuario del id " + id);
-        return this.accountImpl.accountToAccountDTO(accountRepository.findById((long) id).orElse(null));
     }
 }

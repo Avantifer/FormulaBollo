@@ -52,15 +52,4 @@ export class AccountApiService {
     return this.httpClient.post<string>(`${environment.apiUrl}${this.endpoint}/recoverPassword`, null, { params, headers, responseType: "text" as "json" });
   }
 
-  getUserById(id: number): Observable<string> {
-    const headers = new HttpHeaders({
-      "Content-Type": "application/json",
-      Accept: "text/plain",
-    });
-
-    const params = this.baseApiService.createParams({ id: id });
-
-    return this.httpClient.get<string>(`${environment.apiUrl}${this.endpoint}/id`, { params, headers, responseType: "text" as "json" });
-  }
-
 }

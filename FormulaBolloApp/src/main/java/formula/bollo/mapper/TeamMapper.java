@@ -12,7 +12,5 @@ public interface TeamMapper {
 
     TeamDTO teamToTeamDTO(Team team);
 
-    Team teamDTOToTeam(TeamDTO team);
-
     List<TeamDTO> convertTeamsToTeamsDTO(List<Team> teams);
 }

@@ -23,13 +23,6 @@ export class RaceApiService {
     return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<Race[]>(`${environment.apiUrl}${this.endpoint}/all`, { params }));
   }
 
-  getAllRacesFinished(seasonNumber: number): Observable<Race[]> {
-    const cacheKey: string = `allRacesFinished-${seasonNumber}`;
-
-    const params = this.baseApiService.createParams({ season: seasonNumber });
-    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<Race[]>(`${environment.apiUrl}${this.endpoint}/allFinished`, { params }));
-  }
-
   getActualRace(seasonNumber: number): Observable<Race> {
     const cacheKey: string = `actualRace-${seasonNumber}`;
 

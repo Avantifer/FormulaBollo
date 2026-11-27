@@ -1,11 +1,6 @@
 package formula.bollo.controller;
 
-import org.springframework.cache.annotation.Cacheable;
-
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +13,6 @@ import formula.bollo.entity.Team;
 import formula.bollo.impl.TeamImpl;
 import formula.bollo.model.TeamDTO;
 import formula.bollo.model.TeamInfoDTO;
-import formula.bollo.model.TeamPointsEvolutionDTO;
 import formula.bollo.model.TeamWithDriversDTO;
 import formula.bollo.repository.DriverRepository;
 import formula.bollo.repository.TeamRepository;
@@ -78,32 +72,6 @@ public class TeamController {
         List<Team> teams = (season == null || season == 0) ? teamRepository.findByName(teamName)
                 : teamRepository.findByNameAndSeason(season, teamName);
         return this.teamService.getAllInfoTeam(teams);
-    }
-
-    @Operation(summary = "Get all info of teams", tags = Constants.TAG_TEAM)
-    @Transactional(readOnly = true)
-    @GetMapping(path = "/allInfoTeam", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Cacheable(cacheNames = Constants.CACHE_STATS, sync = true, key = "'allInfoTeam:' + #season")
-    public List<TeamInfoDTO> getAllInfoTeam(@RequestParam Integer season) {
-        log.info("Coger la informacion de los equipos de la temporada " + season);
-        List<Team> teams = (season == 0) ? teamRepository.findAll() : teamRepository.findBySeason(season);
-
-        List<TeamInfoDTO> teamInfoDTOs = this.teamService.getAllInfoTeams(teams);
-
-        return this.teamService.sumDuplicates(teamInfoDTOs);
-    }
-
-    @Operation(summary = "Get all evolution points of team", tags = Constants.TAG_TEAM)
-    @Transactional(readOnly = true)
-    @GetMapping(path = "/evolutionPoints", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<TeamPointsEvolutionDTO> getEvolutionPoints(@RequestParam Integer team1Id,
-            @RequestParam Integer team2Id,
-            @RequestParam Integer team3Id,
-            @RequestParam Integer team4Id) {
-        log.info("Coger todas las evoluciones de puntos de los equipos " + team1Id + ", " + team2Id + ", " + team3Id
-                + ", " + team4Id);
-        Set<Integer> teamIds = new HashSet<>(Arrays.asList(team1Id, team2Id, team3Id, team4Id));
-        return this.teamService.getAllPointsEvolutionTeam(teamIds);
     }
 
 }

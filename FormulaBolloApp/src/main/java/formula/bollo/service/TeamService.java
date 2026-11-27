@@ -1,8 +1,6 @@
 package formula.bollo.service;
 
-import formula.bollo.utils.Constants;
 import formula.bollo.utils.StatsMerge;
-import org.springframework.cache.annotation.Cacheable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,7 +21,6 @@ import formula.bollo.entity.Sprint;
 import formula.bollo.entity.Team;
 import formula.bollo.enums.PositionChange;
 import formula.bollo.impl.DriverImpl;
-import formula.bollo.impl.RaceImpl;
 import formula.bollo.impl.ResultImpl;
 import formula.bollo.impl.TeamImpl;
 import formula.bollo.model.DriverDTO;
@@ -34,7 +31,6 @@ import formula.bollo.model.ResultDTO;
 import formula.bollo.model.ResultTeamDTO;
 import formula.bollo.model.TeamDTO;
 import formula.bollo.model.TeamInfoDTO;
-import formula.bollo.model.TeamPointsEvolutionDTO;
 import formula.bollo.model.TeamWithDriversDTO;
 import formula.bollo.repository.ConstructorRepository;
 import formula.bollo.repository.DriverRepository;
@@ -53,7 +49,6 @@ public class TeamService {
     private TeamImpl teamImpl;
     private DriverImpl driverImpl;
     private ResultImpl resultImpl;
-    private RaceImpl raceImpl;
 
     private DriverService driverService;
 
@@ -66,7 +61,6 @@ public class TeamService {
             TeamImpl teamImpl,
             DriverImpl driverImpl,
             ResultImpl resultImpl,
-            RaceImpl raceImpl,
             DriverService driverService) {
         this.resultRepository = resultRepository;
         this.sprintRepository = sprintRepository;
@@ -76,7 +70,6 @@ public class TeamService {
         this.teamImpl = teamImpl;
         this.driverImpl = driverImpl;
         this.resultImpl = resultImpl;
-        this.raceImpl = raceImpl;
         this.driverService = driverService;
     }
 
@@ -431,89 +424,5 @@ public class TeamService {
 
             team.setPositionChangeAmount(changeAmount);
         }
-    }
-
-    /**
-     * Get points' evolutions of teams
-     *
-     * @return a list of TeamPointsEvolutionDTO objects with the points' evolution
-     *         of teams
-     */
-    @Cacheable(cacheNames = Constants.CACHE_STATS, sync = true, key = "#root.methodName + T(java.util.Arrays).toString(#root.args)")
-    public List<TeamPointsEvolutionDTO> getAllPointsEvolutionTeam(Set<Integer> teamIds) {
-        List<Long> teamIdList = teamIds.stream()
-                .map(Integer::longValue)
-                .toList();
-
-        List<Result> results = resultRepository.findByTeamIds(teamIdList);
-        List<Sprint> sprints = sprintRepository.findByTeamIds(teamIdList);
-
-        Map<Team, Map<Race, Integer>> teamRacePoints = new HashMap<>();
-
-        for (Result result : results) {
-            if (result.getDriver().getTeam() == null || result.getRace() == null)
-                continue;
-
-            Team team = result.getDriver().getTeam();
-            Race race = result.getRace();
-            int points = calculatePoints(result);
-
-            teamRacePoints
-                    .computeIfAbsent(team, t -> new HashMap<>())
-                    .merge(race, points, Integer::sum);
-        }
-
-        for (Sprint sprint : sprints) {
-            if (sprint.getDriver().getTeam() == null || sprint.getRace() == null)
-                continue;
-
-            Team team = sprint.getDriver().getTeam();
-            Race race = sprint.getRace();
-            int points = sprint.getPosition() != null ? sprint.getPosition().getPoints() : 0;
-
-            teamRacePoints
-                    .computeIfAbsent(team, t -> new HashMap<>())
-                    .merge(race, points, Integer::sum);
-        }
-
-        List<TeamPointsEvolutionDTO> teamPointsList = new ArrayList<>();
-
-        for (Map.Entry<Team, Map<Race, Integer>> entry : teamRacePoints.entrySet()) {
-            Team team = entry.getKey();
-            Map<Race, Integer> racePointsMap = entry.getValue();
-
-            List<Map.Entry<Race, Integer>> sortedEntries = racePointsMap.entrySet().stream()
-                    .sorted(Comparator.comparing(e -> e.getKey().getDateStart()))
-                    .toList();
-
-            int total = 0;
-            List<Integer> accumulatedPoints = new ArrayList<>();
-            List<RaceDTO> races = new ArrayList<>();
-
-            for (Map.Entry<Race, Integer> rp : sortedEntries) {
-                total += rp.getValue();
-                accumulatedPoints.add(total);
-                races.add(raceImpl.raceToRaceDTO(rp.getKey()));
-            }
-
-            TeamDTO teamDTO = teamImpl.teamToTeamDTO(team);
-            teamPointsList.add(new TeamPointsEvolutionDTO(teamDTO, accumulatedPoints, races));
-        }
-
-        return teamPointsList;
-    }
-
-    private int calculatePoints(Result result) {
-        int basePoints = 0;
-
-        if (result.getPosition() != null) {
-            basePoints = result.getPosition().getPoints();
-        }
-
-        if (result.getFastlap() == 1) {
-            basePoints += 1;
-        }
-
-        return basePoints;
     }
 }

@@ -96,7 +96,7 @@ class LoggingOpsBehaviorTest {
         when(mapper.accountToAccountDTO(account)).thenReturn(dto);
         when(jwt.generateRecoveryToken(dto)).thenReturn(TOKEN);
         when(sender.createMimeMessage()).thenAnswer(ignored -> new MimeMessage(Session.getInstance(new Properties())));
-        AccountController controller = new AccountController(repository, mapper, service);
+        AccountController controller = new AccountController(service);
 
         ResponseEntity<String> success = controller.recoverPassword(EMAIL, request());
         events.list.clear();
@@ -300,7 +300,7 @@ class LoggingOpsBehaviorTest {
         AccountImpl mapper = mock(AccountImpl.class);
         AccountService service = new AccountService(repository, mapper, mock(JwtConfig.class), mock(EmailService.class));
         service.configureAttemptLimits("PT15M", 1, 30, 1, 20, 10, 50);
-        return new AccountController(repository, mapper, service);
+        return new AccountController(service);
     }
 
     private AccountDTO credentials() {

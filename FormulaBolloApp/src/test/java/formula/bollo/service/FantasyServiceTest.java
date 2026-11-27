@@ -1,5 +1,7 @@
 package formula.bollo.service;
 
+import formula.bollo.impl.TeamImpl;
+import formula.bollo.impl.DriverImpl;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -55,16 +57,12 @@ import formula.bollo.entity.Result;
 import formula.bollo.entity.Season;
 import formula.bollo.entity.Team;
 import formula.bollo.impl.AccountImpl;
-import formula.bollo.impl.DriverImpl;
-import formula.bollo.impl.TeamImpl;
 import formula.bollo.impl.FantasyElectionImpl;
 import formula.bollo.impl.FantasyPriceImpl;
-import formula.bollo.impl.RaceImpl;
 import formula.bollo.model.AccountDTO;
 import formula.bollo.model.DriverDTO;
 import formula.bollo.model.FantasyElectionDTO;
 import formula.bollo.model.FantasyInfoDTO;
-import formula.bollo.model.FantasyPointsAccountDTO;
 import formula.bollo.model.FantasyPriceDriverDTO;
 import formula.bollo.model.FantasyPriceTeamDTO;
 import formula.bollo.model.RaceDTO;
@@ -119,16 +117,13 @@ class FantasyServiceTest {
     private AccountImpl accountImpl;
 
     @Mock
-    private RaceImpl raceImpl;
+    private Clock clock;
 
     @Mock
     private DriverImpl driverImpl;
 
     @Mock
     private TeamImpl teamImpl;
-
-    @Mock
-    private Clock clock;
 
     @Test
     void saveDriverTeamPointsEmpty() {
@@ -498,7 +493,7 @@ class FantasyServiceTest {
 
         when(fantasyPriceDriverRepository.findByRaceId(anyInt())).thenReturn(Arrays.asList(fantasyPriceDriver));
 
-        int points = fantasyService.calculatePoints(result, 15);
+        int points = fantasyService.createDriversPoints(java.util.Collections.nCopies(15, result)).getFirst().getPoints();
 
         assertEquals(42, points);
     }
@@ -517,7 +512,7 @@ class FantasyServiceTest {
 
         when(fantasyPriceDriverRepository.findByRaceId(anyInt())).thenReturn(Arrays.asList(fantasyPriceDriver));
 
-        int points = fantasyService.calculatePoints(result, 15);
+        int points = fantasyService.createDriversPoints(java.util.Collections.nCopies(15, result)).getFirst().getPoints();
 
         assertEquals(17, points);
     }
@@ -532,7 +527,8 @@ class FantasyServiceTest {
         when(fantasyPriceDriverRepository.findByRaceId(3))
                 .thenReturn(List.of(new FantasyPriceDriver(1L, driver, race, price)));
 
-        assertEquals(expectedPoints, fantasyService.calculatePoints(result, 8));
+        assertEquals(expectedPoints,
+                fantasyService.createDriversPoints(java.util.Collections.nCopies(8, result)).getFirst().getPoints());
     }
 
     @Test
@@ -562,9 +558,7 @@ class FantasyServiceTest {
 
         when(fantasyPriceDriverRepository.findByRaceId(anyInt())).thenReturn(Arrays.asList(fantasyPriceDriver));
 
-        int price = fantasyService.calculateDriverPrice(result);
-
-        assertEquals(-1, price);
+        assertEquals(List.of(), fantasyService.createDriversPrices(List.of(result), race));
     }
 
     @ParameterizedTest
@@ -585,7 +579,7 @@ class FantasyServiceTest {
         when(fantasyPriceDriverRepository.findByRaceId(anyInt()))
                 .thenReturn(Arrays.asList(fantasyPriceDriver));
 
-        int actualPrice = fantasyService.calculateDriverPrice(result);
+        int actualPrice = fantasyService.createDriversPrices(List.of(result), race).getFirst().getPrice();
 
         assertEquals(expectedPrice, actualPrice);
     }
@@ -641,61 +635,6 @@ class FantasyServiceTest {
     }
 
     @Test
-    void getFantasyPoints() {
-        Season season = new Season(2L, "Temporada 3", 2, 2025);
-        Team team = new Team(1L, "Haas", "", "", season);
-        Driver driver = new Driver(1L, "Avantifer", 2, "", season, team);
-        Race race = new Race(1L, "Francia", "", "", LocalDateTime.now(), season, 0);
-        Account account = new Account(1L, "Avantifer", "123", 1, "email@email.com");
-
-        FantasyElection fantasyElection = new FantasyElection(1L, account, driver, driver, driver,
-                team, team, race);
-        FantasyPointsDriver fantasyPointsDriver = new FantasyPointsDriver(1L, driver, race, 0);
-        FantasyPointsTeam fantasyPointsTeam = new FantasyPointsTeam(1L, team, race, 0);
-
-        when(fantasyPointsTeamRepository.findByRaceId(anyInt())).thenReturn(Arrays.asList(fantasyPointsTeam));
-        when(fantasyPointsDriverRepository.findByRaceId(anyInt())).thenReturn(Arrays.asList(fantasyPointsDriver));
-        when(fantasyElectionRepository.findByRaceId(anyInt())).thenReturn(Arrays.asList(fantasyElection));
-
-        List<FantasyPointsAccountDTO> fantasyPointsAccountDTOs = fantasyService.getFantasyPoints(0);
-
-        assertEquals(1, fantasyPointsAccountDTOs.size());
-    }
-
-    @Test
-    void sumAllFantasyPoints() {
-        Season season = new Season(2L, "Temporada 3", 2, 2025);
-        Team team = new Team(1L, "Haas", "", "", season);
-        Driver driver = new Driver(1L, "Avantifer", 2, "", season, team);
-        Race race = new Race(1L, "Francia", "", "", LocalDateTime.now(), season, 0);
-        Account account = new Account(1L, "Avantifer", "123", 1, "email@email.com");
-
-        FantasyElection fantasyElection = new FantasyElection(1L, account, driver, driver, driver,
-                team, team, race);
-        FantasyPointsDriver fantasyPointsDriver = new FantasyPointsDriver(1L, driver, race, 0);
-        FantasyPointsTeam fantasyPointsTeam = new FantasyPointsTeam(1L, team, race, 0);
-
-        SeasonDTO seasonDTO = new SeasonDTO(2L, "Temporada 3", 2, "2025");
-        RaceDTO raceDTO = new RaceDTO(1L, "Francia", "", "", LocalDateTime.now(), seasonDTO, 0);
-
-        when(accountImpl.accountToAccountDTO(any()))
-                .thenReturn(new AccountDTO(1l, "Avantifer", "123", 1, "email@mail.com"));
-        when(raceImpl.convertRacesToRacesDTO(anyList())).thenReturn(Arrays.asList(raceDTO));
-        when(fantasyPointsTeamRepository.findByRaceId(anyInt()))
-                .thenReturn(Arrays.asList(fantasyPointsTeam, fantasyPointsTeam));
-        when(fantasyPointsDriverRepository.findByRaceId(anyInt()))
-                .thenReturn(Arrays.asList(fantasyPointsDriver, fantasyPointsDriver));
-        when(fantasyElectionRepository.findByRaceId(anyInt()))
-                .thenReturn(Arrays.asList(fantasyElection, fantasyElection));
-
-        List<FantasyPointsAccountDTO> fantasyPointsAccountDTOs = fantasyService.sumAllFantasyPoints(0);
-
-        assertEquals(1, fantasyPointsAccountDTOs.size());
-        verify(raceRepository).findAllFinished(0);
-        verifyNoMoreInteractions(raceRepository);
-    }
-
-    @Test
     void getFantasyElectionEmpty() {
         Account account = new Account();
         account.setId(7L);
@@ -733,69 +672,6 @@ class FantasyServiceTest {
 
         assertEquals(403, error.getStatusCode().value());
         verifyNoInteractions(fantasyElectionRepository, fantasyElectionImpl);
-    }
-
-    @ParameterizedTest
-    @ValueSource(ints = {0, 2, -1})
-    void getFantasyPointsRaceHidesElectionsUntilFinished(int finished) {
-        Race race = new Race();
-        race.setFinished(finished);
-        when(raceRepository.findById(12L)).thenReturn(Optional.of(race));
-
-        assertEquals(List.of(), fantasyService.getFantasyPointsRace(12));
-        verify(raceRepository).findById(12L);
-        verifyNoInteractions(fantasyElectionRepository, fantasyPointsDriverRepository, fantasyPointsTeamRepository);
-    }
-
-    @Test
-    void getFantasyPointsRaceHidesElectionsForMissingRace() {
-        when(raceRepository.findById(12L)).thenReturn(Optional.empty());
-
-        assertEquals(List.of(), fantasyService.getFantasyPointsRace(12));
-        verifyNoInteractions(fantasyElectionRepository, fantasyPointsDriverRepository, fantasyPointsTeamRepository);
-    }
-
-    @Test
-    void getFantasyPointsRacePreservesFinishedRaceRanking() {
-        Race race = new Race();
-        race.setFinished(1);
-        Team team = new Team();
-        team.setId(1L);
-        Driver driver = new Driver();
-        driver.setId(1L);
-        Driver otherDriver = new Driver();
-        otherDriver.setId(2L);
-        Account ana = new Account();
-        ana.setId(7L);
-        Account bob = new Account();
-        bob.setId(8L);
-        FantasyElection anaElection = new FantasyElection(1L, ana, driver, driver, driver, team, team, race);
-        FantasyElection bobElection = new FantasyElection(2L, bob, otherDriver, otherDriver, otherDriver, team, team, race);
-        FantasyElectionDTO anaElectionDTO = new FantasyElectionDTO();
-        FantasyElectionDTO bobElectionDTO = new FantasyElectionDTO();
-        AccountDTO anaDTO = new AccountDTO();
-        AccountDTO bobDTO = new AccountDTO();
-        when(raceRepository.findById(12L)).thenReturn(Optional.of(race));
-        when(fantasyElectionRepository.findByRaceId(12)).thenReturn(List.of(bobElection, anaElection));
-        when(fantasyPointsDriverRepository.findByRaceId(12)).thenReturn(List.of(
-                new FantasyPointsDriver(1L, driver, race, 20),
-                new FantasyPointsDriver(2L, otherDriver, race, 5)));
-        when(fantasyPointsTeamRepository.findByRaceId(12)).thenReturn(List.of(new FantasyPointsTeam(1L, team, race, 3)));
-        when(accountImpl.accountToAccountDTO(ana)).thenReturn(anaDTO);
-        when(accountImpl.accountToAccountDTO(bob)).thenReturn(bobDTO);
-        when(fantasyElectionImpl.fantasyElectionToFantasyElectionDTO(anaElection)).thenReturn(anaElectionDTO);
-        when(fantasyElectionImpl.fantasyElectionToFantasyElectionDTO(bobElection)).thenReturn(bobElectionDTO);
-
-        List<FantasyPointsAccountDTO> points = fantasyService.getFantasyPointsRace(12);
-
-        assertEquals(List.of(23, 8), points.stream().map(FantasyPointsAccountDTO::getTotalPoints).toList());
-        assertSame(anaDTO, points.get(0).getAccount());
-        assertSame(anaElectionDTO, points.get(0).getFantasyElection());
-        assertSame(bobDTO, points.get(1).getAccount());
-        assertSame(bobElectionDTO, points.get(1).getFantasyElection());
-        verify(fantasyElectionRepository).findByRaceId(12);
-        verify(raceRepository).findById(12L);
-        verifyNoMoreInteractions(raceRepository);
     }
 
     @ParameterizedTest

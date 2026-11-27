@@ -30,7 +30,6 @@ import formula.bollo.impl.FantasyPointsImpl;
 import formula.bollo.impl.FantasyPriceImpl;
 import formula.bollo.model.AccountDTO;
 import formula.bollo.model.FantasyElectionDTO;
-import formula.bollo.model.FantasyPointsAccountDTO;
 import formula.bollo.model.FantasyClasificationDTO;
 import formula.bollo.model.FantasyClasificationRaceDTO;
 import formula.bollo.model.FantasyClasificationEntryDTO;
@@ -166,15 +165,6 @@ class FantasyControllerTest {
 
         assertSame(election, fantasyController.getFantasyElection(12, () -> "ana"));
         verify(fantasyService).getFantasyElection(12, "ana");
-    }
-
-    @Test
-    void getFantasyPointsRaceUsesFinishedRaceEntryPoint() {
-        List<FantasyPointsAccountDTO> points = List.of(new FantasyPointsAccountDTO());
-        when(fantasyService.getFantasyPointsRace(12)).thenReturn(points);
-
-        assertSame(points, fantasyController.getFantasyPointsRace(12));
-        verify(fantasyService).getFantasyPointsRace(12);
     }
 
     @Test

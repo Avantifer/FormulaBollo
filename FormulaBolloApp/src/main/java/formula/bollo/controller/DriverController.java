@@ -1,11 +1,6 @@
 package formula.bollo.controller;
 
-import org.springframework.cache.annotation.Cacheable;
-
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,8 +14,6 @@ import formula.bollo.impl.DriverImpl;
 import formula.bollo.model.DriverDTO;
 import formula.bollo.model.DriverTeamHistoryDTO;
 import formula.bollo.model.DriverInfoDTO;
-import formula.bollo.model.DriverPointsEvolutionDTO;
-import formula.bollo.model.RecordDTO;
 import formula.bollo.repository.DriverRepository;
 import formula.bollo.service.DriverService;
 import formula.bollo.utils.Constants;
@@ -83,35 +76,4 @@ public class DriverController {
         return this.driverService.getTeamHistory(this.driverRepository.findTeamHistoryByName(driverName));
     }
 
-    @Operation(summary = "Get all info of drivers", tags = Constants.TAG_DRIVER)
-    @Transactional(readOnly = true)
-    @GetMapping(path = "/allInfoDriver", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Cacheable(cacheNames = Constants.CACHE_STATS, sync = true, key = "'allInfoDriver:' + #season")
-    public List<DriverInfoDTO> getAllInfoDriver(@RequestParam Integer season) {
-        log.info("Se coge toda la informacion de los pilotos de la temporada " + season);
-        List<Driver> drivers = (season == 0) ? driverRepository.findAll() : driverRepository.findAllBySeason(season);
-
-        return this.driverService.sumDuplicates(this.driverService.getAllInfoDrivers(drivers));
-    }
-
-    @Operation(summary = "Get all record of drivers", tags = Constants.TAG_DRIVER)
-    @Transactional(readOnly = true)
-    @GetMapping(path = "/recordsDrivers", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<RecordDTO> getAllDriversRecords() {
-        log.info("Coger todos los records de los pilotos");
-        return this.driverService.getAllRecords();
-    }
-
-    @Operation(summary = "Get all evolution points of drivers", tags = Constants.TAG_DRIVER)
-    @Transactional(readOnly = true)
-    @GetMapping(path = "/evolutionPoints", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<DriverPointsEvolutionDTO> getEvolutionPoints(@RequestParam Integer driver1Id,
-            @RequestParam Integer driver2Id,
-            @RequestParam Integer driver3Id,
-            @RequestParam Integer driver4Id) {
-        log.info("Coger la evolucion de los pilotos " + driver1Id + ", " + driver2Id + ", " + driver3Id + ", "
-                + driver4Id);
-        Set<Integer> driverIds = new HashSet<>(Arrays.asList(driver1Id, driver2Id, driver3Id, driver4Id));
-        return this.driverService.getAllPointsEvolutionDriver(driverIds);
-    }
 }

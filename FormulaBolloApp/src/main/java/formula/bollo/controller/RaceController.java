@@ -51,14 +51,6 @@ public class RaceController {
         return this.raceImpl.convertRacesToRacesDTO(raceRepository.findBySeason(season));
     }
 
-    @Operation(summary = "Get all races finished ", tags = Constants.TAG_RACE)
-    @Transactional(readOnly = true)
-    @GetMapping(path = "/allFinished", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<RaceDTO> getAllFinished(@RequestParam Integer season) {
-        log.info("Coger todas las carreras terminadas de la temporada " + season);
-        return this.raceImpl.convertRacesToRacesDTO(this.raceRepository.findAllFinished(season));
-    }
-
     @Operation(summary = "Get all races finished and the next one", tags = Constants.TAG_RACE)
     @Transactional(readOnly = true)
     @GetMapping(path = "/allFinishedAndActual", produces = MediaType.APPLICATION_JSON_VALUE)

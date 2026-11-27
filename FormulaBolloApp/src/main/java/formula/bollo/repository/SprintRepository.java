@@ -37,9 +37,6 @@ public interface SprintRepository extends JpaRepository<Sprint, Long> {
     @Query("SELECT s FROM Sprint s LEFT JOIN FETCH s.position WHERE s.driver.id IN :driverIds")
     List<Sprint> findWithPositionByDriverIds(List<Long> driverIds);
 
-    @Query("SELECT s FROM Sprint s WHERE s.driver.team.id IN :teamIds")
-    List<Sprint> findByTeamIds(List<Long> teamIds);
-
     @Query(value = "SELECT s FROM Sprint s WHERE s.race.id = :raceId")
     List<Sprint> findByRaceId(int raceId);
 }

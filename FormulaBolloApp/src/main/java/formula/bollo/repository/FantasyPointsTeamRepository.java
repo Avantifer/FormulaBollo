@@ -1,7 +1,6 @@
 package formula.bollo.repository;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -21,7 +20,4 @@ public interface FantasyPointsTeamRepository extends JpaRepository<FantasyPoints
 
     @Query("SELECT fpt FROM FantasyPointsTeam fpt WHERE fpt.team.id IN :teamIds AND fpt.race.id IN :raceIds")
     List<FantasyPointsTeam> findByTeamIdsAndRaceIds(List<Long> teamIds, List<Long> raceIds);
-
-    @Query("SELECT fpt FROM FantasyPointsTeam fpt WHERE fpt.team.id = :teamId AND fpt.race.id = :raceId")
-    Optional<FantasyPointsTeam> findByTeamIdAndRaceId(int teamId, int raceId);
 }

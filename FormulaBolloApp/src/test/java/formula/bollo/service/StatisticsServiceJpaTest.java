@@ -62,12 +62,10 @@ class StatisticsServiceJpaTest {
         DriverImpl driverMapper = new DriverImpl(Mappers.getMapper(DriverMapper.class));
         TeamImpl teamMapper = new TeamImpl(Mappers.getMapper(TeamMapper.class));
         ResultImpl resultMapper = new ResultImpl(Mappers.getMapper(ResultMapper.class));
-        RaceImpl raceMapper = new RaceImpl(Mappers.getMapper(RaceMapper.class));
-        driverService = new DriverService(results, championships, penalties, sprints, driverMapper,
-                teamMapper, resultMapper, null, raceMapper,
+        driverService = new DriverService(results, championships, penalties, sprints, driverMapper, resultMapper,
                 new ResultService(results, sprints, resultMapper, driverMapper));
         teamService = new TeamService(results, sprints, drivers, constructors, teams, teamMapper,
-                driverMapper, resultMapper, raceMapper, driverService);
+                driverMapper, resultMapper, driverService);
         service = new StatisticsService(drivers, teams, races, results, sprints, penalties,
                 driverService, teamService);
     }

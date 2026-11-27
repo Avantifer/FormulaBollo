@@ -26,7 +26,7 @@ class AccountRateLimitHttpTest {
         repository = mock(AccountRepository.class);
         AccountImpl mapper = mock(AccountImpl.class);
         service = new AccountService(repository, mapper, mock(JwtConfig.class), mock(EmailService.class));
-        mvc = MockMvcBuilders.standaloneSetup(new AccountController(repository, mapper, service)).build();
+        mvc = MockMvcBuilders.standaloneSetup(new AccountController(service)).build();
     }
 
     @Test
