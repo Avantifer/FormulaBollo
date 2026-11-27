@@ -20,7 +20,7 @@ import formula.bollo.entity.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
 
-/** Requires a disposable MariaDB schema loaded with production_schema.sql and V002. */
+/** Requires a disposable MariaDB schema loaded with production_schema.sql, V002 and V003. */
 @EnabledIfEnvironmentVariable(named = "PRODUCTION_SCHEMA_JDBC_URL", matches = ".+")
 @DataJpaTest(properties = {
         "spring.datasource.url=${PRODUCTION_SCHEMA_JDBC_URL}",
@@ -42,6 +42,8 @@ class ProductionSchemaTest {
     @Autowired EntityManager em;
     @Autowired ResultRepository results;
     @Autowired AccountRepository accounts;
+    @Autowired FantasyPointsDriverRepository driverPoints;
+    @Autowired RaceRepository races;
 
     @Test
     void allEntitiesCanBeSelectedFromProductionSchema() {
@@ -103,5 +105,32 @@ class ProductionSchemaTest {
         assertThrows(DataIntegrityViolationException.class,
                 () -> accounts.saveAndFlush(new Account(null, "b" + token.substring(0, 24),
                         "hash", 0, email)));
+    }
+
+    @Test
+    void duplicateFantasyPointsForSameRaceAndDriverIsRejected() {
+        Race race = new Race(null, "Fantasy test", "", "",
+                LocalDateTime.of(2026, 1, 1, 12, 0), null, 0);
+        Driver driver = new Driver(null, "Fantasy test", 1, null, null, null);
+        em.persist(race);
+        em.persist(driver);
+        em.flush();
+        driverPoints.saveAndFlush(new FantasyPointsDriver(null, driver, race, 10));
+
+        assertThrows(DataIntegrityViolationException.class,
+                () -> driverPoints.saveAndFlush(new FantasyPointsDriver(null, driver, race, 20)));
+    }
+
+    @Test
+    void duplicateRaceNameInSameSeasonIsRejected() {
+        Season season = new Season(null, "Race test", 1, 2026);
+        em.persist(season);
+        Race race = new Race(null, "Same name", "", "",
+                LocalDateTime.of(2026, 1, 1, 12, 0), season, 0);
+        races.saveAndFlush(race);
+
+        assertThrows(DataIntegrityViolationException.class,
+                () -> races.saveAndFlush(new Race(null, race.getName(), "", "",
+                        race.getDateStart().plusDays(7), season, 0)));
     }
 }

@@ -200,10 +200,18 @@ public class FantasyService {
         List<FantasyPointsTeam> fantasyPointsTeams = this.createTeamsPoints(fantasyPointsDriver);
         List<FantasyPointsTeam> fantasyTeamsPrevious = this.fantasyPointsTeamRepository.findByRaceId(raceId);
 
-        fantasyPointsDriverRepository.deleteAll(fantasyDriversPrevious);
-        fantasyPointsDriverRepository.saveAll(fantasyPointsDriver);
-        fantasyPointsTeamRepository.deleteAll(fantasyTeamsPrevious);
-        fantasyPointsTeamRepository.saveAll(fantasyPointsTeams);
+        try {
+            fantasyPointsDriverRepository.deleteAll(fantasyDriversPrevious);
+            fantasyPointsTeamRepository.deleteAll(fantasyTeamsPrevious);
+            // Flush both deletions before any IDENTITY insert can reuse their unique keys.
+            fantasyPointsDriverRepository.flush();
+            fantasyPointsTeamRepository.flush();
+            fantasyPointsDriverRepository.saveAllAndFlush(fantasyPointsDriver);
+            fantasyPointsTeamRepository.saveAllAndFlush(fantasyPointsTeams);
+        } catch (DataIntegrityViolationException | ConcurrencyFailureException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Otro guardado simultáneo ha modificado los puntos. Vuelve a intentarlo");
+        }
 
         return new ResponseEntity<>("Puntos guardados correctamente", Constants.HEADERS_TEXT_PLAIN,
                 HttpStatusCode.valueOf(200));
@@ -243,10 +251,18 @@ public class FantasyService {
         List<FantasyPriceTeam> fantasyTeamPrevious = this.fantasyPriceTeamRepository.findByRaceId(nextRaceId);
         List<FantasyPriceTeam> fantasyPricesTeam = this.createTeamsPrices(fantasyPricesDriver, nextRace.get());
 
-        fantasyPriceDriverRepository.deleteAll(fantasyDriversPrevious);
-        fantasyPriceDriverRepository.saveAll(fantasyPricesDriver);
-        fantasyPriceTeamRepository.deleteAll(fantasyTeamPrevious);
-        fantasyPriceTeamRepository.saveAll(fantasyPricesTeam);
+        try {
+            fantasyPriceDriverRepository.deleteAll(fantasyDriversPrevious);
+            fantasyPriceTeamRepository.deleteAll(fantasyTeamPrevious);
+            // Flush both deletions before any IDENTITY insert can reuse their unique keys.
+            fantasyPriceDriverRepository.flush();
+            fantasyPriceTeamRepository.flush();
+            fantasyPriceDriverRepository.saveAllAndFlush(fantasyPricesDriver);
+            fantasyPriceTeamRepository.saveAllAndFlush(fantasyPricesTeam);
+        } catch (DataIntegrityViolationException | ConcurrencyFailureException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Otro guardado simultáneo ha modificado los precios. Vuelve a intentarlo");
+        }
 
         return new ResponseEntity<>("Precios guardados correctamente", Constants.HEADERS_TEXT_PLAIN,
                 HttpStatusCode.valueOf(200));

@@ -141,7 +141,8 @@ class FantasyServiceTest {
         Race race = new Race(1L, "Francia", "", "", LocalDateTime.now(), season, 0);
 
         Result result = new Result(1L, race, driver, position, 1, 1);
-        Result result2 = new Result(2L, race, driver, null, 0, 0);
+        Driver retired = new Driver(2L, "Retirado", 3, "", season, team);
+        Result result2 = new Result(2L, race, retired, null, 0, 0);
         FantasyPriceDriver fantasyPriceDriver = new FantasyPriceDriver(1L, driver, race, 200);
 
         when(resultRepository.findByRaceId(anyInt())).thenReturn(Arrays.asList(result, result2));
@@ -203,7 +204,7 @@ class FantasyServiceTest {
         verify(fantasyPriceDriverRepository).findByRaceId(40); // los precios que se reemplazan son los de la carrera 40
         verify(fantasyPriceTeamRepository).findByRaceId(40);
         org.mockito.ArgumentCaptor<List<FantasyPriceDriver>> saved = org.mockito.ArgumentCaptor.forClass(List.class);
-        verify(fantasyPriceDriverRepository).saveAll(saved.capture());
+        verify(fantasyPriceDriverRepository).saveAllAndFlush(saved.capture());
         assertEquals(40L, saved.getValue().getFirst().getRace().getId());
     }
 
@@ -231,16 +232,19 @@ class FantasyServiceTest {
         Race race = new Race(1L, "Francia", "", "", LocalDateTime.now(), season, 0);
 
         Result result = new Result(1L, race, driver, position, 1, 1);
-        Result result2 = new Result(2L, race, driver, null, 0, 0);
+        Driver retired = new Driver(2L, "Retirado", 3, "", season, team);
+        Result result2 = new Result(2L, race, retired, null, 0, 0);
         FantasyPriceDriver fantasyPriceDriver = new FantasyPriceDriver(1L, driver, race, 200);
         FantasyPointsDriver fantasyPointsDriver = new FantasyPointsDriver(1L, driver, race, 5);
+        FantasyPriceDriver retiredPrice = new FantasyPriceDriver(2L, retired, race, 200);
+        FantasyPointsDriver retiredPoints = new FantasyPointsDriver(2L, retired, race, 0);
 
         when(resultRepository.findByRaceId(anyInt())).thenReturn(Arrays.asList(result, result2));
         Race next = new Race(2L, "Italia", "", "", LocalDateTime.now().plusDays(7), season, 0);
         when(raceRepository.findById(anyLong())).thenReturn(Optional.of(race));
         when(raceRepository.findBySeason(2)).thenReturn(List.of(race, next));
-        when(fantasyPriceDriverRepository.findByRaceId(anyInt())).thenReturn(Arrays.asList(fantasyPriceDriver));
-        when(fantasyPointsDriverRepository.findByRaceId(anyInt())).thenReturn(Arrays.asList(fantasyPointsDriver));
+        when(fantasyPriceDriverRepository.findByRaceId(anyInt())).thenReturn(List.of(fantasyPriceDriver, retiredPrice));
+        when(fantasyPointsDriverRepository.findByRaceId(anyInt())).thenReturn(List.of(fantasyPointsDriver, retiredPoints));
         ResponseEntity<String> response = fantasyService.saveDriverTeamPrices(0);
 
         assertEquals("Precios guardados correctamente", response.getBody());

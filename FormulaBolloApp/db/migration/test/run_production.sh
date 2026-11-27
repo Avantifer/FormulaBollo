@@ -120,7 +120,7 @@ v001_versions=$(migration_versions)
 if printf '%s\n' "$v001_versions" | grep -Fxq 'V001'; then
     printf 'PRODUCTION ERROR: (a) V001 dejo una marca; se esperaban 0.\n' >&2
     v001_failed_assertion=1
-    # Aislar (b)-(d) sin ocultar la regresion: el script terminara con error.
+    # Aislar (b)-(e) sin ocultar la regresion: el script terminara con error.
     # Solo se elimina la marca en nuestra BD recien creada, nunca en otra BD.
     sql --execute="DELETE FROM schema_migration WHERE version = 'V001';"
 fi
@@ -166,13 +166,90 @@ counts_query='SELECT (SELECT COUNT(*) FROM result), (SELECT COUNT(*) FROM sprint
     (SELECT COUNT(*) FROM fantasy_election), (SELECT COUNT(*) FROM account);'
 assert_sql '(c) ninguna fila duplicada insertada' $'1\t1\t1\t1' "$counts_query"
 
-# (d) Comparar TODAS las tablas originales, incluidos indices y claves foraneas.
+# (d) V003 sobre V002 y el esquema con FK: preflight, cinco claves y rollback.
+sql --execute="
+    INSERT INTO season (id, name, number, year) VALUES (1, 'Test season', 1, '2026');
+    INSERT INTO team (id, name, season_id) VALUES (1, 'Test team', 1);
+    UPDATE driver SET season_id = 1, team_id = 1 WHERE id = 1;
+    UPDATE race SET season_id = 1 WHERE id = 1;
+    INSERT INTO fantasy_points_driver (id, race_id, driver_id, points) VALUES (1, 1, 1, 10);
+    INSERT INTO fantasy_points_team (id, race_id, team_id, points) VALUES (1, 1, 1, 10);
+    INSERT INTO fantasy_price_driver (id, race_id, driver_id, price) VALUES (1, 1, 1, 1000000);
+    INSERT INTO fantasy_price_team (id, race_id, team_id, price) VALUES (1, 1, 1, 1000000);"
+v002_schema=$(schema_snapshot)
+v002_unique=$(unique_snapshot)
+duplicate_report=$(sql < "$migration_dir/V003__find_duplicates.sql")
+assert_equal "$duplicate_report" '' '(d) informe V003 vacio'
+after_report=$(schema_snapshot)
+assert_equal "$after_report" "$v002_schema" '(d) informe V003 sin cambios de definiciones'
+assert_sql '(d) informe V003 no registra migraciones' 'V002' \
+    'SELECT version FROM schema_migration ORDER BY version;'
+
+duplicate_tables=(fantasy_points_driver fantasy_points_team fantasy_price_driver fantasy_price_team race)
+duplicate_queries=(
+    'INSERT INTO fantasy_points_driver (id, race_id, driver_id, points) VALUES (2, 1, 1, 20);'
+    'INSERT INTO fantasy_points_team (id, race_id, team_id, points) VALUES (2, 1, 1, 20);'
+    'INSERT INTO fantasy_price_driver (id, race_id, driver_id, price) VALUES (2, 1, 1, 2000000);'
+    'INSERT INTO fantasy_price_team (id, race_id, team_id, price) VALUES (2, 1, 1, 2000000);'
+    "INSERT INTO race (id, season_id, name, date_start, flag_image, circuit_image, finished)
+        VALUES (2, 1, 'Test race', '2026-01-08 12:00:00', '', '', 0);"
+)
+for i in "${!duplicate_tables[@]}"; do
+    table=${duplicate_tables[$i]}
+    sql --execute="${duplicate_queries[$i]}"
+    duplicate_report=$(sql < "$migration_dir/V003__find_duplicates.sql")
+    [[ -n "$duplicate_report" ]] || fail "(d) informe V003 no detecta duplicado en $table."
+    expect_error 1062 "(d) V003 rechaza duplicados en $table antes del DDL" sql \
+        < "$migration_dir/V003__unique_keys.sql"
+    after_rejected=$(schema_snapshot)
+    assert_equal "$after_rejected" "$v002_schema" "(d) duplicado en $table no deja DDL parcial"
+    assert_sql '(d) duplicados no dejan marca V003' 'V002' \
+        'SELECT version FROM schema_migration ORDER BY version;'
+    assert_sql "(d) V003 no borra duplicados en $table" '2' "SELECT COUNT(*) FROM \`$table\`;"
+    sql --execute="DELETE FROM \`$table\` WHERE id = 2;"
+done
+
+sql < "$migration_dir/V003__unique_keys.sql"
+v003_keys=$'fantasy_points_driver\tfantasy_points_driver_race_driver_un\trace_id,driver_id\nfantasy_points_team\tfantasy_points_team_race_team_un\trace_id,team_id\nfantasy_price_driver\tfantasy_price_driver_race_driver_un\trace_id,driver_id\nfantasy_price_team\tfantasy_price_team_race_team_un\trace_id,team_id\nrace\trace_season_name_un\tseason_id,name'
+expected_unique=$(printf '%s\n%s\n' "$v002_unique" "$v003_keys" | LC_ALL=C sort)
+actual_unique=$(unique_snapshot)
+assert_equal "$actual_unique" "$expected_unique" '(d) exactamente las cinco claves V003 adicionales'
+assert_sql '(d) V002 y V003 registradas' $'V002\nV003' \
+    'SELECT version FROM schema_migration ORDER BY version;'
+for i in "${!duplicate_tables[@]}"; do
+    expect_error 1062 "(d) clave V003 rechaza duplicado en ${duplicate_tables[$i]}" sql \
+        --execute="${duplicate_queries[$i]}"
+done
+v003_counts_query='SELECT (SELECT COUNT(*) FROM fantasy_points_driver),
+    (SELECT COUNT(*) FROM fantasy_points_team), (SELECT COUNT(*) FROM fantasy_price_driver),
+    (SELECT COUNT(*) FROM fantasy_price_team), (SELECT COUNT(*) FROM race);'
+assert_sql '(d) ninguna fila V003 duplicada insertada' $'1\t1\t1\t1\t1' "$v003_counts_query"
+v003_schema=$(schema_snapshot)
+expect_error 1062 '(d) reejecutar V003 falla' sql < "$migration_dir/V003__unique_keys.sql"
+after_rerun=$(schema_snapshot)
+assert_equal "$after_rerun" "$v003_schema" '(d) reejecutar V003 no cambia definiciones'
+assert_sql '(d) reejecutar V003 no cambia versiones' $'V002\nV003' \
+    'SELECT version FROM schema_migration ORDER BY version;'
+
+sql < "$migration_dir/V003__rollback.sql"
+after_v003_rollback=$(schema_snapshot)
+assert_equal "$after_v003_rollback" "$v002_schema" '(d) rollback V003 restaura tablas, indices y FK con V002'
+assert_sql '(d) rollback V003 conserva V002' 'V002' \
+    'SELECT version FROM schema_migration ORDER BY version;'
+assert_sql '(d) rollback V003 conserva las semillas' $'1\t1\t1\t1\t1' "$v003_counts_query"
+# Las mismas inserciones ahora deben funcionar: el rollback ha retirado las claves.
+for i in "${!duplicate_tables[@]}"; do
+    sql --execute="${duplicate_queries[$i]}"
+    sql --execute="DELETE FROM \`${duplicate_tables[$i]}\` WHERE id = 2;"
+done
+
+# (e) Comparar TODAS las tablas originales, incluidos indices y claves foraneas.
 sql < "$migration_dir/V002__rollback.sql"
 after_rollback=$(schema_snapshot)
-assert_equal "$after_rollback" "$initial_schema" '(d) rollback restaura las definiciones originales'
-assert_sql '(d) control vacio tras rollback' '' \
+assert_equal "$after_rollback" "$initial_schema" '(e) rollback restaura las definiciones originales'
+assert_sql '(e) control vacio tras rollback' '' \
     'SELECT version FROM schema_migration ORDER BY version;'
-assert_sql '(d) rollback conserva las semillas' $'1\t1\t1\t1' "$counts_query"
-printf 'PRODUCTION: comprobaciones (b)-(d) OK\n'
+assert_sql '(e) rollback conserva las semillas' $'1\t1\t1\t1' "$counts_query"
+printf 'PRODUCTION: comprobaciones (b)-(e), incluidas V002 y V003, OK\n'
 [[ "$v001_failed_assertion" == 0 ]] || fail '(a) V001 deja una marca falsa; ver fallo anterior.'
 # trap EXIT elimina exclusivamente production_test antes de anunciar exito.
