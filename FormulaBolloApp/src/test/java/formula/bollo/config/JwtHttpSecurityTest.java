@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.HashMap;
@@ -23,17 +24,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
@@ -46,6 +50,7 @@ import formula.bollo.repository.*;
 import formula.bollo.service.*;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import jakarta.servlet.DispatcherType;
 import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 
@@ -105,17 +110,70 @@ class JwtHttpSecurityTest {
     @CsvSource({"DELETE,/results/delete", "POST,/cache/update", "GET,/account/id",
             "POST,/fantasy/saveDriverTeamPoints", "POST,/fantasy/saveDriverTeamPrices", "PUT,/results/save"})
     void adminMatrix(String method, String path) throws Exception {
-        mvc.perform(route(method, path)).andExpect(status().isForbidden());
+        mvc.perform(route(method, path)).andExpect(status().isUnauthorized());
         mvc.perform(route(method, path).header("Authorization", "Bearer " + session(user)))
                 .andExpect(status().isForbidden());
         mvc.perform(route(method, path).header("Authorization", "Bearer " + session(admin)))
                 .andExpect(status().isOk());
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"http://localhost:4200", "https://formulabollo.es"})
+    void anonymousProtectedRequestIncludesCorsHeader(String origin) throws Exception {
+        mvc.perform(route("GET", "/fantasy/fantasyElection").header("Origin", origin))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().stringValues("Access-Control-Allow-Origin", origin));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"http://localhost:4200", "https://formulabollo.es"})
+    void normalUserOnAdminRouteIncludesCorsHeader(String origin) throws Exception {
+        mvc.perform(route("PUT", "/results/save").header("Origin", origin)
+                .header("Authorization", "Bearer " + session(user)))
+                .andExpect(status().isForbidden())
+                .andExpect(header().stringValues("Access-Control-Allow-Origin", origin));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"http://localhost:4200", "https://formulabollo.es"})
+    void allowedOriginCanPreflightAdminPutRoute(String origin) throws Exception {
+        mvc.perform(options("/results/save").servletPath("/results/save")
+                .header("Origin", origin)
+                .header("Access-Control-Request-Method", "PUT")
+                .header("Access-Control-Request-Headers", "Authorization, Content-Type"))
+                .andExpect(status().isOk())
+                .andExpect(header().stringValues("Access-Control-Allow-Origin", origin))
+                .andExpect(header().string("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("PUT")))
+                .andExpect(header().string("Access-Control-Allow-Headers", org.hamcrest.Matchers.containsString("Authorization")))
+                .andExpect(header().string("Access-Control-Allow-Headers", org.hamcrest.Matchers.containsString("Content-Type")))
+                .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
+    }
+
+    @Test
+    void foreignOriginCannotPreflightAdminPutRoute() throws Exception {
+        mvc.perform(options("/results/save").servletPath("/results/save")
+                .header("Origin", "https://foreign.example")
+                .header("Access-Control-Request-Method", "PUT")
+                .header("Access-Control-Request-Headers", "Authorization, Content-Type"))
+                .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"http://localhost:4200", "https://formulabollo.es"})
+    void mvcResponsesIncludeSingleCorsHeader(String origin) throws Exception {
+        mvc.perform(route("GET", "/drivers/teamHistory").param("driverName", "Driver With Spaces")
+                .header("Origin", origin))
+                .andExpect(status().isOk())
+                .andExpect(header().stringValues("Access-Control-Allow-Origin", origin));
+        mvc.perform(route("POST", "/account/login").content("{").header("Origin", origin))
+                .andExpect(status().isBadRequest())
+                .andExpect(header().stringValues("Access-Control-Allow-Origin", origin));
+    }
+
     @Test
     void fantasyElectionRequiresAuthentication() throws Exception {
         mvc.perform(route("GET", "/fantasy/fantasyElection").param("userId", "999"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
         verifyNoInteractions(fantasy);
     }
 
@@ -150,7 +208,7 @@ class JwtHttpSecurityTest {
     @Test
     void passwordRequiresAuthenticationAndJson() throws Exception {
         mvc.perform(route("POST", "/account/changePassword").content("{\"password\":\"new\"}"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
         mvc.perform(route("POST", "/account/changePassword").header("Authorization", "Bearer " + session(user))
                 .content(""))
                 .andExpect(status().isBadRequest());
@@ -176,7 +234,7 @@ class JwtHttpSecurityTest {
             "POST,/fantasy/saveDriverTeamPoints", "POST,/fantasy/saveFantasyElection"})
     void recoveryCannotAuthenticateElsewhere(String method, String path) throws Exception {
         mvc.perform(route(method, path).content("{}")
-                .header("Authorization", "Bearer " + recovery(admin))).andExpect(status().isForbidden());
+                .header("Authorization", "Bearer " + recovery(admin))).andExpect(status().isUnauthorized());
     }
 
     @ParameterizedTest
@@ -189,9 +247,9 @@ class JwtHttpSecurityTest {
         mvc.perform(change(purpose.equals("session") ? oldSession : oldRecovery)).andExpect(status().isOk());
         assertTrue(encoder.matches("new-password", admin.getPassword()));
         mvc.perform(route("POST", "/cache/update").header("Authorization", "Bearer " + oldSession))
-                .andExpect(status().isForbidden());
-        mvc.perform(change(oldSession)).andExpect(status().isForbidden());
-        mvc.perform(change(oldRecovery)).andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
+        mvc.perform(change(oldSession)).andExpect(status().isUnauthorized());
+        mvc.perform(change(oldRecovery)).andExpect(status().isUnauthorized());
         mvc.perform(route("POST", "/cache/update").header("Authorization", "Bearer " + session(admin)))
                 .andExpect(status().isOk());
         verify(repository, times(1)).save(admin);
@@ -204,7 +262,7 @@ class JwtHttpSecurityTest {
         claims.remove("credentialFingerprint");
         String legacy = Jwts.builder().claims(claims).signWith(jwt.getKey()).compact();
         mvc.perform(route("POST", "/cache/update").header("Authorization", "Bearer " + legacy))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -266,10 +324,91 @@ class JwtHttpSecurityTest {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    void anonymousProtectedRequestReturnsUnauthorized() throws Exception {
+        mvc.perform(route("GET", "/fantasy/fantasyElection"))
+                .andExpect(status().isUnauthorized());
+        verifyNoInteractions(fantasy);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", " ", "malformed", "expired", "subject", "expiration", "unknown", "claimType"})
+    void invalidTokensRemainUnauthenticated(String invalid) throws Exception {
+        String token = invalid;
+        if ("expired".equals(invalid)) {
+            token = jwt.generateToken(mapper.accountToAccountDTO(user), -1);
+        } else if (List.of("subject", "expiration", "unknown", "claimType").contains(invalid)) {
+            Map<String, Object> claims = new HashMap<>(jwt.extractAllClaims(session(user)));
+            switch (invalid) {
+                case "subject" -> claims.remove("sub");
+                case "expiration" -> claims.remove("exp");
+                case "unknown" -> claims.put("sub", "missing");
+                case "claimType" -> claims.put("purpose", List.of("session"));
+            }
+            token = Jwts.builder().claims(claims).signWith(jwt.getKey()).compact();
+        }
+
+        mvc.perform(route("GET", "/fantasy/fantasyElection").header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized());
+        verifyNoInteractions(fantasy);
+    }
+
+    @Test
+    void sessionRevokedByPasswordChangeReturnsUnauthorized() throws Exception {
+        String token = session(user);
+        mvc.perform(change(token)).andExpect(status().isOk());
+        assertTrue(encoder.matches("new-password", user.getPassword()));
+        verify(repository).save(user);
+
+        mvc.perform(route("GET", "/fantasy/fantasyElection")
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized());
+        verifyNoInteractions(fantasy);
+    }
+
+    @Test
+    void accountLookupResourceFailurePropagates() {
+        String token = session(user);
+        DataAccessResourceFailureException failure = new DataAccessResourceFailureException("Database unavailable");
+        when(repository.findByUsername("ana")).thenThrow(failure);
+
+        assertSame(failure, assertThrows(DataAccessResourceFailureException.class,
+                () -> mvc.perform(route("GET", "/fantasy/fantasyElection")
+                        .header("Authorization", "Bearer " + token))));
+        verify(repository).findByUsername("ana");
+        verifyNoInteractions(fantasy);
+    }
+
+    @Test
+    void accountLookupTransactionFailurePropagates() {
+        String token = session(user);
+        CannotCreateTransactionException failure = new CannotCreateTransactionException("Cannot connect to database");
+        when(repository.findByUsername("ana")).thenThrow(failure);
+
+        assertSame(failure, assertThrows(CannotCreateTransactionException.class,
+                () -> mvc.perform(route("GET", "/fantasy/fantasyElection")
+                        .header("Authorization", "Bearer " + token))));
+        verify(repository).findByUsername("ana");
+        verifyNoInteractions(fantasy);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"http://localhost:4200", "https://formulabollo.es"})
+    void anonymousPostErrorDispatchIsNotRejectedBySecurity(String origin) throws Exception {
+        mvc.perform(route("POST", "/error").header("Origin", origin).with(request -> {
+            request.setDispatcherType(DispatcherType.ERROR);
+            return request;
+        })).andExpect(result -> {
+            int responseStatus = result.getResponse().getStatus();
+            assertNotEquals(401, responseStatus);
+            assertNotEquals(403, responseStatus);
+        }).andExpect(header().stringValues("Access-Control-Allow-Origin", origin));
+    }
+
     @Configuration
     @EnableWebMvc
     @EnableWebSecurity
-    @Import({SecurityConfigurer.class, JwtRequestFilter.class, JwtConfig.class, AccountService.class, AccountController.class})
+    @Import({SecurityConfigurer.class, JwtRequestFilter.class, JwtConfig.class, CorsConfig.class, AccountService.class, AccountController.class})
     static class Config {
         @Bean AccountRepository repository() { return mock(AccountRepository.class); }
         @Bean AccountImpl mapper() { return new AccountImpl(Mappers.getMapper(AccountMapper.class)); }
@@ -278,7 +417,9 @@ class JwtHttpSecurityTest {
         @Bean FantasyService fantasy() { return mock(FantasyService.class); }
         @Bean UserDetailsService users(AccountRepository repository) {
             return name -> {
-                Account account = repository.findByUsername(name).getFirst();
+                List<Account> accounts = repository.findByUsername(name);
+                if (accounts.isEmpty()) throw new UsernameNotFoundException("Usuario no encontrado");
+                Account account = accounts.getFirst();
                 return User.withUsername(account.getUsername()).password(account.getPassword())
                         .roles(account.getAdmin() == 1 ? "ADMIN" : "USER").build();
             };

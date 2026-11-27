@@ -6,10 +6,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.MalformedJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -56,6 +59,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             try {
                 String username = jwtConfig.extractUsername(jwt);
+                if (username == null || username.isBlank() || jwtConfig.extractExpiration(jwt) == null) {
+                    throw new MalformedJwtException("JWT subject and expiration are required");
+                }
 
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
@@ -75,7 +81,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
-            } catch (Exception e) {
+            } catch (JwtException | IllegalArgumentException | UsernameNotFoundException e) {
                 logger.warn("Cannot set user authentication (" + e.getClass().getSimpleName() + ")");
             }
         }

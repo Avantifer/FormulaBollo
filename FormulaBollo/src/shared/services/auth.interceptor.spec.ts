@@ -24,10 +24,76 @@ describe('Authenticated errors and guards', () => {
     expect(router).toHaveBeenCalledWith(['/fantasy/login']);
   });
 
+  it('preserves the session and does not navigate on a 401 for a different bearer token', () => {
+    localStorage.setItem('auth', 'session');
+    const auth = TestBed.inject(AuthJWTService);
+    auth.isUserLogged = true;
+    const clearSession = spyOn(auth, 'clearSession').and.callThrough();
+    const router = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+
+    TestBed.inject(HttpClient).post('/account/changePassword', { password: 'new-password' }, {
+      headers: { Authorization: 'Bearer invalid-recovery-token' }
+    }).subscribe({ error: () => {} });
+    TestBed.inject(HttpTestingController).expectOne('/account/changePassword')
+      .flush('', { status: 401, statusText: 'Unauthorized' });
+
+    expect(localStorage.getItem('auth')).toBe('session');
+    expect(auth.isUserLogged).toBeTrue();
+    expect(clearSession).not.toHaveBeenCalled();
+    expect(router).not.toHaveBeenCalled();
+  });
+
+  for (const url of ['/account/changePassword', '/cache/update', '/fantasy/saveDriverTeamPoints',
+    '/penalties/save', '/races/save', '/results/save', '/sprints/save']) {
+    it(`ends the expired session on a 401 from ${url}`, () => {
+      localStorage.setItem('auth', 'expired');
+      const router = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+      TestBed.inject(HttpClient).post(url, {}, { headers: { Authorization: 'Bearer expired' } })
+        .subscribe({ error: () => {} });
+      TestBed.inject(HttpTestingController).expectOne(url).flush('', { status: 401, statusText: 'Unauthorized' });
+      expect(localStorage.getItem('auth')).toBeNull();
+      expect(router).toHaveBeenCalledWith(['/fantasy/login']);
+    });
+  }
+
+  for (const currentToken of [null, 'new-session']) {
+    it(`handles a delayed 401 when the stored token becomes ${currentToken}`, () => {
+      localStorage.setItem('auth', 'expired');
+      const clearSession = spyOn(TestBed.inject(AuthJWTService), 'clearSession').and.callThrough();
+      const router = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+      const error = jasmine.createSpy('error');
+      TestBed.inject(HttpClient).get('/fantasy/fantasyElection', { headers: { Authorization: 'Bearer expired' } })
+        .subscribe({ error });
+      if (currentToken === null) localStorage.removeItem('auth');
+      else localStorage.setItem('auth', currentToken);
+      TestBed.inject(HttpTestingController).expectOne('/fantasy/fantasyElection')
+        .flush('', { status: 401, statusText: 'Unauthorized' });
+      expect(error).toHaveBeenCalled();
+      expect(localStorage.getItem('auth')).toBe(currentToken);
+      if (currentToken === null) {
+        expect(clearSession).toHaveBeenCalled();
+        expect(router).toHaveBeenCalledWith(['/fantasy/login']);
+      } else {
+        expect(clearSession).not.toHaveBeenCalled();
+        expect(router).not.toHaveBeenCalled();
+      }
+    });
+  }
+
+  it('preserves the session on an authenticated 403', () => {
+    localStorage.setItem('auth', 'session');
+    const router = spyOn(TestBed.inject(Router), 'navigate');
+    TestBed.inject(HttpClient).post('/cache/update', {}, { headers: { Authorization: 'Bearer session' } })
+      .subscribe({ error: () => {} });
+    TestBed.inject(HttpTestingController).expectOne('/cache/update').flush('', { status: 403, statusText: 'Forbidden' });
+    expect(localStorage.getItem('auth')).toBe('session');
+    expect(router).not.toHaveBeenCalled();
+  });
+
   for (const [url, headers] of [
     ['/drivers/all', {}],
-    ['/account/login', { Authorization: 'Bearer token' }],
-    ['/account/register', { Authorization: 'Bearer token' }]
+    ['/account/login', { Authorization: 'Bearer session' }],
+    ['/account/register', { Authorization: 'Bearer session' }]
   ] as const) {
     it(`preserves the session on a 401 from ${url}`, () => {
       localStorage.setItem('auth', 'session');

@@ -8,9 +8,15 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const auth = inject(AuthJWTService);
   const router = inject(Router);
   const credentialsRequest = /\/account\/(login|register)(?:[/?]|$)/.test(request.url);
+  const authorization = request.headers.get('Authorization');
+  const sessionToken = localStorage.getItem('auth');
+  // A parallel response may clear this session before this request fails.
+  const sessionRequest = sessionToken !== null && authorization === `Bearer ${sessionToken}`;
   return next(request).pipe(catchError((error: unknown) => {
+    const currentToken = localStorage.getItem('auth');
     if (error instanceof HttpErrorResponse && error.status === 401
-        && request.headers.has('Authorization') && !credentialsRequest) {
+        && (authorization === `Bearer ${currentToken}` || (currentToken === null && sessionRequest))
+        && !credentialsRequest) {
       auth.clearSession();
       void router.navigate(['/fantasy/login']);
     }
