@@ -1,0 +1,31 @@
+# Actualizaciones semanales. Las versiones mayores se suben a mano (Angular, Spring Boot).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /FormulaBollo
+    schedule:
+      interval: weekly
+    groups:
+      npm:
+        patterns: ["*"]
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: maven
+    directory: /FormulaBolloApp
+    schedule:
+      interval: weekly
+    groups:
+      maven:
+        patterns: ["*"]
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
