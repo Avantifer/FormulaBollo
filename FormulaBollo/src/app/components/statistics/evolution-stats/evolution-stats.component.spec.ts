@@ -52,6 +52,7 @@ describe('EvolutionStatsComponent', () => {
   });
 
   it('requests once per season, shares the overview with teams and uses the application cache', () => {
+    TestBed.inject(CacheService).updateVersion(1);
     const data = load();
     click(0);
     teams();

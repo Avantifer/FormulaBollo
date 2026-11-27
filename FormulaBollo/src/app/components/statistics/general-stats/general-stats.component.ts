@@ -1,3 +1,4 @@
+import { CacheService } from '../../../../shared/services/cache.service';
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input, OnChanges, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ChartModule } from 'primeng/chart';
@@ -18,6 +19,7 @@ import { buildStatisticsCharts, centerTextPlugin, isVacant, StatisticsPalette } 
   styleUrl: './general-stats.component.scss'
 })
 export class GeneralStatsComponent implements OnChanges {
+  private readonly cache = inject(CacheService);
   private readonly api = inject(StatisticsApiService);
   private readonly theme = inject(ThemeService);
   private readonly destroyRef = inject(DestroyRef);
@@ -109,7 +111,7 @@ export class GeneralStatsComponent implements OnChanges {
     this.loading.set(true);
     this.loadError.set(false);
     this.overview.set(null);
-    this.request = this.api.getOverview(season).subscribe({
+    this.request = this.cache.refreshOnPublish(() => this.api.getOverview(season)).subscribe({
       next: data => {
         this.overview.set(data);
         this.loading.set(false);

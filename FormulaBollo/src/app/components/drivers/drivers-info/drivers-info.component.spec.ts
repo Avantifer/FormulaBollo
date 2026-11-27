@@ -14,6 +14,8 @@ import { ResultApiService } from '../../../../shared/services/api/result-api.ser
 import { UtilsService } from '../../../../shared/services/utils.service';
 import { DriverTeamHistoryEntry } from '../../../../shared/models/driverTeamHistoryEntry';
 import { DriverPoints } from '../../../../shared/models/driverPoints';
+import { CacheService } from '../../../../shared/services/cache.service';
+import { HttpTestingController } from '@angular/common/http/testing';
 
 describe('DriversInfoComponent', () => {
   let component: DriversInfoComponent;
@@ -378,6 +380,47 @@ describe('DriversInfoComponent', () => {
         }
       }
     }
+  });
+});
+
+describe('Driver profile cache version regression', () => {
+  let fixture: ComponentFixture<DriversInfoComponent>;
+  let seed: CacheService;
+
+  beforeEach(() => {
+    jasmine.clock().install();
+    TestBed.configureTestingModule({ imports: [DriversInfoComponent], providers: provideComponentTesting() });
+    seed = new CacheService();
+  });
+
+  afterEach(() => {
+    fixture?.destroy();
+    TestBed.inject(HttpTestingController).verify({ ignoreCancelled: true });
+    TestBed.inject(CacheService).clearCache();
+    seed.clearCache();
+    localStorage.clear();
+    jasmine.clock().uninstall();
+  });
+
+  it('E: keeps the driver profile on its skeleton while persisted data awaits version validation', () => {
+    const info: DriverInfo = {
+      driver: driverPointsFixture.driver, totalPoints: 336, victories: 6, podiums: 15,
+      poles: 9, fastlaps: 4, averagePosition: 2.4, racesFinished: 17,
+      penalties: 0, bestPosition: 1, championships: 2,
+      last5Results: [] as unknown as DriverInfo['last5Results']
+    };
+    seed.updateVersion(29);
+    seed.getOrLoad('infoByDriverName-Piloto de prueba-0', () => of(info)).subscribe();
+    jasmine.clock().tick(300);
+    const reload = TestBed.inject(CacheService);
+    expect(reload.getCache().get('infoByDriverName-Piloto de prueba-0')?.totalPoints).toBe(336);
+
+    fixture = TestBed.createComponent(DriversInfoComponent);
+    fixture.detectChanges();
+    // Leave the season request pending: the profile must not bypass getOrLoad via loadCache.
+    expect(fixture.nativeElement.querySelector('.loading-profile')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('header')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.key-stats')).toBeNull();
   });
 });
 describe('DriversInfoComponent season navigation', () => {

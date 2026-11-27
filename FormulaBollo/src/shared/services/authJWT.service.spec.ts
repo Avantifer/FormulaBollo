@@ -2,6 +2,10 @@ import { TestBed } from '@angular/core/testing';
 import { CacheService } from './cache.service';
 import { AuthJWTService } from './authJWT.service';
 import { MessageInfoService } from './toastInfo.service';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { FantasyApiService } from './api/fantasy-api.service';
+import { of } from 'rxjs';
 
 export function sessionToken(exp: number): string {
   return `${btoa(JSON.stringify({ alg: 'HS256' }))}.${btoa(JSON.stringify({ userId: 1, sub: 'user', exp }))}.signature`;
@@ -13,19 +17,24 @@ describe('AuthJWTService session validation', () => {
     localStorage.clear();
     jasmine.clock().install();
     TestBed.configureTestingModule({ providers: [
+    provideHttpClient(), provideHttpClientTesting(),
     { provide: MessageInfoService, useValue: { showInfo: () => {} } }
     ] });
   });
-  afterEach(() => { TestBed.inject(CacheService).clearCache(); localStorage.clear(); jasmine.clock().uninstall(); });
+  afterEach(() => { TestBed.inject(HttpTestingController).verify(); TestBed.inject(CacheService).clearCache(); localStorage.clear(); jasmine.clock().uninstall(); });
 
   for (const method of ['clearSession', 'logOut'] as const) {
-    it(`${method} removes private Fantasy cache and preserves public data`, () => {
+    it(`${method} leaves no private Fantasy data persisted and preserves public data`, () => {
       const cache = TestBed.inject(CacheService);
       localStorage.setItem('auth', sessionToken(Date.now() / 1000 + 60));
-      cache.getCache().set('fantasyElection-authenticated-1-2', { team: 1 });
-      cache.getCache().set('fantasyElection-authenticated-2-3', { team: 2 });
-      cache.getCache().set('allDrivers-1', [1]);
-      cache.saveCache();
+      cache.updateVersion(1);
+      cache.getOrLoad('allDrivers-1', () => of([1])).subscribe();
+      const election = jasmine.createSpy('election');
+      for (const raceId of [2, 3]) {
+        TestBed.inject(FantasyApiService).getFantasyElection(raceId).subscribe(election);
+        TestBed.inject(HttpTestingController).expectOne(r => r.url.endsWith('/fantasyElection')).flush({ team: raceId });
+        expect(election).toHaveBeenCalledWith({ team: raceId });
+      }
       jasmine.clock().tick(300);
       const auth = TestBed.inject(AuthJWTService);
       auth.isUserLogged = true;
@@ -34,7 +43,7 @@ describe('AuthJWTService session validation', () => {
       expect(auth.isUserLogged).toBeFalse();
       expect(Array.from(cache.getCache().keys())).toEqual(['allDrivers-1']);
       jasmine.clock().tick(300);
-      expect(JSON.parse(localStorage.getItem('apiCache')!)).toEqual([['allDrivers-1', [1]]]);
+      expect(JSON.parse(localStorage.getItem('apiCache')!)).toEqual({ version: 1, entries: [['allDrivers-1', [1]]] });
     });
   }
 

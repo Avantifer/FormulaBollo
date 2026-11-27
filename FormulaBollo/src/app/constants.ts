@@ -2,7 +2,7 @@
 export const ERROR_TEAM_FETCH: string = "No se pudo obtener los equipos correctamente";
 export const ERROR_RESULT_FETCH: string = "No se ha podido recoger los resultados";
 export const ERROR_RACE_FETCH: string = "No se ha podido recoger la carrera correctamente";
-export const ERROR_DRIVER_FETCH: string = "No se puedo obtener los puntos de los pilotos correctamente";
+export const ERROR_DRIVER_FETCH: string = "No se pudo obtener los puntos de los pilotos correctamente";
 export const ERROR_CONFIGURATION_FETCH: string = "No se pudo obtener las configuraciones correctamente";
 export const ERROR_PENALTY_FETCH: string = "No se han podido recoger las penalización";
 export const ERROR_PRICE_FETCH: string = "Al parecer hubo problemas al recoger los precios";
@@ -13,7 +13,6 @@ export const ERROR_FANTASY_POINTS: string = "No se ha podido recoger los puntos 
 export const ERROR_FANTASY_ELECTION_NOT_FOUND: string = "No se ha podido recoger tu equipo correctamente. Contacta con el administrador";
 export const ERROR_DRIVER_NAME_NOT_FOUND: string = "No hay ningún piloto con ese nombre";
 export const ERROR_TEAM_NAME_NOT_FOUND: string = "No hay ningún equipo con ese nombre";
-export const ERROR_CACHE: string = "Error al obtener la versión de la caché: ";
 export const ERROR_LOGIN_CREDENTIALS: string = "Credenciales incorrectas.";
 export const ERROR_RECOVER_PASSWORD: string = "Correo incorrecto.";
 export const ERROR_CHANGE_PASSWORD: string = "No se pudo cambiar la contraseña.";
@@ -28,10 +27,6 @@ export const WARNING_FANTASY_SAVE_LATE: string = "Demasiado tarde para guardar e
 // Success
 export const SUCCESS_LOGOUT: string = "Has cerrado sesión correctamente.";
 export const SUCCESS_REGISTER : string = "Te has registrado correctamente";
-
-// CACHE
-export const CACHE_NAME_LOCAL_STORAGE: string = 'cacheVersion';
-
 
 // CHARTS
 export const colorsMappings: { [key: string]: string } = {

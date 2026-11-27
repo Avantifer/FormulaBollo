@@ -1,3 +1,4 @@
+import { CacheService } from '../../../../shared/services/cache.service';
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input, OnChanges, signal, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -23,6 +24,7 @@ import { buildComparisonChart, comparisonMetricLabel, comparisonMetrics, compari
   styleUrl: './comparative-stats.component.scss'
 })
 export class ComparativeStatsComponent implements OnChanges {
+  private readonly cache = inject(CacheService);
   private readonly api = inject(StatisticsApiService);
   private readonly theme = inject(ThemeService);
   private readonly images = inject(ImageService);
@@ -146,11 +148,11 @@ export class ComparativeStatsComponent implements OnChanges {
     this.load(this.seasonSelected().number);
   }
 
-  protected loadDuel(): void {
+  protected loadDuel(refresh = false): void {
     this.duelRequest?.unsubscribe();
-    this.duel.set(null);
+    if (!refresh) this.duel.set(null);
     this.duelError.set(false);
-    this.duelLoading.set(false);
+    if (!refresh) this.duelLoading.set(false);
     const [a, b] = this.selectedIds();
     if (a === undefined || b === undefined || !this.overview()) return;
     if (this.isTeams()) {
@@ -159,10 +161,10 @@ export class ComparativeStatsComponent implements OnChanges {
     }
     const [driverA, driverB] = this.selected();
     if (!driverA || !driverB) return;
-    this.duelLoading.set(true);
+    if (!refresh) this.duelLoading.set(true);
     this.duelRequest = this.api.getHeadToHead(this.seasonSelected().number, driverA.name, driverB.name).subscribe({
       next: data => { this.duel.set(data); this.duelLoading.set(false); },
-      error: () => { this.duelError.set(true); this.duelLoading.set(false); }
+      error: () => { if (!refresh) { this.duelError.set(true); this.duelLoading.set(false); } }
     });
   }
 
@@ -188,8 +190,23 @@ export class ComparativeStatsComponent implements OnChanges {
     this.overview.set(null);
     this.selectedIds.set([]);
     this.duel.set(null);
-    this.request = this.api.getOverview(season).subscribe({
-      next: data => { this.overview.set(data); this.reset(); this.loading.set(false); },
+    this.request = this.cache.refreshOnPublish(refresh => {
+      if (refresh) this.duelRequest?.unsubscribe();
+      return this.api.getOverview(season);
+    }).subscribe({
+      next: data => {
+        const previous = this.overview();
+        this.overview.set(data);
+        if (!previous) this.reset();
+        else {
+          const valid = this.selectedIds().filter(id => this.candidates().some(entry => entry.id === id));
+          if (valid.length === 2) {
+            this.selectedIds.set(valid);
+            this.loadDuel(true);
+          } else this.reset();
+        }
+        this.loading.set(false);
+      },
       error: () => { this.loading.set(false); this.loadError.set(true); }
     });
   }

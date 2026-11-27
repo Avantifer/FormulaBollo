@@ -3,7 +3,7 @@
 	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
 		<div>
 			<p class="text-sm font-medium mb-2 text-ink-soft">Circuito</p>
-			<select-races [season]="actualSeason" class="w-full" (raceChanged)="onRaceChange($event)" />
+			<select-races [refreshOnPublish]="false" [season]="actualSeason" class="w-full" (raceChanged)="onRaceChange($event)" />
 		</div>
 		<div>
 			<p class="text-sm font-medium mb-2 text-ink-soft">Piloto</p>

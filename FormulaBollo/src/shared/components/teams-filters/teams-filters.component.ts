@@ -1,3 +1,4 @@
+import { CacheService } from '../../services/cache.service';
 import { CommonModule } from '@angular/common';
 import { Component, effect, EventEmitter, inject, input, InputSignal, Output, signal, untracked, WritableSignal } from '@angular/core';
 import { ChipModule } from 'primeng/chip';
@@ -22,6 +23,7 @@ import { ImageService } from '../../services/image.service';
   styleUrl: './teams-filters.component.scss'
 })
 export class TeamsFiltersComponent {
+  private readonly cache = inject(CacheService);
   private readonly teamApiService: TeamApiService = inject(TeamApiService);
   private readonly utilsService: UtilsService = inject(UtilsService);
   protected readonly imageService = inject(ImageService);
@@ -45,14 +47,17 @@ export class TeamsFiltersComponent {
       this.teams.set([]);
       if (!initial.length) untracked(() => this.emitSelection());
 
-      const subscription = this.teamApiService.getAllTeams(season.number).pipe(
+      let loaded = false;
+      const subscription = this.cache.refreshOnPublish(() => this.teamApiService.getAllTeams(season.number)).pipe(
         map((teams: Team[] | undefined) => teams ?? []),
         catchError((error) => this.utilsService.handleError<Team[]>(ERROR_TEAM_FETCH, error, []))
       ).subscribe(teams => {
         this.teams.set(teams);
-        const valid = initial.filter(name => teams.some(team => team.name === name));
+        const chosen = loaded ? [...this.selectedTeams] : initial;
+        const valid = chosen.filter(name => teams.some(team => team.name === name));
         this.selectedTeams = new Set(valid.length ? valid : ['Todos los equipos']);
-        if (initial.length) untracked(() => this.emitSelection());
+        if (!loaded ? initial.length : chosen.some(name => !this.selectedTeams.has(name))) untracked(() => this.emitSelection());
+        loaded = true;
       });
       onCleanup(() => subscription.unsubscribe());
     });

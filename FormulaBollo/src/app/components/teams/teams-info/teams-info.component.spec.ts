@@ -16,6 +16,7 @@ import { CacheService } from '../../../../shared/services/cache.service';
 import { ImageService } from '../../../../shared/services/image.service';
 import { UtilsService } from '../../../../shared/services/utils.service';
 import { TeamsInfoComponent } from './teams-info.component';
+import { HttpTestingController } from '@angular/common/http/testing';
 
 describe('TeamsInfoComponent', () => {
   const total = new Season(0, 'Total', 0);
@@ -275,6 +276,19 @@ describe('TeamsInfoComponent', () => {
     expect(fixture.nativeElement.querySelector('.classification-value').textContent).not.toContain('empatado');
   });
 
+  it('clears the previous championship position while the next season standings are pending', () => {
+    create();
+    const pendingStandings = new Subject<TeamWithDrivers[]>();
+    standingsRequest.and.returnValues(of([standing(team.id, team.name, 414)]), pendingStandings);
+    select(season1);
+    expect(component['championshipPosition']()?.position).toBe(1);
+
+    select(season2);
+
+    expect(component['championshipPosition']()).toBeUndefined();
+    expect(fixture.nativeElement.querySelector('.classification-stat, .hero-number')).toBeNull();
+  });
+
   for (const result of [[], [standing(999, 'Otro', 100)], [standing(team.id, team.name, 0)]]) {
     it('omits classification for unavailable or scoreless standings: ' + JSON.stringify(result.map(point => point.totalPoints)), () => {
       create();
@@ -483,25 +497,35 @@ describe('TeamsInfoComponent', () => {
     expect(component['drivers']()).toEqual([]);
   });
 
-  it('preloads the existing cache keys for the requested season and preserves the previous profile during refresh', () => {
+  it('loads validated cache keys through the APIs for the requested season and preserves the previous profile during refresh', () => {
     Object.assign(route.snapshot, { queryParamMap: convertToParamMap({ season: '2' }) });
-    const cache = TestBed.inject(CacheService).loadCache();
+    const service = TestBed.inject(CacheService);
+    service.updateVersion(1);
+    const cache = service.loadCache();
     cache.set('infoTeamByName-McLaren-2', info);
     cache.set('driversByTeamName-McLaren-2', drivers.map(point => point.driver));
     cache.set('specificDriverPoints-2-1,2', drivers);
     cache.set('allTeamsWithDrivers-2', [standing(team.id, team.name, 414)]);
+    infoRequest.and.callThrough();
+    driversRequest.and.callThrough();
+    pointsRequest.and.callThrough();
+    standingsRequest.and.callThrough();
     create();
+    select(season2);
     expect(component['teamInfo']()).toBe(info);
     expect(component['drivers']()).toEqual(drivers);
     expect(component['championshipPosition']()?.position).toBe(1);
     const pendingInfo = new Subject<TeamInfo>();
     const pendingDrivers = new Subject<DriverPoints[]>();
     infoRequest.and.returnValue(pendingInfo);
+    driversRequest.and.returnValue(of(drivers.map(point => point.driver)));
     pointsRequest.and.returnValue(pendingDrivers);
+    standingsRequest.and.returnValue(of([]));
     select(season1);
     expect(fixture.nativeElement.querySelector('header').classList.contains('bg-McLaren')).toBeTrue();
     expect(fixture.nativeElement.querySelectorAll('.driver-row').length).toBe(2);
     expect(fixture.nativeElement.querySelector('.loading-profile')).toBeNull();
+    service.clearCache();
   });
 
   it('cancels stale requests during fast tab changes and after destroy', () => {
@@ -693,4 +717,49 @@ describe('TeamsInfoComponent', () => {
       }
     }
   }, 30000);
+});
+
+describe('Team profile cache version regression', () => {
+  let fixture: ComponentFixture<TeamsInfoComponent>;
+  let seed: CacheService;
+
+  beforeEach(() => {
+    jasmine.clock().install();
+    TestBed.configureTestingModule({ imports: [TeamsInfoComponent], providers: provideComponentTesting() });
+    const route = TestBed.inject(ActivatedRoute);
+    Object.assign(route, { params: of({ name: 'Ferrari' }) });
+    Object.assign(route.snapshot, { paramMap: convertToParamMap({ name: 'Ferrari' }) });
+    seed = new CacheService();
+  });
+
+  afterEach(() => {
+    fixture?.destroy();
+    TestBed.inject(HttpTestingController).verify({ ignoreCancelled: true });
+    TestBed.inject(CacheService).clearCache();
+    seed.clearCache();
+    localStorage.clear();
+    jasmine.clock().uninstall();
+  });
+
+  it('E: keeps the team profile on its skeleton while persisted data awaits version validation', () => {
+    const info: TeamInfo = {
+      team: teamPointsFixture.team, totalPoints: 414, victories: 6, podiums: 15,
+      poles: 9, fastlaps: 4, averagePosition: 4.5, racesFinished: 30,
+      penalties: 1, bestPosition: 1, constructors: 2, last5Results: []
+    };
+    seed.updateVersion(29);
+    seed.getOrLoad('infoTeamByName-Ferrari-0', () => of(info)).subscribe();
+    seed.getOrLoad('driversByTeamName-Ferrari-0', () => of([teamPointsFixture.driver1.driver])).subscribe();
+    seed.getOrLoad('specificDriverPoints-0-1', () => of([teamPointsFixture.driver1])).subscribe();
+    jasmine.clock().tick(300);
+    const reload = TestBed.inject(CacheService);
+    expect(reload.getCache().get('infoTeamByName-Ferrari-0')?.totalPoints).toBe(414);
+
+    fixture = TestBed.createComponent(TeamsInfoComponent);
+    fixture.detectChanges();
+    // Keep the season request pending to isolate the direct loadCache path.
+    expect(fixture.nativeElement.querySelector('.loading-profile')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('header')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.driver-entry')).toBeNull();
+  });
 });

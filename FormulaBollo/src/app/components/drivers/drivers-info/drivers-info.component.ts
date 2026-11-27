@@ -1,3 +1,4 @@
+import { CacheService } from '../../../../shared/services/cache.service';
 import { UtilsService } from '../../../../shared/services/utils.service';
 import { Component, computed, inject, signal, WritableSignal } from '@angular/core';
 import { SelectSeasonsComponent } from "../../../../shared/components/select-seasons/select-seasons.component";
@@ -12,7 +13,6 @@ import { Title } from '@angular/platform-browser';
 import { driverSeasonTitle } from '../../../../shared/services/page-title.strategy';
 import { ImageService } from '../../../../shared/services/image.service';
 import { SpaceToUnderscorePipe } from '../../../../shared/pipes/spaceToUnderscore.pipe';
-import { CacheService } from '../../../../shared/services/cache.service';
 import { DriverTeamHistoryEntry } from '../../../../shared/models/driverTeamHistoryEntry';
 import { DriverPoints } from '../../../../shared/models/driverPoints';
 import { Result } from '../../../../shared/models/result';
@@ -32,12 +32,12 @@ import { driverPosition, isVacantDriver } from '../drivers-ranking/drivers-ranki
   styleUrl: './drivers-info.component.scss'
 })
 export class DriversInfoComponent {
+  private readonly cache = inject(CacheService);
   private readonly title = inject(Title);
   protected readonly activatedRoute: ActivatedRoute = inject(ActivatedRoute);
   protected readonly utilsService: UtilsService = inject(UtilsService);
   protected readonly imageService: ImageService = inject(ImageService);
   private readonly driverApiService: DriverApiService = inject(DriverApiService);
-  private readonly cacheService: CacheService = inject(CacheService);
   private readonly resultApiService = inject(ResultApiService);
   protected readonly router: Router = inject(Router);
 
@@ -93,32 +93,21 @@ export class DriversInfoComponent {
       this.initialSeasonNumber = Number.isSafeInteger(number) ? number : undefined;
       this.selectedSeasonNumber.set(this.initialSeasonNumber ?? 0);
       this.driverInfo.set(undefined);
-      this._getDriversCache();
     });
   }
   
-  private _getDriversCache(): void {
-    const cache: Map<string, DriverInfo> = this.cacheService.loadCache();
-    const cacheKeyDriverInfo: string =`infoByDriverName-${this.driverName}-${this.initialSeasonNumber ?? 0}`;
-    
-    if (cache.has(cacheKeyDriverInfo)) {
-      this.driverInfo.set(cache.get(cacheKeyDriverInfo));
-      this._mapDriverStats(this.driverInfo()!);
-    }    
-  }
-
   protected onSeasonChange(newSeason: Season): void {
     const seasonNumber = newSeason?.number ?? 0;
     this.selectedSeasonNumber.set(seasonNumber);
     this.title.setTitle(driverSeasonTitle(this.driverName, seasonNumber));
     this.resetSeasonDetails(false);
     this._getInfoByDriverName(seasonNumber);
-    this.historySubscription = this.driverApiService.getTeamHistoryByDriverName(this.driverName).pipe(
+    this.historySubscription = this.cache.refreshOnPublish(() => this.driverApiService.getTeamHistoryByDriverName(this.driverName)).pipe(
       takeUntil(this.destroy$),
       catchError(error => this.utilsService.handleError<DriverTeamHistoryEntry[]>('No se pudo cargar el recorrido de equipos', error, []))
     ).subscribe(history => this.teamHistory.set(history));
     if (seasonNumber !== 0) {
-      this.standingsSubscription = this.resultApiService.getAllDriverPoints(seasonNumber).pipe(
+      this.standingsSubscription = this.cache.refreshOnPublish(() => this.resultApiService.getAllDriverPoints(seasonNumber)).pipe(
         takeUntil(this.destroy$),
         catchError(() => of([]))
       ).subscribe(standings => this.standings.set(standings));
@@ -140,8 +129,7 @@ export class DriversInfoComponent {
 
   private _getInfoByDriverName(seasonNumber: number): void {
     this.infoSubscription?.unsubscribe();
-    this.infoSubscription = this.driverApiService
-      .getInfoByDriverName(this.driverName, seasonNumber)
+    this.infoSubscription = this.cache.refreshOnPublish(() => this.driverApiService.getInfoByDriverName(this.driverName, seasonNumber))
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => this.utilsService.handleError<DriverInfo>(ERROR_DRIVER_INFO_FETCH, error))

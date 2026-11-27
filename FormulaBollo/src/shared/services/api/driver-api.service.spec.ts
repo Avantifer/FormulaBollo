@@ -10,6 +10,7 @@ describe('DriverApiService team history', () => {
   it('sends the original name as a GET parameter and caches histories independently of driver info', () => {
     localStorage.clear();
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.inject(CacheService).updateVersion(1);
     const http = TestBed.inject(HttpTestingController);
     const api = TestBed.inject(DriverApiService);
     const history = [{ season: driverPointsFixture.driver.season, team: driverPointsFixture.driver.team }];
