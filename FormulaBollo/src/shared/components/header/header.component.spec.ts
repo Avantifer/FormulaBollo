@@ -343,7 +343,10 @@ describe('HeaderComponent navigation and layout', () => {
             document.body.append(frame);
             try {
               const doc = frame.contentDocument!;
-              doc.documentElement.innerHTML = `<head><style>${styles}</style></head><body>${fixture.nativeElement.outerHTML}${toast.nativeElement.outerHTML}</body>`;
+              doc.documentElement.innerHTML = `<head><style>${styles}
+                /* Hide the scrollbar gutter so measurements are independent of the browser scrollbar mode. */
+                html { scrollbar-width: none; }
+              </style></head><body>${fixture.nativeElement.outerHTML}${toast.nativeElement.outerHTML}</body>`;
               const loadedFonts = await doc.fonts.load('600 11px "Barlow Condensed"', 'PILOTOS ESCUDERÍAS RESULTADOS ESTATUTO ESTADÍSTICAS');
               await doc.fonts.load('700 14px "Barlow Condensed"', 'LIGA FANTASY');
               await doc.fonts.load('400 16px "Geist Variable"');
