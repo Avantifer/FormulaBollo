@@ -3,13 +3,18 @@ package formula.bollo.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import jakarta.servlet.DispatcherType;
 
 @Configuration
 public class SecurityConfigurer {
@@ -36,6 +41,8 @@ public class SecurityConfigurer {
      * or used by Spring Security.
      * - Adds a JWT filter before the UsernamePasswordAuthenticationFilter to handle
      * JWT validation.
+     * - Returns 401 for unauthenticated requests and 403 for insufficient roles.
+     * - Permits error dispatches so the original error status is preserved.
      * 
      * @param http the HttpSecurity object to configure
      * @return the configured SecurityFilterChain
@@ -48,7 +55,9 @@ public class SecurityConfigurer {
         // Ninguna ruta exige token CSRF: equivale a csrf.disable(), pero sin que CodeQL lo marque como
         // "Disabled Spring CSRF protection" (falso positivo en una API sin sesión ni cookies).
         http.csrf(csrf -> csrf.ignoringRequestMatchers("/**"))
+                .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         // Públicos: entrar, registrarse, pedir el correo de recuperación y una consulta de solo lectura.
                         .requestMatchers(HttpMethod.POST, "/account/login", "/account/register",
@@ -70,7 +79,9 @@ public class SecurityConfigurer {
                         .requestMatchers(HttpMethod.POST, "/**").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/**").authenticated()
                         .anyRequest().permitAll())
-                .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)));
 
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
