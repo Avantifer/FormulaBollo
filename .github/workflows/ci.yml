@@ -60,9 +60,11 @@ jobs:
         env:
           MYSQL_PWD: ci-solo-pruebas
         run: |
-          mariadb -h 127.0.0.1 -u root -e "CREATE DATABASE production_jpa CHARACTER SET utf8mb4"
-          mariadb -h 127.0.0.1 -u root production_jpa < test/production_schema.sql
-          mariadb -h 127.0.0.1 -u root production_jpa < V002__unique_keys.sql
+          # Como los scripts: sin --no-defaults el cliente del runner exige TLS y el servidor de pruebas no lo tiene.
+          db=(mariadb --no-defaults --protocol=TCP --host=127.0.0.1 --user=root --default-character-set=utf8mb4)
+          "${db[@]}" --execute="CREATE DATABASE production_jpa CHARACTER SET utf8mb4"
+          "${db[@]}" production_jpa < test/production_schema.sql
+          "${db[@]}" production_jpa < V002__unique_keys.sql
       - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           distribution: temurin
