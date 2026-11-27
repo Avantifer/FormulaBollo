@@ -1,3 +1,4 @@
+import { CacheService } from '../../../../shared/services/cache.service';
 import { UtilsService } from '../../../../shared/services/utils.service';
 import { Component, computed, inject, signal, WritableSignal } from '@angular/core';
 import { SelectSeasonsComponent } from "../../../../shared/components/select-seasons/select-seasons.component";
@@ -31,6 +32,7 @@ import { driverPosition, isVacantDriver } from '../drivers-ranking/drivers-ranki
   styleUrl: './drivers-info.component.scss'
 })
 export class DriversInfoComponent {
+  private readonly cache = inject(CacheService);
   private readonly title = inject(Title);
   protected readonly activatedRoute: ActivatedRoute = inject(ActivatedRoute);
   protected readonly utilsService: UtilsService = inject(UtilsService);
@@ -100,12 +102,12 @@ export class DriversInfoComponent {
     this.title.setTitle(driverSeasonTitle(this.driverName, seasonNumber));
     this.resetSeasonDetails(false);
     this._getInfoByDriverName(seasonNumber);
-    this.historySubscription = this.driverApiService.getTeamHistoryByDriverName(this.driverName).pipe(
+    this.historySubscription = this.cache.refreshOnPublish(() => this.driverApiService.getTeamHistoryByDriverName(this.driverName)).pipe(
       takeUntil(this.destroy$),
       catchError(error => this.utilsService.handleError<DriverTeamHistoryEntry[]>('No se pudo cargar el recorrido de equipos', error, []))
     ).subscribe(history => this.teamHistory.set(history));
     if (seasonNumber !== 0) {
-      this.standingsSubscription = this.resultApiService.getAllDriverPoints(seasonNumber).pipe(
+      this.standingsSubscription = this.cache.refreshOnPublish(() => this.resultApiService.getAllDriverPoints(seasonNumber)).pipe(
         takeUntil(this.destroy$),
         catchError(() => of([]))
       ).subscribe(standings => this.standings.set(standings));
@@ -127,8 +129,7 @@ export class DriversInfoComponent {
 
   private _getInfoByDriverName(seasonNumber: number): void {
     this.infoSubscription?.unsubscribe();
-    this.infoSubscription = this.driverApiService
-      .getInfoByDriverName(this.driverName, seasonNumber)
+    this.infoSubscription = this.cache.refreshOnPublish(() => this.driverApiService.getInfoByDriverName(this.driverName, seasonNumber))
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => this.utilsService.handleError<DriverInfo>(ERROR_DRIVER_INFO_FETCH, error))

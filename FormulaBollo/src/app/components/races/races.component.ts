@@ -1,3 +1,4 @@
+import { CacheService } from '../../../shared/services/cache.service';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ActivatedRoute, convertToParamMap, Router, RouterLink } from '@angular/router';
 import { ChangeDetectionStrategy, Component, computed, inject, signal, WritableSignal } from '@angular/core';
@@ -30,6 +31,7 @@ import { SkeletonItemsPipe } from '../../../shared/pipes/skeletonItems.pipe';
   styleUrl: './races.component.scss'
 })
 export class RacesComponent {
+  private readonly cache = inject(CacheService);
   private readonly raceApiService: RaceApiService = inject(RaceApiService);
   private readonly utilsService: UtilsService = inject(UtilsService);
   private readonly route = inject(ActivatedRoute);
@@ -86,7 +88,7 @@ export class RacesComponent {
     this.loading.set(true);
     this.loadError.set(false);
     this.races.set([]);
-    this.loadSubscription = this.raceApiService.getAllRaces(season.number).subscribe({
+    this.loadSubscription = this.cache.refreshOnPublish(() => this.raceApiService.getAllRaces(season.number)).subscribe({
       next: races => {
         this.races.set(races);
         this.loading.set(false);

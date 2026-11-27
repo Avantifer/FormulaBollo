@@ -1,8 +1,9 @@
+import { CacheService } from '../../../shared/services/cache.service';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { catchError, map, of, shareReplay, switchMap } from 'rxjs';
+import { catchError, defer, map, of, switchMap } from 'rxjs';
 import { ImageService } from '../../../shared/services/image.service';
 import { AuthJWTService } from '../../../shared/services/authJWT.service';
 import { FantasyApiService } from '../../../shared/services/api/fantasy-api.service';
@@ -31,29 +32,29 @@ interface HowToPlayItem {
   styleUrl: './fantasy.component.scss'
 })
 export class FantasyComponent {
+  private readonly cache = inject(CacheService);
   protected readonly imageService: ImageService = inject(ImageService);
   private readonly fantasyApi = inject(FantasyApiService);
   private readonly raceApi = inject(RaceApiService);
+  private readonly seasonsApi = inject(SeasonApiService);
 
   readonly isLogged: boolean = inject(AuthJWTService).isLogged();
   readonly startLink: string = this.isLogged ? '/fantasy/team' : '/fantasy/register';
 
-  private readonly seasonNumber$ = inject(SeasonApiService).getSeasonOfFantasy().pipe(
-    map(seasons => Math.max(0, ...seasons.map(season => season.number))),
-    catchError(() => of(0)),
-    shareReplay({ bufferSize: 1, refCount: true })
+  private readonly seasonNumber$ = defer(() => this.seasonsApi.getSeasonOfFantasy()).pipe(
+    map(seasons => Math.max(0, ...seasons.map(season => season.number)))
   );
 
-  readonly season = toSignal(this.seasonNumber$.pipe(
+  readonly season = toSignal(this.cache.refreshOnPublish(refresh => this.seasonNumber$.pipe(
     switchMap(number => number ? this.fantasyApi.getFantasyClasification(number).pipe(map(buildFantasySeason)) : of(null)),
-    catchError(() => of(null))
-  ), { initialValue: undefined });
+    catchError(error => { if (refresh) throw error; return of(null); })
+  )), { initialValue: undefined });
   readonly loading = computed(() => this.season() === undefined);
 
-  private readonly races = toSignal(this.seasonNumber$.pipe(
+  private readonly races = toSignal(this.cache.refreshOnPublish(refresh => this.seasonNumber$.pipe(
     switchMap(number => number ? this.raceApi.getAllRaces(number) : of([] as Race[])),
-    catchError(() => of([] as Race[]))
-  ), { initialValue: [] as Race[] });
+    catchError(error => { if (refresh) throw error; return of([] as Race[]); })
+  )), { initialValue: [] as Race[] });
 
   readonly top = computed(() => this.season()?.total.slice(0, 5) ?? []);
   readonly picks = computed(() => {

@@ -1,3 +1,4 @@
+import { CacheService } from '../../../../shared/services/cache.service';
 import { UtilsService } from './../../../../shared/services/utils.service';
 import { Component, inject, signal } from '@angular/core';
 import { Team } from '../../../../shared/models/team';
@@ -22,6 +23,7 @@ import { SkeletonItemsPipe } from '../../../../shared/pipes/skeletonItems.pipe';
   templateUrl: './home-teams.component.html'
 })
 export class HomeTeamsComponent {
+  private readonly cache = inject(CacheService);
   private readonly teamApiService: TeamApiService = inject(TeamApiService);
   private readonly utilsService: UtilsService = inject(UtilsService);
   protected readonly imageService: ImageService = inject(ImageService);
@@ -39,7 +41,7 @@ export class HomeTeamsComponent {
     this.loadSubscription?.unsubscribe();
     this.loading.set(true);
     this.loadError.set(false);
-    this.loadSubscription = this.teamApiService.getAllTeams(environment.seasonActual.number).subscribe({
+    this.loadSubscription = this.cache.refreshOnPublish(() => this.teamApiService.getAllTeams(environment.seasonActual.number)).subscribe({
       next: teams => {
         this.teams.set(teams);
         this.loading.set(false);

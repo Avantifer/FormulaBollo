@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { of, Subject } from 'rxjs';
+import { forkJoin, lastValueFrom, of, Subject } from 'rxjs';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { DriverApiService } from './api/driver-api.service';
@@ -25,6 +25,67 @@ describe('Public API cache', () => {
     http = TestBed.inject(HttpTestingController);
   });
   afterEach(() => { http.verify(); cache.clearCache(); localStorage.clear(); jasmine.clock().uninstall(); });
+
+  it('cancels obsolete publication requests, survives refresh errors and stops on unsubscribe', () => {
+    cache.updateVersion(29);
+    const next = jasmine.createSpy('visible data');
+    const error = jasmine.createSpy('first-load error');
+    const subscription = cache.refreshOnPublish(() => drivers.getAllDrivers(3)).subscribe({ next, error });
+    const initial = [{ id: 1, name: 'Initial' }];
+    http.expectOne(request => request.url.endsWith('/drivers/all')).flush(initial);
+    expect(next).toHaveBeenCalledOnceWith(initial);
+
+    cache.updateVersion(30);
+    const obsolete = http.expectOne(request => request.url.endsWith('/drivers/all'));
+    cache.updateVersion(31);
+    expect(obsolete.cancelled).toBeTrue();
+    const current = [{ id: 1, name: 'Published' }];
+    http.expectOne(request => request.url.endsWith('/drivers/all')).flush(current);
+    expect(next.calls.allArgs()).toEqual([[initial], [current]]);
+
+    cache.updateVersion(32);
+    http.expectOne(request => request.url.endsWith('/drivers/all')).flush('offline', { status: 503, statusText: 'Unavailable' });
+    expect(next.calls.allArgs()).toEqual([[initial], [current]]);
+    expect(error).not.toHaveBeenCalled();
+    cache.updateVersion(33);
+    http.expectOne(request => request.url.endsWith('/drivers/all')).flush(initial);
+    expect(next.calls.allArgs()).toEqual([[initial], [current], [initial]]);
+
+    cache.updateVersion(34);
+    const pending = http.expectOne(request => request.url.endsWith('/drivers/all'));
+    subscription.unsubscribe();
+    expect(pending.cancelled).toBeTrue();
+    cache.updateVersion(35);
+    http.expectNone(() => true);
+  });
+
+  for (const publicationWhileLoading of [false, true]) {
+    it('delivers a first-load error to the existing view handler, publication while loading: ' + publicationWhileLoading, () => {
+      cache.updateVersion(29);
+      const next = jasmine.createSpy('visible data');
+      const error = jasmine.createSpy('first-load error');
+      cache.refreshOnPublish(() => drivers.getAllDrivers(3)).subscribe({ next, error });
+      let request = http.expectOne(request => request.url.endsWith('/drivers/all'));
+      if (publicationWhileLoading) {
+        cache.updateVersion(30);
+        expect(request.cancelled).toBeTrue();
+        request = http.expectOne(request => request.url.endsWith('/drivers/all'));
+      }
+      request.flush('offline', { status: 503, statusText: 'Unavailable' });
+      expect(next).not.toHaveBeenCalled();
+      expect(error).toHaveBeenCalledOnceWith(jasmine.objectContaining({ status: 503 }));
+    });
+  }
+
+  it('still completes API requests used by forkJoin and lastValueFrom', async () => {
+    cache.updateVersion(29);
+    const completed = lastValueFrom(forkJoin({ first: drivers.getAllDrivers(3), second: drivers.getAllDrivers(2) }));
+    const first = [{ id: 1 }];
+    const second = [{ id: 2 }];
+    http.expectOne(request => request.url.endsWith('/drivers/all') && request.params.get('season') === '3').flush(first);
+    http.expectOne(request => request.url.endsWith('/drivers/all') && request.params.get('season') === '2').flush(second);
+    expect(await completed).toEqual(jasmine.objectContaining({ first, second }));
+  });
 
   it('keeps API data in memory when storage quota is exceeded', () => {
     localStorage.setItem('apiCache', 'stale');

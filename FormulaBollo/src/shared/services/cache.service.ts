@@ -1,10 +1,14 @@
 import { Injectable } from '@angular/core';
-import { defer, finalize, Observable, of, race, shareReplay, Subject, switchMap, take, tap, timer } from 'rxjs';
+import { catchError, defer, EMPTY, finalize, Observable, of, race, shareReplay, startWith, Subject, switchMap, throwError, take, tap, timer } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class CacheService {
   private cache: Map<string, any>;
   private version: number | null = null;
+  private versionInUse = false;
+  private readonly persistedKeys = new Set<string>();
+  private readonly screenDataOutdated = new Subject<void>();
+  readonly screenDataOutdated$ = this.screenDataOutdated.asObservable();
   private versionCheckSettled = false;
   private readonly versionCheckFinished = new Subject<void>();
   private readonly inFlight = new Map<string, Observable<unknown>>();
@@ -27,6 +31,7 @@ export class CacheService {
           throw new Error('Invalid persisted cache');
         }
         this.cache = new Map(stored.entries);
+        this.cache.forEach((_, key) => this.persistedKeys.add(key));
         this.version = stored.version;
       } else {
         this.cache = new Map();
@@ -72,8 +77,24 @@ export class CacheService {
     this.saveTimer = undefined;
     this.generation++;
     this.cache.clear();
+    this.persistedKeys.clear();
     this.inFlight.clear();
     this.removePersistedCache();
+  }
+
+  /** A view owns this subscription; API requests remain finite for forkJoin/lastValueFrom. */
+  refreshOnPublish<T>(request: (refresh: boolean) => Observable<T>): Observable<T> {
+    return defer(() => {
+      let loaded = false;
+      return this.screenDataOutdated$.pipe(
+        startWith(undefined),
+        switchMap(() => defer(() => request(loaded)).pipe(
+          tap(() => loaded = true),
+          // Until data arrives, preserve first-load error handling even after a publication.
+          catchError(error => loaded ? EMPTY : throwError(() => error))
+        ))
+      );
+    });
   }
 
   getOrLoad<T>(key: string, request: () => Observable<T>): Observable<T> {
@@ -89,7 +110,11 @@ export class CacheService {
   }
 
   private getCachedOrLoad<T>(key: string, request: () => Observable<T>): Observable<T> {
-    if (this.cache.has(key)) return of(this.cache.get(key) as T);
+    if (this.cache.has(key)) {
+      return of(this.cache.get(key) as T).pipe(tap(() => {
+        if (this.persistedKeys.has(key)) this.versionInUse = true;
+      }));
+    }
     const pending = this.inFlight.get(key);
     if (pending) return pending as Observable<T>;
     const generation = this.generation;
@@ -111,12 +136,15 @@ export class CacheService {
 
   updateVersion(version: number): void {
     if (!Number.isFinite(version) || version < 0) return;
+    const viewOutdated = this.version !== version && this.versionInUse;
     if (this.version !== version) {
       this.clearCache();
       this.version = version;
       this.saveCache();
     }
+    this.versionInUse = true;
     this.settleVersionCheck();
+    if (viewOutdated) this.screenDataOutdated.next();
   }
 
   reportVersionCheckFailure(): void {

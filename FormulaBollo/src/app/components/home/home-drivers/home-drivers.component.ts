@@ -1,6 +1,7 @@
+import { CacheService } from '../../../../shared/services/cache.service';
 import { Component, inject, signal, WritableSignal } from '@angular/core';
 import { DriverApiService } from '../../../../shared/services/api/driver-api.service';
-import { Subscription, switchMap, of, tap } from 'rxjs';
+import { Subscription, switchMap, of, map } from 'rxjs';
 import { Driver } from '../../../../shared/models/driver';
 import { DriverPoints } from '../../../../shared/models/driverPoints';
 import { ResultApiService } from '../../../../shared/services/api/result-api.service';
@@ -24,6 +25,7 @@ import { Top10DriversComponent } from "./top10-drivers/top10-drivers.component";
   templateUrl: './home-drivers.component.html'
 })
 export class HomeDriversComponent {
+  private readonly cache = inject(CacheService);
   private readonly driverApiService: DriverApiService = inject(DriverApiService);
   private readonly resultApiService: ResultApiService = inject(ResultApiService);
   protected readonly utilsService: UtilsService = inject(UtilsService);
@@ -49,14 +51,16 @@ export class HomeDriversComponent {
     this.driverPoints.set([]);
     this.top3Drivers = [];
     this.top3DriverPoints = [];
-    this.loadSubscription = this.resultApiService.getAllDriverPoints(environment.seasonActual.number, 10).pipe(
-      tap(points => {
+    this.loadSubscription = this.cache.refreshOnPublish(() =>
+      this.resultApiService.getAllDriverPoints(environment.seasonActual.number, 10).pipe(
+        switchMap(points => (points.length ? of([] as Driver[]) : this.driverApiService.getAllDrivers(environment.seasonActual.number, 0, 10)).pipe(
+          map(drivers => ({ points, drivers }))
+        ))
+      )
+    ).subscribe({
+      next: ({ points, drivers }) => {
         this.driverPoints.set(points);
         this.top3DriverPoints = this._extractTop3Drivers(points) as DriverPoints[];
-      }),
-      switchMap(points => points.length ? of([] as Driver[]) : this.driverApiService.getAllDrivers(environment.seasonActual.number, 0, 10))
-    ).subscribe({
-      next: drivers => {
         this.top3Drivers = this._extractTop3Drivers(drivers) as Driver[];
         this.drivers.set(drivers);
         this.loading.set(false);

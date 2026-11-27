@@ -1,3 +1,4 @@
+import { CacheService } from '../../../../shared/services/cache.service';
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input, OnChanges, signal, SimpleChanges } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ChartModule } from 'primeng/chart';
@@ -20,6 +21,7 @@ import { buildEvolutionChart, EvolutionPalette } from './evolution-stats.charts'
   styleUrl: './evolution-stats.component.scss'
 })
 export class EvolutionStatsComponent implements OnChanges {
+  private readonly cache = inject(CacheService);
   private readonly api = inject(StatisticsApiService);
   private readonly theme = inject(ThemeService);
   private readonly destroyRef = inject(DestroyRef);
@@ -99,10 +101,16 @@ export class EvolutionStatsComponent implements OnChanges {
     this.loadError.set(false);
     this.overview.set(null);
     this.selectedIds.set([]);
-    this.request = this.api.getOverview(season).subscribe({
+    this.request = this.cache.refreshOnPublish(() => this.api.getOverview(season)).subscribe({
       next: data => {
+        const previous = this.overview();
         this.overview.set(data);
-        this.reset();
+        if (!previous) this.reset();
+        else {
+          const valid = this.selectedIds().filter(id => this.participants().some(entry => entry.id === id));
+          if (valid.length) this.selectedIds.set(valid);
+          else this.reset();
+        }
         this.loading.set(false);
       },
       error: () => {

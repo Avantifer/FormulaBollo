@@ -15,6 +15,7 @@ import { Position } from '../../../shared/models/position';
 import { Penalty } from '../../../shared/models/penalty';
 import { ERROR_PENALTY_FETCH, ERROR_RESULT_FETCH } from '../../constants';
 import { ImageService } from '../../../shared/services/image.service';
+import { CacheService } from '../../../shared/services/cache.service';
 import { ResultsComponent } from './results.component';
 
 describe('ResultsComponent', () => {
@@ -69,6 +70,29 @@ describe('ResultsComponent', () => {
   });
 
   afterEach(() => fixture.destroy());
+
+  it('stops refreshing the old race immediately when the season changes before its new race list arrives', () => {
+    const cache = TestBed.inject(CacheService);
+    cache.updateVersion(29);
+    render();
+    select(1);
+    const obsolete = new Subject<Result[]>();
+    results.getAllResultsPerRacePilots.and.returnValue(obsolete);
+    cache.updateVersion(30);
+    races.getAllRaces.and.returnValue(new Subject<Race[]>());
+    component.onSeasonChange(new Season(1, 'Temporada 1', 1));
+    render();
+    obsolete.next([{ ...result, driver: { ...driver, name: 'Obsolete result' } }]);
+    render();
+    expect(root().textContent).not.toContain('Obsolete result');
+    results.getAllResultsPerRacePilots.calls.reset();
+    results.getAllResultsPerRaceTeams.calls.reset();
+    penalties.getPenaltiesByRace.calls.reset();
+    cache.updateVersion(31);
+    expect(results.getAllResultsPerRacePilots).not.toHaveBeenCalled();
+    expect(results.getAllResultsPerRaceTeams).not.toHaveBeenCalled();
+    expect(penalties.getPenaltiesByRace).not.toHaveBeenCalled();
+  });
 
   it('decodes the route name, selects the season by number and loads its race without navigation', () => {
     render();

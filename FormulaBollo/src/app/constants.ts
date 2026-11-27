@@ -2,7 +2,7 @@
 export const ERROR_TEAM_FETCH: string = "No se pudo obtener los equipos correctamente";
 export const ERROR_RESULT_FETCH: string = "No se ha podido recoger los resultados";
 export const ERROR_RACE_FETCH: string = "No se ha podido recoger la carrera correctamente";
-export const ERROR_DRIVER_FETCH: string = "No se puedo obtener los puntos de los pilotos correctamente";
+export const ERROR_DRIVER_FETCH: string = "No se pudo obtener los puntos de los pilotos correctamente";
 export const ERROR_CONFIGURATION_FETCH: string = "No se pudo obtener las configuraciones correctamente";
 export const ERROR_PENALTY_FETCH: string = "No se han podido recoger las penalización";
 export const ERROR_PRICE_FETCH: string = "Al parecer hubo problemas al recoger los precios";

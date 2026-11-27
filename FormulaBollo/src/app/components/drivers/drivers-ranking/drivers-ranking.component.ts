@@ -1,3 +1,4 @@
+import { CacheService } from '../../../../shared/services/cache.service';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -37,6 +38,7 @@ export function driverPosition(driver: DriverPoints, standings: readonly DriverP
   styleUrl: './drivers-ranking.component.scss'
 })
 export class DriversRankingComponent {
+  private readonly cache = inject(CacheService);
   readonly season = input<Season>(environment.seasonActual);
   readonly selectedTeams = input<string[]>([]);
   private readonly resultsApi = inject(ResultApiService);
@@ -69,14 +71,14 @@ export class DriversRankingComponent {
       const season = this.season();
       this.isLoading.set(true);
       this.standings.set([]);
-      const subscription = this.resultsApi.getAllDriverPoints(season.number).pipe(
+      const subscription = this.cache.refreshOnPublish(refresh => this.resultsApi.getAllDriverPoints(season.number).pipe(
         delay(100),
-        catchError(error => this.utilsService.handleError<DriverPoints[]>(ERROR_DRIVER_FETCH, error, [])),
+        catchError(error => { if (refresh) throw error; return this.utilsService.handleError<DriverPoints[]>(ERROR_DRIVER_FETCH, error, []); }),
         switchMap(points => points.length ? of(points) : this.driversApi.getAllDrivers(season.number).pipe(
-          catchError(error => this.utilsService.handleError(ERROR_DRIVER_FETCH, error, [])),
+          catchError(error => { if (refresh) throw error; return this.utilsService.handleError(ERROR_DRIVER_FETCH, error, []); }),
           map(drivers => drivers.map(driver => ({ driver, totalPoints: 0, positionChange: 'SAME', positionChangeAmount: 0 })))
         ))
-      ).subscribe(points => {
+      )).subscribe(points => {
         this.standings.set(points);
         this.isLoading.set(false);
       });

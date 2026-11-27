@@ -1,3 +1,4 @@
+import { CacheService } from '../../../../shared/services/cache.service';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -25,6 +26,7 @@ type TeamStanding = Pick<TeamWithDrivers, 'team' | 'totalPoints'> & { drivers: D
   styleUrl: './teams-ranking.component.scss'
 })
 export class TeamsRankingComponent {
+  private readonly cache = inject(CacheService);
   readonly season = input<Season>(environment.seasonActual);
   readonly selectedTeams = input<string[]>([]);
   private readonly teamsApi = inject(TeamApiService);
@@ -51,16 +53,16 @@ export class TeamsRankingComponent {
       const season = this.season();
       this.isLoading.set(true);
       this.standings.set([]);
-      const subscription = this.teamsApi.getllTeamsWithDrivers(season.number).pipe(
+      const subscription = this.cache.refreshOnPublish(refresh => this.teamsApi.getllTeamsWithDrivers(season.number).pipe(
         delay(100),
-        catchError(error => this.utilsService.handleError<TeamWithDrivers[]>(ERROR_TEAM_FETCH, error, [])),
+        catchError(error => { if (refresh) throw error; return this.utilsService.handleError<TeamWithDrivers[]>(ERROR_TEAM_FETCH, error, []); }),
         switchMap(points => points.length
           ? of(points.map(row => ({ team: row.team, totalPoints: row.totalPoints, drivers: [row.driver1, row.driver2] })))
           : this.teamsApi.getAllTeams(season.number).pipe(
-            catchError(error => this.utilsService.handleError<Team[]>(ERROR_TEAM_FETCH, error, [])),
+            catchError(error => { if (refresh) throw error; return this.utilsService.handleError<Team[]>(ERROR_TEAM_FETCH, error, []); }),
             map(teams => teams.map(team => ({ team, totalPoints: 0, drivers: [] })))
           ))
-      ).subscribe(standings => {
+      )).subscribe(standings => {
         this.standings.set(standings);
         this.isLoading.set(false);
       });

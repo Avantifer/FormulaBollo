@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { CacheService } from '../../../../shared/services/cache.service';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import { EMPTY, catchError } from 'rxjs';
 import { DrawerModule } from 'primeng/drawer';
@@ -22,6 +23,7 @@ import { FantasyTeamDetailComponent } from './fantasy-team-detail/fantasy-team-d
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FantasyClasificationComponent {
+  private readonly cache = inject(CacheService);
   private readonly api = inject(FantasyApiService);
   private readonly utils = inject(UtilsService);
   private readonly document = inject(DOCUMENT);
@@ -76,18 +78,23 @@ export class FantasyClasificationComponent {
       if (!season) return;
       this.loading.set(true);
       this.failed.set(false);
-      const request = this.api.getFantasyClasification(season.number).pipe(
+      const request = this.cache.refreshOnPublish(refresh => this.api.getFantasyClasification(season.number).pipe(
         catchError(error => {
+          if (refresh) throw error;
           if (this.seasonSelected()?.number !== season.number) return EMPTY;
           this.failed.set(true);
           this.loading.set(false);
           return this.utils.handleError<FantasyClasificationDTO | null>(ERROR_FANTASY_POINTS, error, null);
         })
-      ).subscribe(data => {
+      )).subscribe(data => untracked(() => {
         if (this.seasonSelected()?.number !== season.number) return;
+        const selected = this.selected()?.userId;
         this.data.set(data);
+        if (this.selectedId() !== null) {
+          this.selectedId.set(this.rows().some(row => row.userId === selected) ? selected : this.selected()?.userId);
+        }
         this.loading.set(false);
-      });
+      }));
       onCleanup(() => request.unsubscribe());
     });
   }

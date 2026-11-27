@@ -1,3 +1,4 @@
+import { CacheService } from '../../../shared/services/cache.service';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, effect, inject, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -29,6 +30,7 @@ type ResultsTab = 'Pilotos' | 'Equipos' | 'Penalizaciones';
   styleUrl: './results.component.scss'
 })
 export class ResultsComponent {
+  private readonly cache = inject(CacheService);
   @ViewChild(SelectRacesComponent) selectRacesComponent!: SelectRacesComponent;
   @ViewChild(SelectSeasonsComponent) selectSeasonComponent!: SelectSeasonsComponent;
 
@@ -107,6 +109,11 @@ export class ResultsComponent {
   }
 
   onSeasonChange(season: Season): void {
+    if (this.seasonSelected.number !== season.number) {
+      this.driversRequest?.unsubscribe();
+      this.teamsRequest?.unsubscribe();
+      this.penaltiesRequest?.unsubscribe();
+    }
     this.seasonSelected = season;
     this.updateUrl();
   }
@@ -175,6 +182,7 @@ export class ResultsComponent {
 
   getResults(): void {
     if (!this.raceSelected) return;
+    const raceId = this.raceSelected.id;
     this.driversRequest?.unsubscribe();
     this.teamsRequest?.unsubscribe();
     this.penaltiesRequest?.unsubscribe();
@@ -182,7 +190,7 @@ export class ResultsComponent {
     this.teamsRequested = false;
     this.loading.set(true);
     this.teamsLoading.set(false);
-    this.driversRequest = this.resultApiService.getAllResultsPerRacePilots(this.raceSelected.id).pipe(
+    this.driversRequest = this.cache.refreshOnPublish(() => this.resultApiService.getAllResultsPerRacePilots(raceId)).pipe(
       catchError(error => {
         this.messageInfoService.showError(ERROR_RESULT_FETCH, error);
         console.error(error);
@@ -199,7 +207,7 @@ export class ResultsComponent {
   private getResultsTeams(): void {
     this.teamsRequested = true;
     this.teamsLoading.set(true);
-    this.teamsRequest = this.resultApiService.getAllResultsPerRaceTeams(this.raceSelected!.id).pipe(
+    this.teamsRequest = this.cache.refreshOnPublish(() => this.resultApiService.getAllResultsPerRaceTeams(this.raceSelected!.id)).pipe(
       catchError(error => {
         this.messageInfoService.showError(ERROR_RESULT_FETCH, error);
         console.error(error);
@@ -213,9 +221,10 @@ export class ResultsComponent {
 
   getPenalties(): void {
     if (!this.raceSelected) return;
+    const raceId = this.raceSelected.id;
     this.penaltiesRequest?.unsubscribe();
     this.penaltiesLoading.set(true);
-    this.penaltiesRequest = this.penaltiesApiService.getPenaltiesByRace(this.raceSelected.id).pipe(
+    this.penaltiesRequest = this.cache.refreshOnPublish(() => this.penaltiesApiService.getPenaltiesByRace(raceId)).pipe(
       catchError(error => {
         this.messageInfoService.showError(ERROR_PENALTY_FETCH, error);
         console.error(error);

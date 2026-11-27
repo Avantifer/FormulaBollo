@@ -1,3 +1,4 @@
+import { CacheService } from '../../../../shared/services/cache.service';
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -22,6 +23,7 @@ import { initials, recordValue, seasonRecords, standingNotes, victoryLeaders } f
   styleUrl: './records.component.scss'
 })
 export class RecordsComponent {
+  private readonly cache = inject(CacheService);
   private readonly api = inject(StatisticsApiService);
   private readonly theme = inject(ThemeService);
   private readonly destroyRef = inject(DestroyRef);
@@ -85,7 +87,7 @@ export class RecordsComponent {
     this.loading.set(true);
     this.loadError.set(false);
     this.data.set(null);
-    this.request = this.api.getRecords().subscribe({
+    this.request = this.cache.refreshOnPublish(() => this.api.getRecords()).subscribe({
       next: data => { this.data.set(data); this.loading.set(false); },
       error: () => { this.loadError.set(true); this.loading.set(false); }
     });

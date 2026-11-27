@@ -1,3 +1,4 @@
+import { CacheService } from '../../../../shared/services/cache.service';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { Title } from '@angular/platform-browser';
@@ -27,6 +28,7 @@ import { isVacantDriver } from '../../drivers/drivers-ranking/drivers-ranking.co
   styleUrl: './teams-info.component.scss'
 })
 export class TeamsInfoComponent {
+  private readonly cache = inject(CacheService);
   protected readonly activatedRoute = inject(ActivatedRoute);
   protected readonly imageService = inject(ImageService);
   protected readonly utilsService = inject(UtilsService);
@@ -99,22 +101,25 @@ export class TeamsInfoComponent {
     this.selectedSeasonNumber.set(seasonNumber);
     this.standings.set([]);
     this.title.setTitle(teamSeasonTitle(this.teamName, seasonNumber));
-    this.infoSubscription = this.teamApiService.getInfoTeamByName(this.teamName, seasonNumber).pipe(
+    this.infoSubscription = this.cache.refreshOnPublish(() => this.teamApiService.getInfoTeamByName(this.teamName, seasonNumber)).pipe(
       takeUntil(this.destroy$),
       catchError(error => this.utilsService.handleError<TeamInfo>(ERROR_TEAM_INFO_FETCH, error))
     ).subscribe(info => {
       this.teamInfo.set(info);
       this._mapTeamStats(info);
     });
-    this.driversSubscription = this.driverApiService.getDriversByTeamName(this.teamName, seasonNumber).pipe(
+    this.driversSubscription = this.cache.refreshOnPublish(() =>
+      this.driverApiService.getDriversByTeamName(this.teamName, seasonNumber).pipe(
+        switchMap(drivers => drivers.length
+          ? this.resultApiService.getSpecificDriversPoints(seasonNumber, drivers.map(driver => driver.id))
+          : of([]))
+      )
+    ).pipe(
       takeUntil(this.destroy$),
-      switchMap(drivers => drivers.length
-        ? this.resultApiService.getSpecificDriversPoints(seasonNumber, drivers.map(driver => driver.id))
-        : of([])),
       catchError(error => this.utilsService.handleError<DriverPoints[]>(ERROR_DRIVER_FETCH, error, []))
     ).subscribe(drivers => this.drivers.set(drivers));
     if (seasonNumber) {
-      this.standingsSubscription = this.teamApiService.getllTeamsWithDrivers(seasonNumber).pipe(
+      this.standingsSubscription = this.cache.refreshOnPublish(() => this.teamApiService.getllTeamsWithDrivers(seasonNumber)).pipe(
         takeUntil(this.destroy$),
         catchError(() => of([]))
       ).subscribe(standings => this.standings.set(standings));
