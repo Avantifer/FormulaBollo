@@ -1,6 +1,7 @@
 package formula.bollo.controller;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import formula.bollo.impl.SprintImpl;
 import formula.bollo.model.SprintDTO;
+import formula.bollo.model.RaceDTO;
 import formula.bollo.repository.SprintRepository;
 import formula.bollo.service.SprintService;
 import formula.bollo.utils.Constants;
@@ -53,7 +55,10 @@ public class SprintController {
     @SecurityRequirement(name = "Bearer Authentication")
     @PutMapping(path = "/save", produces = MediaType.TEXT_PLAIN_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> saveSprintsCircuit(@RequestBody List<SprintDTO> sprintDTOs) {
-        log.info("Guardar las siguientes sprints " + sprintDTOs);
+        log.info("Guardar sprints: carreras={}, cantidad={}", sprintDTOs == null ? List.of() : sprintDTOs.stream()
+                .filter(Objects::nonNull).map(SprintDTO::getRace).filter(Objects::nonNull)
+                .map(RaceDTO::getId).filter(Objects::nonNull).distinct().toList(),
+                sprintDTOs == null ? 0 : sprintDTOs.size());
         return this.sprintService.saveSprints(sprintDTOs);
     }
 

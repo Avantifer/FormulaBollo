@@ -69,8 +69,19 @@ public class AccountService {
      *         successful.
      */
     public ResponseEntity<String> login(AccountDTO accountDTO, String remoteAddress) {
-        return attemptLimiter.login(accountDTO == null ? null : accountDTO.getUsername(), remoteAddress,
+        String username = accountDTO == null ? null : accountDTO.getUsername();
+        ResponseEntity<String> response = attemptLimiter.login(username, remoteAddress,
                 () -> authenticate(accountDTO));
+        if (response.getStatusCode().value() == 401 || response.getStatusCode().value() == 429) {
+            String maskedUsername = username == null ? "***" : username.substring(0, Math.min(2, username.length())) + "***";
+            log.warn("Login rechazado: estado={}, IP={}, usuario={}", response.getStatusCode().value(),
+                    singleLine(remoteAddress), singleLine(maskedUsername));
+        }
+        return response;
+    }
+
+    private static String singleLine(String value) {
+        return value == null ? "" : value.replaceAll("[\\p{Cc}\\p{Zl}\\p{Zp}]", " ");
     }
 
     private ResponseEntity<String> authenticate(AccountDTO accountDTO) {
@@ -82,7 +93,6 @@ public class AccountService {
                 && passwordEncoder.matches(accountDTO.getPassword(), account.get(0).getPassword());
 
         if (!goodCredentials) {
-            log.warn("Intento de acceso con credenciales no validas");
             return new ResponseEntity<>("Las credenciales no son válidas", HttpStatusCode.valueOf(401));
         }
 
@@ -174,6 +184,7 @@ public class AccountService {
     public ResponseEntity<String> recoverPassword(String email, String remoteAddress) {
         ResponseEntity<String> limited = attemptLimiter.recovery(email, remoteAddress);
         if (limited != null) {
+            log.warn("Recuperacion bloqueada: IP={}", singleLine(remoteAddress));
             return limited;
         }
         email = AccountAttemptLimiter.normalize(email);
@@ -213,6 +224,19 @@ public class AccountService {
                 %s
                 """.formatted(link);
 
-        this.emailService.sendSimpleMessage(accountDTO.getEmail(), "Contraseña olvidada", message);
+        Exception failure = this.emailService.sendSimpleMessage(accountDTO.getEmail(), "Contraseña olvidada", message);
+        if (failure != null) {
+            Throwable root = org.springframework.core.NestedExceptionUtils.getMostSpecificCause(failure);
+            String detail = String.valueOf(root.getMessage());
+            for (String secret : new String[] {link, token, base, accountDTO.getEmail()}) {
+                if (secret != null && !secret.isEmpty()) {
+                    detail = detail.replace(secret, "[redacted]");
+                }
+            }
+            // SMTP diagnostics may contain other mailbox addresses or URLs. Never log the raw exception.
+            detail = detail.replaceAll("(?i)https?://\\S+|[^\\s<>@]+@[^\\s<>@]+", "[redacted]");
+            log.error("Error al enviar recuperacion: cuenta={}, causa={}: {}", accountDTO.getId(),
+                    root.getClass().getSimpleName(), singleLine(detail));
+        }
     }
 }

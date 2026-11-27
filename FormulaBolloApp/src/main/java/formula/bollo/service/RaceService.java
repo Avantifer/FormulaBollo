@@ -57,9 +57,8 @@ public class RaceService {
         Season season = this.seasonRepository.findByNumber(raceDTO.getSeason().getNumber());
 
         if (season == null) {
-            log.info("Hubo un problema al guardar con la carrera porque la temporada es null");
-            return new ResponseEntity<>("Hubo un problema al guardar la carrera", Constants.HEADERS_TEXT_PLAIN,
-                    HttpStatusCode.valueOf(500));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "No existe la temporada " + raceDTO.getSeason().getNumber());
         }
 
         Optional<Race> existingRace = this.raceRepository.findByNameAndSeason(raceDTO.getName(),

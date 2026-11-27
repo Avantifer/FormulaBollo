@@ -8,10 +8,8 @@ import org.springframework.stereotype.Service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import lombok.extern.log4j.Log4j2;
 
 @Service
-@Log4j2
 public class EmailService {
 
     private JavaMailSender emailSender;
@@ -29,8 +27,9 @@ public class EmailService {
      * @param to      the recipient email address
      * @param subject the email subject
      * @param text    the email body text
+     * @return the delivery failure, or null on success; the caller logs it with safe account context
     */
-    public void sendSimpleMessage(String to, String subject, String text) {
+    public Exception sendSimpleMessage(String to, String subject, String text) {
         try {
             MimeMessage message = emailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, "utf-8");
@@ -42,8 +41,9 @@ public class EmailService {
 
             emailSender.send(message);
         } catch (MessagingException | MailException e) {
-            log.error("Hubo un error al enviar el email ({})", e.getClass().getSimpleName());
+            return e;
         }
+        return null;
     }
 }
 
