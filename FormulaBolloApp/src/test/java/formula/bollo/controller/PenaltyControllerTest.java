@@ -34,12 +34,12 @@ class PenaltyControllerTest {
     }
 
     @Test
-    void emptyListDeletesPenaltiesForTheRequestedDriverAndRace() throws Exception {
-        mvc.perform(put("/penalties/save").param("driverId", "3").param("raceId", "5")
+    void emptyListDeletesPenaltiesForTheRequestedDriverRaceAndSeverity() throws Exception {
+        mvc.perform(put("/penalties/save").param("driverId", "3").param("raceId", "5").param("severityId", "2")
                 .contentType("application/json").content("[]"))
                 .andExpect(status().isOk()).andExpect(content().string("Penalizaciones eliminadas correctamente"));
 
-        verify(service).savePenalties(List.of(), 3, 5);
+        verify(service).savePenalties(List.of(), 3, 5, 2);
         verifyNoInteractions(repository, mapper);
     }
 
@@ -49,26 +49,26 @@ class PenaltyControllerTest {
         penalty.setReason("Límites de pista");
         List<PenaltyDTO> batch = List.of(penalty);
 
-        mvc.perform(put("/penalties/save").param("driverId", "3").param("raceId", "5")
+        mvc.perform(put("/penalties/save").param("driverId", "3").param("raceId", "5").param("severityId", "2")
                 .contentType("application/json").content(json.writeValueAsString(batch)))
                 .andExpect(status().isOk()).andExpect(content().string("Penalización guardada correctamente"));
 
-        verify(service).savePenalties(batch, 3, 5);
+        verify(service).savePenalties(batch, 3, 5, 2);
         verifyNoInteractions(repository, mapper);
     }
 
     @Test
     void badRequestExceptionReturnsTheReasonAsPlainText() throws Exception {
         doThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Piloto inválido"))
-                .when(service).savePenalties(List.of(), 3, 5);
+                .when(service).savePenalties(List.of(), 3, 5, 2);
 
-        mvc.perform(put("/penalties/save").param("driverId", "3").param("raceId", "5")
+        mvc.perform(put("/penalties/save").param("driverId", "3").param("raceId", "5").param("severityId", "2")
                 .contentType("application/json").content("[]"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith("text/plain"))
                 .andExpect(content().string("Piloto inválido"));
 
-        verify(service).savePenalties(List.of(), 3, 5);
+        verify(service).savePenalties(List.of(), 3, 5, 2);
         verifyNoInteractions(repository, mapper);
     }
 }

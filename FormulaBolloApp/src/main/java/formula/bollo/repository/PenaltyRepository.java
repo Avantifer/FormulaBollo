@@ -49,6 +49,6 @@ public interface PenaltyRepository extends JpaRepository<Penalty, Long> {
             """)
     List<RecordDTO> recordPenaltiesDriver();
 
-    @Query(value = "SELECT p FROM Penalty p WHERE p.driver.id = :driverId AND p.race.id = :raceId")
-    List<Penalty> findByDriverAndRace(int driverId, int raceId);
+    @Query(value = "SELECT p FROM Penalty p WHERE p.driver.id = :driverId AND p.race.id = :raceId AND p.penaltySeverity.id = :severityId")
+    List<Penalty> findByDriverAndRaceAndSeverity(int driverId, int raceId, int severityId);
 }
