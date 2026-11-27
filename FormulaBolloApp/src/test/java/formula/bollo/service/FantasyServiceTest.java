@@ -22,7 +22,6 @@ import static org.mockito.Mockito.when;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -351,7 +350,7 @@ class FantasyServiceTest {
 
     private Race prepareElection(FantasyElectionDTO input) {
         Race race = new Race(3L, "GP", "", "", LocalDateTime.of(2026, 6, 2, 18, 0), null, 0);
-        lenient().when(clock.instant()).thenReturn(Instant.parse("2026-06-02T05:59:59Z"));
+        lenient().when(clock.instant()).thenReturn(Instant.parse("2026-06-02T03:59:59Z"));
         lenient().when(raceRepository.findById(3L)).thenReturn(Optional.of(race));
         lenient().when(accountRepository.findByUsername("ana"))
                 .thenReturn(List.of(new Account(7L, "ana", "hash", 0, "ana@example.com")));
@@ -414,11 +413,44 @@ class FantasyServiceTest {
     @ValueSource(ints = {0, 1})
     void saveFantasyElectionRejectsAtAndAfterDeadline(int secondsAfter) {
         FantasyElectionDTO input = validElection();
-        Race race = prepareElection(input);
-        when(clock.instant()).thenReturn(race.getDateStart().toInstant(ZoneOffset.UTC)
-                .minusSeconds(12 * 3600).plusSeconds(secondsAfter));
+        prepareElection(input);
+        when(clock.instant()).thenReturn(Instant.parse("2026-06-02T04:00:00Z").plusSeconds(secondsAfter));
 
         assertElectionRejected(input, 403, "El plazo para guardar tu equipo ha terminado");
+    }
+
+    // Literal UTC deadlines: subtract twelve elapsed hours from the Madrid start instant.
+    // The March and October windows cross the European DST transitions.
+    @ParameterizedTest(name = "Madrid start {0}, UTC deadline {1}")
+    @CsvSource({
+        "2025-07-06T21:00:00, 2025-07-06T07:00:00Z",
+        "2025-01-05T21:00:00, 2025-01-05T08:00:00Z",
+        "2025-03-30T10:00:00, 2025-03-29T20:00:00Z",
+        "2025-10-26T10:00:00, 2025-10-25T21:00:00Z",
+        "2025-03-30T02:30:00, 2025-03-29T13:30:00Z",
+        "2025-10-26T02:30:00, 2025-10-25T12:30:00Z"
+    })
+    void saveFantasyElectionUsesMadridDeadline(String start, String deadline) {
+        FantasyElectionDTO input = validElection();
+        prepareElection(input).setDateStart(LocalDateTime.parse(start));
+        Instant cutoff = Instant.parse(deadline);
+        when(clock.instant()).thenReturn(cutoff.minusNanos(1));
+
+        assertEquals(200, fantasyService.saveFantasyElection(input, "ana").getStatusCode().value());
+        verify(fantasyElectionRepository).saveAndFlush(any());
+
+        org.junit.jupiter.api.Assertions.assertAll(
+                () -> assertMadridDeadlineRejected(input, cutoff),
+                () -> assertMadridDeadlineRejected(input, cutoff.plusNanos(1)));
+        // Neither rejected submission may write a second election.
+        verify(fantasyElectionRepository, times(1)).saveAndFlush(any());
+    }
+
+    private void assertMadridDeadlineRejected(FantasyElectionDTO input, Instant now) {
+        when(clock.instant()).thenReturn(now);
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> fantasyService.saveFantasyElection(input, "ana"));
+        assertEquals(403, error.getStatusCode().value());
     }
 
     @ParameterizedTest

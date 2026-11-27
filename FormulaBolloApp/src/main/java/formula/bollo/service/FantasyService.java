@@ -5,7 +5,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.cache.annotation.CacheEvict;
 
 import java.time.Clock;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -59,6 +58,7 @@ import formula.bollo.repository.FantasyPriceTeamRepository;
 import formula.bollo.repository.RaceRepository;
 import formula.bollo.repository.ResultRepository;
 import formula.bollo.utils.Constants;
+import formula.bollo.utils.RaceTime;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -291,9 +291,8 @@ public class FantasyService {
         Race race = this.raceRepository.findById(fantasyElectionDTO.getRace().getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "No se ha encontrado la carrera"));
-        // El frontend envía UTC y dateStart se persiste como LocalDateTime sin zona.
         if (race.getFinished() == 1 || !clock.instant().isBefore(
-                race.getDateStart().toInstant(ZoneOffset.UTC).minusSeconds(12 * 3600))) {
+                RaceTime.toInstant(race.getDateStart()).minusSeconds(12 * 3600))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "El plazo para guardar tu equipo ha terminado");
         }

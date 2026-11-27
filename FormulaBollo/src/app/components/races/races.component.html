@@ -31,7 +31,7 @@
 					<h2 id="featured-race-title" class="hero-title font-display font-extrabold uppercase">{{ race.name }}</h2>
 					<div class="flex items-center gap-3">
 						<img class="size-10 shrink-0 rounded-full object-cover" [src]="imageService.getImageUrl(race.flagImage)" alt="" width="40" height="40" />
-						<time class="text-lg tabular-nums md:text-xl" [attr.datetime]="race.dateStart | date: 'yyyy-MM-dd'">{{ race.dateStart | date: 'dd/MM/yyyy' }}</time>
+						<time class="text-lg tabular-nums md:text-xl" [attr.datetime]="race.dateStart | raceDate: 'yyyy-MM-dd'">{{ race.dateStart | raceDate: 'dd/MM/yyyy' }}</time>
 					</div>
 					<a class="mt-5 inline-flex min-h-11 max-w-full items-center justify-center gap-3 rounded-row bg-accent px-4 py-2.5 font-display font-semibold uppercase text-on-accent transition-colors hover:outline hover:outline-on-pit focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-pit motion-reduce:transition-none md:mt-7"
 						[routerLink]="['/results/' + (race.name | SpaceToUnderscore) + '/' + race.season.number]" [attr.aria-label]="'Ver resultados de ' + race.name">
@@ -50,7 +50,7 @@
 							<div class="min-w-0">
 								<span class="race-name block text-sm font-medium leading-snug underline-offset-4 group-hover:underline group-focus-visible:underline">{{ race.name }}</span>
 								<div class="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1">
-									<time class="text-xs text-ink-soft tabular-nums" [attr.datetime]="race.dateStart | date: 'yyyy-MM-dd'">{{ race.dateStart | date: 'dd/MM/yyyy' }}</time>
+									<time class="text-xs text-ink-soft tabular-nums" [attr.datetime]="race.dateStart | raceDate: 'yyyy-MM-dd'">{{ race.dateStart | raceDate: 'dd/MM/yyyy' }}</time>
 									@if (race.finished) {
 										<span class="inline-flex items-center gap-1 rounded-row bg-pit px-1.5 py-0.5 font-display text-[11px] font-semibold uppercase text-on-pit"><i class="pi pi-check text-sector-up" aria-hidden="true"></i>Completada</span>
 									}

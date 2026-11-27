@@ -5,7 +5,7 @@ export class Race {
   name: string;
   flagImage: string;
   circuitImage: string;
-  dateStart: Date;
+  dateStart: string | Date;
   season: Season;
   finished: number;
 
@@ -14,7 +14,7 @@ export class Race {
     name: string,
     flagImage: string,
     circuitImage: string,
-    dateStart: Date,
+    dateStart: string | Date,
     season: Season,
     finished: number,
   ) {

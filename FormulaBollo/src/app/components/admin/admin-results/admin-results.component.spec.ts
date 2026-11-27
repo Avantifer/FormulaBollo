@@ -32,7 +32,7 @@ describe('AdminResultsComponent', () => {
       ...driverPointsFixture.driver, id, name: `Piloto ${id}`, number: id,
     }));
     race = new Race(11, 'Carrera A', 'flag.png', 'circuit.png',
-      new Date('2026-05-01T10:00:00Z'), drivers[0].season, 0);
+      '2026-05-01T10:00:00' as unknown as Date, drivers[0].season, 0);
     resultApi = jasmine.createSpyObj<ResultApiService>('ResultApiService',
       ['getAllResultsPerRacePilots', 'saveResults']);
     sprintApi = jasmine.createSpyObj<SprintApiService>('SprintApiService',
@@ -378,18 +378,18 @@ describe('AdminResultsComponent', () => {
     it(`sends the edited calendar date in ${label} without mutating the cached race`, async () => {
       selectNewRace(sprint);
       const originalDate = race.dateStart;
-      component.raceDate = new Date('2026-06-02T14:30:00Z');
+      component.raceDate = new Date(2026, 5, 2, 14, 30);
       component.saveResults();
       await settle();
       const payload = savedRows(sprint);
-      expect(new Date(payload[0].race.dateStart).toISOString()).toBe('2026-06-02T14:30:00.000Z');
+      expect(JSON.parse(JSON.stringify(payload))[0].race.dateStart).toBe('2026-06-02T14:30:00');
       expect(payload[0].race).not.toBe(race);
       expect(race.dateStart).toBe(originalDate);
-      expect(race.dateStart.toISOString()).toBe('2026-05-01T10:00:00.000Z');
+      expect(race.dateStart as unknown).toBe('2026-05-01T10:00:00');
       expect(race.finished).toBe(0);
       if (!sprint) {
         const savedRace = raceApi.saveRace.calls.mostRecent().args[0];
-        expect(new Date(savedRace.dateStart).toISOString()).toBe('2026-06-02T14:30:00.000Z');
+        expect(JSON.parse(JSON.stringify(savedRace)).dateStart).toBe('2026-06-02T14:30:00');
         expect(savedRace).not.toBe(race);
       }
     });
@@ -414,15 +414,15 @@ describe('AdminResultsComponent', () => {
     selectNewRace();
     const pendingResults = new Subject<string>();
     resultApi.saveResults.and.returnValue(pendingResults);
-    component.raceDate = new Date('2026-06-02T14:30:00Z');
+    component.raceDate = new Date(2026, 5, 2, 14, 30);
     component.saveResults();
     component.onRaceChange({ ...race, id: 22, name: 'Carrera B' });
-    component.raceDate = new Date('2026-07-03T15:00:00Z');
+    component.raceDate = new Date(2026, 6, 3, 15, 0);
     complete(pendingResults, 'Resultados guardados');
     await settle();
     expect(raceApi.saveRace.calls.mostRecent().args[0].id).toBe(11);
-    expect(new Date(raceApi.saveRace.calls.mostRecent().args[0].dateStart).toISOString())
-      .toBe('2026-06-02T14:30:00.000Z');
+    expect(JSON.parse(JSON.stringify(raceApi.saveRace.calls.mostRecent().args[0])).dateStart)
+      .toBe('2026-06-02T14:30:00');
     expect(fantasyApi.saveDriverTeamPoints).toHaveBeenCalledOnceWith(11);
     expect(fantasyApi.saveDriverTeamPrices).toHaveBeenCalledOnceWith(11);
   });

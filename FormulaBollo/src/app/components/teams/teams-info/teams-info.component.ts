@@ -1,6 +1,7 @@
 import { CacheService } from '../../../../shared/services/cache.service';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { DatePipe, NgTemplateOutlet } from '@angular/common';
+import { NgTemplateOutlet } from '@angular/common';
+import { RaceDatePipe } from '../../../../shared/pipes/raceDate.pipe';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { catchError, distinctUntilChanged, map, of, Subject, Subscription, switchMap, takeUntil } from 'rxjs';
@@ -23,7 +24,7 @@ import { isVacantDriver } from '../../drivers/drivers-ranking/drivers-ranking.co
 @Component({
   selector: 'app-teams-info',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterModule, DatePipe, NgTemplateOutlet, SpaceToUnderscorePipe, SelectSeasonsComponent],
+  imports: [RouterModule, RaceDatePipe, NgTemplateOutlet, SpaceToUnderscorePipe, SelectSeasonsComponent],
   templateUrl: './teams-info.component.html',
   styleUrl: './teams-info.component.scss'
 })

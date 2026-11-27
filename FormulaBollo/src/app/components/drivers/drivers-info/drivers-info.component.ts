@@ -8,7 +8,7 @@ import { DriverApiService } from '../../../../shared/services/api/driver-api.ser
 import { catchError, distinctUntilChanged, map, of, Subject, Subscription, takeUntil } from 'rxjs';
 import { DriverInfo } from '../../../../shared/models/driverInfo';
 import { ERROR_DRIVER_INFO_FETCH } from '../../../constants';
-import { DatePipe } from '@angular/common';
+import { RaceDatePipe } from '../../../../shared/pipes/raceDate.pipe';
 import { Title } from '@angular/platform-browser';
 import { driverSeasonTitle } from '../../../../shared/services/page-title.strategy';
 import { ImageService } from '../../../../shared/services/image.service';
@@ -25,7 +25,7 @@ import { driverPosition, isVacantDriver } from '../drivers-ranking/drivers-ranki
   imports: [
     RouterModule,
     SpaceToUnderscorePipe,
-    DatePipe,
+    RaceDatePipe,
     SelectSeasonsComponent
   ],
   templateUrl: './drivers-info.component.html',

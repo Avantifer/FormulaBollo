@@ -59,6 +59,17 @@ describe('RacesComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
+  it('renders the API wall-clock calendar day for summer, winter and shortly after midnight', async () => {
+    const starts = ['2025-10-05T00:30:00', '2025-01-05T00:30:00', '2025-03-09T02:30:00'];
+    api.and.returnValue(of(starts.map((start, index) => ({
+      ...race(index + 1, `GP ${index + 1}`, 1, 1), dateStart: start,
+    })) as unknown as Race[]));
+    await render();
+    const times: HTMLTimeElement[] = Array.from(fixture.nativeElement.querySelectorAll('time'));
+    expect(times.map(time => time.textContent)).toEqual(['05/10/2025', '05/01/2025', '09/03/2025']);
+    expect(times.map(time => time.getAttribute('datetime'))).toEqual(['2025-10-05', '2025-01-05', '2025-03-09']);
+  });
+
   it('features the earliest unfinished race with its date and accessible results link', async () => {
     api.and.returnValue(of([
       race(3, 'Más tarde', 25), race(1, 'Terminada', 1, 1), race(2, 'Gran Premio', 10)

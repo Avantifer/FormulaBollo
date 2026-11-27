@@ -5,6 +5,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal, WritableS
 import { SelectSeasonsComponent } from '../../../shared/components/select-seasons/select-seasons.component';
 import { Season } from '../../../shared/models/season';
 import { Race } from '../../../shared/models/race';
+import { raceStartInstant } from '../../../shared/helpers/race-time';
+import { RaceDatePipe } from '../../../shared/pipes/raceDate.pipe';
 import { environment } from '../../../enviroments/enviroment';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
@@ -20,6 +22,7 @@ import { SkeletonItemsPipe } from '../../../shared/pipes/skeletonItems.pipe';
   standalone: true,
   imports: [
     CommonModule,
+    RaceDatePipe,
     RouterLink,
     SkeletonModule,
     SkeletonItemsPipe,
@@ -48,7 +51,7 @@ export class RacesComponent {
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
   protected readonly sortedRaces = computed(() => [...this.races()].sort(
-    (a, b) => new Date(a.dateStart).getTime() - new Date(b.dateStart).getTime()
+    (a, b) => raceStartInstant(a.dateStart) - raceStartInstant(b.dateStart)
   ));
   protected readonly featuredRace = computed(() => this.sortedRaces().find(race => !race.finished) ?? this.sortedRaces().at(-1));
   protected readonly calendarRaces = computed(() => this.sortedRaces().filter(race => race !== this.featuredRace()));

@@ -19,7 +19,7 @@
 					<h1 class="race-title font-display font-extrabold uppercase">Resultados de {{ race.name }}</h1>
 					<div class="hero-meta flex items-center gap-3.5">
 						<img class="size-10 shrink-0 rounded-full object-cover" [src]="imageService.getImageUrl(race.flagImage)" alt="" width="40" height="40" />
-						<time class="text-sm tabular-nums" [attr.datetime]="race.dateStart | date: 'yyyy-MM-dd'">{{ race.dateStart | date: 'dd/MM/yyyy' }}</time>
+						<time class="text-sm tabular-nums" [attr.datetime]="race.dateStart | raceDate: 'yyyy-MM-dd'">{{ race.dateStart | raceDate: 'dd/MM/yyyy' }}</time>
 					</div>
 				} @else {
 					<h1 class="sr-only">Resultados de la carrera</h1>

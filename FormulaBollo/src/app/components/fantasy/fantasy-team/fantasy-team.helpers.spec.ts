@@ -14,10 +14,41 @@ const team = (id: number, name: string, price: number, points = 10) =>
   ({ id, team: { id, name }, price, fantasyInfo: { totalPoints: points, differencePrice: 0, averagePoints: 0 } }) as unknown as FantasyPricesTeam;
 
 describe('Fantasy team helpers', () => {
+  beforeAll(() => console.info('Race time tests browser zone:', Intl.DateTimeFormat().resolvedOptions().timeZone,
+    'summer offset:', new Date('2025-07-06T07:00:00Z').getTimezoneOffset()));
   const drivers = [driver(1, 'Moraga', 20 * M, 200), driver(2, 'Juannudi', 10 * M, 150), driver(3, 'Bubapu', 2 * M, 30), driver(4, 'Fernando', 5 * M, 60), driver(5, 'Robe', 3 * M, 20)];
   const teams = [team(1, 'Red Bull', 22 * M, 300), team(2, 'Haas', 3 * M, 40), team(3, 'Mercedes', 15 * M, 120)];
   const caro = driver(9, 'Caro', 27 * M);
   const withTeam = (partial: Partial<TeamState>): TeamState => ({ ...emptyTeam(), ...partial });
+
+  for (const [label, start, deadline] of [
+    ['summer', '2025-07-06T21:00:00', '2025-07-06T07:00:00Z'],
+    ['winter', '2025-01-05T21:00:00', '2025-01-05T08:00:00Z'],
+    ['spring DST crossing', '2025-03-30T10:00:00', '2025-03-29T20:00:00Z'],
+    ['autumn DST crossing', '2025-10-26T10:00:00', '2025-10-25T21:00:00Z'],
+    ['Madrid gap (shift forward)', '2025-03-30T02:30:00', '2025-03-29T13:30:00Z'],
+    ['Madrid overlap (first occurrence)', '2025-10-26T02:30:00', '2025-10-25T12:30:00Z'],
+  ]) {
+    it(`measures elapsed hours from the Madrid wall-clock start in ${label}`, () => {
+      expect(hoursUntil(start, new Date(deadline))).toBe(12);
+      expect(hoursUntil(start, new Date(Date.parse(deadline) + 3_600_000))).toBe(11);
+    });
+
+    it(`allows saving only strictly before the Madrid deadline in ${label}`, () => {
+      const full = withTeam({ drivers: [drivers[2], drivers[3], drivers[4]], teams: [teams[1], teams[2]] });
+      const cutoff = Date.parse(deadline);
+      expect(saveBlock(true, full, start, new Date(cutoff - 1))).withContext('one millisecond before').toBeNull();
+      expect(saveBlock(true, full, start, new Date(cutoff))).withContext('at the deadline').toBe('late');
+      expect(saveBlock(true, full, start, new Date(cutoff + 1))).withContext('one millisecond after').toBe('late');
+    });
+  }
+
+  it('displays the stored Madrid departure even during a browser-local DST gap', () => {
+    // This Madrid time exists; New York skips 02:00 to 03:00 on this date.
+    const departure = formatDeparture('2025-03-09T02:30:00');
+    expect(departure).toContain('9 de marzo');
+    expect(departure.endsWith('02:30')).toBeTrue();
+  });
 
   it('adds up the cost of the team and the budget left out of 80 million', () => {
     expect(FANTASY_BUDGET).toBe(80_000_000);
@@ -92,14 +123,14 @@ describe('Fantasy team helpers', () => {
   });
 
   it('measures the hours to the race with sign so a race that already started is late', () => {
-    const now = new Date('2026-01-10T12:00:00');
+    const now = new Date('2026-01-10T11:00:00Z');
 
     expect(hoursUntil('2026-01-11T12:00:00', now)).toBe(24);
     expect(hoursUntil('2026-01-10T00:00:00', now)).toBe(-12);
   });
 
   it('explains why saving is blocked, in the order of the app rules', () => {
-    const now = new Date('2026-01-01T12:00:00');
+    const now = new Date('2026-01-01T11:00:00Z');
     const full = withTeam({ drivers: [drivers[2], drivers[3], drivers[4]], teams: [teams[1], teams[2]] });
     const over = withTeam({ drivers: [drivers[0], drivers[1], caro], teams: [teams[0], teams[2]] });
 
@@ -108,7 +139,7 @@ describe('Fantasy team helpers', () => {
     expect(saveBlock(true, over, '2026-01-05T12:00:00', now)).toBe('negative');
     expect(saveBlock(true, full, '2026-01-01T20:00:00', now)).toBe('late');
     expect(saveBlock(true, full, '2025-12-31T12:00:00', now)).toBe('late');
-    expect(saveBlock(true, full, '2026-01-02T00:00:00', now)).toBeNull();
+    expect(saveBlock(true, full, '2026-01-02T00:00:00', now)).toBe('late');
     expect(saveBlock(true, full, undefined, now)).toBeNull();
     expect(SAVE_BLOCK_MESSAGE).toEqual({
       disabled: DISABLED_MESSAGE, incomplete: WARNING_ELECTION_NOT_COMPLETED, negative: WARNING_MONEY_NEGATIVE, late: WARNING_FANTASY_SAVE_LATE
