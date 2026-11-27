@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
@@ -62,7 +61,7 @@ class RaceServiceTest {
     }
 
     @Test
-    void saveRaceNotExistingPreviously() {
+    void saveRaceUpdatesByIdUsingStoredSeason() {
         SeasonDTO seasonDTO = new SeasonDTO(1L, "Nombre manipulado", 1, "2099");
         RaceDTO raceDTO = new RaceDTO(1L, "Francia", "", "", LocalDateTime.now(), seasonDTO, 0);
 
@@ -70,7 +69,7 @@ class RaceServiceTest {
         Race race = new Race(1L, "Francia", "", "", LocalDateTime.now(), season, 0);
 
         when(seasonRepository.findByNumber(anyInt())).thenReturn(season);
-        when(raceRepository.findByNameAndSeason(anyString(), anyInt())).thenReturn(Optional.of(race));
+        when(raceRepository.findById(raceDTO.getId())).thenReturn(Optional.of(race));
 
         ResponseEntity<String> responseEntity = raceService.saveRace(raceDTO);
 
@@ -78,14 +77,14 @@ class RaceServiceTest {
         assertSame(season, race.getSeason());
         assertEquals("Temporada 1", race.getSeason().getName());
         assertEquals(2023, race.getSeason().getYear());
-        verify(raceRepository).save(race);
+        verify(raceRepository).saveAndFlush(race);
         verifyNoInteractions(seasonImpl);
     }
 
     @Test
     void saveRace() {
         SeasonDTO seasonDTO = new SeasonDTO(1L, "Temporada 1", 1, "2023");
-        RaceDTO raceDTO = new RaceDTO(1L, "Francia", "", "", LocalDateTime.now(), seasonDTO, 0);
+        RaceDTO raceDTO = new RaceDTO(null, "Francia", "", "", LocalDateTime.now(), seasonDTO, 0);
 
         Season season = new Season(1L, "Temporada 1", 1, 2023);
 
@@ -97,7 +96,7 @@ class RaceServiceTest {
 
         assertEquals("La carrera se ha creado correctamente", responseEntity.getBody());
         assertSame(season, mappedRace.getSeason());
-        verify(raceRepository).save(mappedRace);
+        verify(raceRepository).saveAndFlush(mappedRace);
     }
 
     @Test

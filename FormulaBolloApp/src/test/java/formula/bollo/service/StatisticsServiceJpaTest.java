@@ -116,7 +116,7 @@ class StatisticsServiceJpaTest {
         Position secondPlace = position(2, 18);
         Race laterId = race(second, 3, 1);
         Race earlier = race(first, 1, 1);
-        Race dateTie = race(second, 3, 1);
+        Race dateTie = persist(new Race(null, "Date tie", "", "", laterId.getDateStart(), second, 1));
         Race missing = race(first, 2, 1);
         Race dnf = race(second, 4, 1);
         Race last = race(first, 5, 1);
@@ -364,7 +364,7 @@ class StatisticsServiceJpaTest {
         SprintPosition sprintWinner = persist(new SprintPosition(null, 1, 8));
         Race later = race(season, 2, 1);
         Race first = race(season, 1, 1);
-        Race sameDate = race(season, 2, 1);
+        Race sameDate = persist(new Race(null, "Same date", "", "", later.getDateStart(), season, 1));
         Race bFinishes = race(season, 3, 1);
         Race bothDnf = race(season, 4, 1);
         Race tied = race(season, 5, 1);
@@ -703,7 +703,7 @@ class StatisticsServiceJpaTest {
         Season season = season(1);
         Team team = team("Team", season);
         Race first = race(season, 1, 1);
-        Race second = race(season, 1, 1);
+        Race second = persist(new Race(null, "Second race", "", "", first.getDateStart(), season, 1));
         Race pending = race(season, 2, 0);
         Position winner = position(1, 25);
         String[] names = {"Zed", "Bea", "Ana", "Cid", "Eli", "Dan", "Fox"};

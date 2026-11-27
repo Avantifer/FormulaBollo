@@ -2,8 +2,8 @@ package formula.bollo.service;
 
 import org.springframework.cache.annotation.CacheEvict;
 
-import java.util.Optional;
-
+import org.springframework.dao.ConcurrencyFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,26 +61,29 @@ public class RaceService {
                     "No existe la temporada " + raceDTO.getSeason().getNumber());
         }
 
-        Optional<Race> existingRace = this.raceRepository.findByNameAndSeason(raceDTO.getName(),
-                raceDTO.getSeason().getNumber());
+        try {
+            if (raceDTO.getId() == null) {
+                Race raceToSave = this.raceImpl.raceDTOToRace(raceDTO);
+                raceToSave.setSeason(season);
+                this.raceRepository.saveAndFlush(raceToSave);
 
-        if (existingRace.isPresent()) {
-            Race raceToUpdate = existingRace.get();
+                return new ResponseEntity<>("La carrera se ha creado correctamente", HttpStatusCode.valueOf(200));
+            }
+
+            Race raceToUpdate = this.raceRepository.findById(raceDTO.getId()).orElseThrow(
+                    () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No se ha encontrado la carrera"));
             raceToUpdate.setName(raceDTO.getName());
             raceToUpdate.setFlagImage(raceDTO.getFlagImage());
             raceToUpdate.setCircuitImage(raceDTO.getCircuitImage());
             raceToUpdate.setDateStart(raceDTO.getDateStart());
             raceToUpdate.setSeason(season);
             raceToUpdate.setFinished(raceDTO.getFinished());
-            this.raceRepository.save(raceToUpdate);
+            this.raceRepository.saveAndFlush(raceToUpdate);
 
             return new ResponseEntity<>("La carrera se ha actualizado correctamente", HttpStatusCode.valueOf(200));
-        } else {
-            Race raceToSave = this.raceImpl.raceDTOToRace(raceDTO);
-            raceToSave.setSeason(season);
-            this.raceRepository.save(raceToSave);
-
-            return new ResponseEntity<>("La carrera se ha creado correctamente", HttpStatusCode.valueOf(200));
+        } catch (DataIntegrityViolationException | ConcurrencyFailureException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Ya existe una carrera con ese nombre en la temporada o hay otro guardado simultáneo");
         }
     }
 }

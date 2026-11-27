@@ -153,6 +153,13 @@ Esto es infraestructura: no se arregla con código y lo tienes que hacer tú en 
       3. `mariadb <bd> < FormulaBolloApp/db/migration/V002__unique_keys.sql`. Falla si queda algún duplicado.
       Vuelta atrás: `V002__rollback.sql`. Hasta aplicarla, la aplicación nueva funciona igual, pero un doble envío
       simultáneo sigue pudiendo duplicar filas.
+- [ ] **V003: claves únicas de puntos y precios Fantasy y de nombres de carrera.** Después de V002, con la aplicación
+      parada y copia hecha (`mariadb-dump --single-transaction <bd> > antes_V003.sql`):
+      1. `mariadb <bd> < FormulaBolloApp/db/migration/V003__find_duplicates.sql` (solo lectura; en el volcado del
+         18/11/2026 no sale ninguno).
+      2. `mariadb <bd> < FormulaBolloApp/db/migration/V003__unique_keys.sql`.
+      **Arranca después solo el backend nuevo:** con estas claves, el anterior falla al volver a guardar puntos o
+      precios. Si vuelves al backend anterior, ejecuta antes `V003__rollback.sql`.
 - [ ] **Contraseñas y login.** Registro y cambio de contraseña exigen 8 caracteres o más; el login sigue aceptando las
       cortas de cuentas existentes. Además de los límites por cuenta+IP y por IP hay un tope por cuenta desde cualquier
       IP (`account.rate-limit.login-account-total`, 50 fallos cada 15 min): bajo un ataque dirigido la cuenta atacada
@@ -214,7 +221,8 @@ Pendientes de la auditoría global:
 ## 6. Vuelta atrás
 
 - Aplicación: vuelve al `.jar` y a la configuración anteriores.
-- Base de datos: `V002__rollback.sql` quita las claves; `V001__rollback.sql` solo si aplicaste V001 (válido justo
+- Base de datos: `V003__rollback.sql` y `V002__rollback.sql` quitan las claves (V003 es obligatorio antes de volver al
+  backend anterior); `V001__rollback.sql` solo si aplicaste V001 (válido justo
   tras migrar; ver el README de migración para sus límites). O restaura la copia previa.
 
 ## 7. Limpieza (cuando todo esté validado)

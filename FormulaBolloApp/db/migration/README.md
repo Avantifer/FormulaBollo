@@ -119,7 +119,29 @@ y la cuarta no.
 
 - `test/run_v002.sh`: V002 y su vuelta atrás sobre el esquema anterior con duplicados.
 - `test/run_production.sh`: sobre `test/production_schema.sql` (estructura de producción sin datos; `account`
-  reconstruida desde las entidades), comprueba que V001 no deja marca y que V002 se aplica y se revierte.
-- `ProductionSchemaTest`: lee y escribe las entidades contra esa estructura con V002. Se ejecuta en la CI; en local
+  reconstruida desde las entidades), comprueba que V001 no deja marca y que V002 y V003 se aplican y se revierten,
+  incluidos los índices de las claves foráneas.
+- `ProductionSchemaTest`: lee y escribe las entidades contra esa estructura con V002 y V003. Se ejecuta en la CI; en local
   necesita `PRODUCTION_SCHEMA_JDBC_URL`. Diferencias conocidas con las entidades: `cache.version` es `smallint` y
   `season.year` es texto.
+
+# Migración V003: puntos, precios fantasy y nombres de carrera
+
+Crea las cuatro claves únicas fantasy por `(race_id, driver_id)` o `(race_id, team_id)` y
+`race_season_name_un (season_id, name)`. El informe `V003__find_duplicates.sql` es de solo lectura;
+los pares con NULL no colisionan, igual que en los índices UNIQUE de MariaDB.
+
+Orden: parar todas las instancias que escriben, hacer copia (`antes_V003.sql`), completar V002,
+ejecutar el informe V003, resolver a mano los duplicados y aplicar `V003__unique_keys.sql` sin `--force`.
+La comprobación previa requiere `CREATE TEMPORARY TABLES`: rechaza duplicados con 1062 antes de cambiar
+el esquema o registrar V003. Una repetición también falla antes de añadir claves. Otros fallos DDL pueden
+dejar claves parciales porque MariaDB confirma cada ALTER: seguir la recuperación indicada en la cabecera.
+
+Instalar este backend antes de reabrir escrituras: la versión anterior inserta puntos/precios antes de
+ejecutar los borrados y falla con las nuevas claves. Si se usa generación automática de esquema, evitar
+que el arranque cree las claves antes de revisar los duplicados y aplicar la migración manual.
+V001 no se ejecuta sobre el esquema actual de producción.
+
+`V003__rollback.sql` conserva los datos y V002. Repone o conserva los índices originales de las FK
+en el mismo ALTER que elimina cada clave única. Presupone una V003 completa y los nombres de índices
+de `test/production_schema.sql`; revisar `SHOW CREATE TABLE` si el servidor difiere.

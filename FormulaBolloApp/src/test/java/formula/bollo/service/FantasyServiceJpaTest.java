@@ -76,7 +76,7 @@ class FantasyServiceJpaTest {
         Race future = race(season, 4, 0);
         Race later = race(season, 3, 1);
         Race earlier = race(season, 1, 1);
-        Race dateTie = race(season, 1, 1);
+        Race dateTie = persist(new Race(null, "Date tie", "", "", earlier.getDateStart(), season, 1));
         election(ana, earlier, missing, two, one, second, first);
         election(bob, earlier, winner, two, one, first, second);
         election(bob, later, one, two, missing, first, second);
