@@ -110,11 +110,11 @@ public class WebSocketConfig implements WebSocketConfigurer {
         try {
           session.close(CloseStatus.SERVER_ERROR);
         } catch (IOException e) {
-          log.error("Error al cerrar sesión: " + e.getMessage());
+          log.error("Error al cerrar sesión", e);
         }
       }
 
-      log.error("Error de transporte en la sesión: " + exception.getMessage());
+      log.error("Error de transporte en la sesión", exception);
     }
 
     public void checkAndNotify() {
@@ -141,11 +141,11 @@ public class WebSocketConfig implements WebSocketConfigurer {
         return true;
       } catch (IOException | IllegalStateException e) {
         sessions.remove(client.session.getId(), client);
-        log.error("Error al notificar a la sesión: " + e.getMessage());
+        log.error("Error al notificar a la sesión", e);
         try {
           client.session.close(CloseStatus.SERVER_ERROR);
         } catch (IOException closeException) {
-          log.error("Error al cerrar sesión: " + closeException.getMessage());
+          log.error("Error al cerrar sesión", closeException);
         }
         return false;
       }

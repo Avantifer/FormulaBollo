@@ -54,9 +54,11 @@ class RaceServiceTest {
         SeasonDTO seasonDTO = new SeasonDTO(1L, "Temporada 1", 1, "2023");
         RaceDTO raceDTO = new RaceDTO(1L, "Francia", "", "", LocalDateTime.now(), seasonDTO, 0);
 
-        ResponseEntity<String> responseEntity = raceService.saveRace(raceDTO);
+        ResponseStatusException error = assertThrows(ResponseStatusException.class, () -> raceService.saveRace(raceDTO));
 
-        assertEquals("Hubo un problema al guardar la carrera", responseEntity.getBody());
+        assertEquals(400, error.getStatusCode().value());
+        assertEquals("No existe la temporada 1", error.getReason());
+        verifyNoInteractions(raceRepository, raceImpl, seasonImpl);
     }
 
     @Test

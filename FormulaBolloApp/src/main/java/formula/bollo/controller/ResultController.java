@@ -20,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 import formula.bollo.impl.ResultImpl;
 import formula.bollo.model.DriverPointsDTO;
 import formula.bollo.model.ResultDTO;
+import formula.bollo.model.RaceDTO;
 import formula.bollo.model.ResultTeamDTO;
 import formula.bollo.repository.ResultRepository;
 import formula.bollo.service.ResultService;
@@ -92,7 +93,10 @@ public class ResultController {
     @SecurityRequirement(name = "Bearer Authentication")
     @PutMapping(path = "/save", produces = MediaType.TEXT_PLAIN_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> saveResults(@RequestBody List<ResultDTO> resultDTOs) {
-        log.info("Guardar los siguientes resultados " + resultDTOs);
+        log.info("Guardar resultados: carreras={}, cantidad={}", resultDTOs == null ? List.of() : resultDTOs.stream()
+                .filter(Objects::nonNull).map(ResultDTO::getRace).filter(Objects::nonNull)
+                .map(RaceDTO::getId).filter(Objects::nonNull).distinct().toList(),
+                resultDTOs == null ? 0 : resultDTOs.size());
         return this.resultService.saveResults(resultDTOs);
     }
 

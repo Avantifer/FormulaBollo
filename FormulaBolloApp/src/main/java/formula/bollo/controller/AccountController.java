@@ -64,7 +64,12 @@ public class AccountController {
         return this.accountService.changePassword(principal, request.password());
     }
 
-    public record PasswordChangeRequest(String password) { }
+    public record PasswordChangeRequest(String password) {
+        @Override
+        public String toString() {
+            return "PasswordChangeRequest[password=***]";
+        }
+    }
 
     @Operation(summary = "Recover Password", tags = Constants.TAG_ACCOUNT)
     @PostMapping(path = "/recoverPassword", produces = MediaType.TEXT_PLAIN_VALUE)
