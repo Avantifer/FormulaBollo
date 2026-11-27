@@ -1,6 +1,7 @@
 package formula.bollo.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
@@ -13,6 +14,8 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.web.server.ResponseStatusException;
 
 import formula.bollo.impl.DriverImpl;
@@ -50,6 +53,89 @@ class ResultBatchValidationTest {
         RaceDTO race = new RaceDTO(1L, "Race", "", "", LocalDateTime.now(), season, 1);
         DriverDTO driver = new DriverDTO(driverId, "Driver", 1, "", new SeasonDTO(1L, "Season", 1, "2026"), null);
         return new ResultDTO(null, race, driver, null, 0, 0);
+    }
+
+    static Stream<Arguments> invalidScoringBatches() {
+        return Stream.of(
+                Arguments.of("repeated position id", (Consumer<List<ResultDTO>>) batch -> {
+                    batch.get(0).setPosition(new PositionDTO(7L, 1, 25));
+                    batch.get(2).setPosition(new PositionDTO(7L, 1, 25));
+                }),
+                Arguments.of("two poles including a DNF", (Consumer<List<ResultDTO>>) batch -> {
+                    batch.get(0).setPole(1);
+                    batch.get(2).setPole(1);
+                }),
+                Arguments.of("two fast laps including a DNF", (Consumer<List<ResultDTO>>) batch -> {
+                    batch.get(0).setFastlap(1);
+                    batch.get(2).setFastlap(1);
+                }),
+                Arguments.of("negative pole", (Consumer<List<ResultDTO>>) batch -> batch.get(2).setPole(-1)),
+                Arguments.of("pole above one", (Consumer<List<ResultDTO>>) batch -> batch.get(2).setPole(2)),
+                Arguments.of("negative fast lap", (Consumer<List<ResultDTO>>) batch -> batch.get(2).setFastlap(-1)),
+                Arguments.of("fast lap above one", (Consumer<List<ResultDTO>>) batch -> batch.get(2).setFastlap(2)));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("invalidScoringBatches")
+    void invalidScoringBatchReturns400WithoutReplacingExistingResults(String reason,
+            Consumer<List<ResultDTO>> invalidate) {
+        List<ResultDTO> batch = List.of(result(1L), result(2L), result(3L));
+        batch.get(0).setPosition(new PositionDTO(1L, 1, 25));
+        batch.get(1).setPosition(new PositionDTO(2L, 2, 18));
+        invalidate.accept(batch);
+        when(results.findByRaceId(1)).thenReturn(List.of(new formula.bollo.entity.Result()));
+
+        var response = resultService.saveResults(batch);
+
+        assertAll(reason,
+                () -> assertEquals(400, response.getStatusCode().value()),
+                () -> verifyNoInteractions(results, resultImpl));
+    }
+
+    @Test
+    void repeatedSprintPositionIdReturns400WithoutReplacingExistingSprints() {
+        List<SprintDTO> batch = List.of(
+                new SprintDTO(null, result(1L).getRace(), result(1L).getDriver(), new SprintPositionDTO(8L, 1, 8)),
+                new SprintDTO(null, result(2L).getRace(), result(2L).getDriver(), null),
+                new SprintDTO(null, result(3L).getRace(), result(3L).getDriver(), new SprintPositionDTO(8L, 1, 8)));
+        when(sprints.findByRaceId(1)).thenReturn(List.of(new formula.bollo.entity.Sprint()));
+
+        var response = sprintService.saveSprints(batch);
+
+        assertAll(
+                () -> assertEquals(400, response.getStatusCode().value()),
+                () -> verifyNoInteractions(sprints, sprintImpl));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void fullResultBatchAcceptsDistinctPositionsAndMultipleDnfsWithPoleAndFastLap(boolean bonusOnDnf) {
+        List<ResultDTO> batch = java.util.stream.LongStream.rangeClosed(1, 8)
+                .mapToObj(ResultBatchValidationTest::result).toList();
+        for (int i = 0; i < 6; i++)
+            batch.get(i).setPosition(new PositionDTO((long) i + 10, i + 1, 25 - i));
+        // Position identity is its database id, not the array index or driver id.
+        batch.get(bonusOnDnf ? 6 : 0).setFastlap(1);
+        batch.get(bonusOnDnf ? 7 : 0).setPole(1);
+        List<formula.bollo.entity.Result> mapped = batch.stream()
+                .map(dto -> new formula.bollo.entity.Result()).toList();
+        when(resultImpl.convertResultsDTOToResults(batch)).thenReturn(mapped);
+
+        assertEquals(200, resultService.saveResults(batch).getStatusCode().value());
+        verify(results).saveAllAndFlush(mapped);
+    }
+
+    @Test
+    void fullSprintBatchAcceptsDistinctPositionsAndMultipleDnfs() {
+        List<SprintDTO> batch = java.util.stream.LongStream.rangeClosed(1, 8)
+                .mapToObj(id -> new SprintDTO(null, result(id).getRace(), result(id).getDriver(),
+                        id <= 6 ? new SprintPositionDTO(id + 10, (int) id, 9 - (int) id) : null)).toList();
+        List<formula.bollo.entity.Sprint> mapped = batch.stream()
+                .map(dto -> new formula.bollo.entity.Sprint()).toList();
+        when(sprintImpl.convertSprintsDTOToSprints(batch)).thenReturn(mapped);
+
+        assertEquals(200, sprintService.saveSprints(batch).getStatusCode().value());
+        verify(sprints).saveAllAndFlush(mapped);
     }
 
     @ParameterizedTest

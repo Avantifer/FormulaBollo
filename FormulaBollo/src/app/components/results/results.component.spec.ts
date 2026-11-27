@@ -248,7 +248,8 @@ describe('ResultsComponent', () => {
     { position: new Position(1, 1, 25), fastlap: 1, expected: '26' },
     { position: new Position(1, 1, 25), fastlap: 0, expected: '25' },
     { position: new Position(6, 6, 8), fastlap: 1, expected: '9' },
-    { position: null, fastlap: 1, expected: 'DNF' },
+    { position: null, fastlap: 1, expected: 'DNF +1' },
+    { position: null, fastlap: 0, expected: 'DNF' },
     { position: new Position(1, 1, 25), fastlap: null, expected: '25' },
     { position: new Position(1, 1, 25), fastlap: undefined, expected: '25' }
   ]) {
@@ -259,6 +260,31 @@ describe('ResultsComponent', () => {
       expect(query('.result-row .race-points').textContent!.trim()).toBe('Puntos ' + expected);
       expect(raceResult).toEqual({ ...result, position, fastlap } as Result);
     });
+  }
+
+  for (const tabIndex of [0, 1]) {
+    for (const fastlap of [0, 1]) {
+      for (const dnfSlot of [0, 1]) {
+        it(`shows ${fastlap ? 'DNF +1' : 'DNF'} in tab ${tabIndex}, driver slot ${dnfSlot}, agreeing with team points`, () => {
+          const finisher = { ...result, pole: 0, fastlap: 0 };
+          const dnf = { ...result, driver: { ...driver, id: 2, name: 'Retired driver' }, position: null, pole: 0, fastlap };
+          const entries = dnfSlot === 0 ? [dnf, finisher] : [finisher, dnf];
+          results.getAllResultsPerRacePilots.and.returnValue(of(entries));
+          results.getAllResultsPerRaceTeams.and.returnValue(of([
+            { ...teamResult, results: entries, totalPoints: 25 + fastlap, hasFastLap: fastlap === 1, hasPole: false }
+          ]));
+          render();
+          select(tabIndex);
+          const panel = query('#results-panel-' + tabIndex);
+          const cells = panel.querySelectorAll(tabIndex === 0 ? '.result-row' : '.team-driver');
+          const score = cells[dnfSlot].querySelector(tabIndex === 0 ? '.race-points' : '.driver-points')!;
+          expect(score.textContent!.trim().match(/DNF(?: \+\d+)?$/)?.[0]).toBe(fastlap ? 'DNF +1' : 'DNF');
+          const finishedScore = cells[1 - dnfSlot].querySelector(tabIndex === 0 ? '.race-points' : '.driver-points')!;
+          expect(finishedScore.textContent!.trim()).toBe('Puntos 25');
+          if (tabIndex === 1) expect(panel.querySelector('.race-points')!.textContent!.trim()).toBe('Puntos ' + (25 + fastlap));
+        });
+      }
+    }
   }
 
   it('preserves API order, uses actual positions and renders driver links, photos, DNF and only positive chips', () => {
@@ -423,7 +449,7 @@ describe('ResultsComponent', () => {
     expect(rows[1].querySelector('.race-points')!.textContent).toBe('Puntos 1');
     expect(query('#results-panel-1').querySelectorAll('.team-driver.dnf').length).toBe(3);
     for (const cell of Array.from(query('#results-panel-1').querySelectorAll('.team-driver.dnf'))) {
-      expect(cell.querySelector('.driver-points')!.textContent).toBe('– Puntos DNF');
+      expect(cell.querySelector('.driver-points')!.textContent).toBe('– Puntos DNF +1');
     }
   });
 

@@ -372,6 +372,41 @@ describe('TeamsInfoComponent', () => {
     expect(sum).toHaveBeenCalled();
   });
 
+  for (const fastLapSlot of [0, 1]) {
+    for (const dnf of [false, true]) {
+      it(`includes driver ${fastLapSlot + 1}'s fast lap in timeline points with DNF=${dnf}`, () => {
+        const race = info.last5Results[0];
+        const entries = race.results.map((result, index) => ({
+          ...result,
+          position: dnf && index === fastLapSlot ? null! : { id: index + 1, positionNumber: index + 1, points: index ? 18 : 25 },
+          fastlap: index === fastLapSlot ? 1 : 0,
+          pole: 0
+        }));
+        const expected = (dnf ? (fastLapSlot === 0 ? 18 : 25) : 43) + 1;
+        infoRequest.and.returnValue(of({
+          ...info, totalPoints: expected,
+          last5Results: [{ ...race, results: entries, totalPoints: expected, hasFastLap: true, hasPole: false }]
+        }));
+        create();
+        select();
+        const row: HTMLElement = fixture.nativeElement.querySelector('.race-row');
+        expect(row.querySelector('.race-points')!.textContent!.trim()).toBe('Puntos +' + expected);
+        expect(fixture.nativeElement.querySelector('.key-stats .stat:not(.classification-stat) dd').textContent).toBe(String(expected));
+      });
+    }
+  }
+
+  it('includes a single retired driver fast lap in timeline points', () => {
+    const race = info.last5Results[0];
+    infoRequest.and.returnValue(of({ ...info, totalPoints: 1, last5Results: [{
+      ...race, totalPoints: 1, hasFastLap: true,
+      results: [{ ...race.results[0], position: null!, fastlap: 1 }]
+    }] }));
+    create();
+    select();
+    expect(fixture.nativeElement.querySelector('.race-points').textContent.trim()).toBe('Puntos +1');
+  });
+
   for (const position of [1, 2, 3, 4, 10]) {
     it('uses the driver podium colors only for race position ' + position, () => {
       create();

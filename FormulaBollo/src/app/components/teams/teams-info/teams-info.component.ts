@@ -158,7 +158,8 @@ export class TeamsInfoComponent {
   }
 
   protected racePoints(results: Result[]): number {
-    return this.utilsService.sumPoints(results[0]?.position ?? null, results[1]?.position ?? null);
+    return this.utilsService.sumPoints(results[0]?.position ?? null, results[1]?.position ?? null)
+      + (results[0]?.fastlap ?? 0) + (results[1]?.fastlap ?? 0);
   }
 
   ngOnDestroy(): void {

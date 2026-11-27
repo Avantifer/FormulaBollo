@@ -1,6 +1,7 @@
 package formula.bollo.service;
 
 import formula.bollo.utils.StatsMerge;
+import formula.bollo.utils.ResultPoints;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -142,8 +143,7 @@ public class TeamService {
         List<Result> results = resultsByDriver.getOrDefault(driver.getId(), Collections.emptyList());
 
         return results.stream()
-                .filter(result -> result.getPosition() != null)
-                .mapToInt(result -> result.getPosition().getPoints() + result.getFastlap())
+                .mapToInt(ResultPoints::calculate)
                 .sum();
     }
 
@@ -296,9 +296,7 @@ public class TeamService {
                                     dto.setRace(race);
                                     dto.setTotalPoints(
                                             groupedResults.stream()
-                                                    .mapToInt(result -> result.getPosition() != null
-                                                            ? result.getPosition().getPoints()
-                                                            : 0)
+                                                    .mapToInt(ResultPoints::calculate)
                                                     .sum());
                                     dto.setHasFastLap(
                                             groupedResults.stream()
@@ -382,8 +380,7 @@ public class TeamService {
         Map<Long, Integer> pointsToReduce = new HashMap<>();
         lastResults.forEach(result -> {
             Long teamId = result.getDriver().getTeam().getId();
-            int points = result.getPosition() != null ? result.getPosition().getPoints() : 0;
-            points += result.getFastlap();
+            int points = ResultPoints.calculate(result);
             pointsToReduce.merge(teamId, points, Integer::sum);
         });
 
