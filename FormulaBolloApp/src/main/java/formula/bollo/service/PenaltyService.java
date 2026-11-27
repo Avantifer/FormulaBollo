@@ -31,18 +31,19 @@ public class PenaltyService {
 
     @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     @Transactional
-    public void savePenalties(List<PenaltyDTO> penaltyDTOs, int driverId, int raceId) {
+    public void savePenalties(List<PenaltyDTO> penaltyDTOs, int driverId, int raceId, int severityId) {
         if (penaltyDTOs == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Las penalizaciones son obligatorias");
         }
         List<Penalty> penalties = preparePenalties(penaltyDTOs);
         if (penaltyDTOs.isEmpty()) {
-            penaltyRepository.deleteAll(penaltyRepository.findByDriverAndRace(driverId, raceId));
+            penaltyRepository.deleteAll(penaltyRepository.findByDriverAndRaceAndSeverity(driverId, raceId, severityId));
             return;
         }
         for (Penalty penalty : penalties) {
-            if (penalty.getDriver().getId() != driverId || penalty.getRace().getId() != raceId) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Piloto o carrera incoherentes");
+            if (penalty.getDriver().getId() != driverId || penalty.getRace().getId() != raceId
+                    || penalty.getPenaltySeverity().getId() != severityId) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Piloto, carrera o severidad incoherentes");
             }
         }
         if (!penalties.isEmpty()) {

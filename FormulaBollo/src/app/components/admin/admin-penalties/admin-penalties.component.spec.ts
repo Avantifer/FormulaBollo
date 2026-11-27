@@ -28,6 +28,31 @@ describe('AdminPenaltiesComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('sends the selected severityId when saving empty penalties', () => {
+    const http = TestBed.inject(HttpTestingController);
+    const driver = driverPointsFixture.driver;
+    const race = new Race(11, 'Carrera A', '', '', new Date('2026-05-01'), driver.season, 1);
+    const severity = { id: 3, severity: 'Grave' };
+    http.expectOne(request => request.url.endsWith('/penalties/totalPerDriver')).flush([]);
+
+    component.onRaceChange(race);
+    component.onDriverChange(driver);
+    component.onPenaltySeverityChange(severity);
+    http.expectOne(request => request.url.endsWith('/penalties/perDriverPerRace'))
+      .flush([new Penalty(1, race, driver, 'Motivo existente.', severity, driver.season)]);
+    expect(component.penaltiesToShow()).toBe('Motivo existente.');
+
+    component.penaltiesToShow.set('');
+    component.savePenalties();
+
+    const save = http.expectOne(request => request.method === 'PUT' && request.url.endsWith('/penalties/save'));
+    expect(save.request.body).toEqual([]);
+    expect(save.request.params.get('driverId')).toBe(String(driver.id));
+    expect(save.request.params.get('raceId')).toBe(String(race.id));
+    expect(save.request.params.get('severityId')).toBe(String(severity.id));
+    save.flush('Penalizaciones eliminadas correctamente');
+  });
+
   it('renders loaded penalties in a timing tower with team borders and severity chips', async () => {
     const driver = driverPointsFixture.driver;
     const race = new Race(11, 'Carrera A', '', '', new Date('2026-05-01'), driver.season, 1);

@@ -46,8 +46,8 @@ public class PenaltyController {
     @SecurityRequirement(name = "Bearer Authentication")
     @PutMapping(path = "/save", produces = MediaType.TEXT_PLAIN_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> savePenalty(@RequestBody List<PenaltyDTO> penaltyDTOs, @RequestParam int driverId,
-            @RequestParam int raceId) {
-        penaltyService.savePenalties(penaltyDTOs, driverId, raceId);
+            @RequestParam int raceId, @RequestParam int severityId) {
+        penaltyService.savePenalties(penaltyDTOs, driverId, raceId, severityId);
 
         if (penaltyDTOs.isEmpty()) {
             return new ResponseEntity<>("Penalizaciones eliminadas correctamente",

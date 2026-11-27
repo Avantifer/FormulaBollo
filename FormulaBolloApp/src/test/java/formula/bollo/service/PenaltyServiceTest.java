@@ -5,6 +5,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.inOrder;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -74,7 +75,7 @@ class PenaltyServiceTest {
         Penalty penalty = new Penalty(1L, race, driver, "", penaltySeverity, season);
 
         when(penaltyImpl.penaltyDTOToPenalty(any())).thenReturn(penalty);
-        penaltyService.savePenalties(Arrays.asList(penaltyDTO), 1, 1);
+        penaltyService.savePenalties(Arrays.asList(penaltyDTO), 1, 1, 1);
 
         verify(penaltyRepository, times(0)).save(any());
     }
@@ -96,7 +97,7 @@ class PenaltyServiceTest {
         Penalty penalty = new Penalty(1L, race, driver, "Razon", penaltySeverity, season);
 
         when(penaltyImpl.penaltyDTOToPenalty(any())).thenReturn(penalty);
-        penaltyService.savePenalties(Arrays.asList(penaltyDTO), 1, 1);
+        penaltyService.savePenalties(Arrays.asList(penaltyDTO), 1, 1, 1);
 
         verify(penaltyRepository, times(1)).save(any());
     }
@@ -116,7 +117,7 @@ class PenaltyServiceTest {
         when(penaltyImpl.penaltyDTOToPenalty(valid)).thenReturn(penalty());
 
         ResponseStatusException error = assertThrows(ResponseStatusException.class,
-                () -> penaltyService.savePenalties(List.of(valid, invalid), 1, 1));
+                () -> penaltyService.savePenalties(List.of(valid, invalid), 1, 1, 1));
 
         assertEquals(400, error.getStatusCode().value());
         verifyNoInteractions(penaltyRepository);
@@ -132,7 +133,7 @@ class PenaltyServiceTest {
         when(penaltyImpl.penaltyDTOToPenalty(input)).thenReturn(saved);
         when(penaltyRepository.findByDriverAndRaceAndSeverity(1, 1, 1, 2)).thenReturn(List.of(previous));
 
-        penaltyService.savePenalties(List.of(input), 1, 1);
+        penaltyService.savePenalties(List.of(input), 1, 1, 1);
 
         var order = inOrder(penaltyRepository);
         order.verify(penaltyRepository).deleteAll(List.of(previous));
@@ -140,18 +141,20 @@ class PenaltyServiceTest {
         ArgumentCaptor<Penalty> inserted = ArgumentCaptor.forClass(Penalty.class);
         verify(penaltyRepository).save(inserted.capture());
         assertNull(inserted.getValue().getId());
-        assertNotNull(PenaltyService.class.getMethod("savePenalties", List.class, int.class, int.class)
+        assertNotNull(PenaltyService.class.getMethod("savePenalties", List.class, int.class, int.class, int.class)
                 .getAnnotation(Transactional.class));
     }
 
     @Test
-    void emptyReplacementClearsRequestedDriverAndRace() {
+    void emptyReplacementClearsRequestedDriverRaceAndSeverity() {
         Penalty previous = penalty();
-        when(penaltyRepository.findByDriverAndRace(1, 1)).thenReturn(List.of(previous));
+        when(penaltyRepository.findByDriverAndRaceAndSeverity(1, 1, 1)).thenReturn(List.of(previous));
 
-        penaltyService.savePenalties(List.of(), 1, 1);
+        penaltyService.savePenalties(List.of(), 1, 1, 1);
 
+        verify(penaltyRepository).findByDriverAndRaceAndSeverity(1, 1, 1);
         verify(penaltyRepository).deleteAll(List.of(previous));
+        verifyNoMoreInteractions(penaltyRepository);
     }
 
     @Test
@@ -160,8 +163,20 @@ class PenaltyServiceTest {
         when(penaltyImpl.penaltyDTOToPenalty(input)).thenReturn(penalty());
 
         assertThrows(ResponseStatusException.class,
-                () -> penaltyService.savePenalties(List.of(input), 9, 1));
+                () -> penaltyService.savePenalties(List.of(input), 9, 1, 1));
 
+        verifyNoInteractions(penaltyRepository);
+    }
+
+    @Test
+    void mismatchedRequestSeverityDoesNotTouchRepository() {
+        PenaltyDTO input = penaltyDTO();
+        when(penaltyImpl.penaltyDTOToPenalty(input)).thenReturn(penalty());
+
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> penaltyService.savePenalties(List.of(input), 1, 1, 2));
+
+        assertEquals(400, error.getStatusCode().value());
         verifyNoInteractions(penaltyRepository);
     }
 
