@@ -1,5 +1,13 @@
 # Migración de esquema V001
 
+> **No la ejecutes en producción.** El volcado del 18/11/2026 muestra que producción ya tiene el esquema nuevo
+> (lo generó Hibernate): V001 falla con `ERROR 1060 Duplicate column name 'year'`. Solo sirve para una base que
+> siga con el esquema anterior. Antes de lanzarla, comprueba que `SHOW COLUMNS FROM season LIKE 'year'` no
+> devuelve nada.
+>
+> Si en un intento anterior quedó la fila `V001` en `schema_migration` sin que la migración terminara, es una
+> marca falsa de la versión antigua del script. Anótalo antes de borrarla.
+
 Alinea una base MariaDB con el **esquema anterior** (la de la copia `backup_20261102050001.sql`)
 con el que esperan las entidades JPA del código actual.
 
@@ -15,11 +23,11 @@ con el que esperan las entidades JPA del código actual.
 | `season.year` | Columna nueva, obligatoria y única. Se rellena con el año de la primera carrera de la temporada (2023 y 2024 en la copia). |
 | `race.name`, `flag_image`, `circuit_image` | Columnas nuevas. Antes estaban en `circuit` (con las imágenes como BLOB). `race.circuit_id` pasa a ser opcional. |
 | `penalty.severity_id` → `penalty_severity_id` | Renombrada. |
-| `fantasy_election.user_id` → `account_id` | Renombrada. |
+| `fantasy_election.user_id` → `account_id` | Renombrada. Sigue como `TINYINT(4)`: con V001 solo admite cuentas hasta la 127. Producción ya es `BIGINT`. |
 | `season_id` opcional | En 9 tablas que el código ya no usa (`result`, `sprint`, `fantasy_*`, `championship`, `constructor`, `configuration`): la temporada se deduce de la carrera. |
 | Imágenes | `driver.driver_image`, `team.logo_image` y `team.car_image` pasan de BLOB/URL a **rutas relativas** a la carpeta `images/` (`drivers/season2/Avantifer/driver.webp`, ...). Lo anterior se conserva en `*_legacy`. |
 | `cache` | Se inserta la fila `general_cache` (versión 0). |
-| `schema_migration` | Tabla de control: si el script se repite, falla antes de tocar nada. |
+| `schema_migration` | Tabla de control: `V001` se anota al final, solo si todo ha ido bien. |
 
 No se borra nada: `circuit`, las columnas `*_legacy` y los `season_id` siguen en la base.
 Cuando todo esté validado en producción se pueden eliminar a mano.
@@ -43,6 +51,12 @@ Cuando todo esté validado en producción se pueden eliminar a mano.
 4. Arranca la aplicación nueva. La carpeta `images/` debe estar donde apunta
    `spring.web.resources.static-locations` (`file:../images/` en desarrollo), porque ahora la
    base guarda rutas y no los bytes.
+
+## Si falla a medias
+
+Cada `ALTER` queda confirmado por separado y `V001` no se anota. No la repitas sobre esa base (se detiene en la
+primera columna ya creada) ni lances el rollback, que presupone la migración completa: **restaura la copia**
+`antes_V001.sql`, corrige la causa y vuelve a empezar. Nunca uses `--force`.
 
 ## Qué NO hace
 
@@ -73,13 +87,14 @@ mariadb <base> < FormulaBolloApp/db/migration/V001__rollback.sql
 Válida justo tras migrar. Con datos nuevos escritos por la aplicación, las columnas `season_id`
 de esas filas están a NULL; el script las rellena desde la carrera donde puede (`result`,
 `sprint`, `fantasy_*`) y fallará en `championship`/`constructor`/`configuration` si hay filas
-nuevas sin temporada.
+nuevas sin temporada. Los equipos creados después de migrar conservan en `car_image` la ruta, no los bytes.
 
 # Migración V002: claves únicas
 
 Sin clave única, un doble envío de resultados duplicaba filas y los puntos se contaban dos veces
 (en la copia local hay 11 pares: 10 en Las Vegas, temporada 2, y 1 en Red Bull Ring, temporada 1).
-Requiere V001 aplicada. No es destructiva salvo la limpieza opcional.
+Se aplica sobre el esquema actual de producción sin necesidad de V001 (sobre el esquema anterior, V001 va antes).
+No es destructiva salvo la limpieza opcional.
 
 | Fichero | Qué hace |
 |---|---|
@@ -95,3 +110,16 @@ anteriores. Corrige los datos, elimina esas claves, borra la fila V002 de `schem
 
 Con la clave aplicada, el backend responde 409 («Otro guardado simultáneo…») en lugar de duplicar
 cuando dos guardados de la misma carrera coinciden.
+
+En el volcado del 18/11/2026 no hay duplicados en `result`, `sprint` ni `fantasy_election`. **La tabla `account`
+no venía en el volcado:** ejecuta `find_duplicates` antes, porque un correo repetido dejaría creadas tres claves
+y la cuarta no.
+
+## Pruebas
+
+- `test/run_v002.sh`: V002 y su vuelta atrás sobre el esquema anterior con duplicados.
+- `test/run_production.sh`: sobre `test/production_schema.sql` (estructura de producción sin datos; `account`
+  reconstruida desde las entidades), comprueba que V001 no deja marca y que V002 se aplica y se revierte.
+- `ProductionSchemaTest`: lee y escribe las entidades contra esa estructura con V002. Se ejecuta en la CI; en local
+  necesita `PRODUCTION_SCHEMA_JDBC_URL`. Diferencias conocidas con las entidades: `cache.version` es `smallint` y
+  `season.year` es texto.
