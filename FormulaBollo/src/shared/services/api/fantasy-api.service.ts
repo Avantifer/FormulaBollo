@@ -87,12 +87,9 @@ export class FantasyApiService {
   getFantasyElection(raceId: number): Observable<FantasyElection> {
     const token = localStorage.getItem('auth');
     if (!this.auth.isLogged() || !token) return throwError(() => new Error('La sesión no es válida'));
-    const userId = this.auth.getIdFromToken(token);
-    const cacheKey: string = `fantasyElection-authenticated-${userId}-${raceId}`;
-
     const params = this.baseApiService.createParams({ raceId: raceId });
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
-    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<FantasyElection>(`${environment.apiUrl}${this.endpoint}/fantasyElection`, { params, headers }));
+    return this.httpClient.get<FantasyElection>(`${environment.apiUrl}${this.endpoint}/fantasyElection`, { params, headers });
   }
 
 

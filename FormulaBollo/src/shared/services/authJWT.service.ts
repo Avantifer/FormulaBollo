@@ -1,6 +1,5 @@
 import { inject, Injectable } from "@angular/core";
 import { decodeJwtPayload } from '../utils/jwt';
-import { CacheService } from './cache.service';
 import { MessageInfoService } from "./toastInfo.service";
 
 @Injectable({
@@ -8,7 +7,6 @@ import { MessageInfoService } from "./toastInfo.service";
 })
 export class AuthJWTService {
 
-  private readonly cacheService = inject(CacheService);
   private readonly messageInfoService: MessageInfoService = inject(MessageInfoService);
   
   isUserLogged: boolean = false;
@@ -102,7 +100,6 @@ export class AuthJWTService {
 
   clearSession(): void {
     localStorage.removeItem('auth');
-    this.cacheService.removeByPrefix('fantasyElection-authenticated-');
     this.isUserLogged = false;
   }
 }

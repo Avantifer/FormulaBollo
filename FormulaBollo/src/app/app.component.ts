@@ -6,8 +6,6 @@ import { HeaderComponent } from "../shared/components/header/header.component";
 import { ToastModule } from 'primeng/toast';
 import { WebSocketService } from '../shared/services/websocket.service';
 import { catchError, EMPTY, filter, fromEvent, merge, of, Subscription, switchMap } from 'rxjs';
-import { UtilsService } from '../shared/services/utils.service';
-import { ERROR_CACHE } from './constants';
 import { FooterComponent } from "../shared/components/footer/footer.component";
 @Component({
   selector: 'app-root',
@@ -24,7 +22,6 @@ export class AppComponent {
   private readonly webSocketService: WebSocketService = inject(WebSocketService);
   private readonly cacheService: CacheService = inject(CacheService);
   private readonly cacheApiService: CacheApiService = inject(CacheApiService);
-  private readonly utilsService: UtilsService = inject(UtilsService);
 
   private messageSubscription$: Subscription = new Subscription();
 
@@ -32,8 +29,8 @@ export class AppComponent {
     const visible$ = fromEvent(document, 'visibilitychange').pipe(filter(() => document.visibilityState === 'visible'));
     this.messageSubscription$.add(merge(of(undefined), this.webSocketService.connected$, visible$).pipe(
       switchMap(() => this.cacheApiService.getCache().pipe(
-        catchError(error => {
-          this.utilsService.handleError(ERROR_CACHE, error);
+        catchError(() => {
+          this.cacheService.reportVersionCheckFailure();
           return EMPTY;
         })
       ))

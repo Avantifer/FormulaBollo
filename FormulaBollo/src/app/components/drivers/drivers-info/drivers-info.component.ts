@@ -12,7 +12,6 @@ import { Title } from '@angular/platform-browser';
 import { driverSeasonTitle } from '../../../../shared/services/page-title.strategy';
 import { ImageService } from '../../../../shared/services/image.service';
 import { SpaceToUnderscorePipe } from '../../../../shared/pipes/spaceToUnderscore.pipe';
-import { CacheService } from '../../../../shared/services/cache.service';
 import { DriverTeamHistoryEntry } from '../../../../shared/models/driverTeamHistoryEntry';
 import { DriverPoints } from '../../../../shared/models/driverPoints';
 import { Result } from '../../../../shared/models/result';
@@ -37,7 +36,6 @@ export class DriversInfoComponent {
   protected readonly utilsService: UtilsService = inject(UtilsService);
   protected readonly imageService: ImageService = inject(ImageService);
   private readonly driverApiService: DriverApiService = inject(DriverApiService);
-  private readonly cacheService: CacheService = inject(CacheService);
   private readonly resultApiService = inject(ResultApiService);
   protected readonly router: Router = inject(Router);
 
@@ -93,20 +91,9 @@ export class DriversInfoComponent {
       this.initialSeasonNumber = Number.isSafeInteger(number) ? number : undefined;
       this.selectedSeasonNumber.set(this.initialSeasonNumber ?? 0);
       this.driverInfo.set(undefined);
-      this._getDriversCache();
     });
   }
   
-  private _getDriversCache(): void {
-    const cache: Map<string, DriverInfo> = this.cacheService.loadCache();
-    const cacheKeyDriverInfo: string =`infoByDriverName-${this.driverName}-${this.initialSeasonNumber ?? 0}`;
-    
-    if (cache.has(cacheKeyDriverInfo)) {
-      this.driverInfo.set(cache.get(cacheKeyDriverInfo));
-      this._mapDriverStats(this.driverInfo()!);
-    }    
-  }
-
   protected onSeasonChange(newSeason: Season): void {
     const seasonNumber = newSeason?.number ?? 0;
     this.selectedSeasonNumber.set(seasonNumber);

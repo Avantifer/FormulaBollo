@@ -44,6 +44,7 @@ describe('ComparativeStatsComponent', () => {
   beforeEach(() => {
     originalDark = document.documentElement.classList.contains('dark');
     TestBed.configureTestingModule({ imports: [ComparativeStatsComponent], providers: provideComponentTesting() });
+    TestBed.inject(CacheService).updateVersion(1);
     http = TestBed.inject(HttpTestingController);
     TestBed.inject(ThemeService).setDarkTheme(false);
     fixture = TestBed.createComponent(ComparativeStatsComponent);

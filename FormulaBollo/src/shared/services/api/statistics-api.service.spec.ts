@@ -13,6 +13,7 @@ describe('StatisticsApiService', () => {
   beforeEach(() => {
     localStorage.clear();
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.inject(CacheService).updateVersion(1);
     service = TestBed.inject(StatisticsApiService);
     http = TestBed.inject(HttpTestingController);
   });
