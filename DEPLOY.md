@@ -127,7 +127,7 @@ Esto es infraestructura: no se arregla con código y lo tienes que hacer tú en 
       CSP. Empieza en modo informe y revisa la consola del navegador antes de hacerla obligatoria:
 
       ```
-      Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://formulabollo.es:8443; connect-src 'self' https://formulabollo.es:8443 wss://formulabollo.es:8443; object-src 'none'; base-uri 'self'; frame-ancestors 'none'
+      Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://formulabollo.es:8443; connect-src 'self' https://formulabollo.es:8443 wss://formulabollo.es:8443; object-src 'none'; base-uri 'self'; frame-ancestors 'none'
       ```
 
       `script-src` lleva `'unsafe-inline'` porque `index.html` y la compilación de Angular tienen scripts en línea;
