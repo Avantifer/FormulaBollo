@@ -118,6 +118,17 @@ class JwtHttpSecurityTest {
     }
 
     @ParameterizedTest
+    @CsvSource({"GET,anonymous", "GET,user", "GET,admin", "PUT,anonymous", "PUT,user", "PUT,admin"})
+    void fantasyAdminPricesRequiresAdminForBothVerbs(String method, String identity) throws Exception {
+        var request = route(method, "/fantasy/adminPrices")
+                .content("{\"drivers\":[{\"id\":1,\"price\":6000000}],\"teams\":[]}");
+        if (!identity.equals("anonymous")) {
+            request.header("Authorization", "Bearer " + session(identity.equals("admin") ? admin : user));
+        }
+        mvc.perform(request).andExpect(status().is(identity.equals("anonymous") ? 401 : identity.equals("user") ? 403 : 200));
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {"http://localhost:4200", "https://formulabollo.es"})
     void anonymousProtectedRequestIncludesCorsHeader(String origin) throws Exception {
         mvc.perform(route("GET", "/fantasy/fantasyElection").header("Origin", origin))

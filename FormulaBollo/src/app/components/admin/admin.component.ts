@@ -23,6 +23,7 @@ export class AdminComponent {
     {
       items: [
         { label: 'Resultados', icon: 'pi pi-list', routerLink: 'results' },
+        { label: 'Precios Fantasy', icon: 'pi pi-dollar', routerLink: 'prices' },
         { label: 'Penalizaciones', icon: 'pi pi-exclamation-triangle', routerLink: 'penalties' },
         { label: 'Sprints', icon: 'pi pi-calendar', routerLink: 'sprints' }
       ]

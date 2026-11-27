@@ -24,6 +24,7 @@ public class CacheVersionWebConfig implements WebMvcConfigurer {
                 Constants.ENDPOINT_RACE + "/save",
                 Constants.ENDPOINT_PENALTY + "/save",
                 Constants.ENDPOINT_FANTASY + "/saveDriverTeamPoints",
-                Constants.ENDPOINT_FANTASY + "/saveDriverTeamPrices");
+                Constants.ENDPOINT_FANTASY + "/saveDriverTeamPrices",
+                Constants.ENDPOINT_FANTASY + "/adminPrices");
     }
 }

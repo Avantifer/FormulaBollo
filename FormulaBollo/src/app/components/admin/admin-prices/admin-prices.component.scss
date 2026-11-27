@@ -1,0 +1,8 @@
+:host { display: block; min-width: 0; }
+.price-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 12rem); gap: .5rem 1rem; }
+.price-label { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+input { width: 100%; min-width: 0; font-variant-numeric: tabular-nums; }
+input[aria-invalid="true"] { border-color: var(--accent-text); }
+input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.price-error { grid-column: 1 / -1; }
+@media (max-width: 480px) { .price-row { grid-template-columns: minmax(0, 1fr); } }
