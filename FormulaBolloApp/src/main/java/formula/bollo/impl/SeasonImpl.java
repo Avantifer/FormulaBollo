@@ -17,10 +17,6 @@ public class SeasonImpl {
         this.seasonMapper = seasonMapper;
     }
 
-    public Season seasonDTOToSeason(SeasonDTO season) {
-        return seasonMapper.seasonDTOToSeason(season);
-    }
-
     public List<SeasonDTO> convertSeasonsToSeasonsDTO(List<Season> seasons) {
         return seasonMapper.convertSeasonsToSeasonsDTO(seasons);
     }

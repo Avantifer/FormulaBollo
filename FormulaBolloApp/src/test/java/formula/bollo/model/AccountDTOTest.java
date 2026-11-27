@@ -30,15 +30,13 @@ class AccountDTOTest {
         AccountDTO account = new AccountDTO(7L, "ana", "hash-secreto", 1, "ana@example.com");
         FantasyElectionDTO election = new FantasyElectionDTO();
         election.setAccount(account);
-        FantasyPointsAccountDTO points = new FantasyPointsAccountDTO();
+        FantasyClasificationEntryDTO points = new FantasyClasificationEntryDTO();
         points.setAccount(account);
-        points.setFantasyElection(election);
 
         assertPublicAccount(mapper.readTree(mapper.writeValueAsString(account)));
         assertPublicAccount(mapper.readTree(mapper.writeValueAsString(election)).get("account"));
         JsonNode response = mapper.readTree(mapper.writeValueAsString(List.of(points))).get(0);
         assertPublicAccount(response.get("account"));
-        assertPublicAccount(response.get("fantasyElection").get("account"));
     }
 
     @Test

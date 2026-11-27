@@ -11,7 +11,5 @@ import formula.bollo.model.SeasonDTO;
 public interface SeasonMapper {
     SeasonDTO seasonToSeasonDTO(Season season);
 
-    Season seasonDTOToSeason(SeasonDTO season);
-    
     List<SeasonDTO> convertSeasonsToSeasonsDTO(List<Season> seasons);
 }

@@ -73,8 +73,8 @@ El backend no trae secretos en el repositorio; deben llegar por ficheros de perf
   controladores llevan `@Transactional(readOnly = true)`; un endpoint nuevo que lea relaciones LAZY sin esa
   anotación falla con `LazyInitializationException`. Comprobado contra MariaDB real con 180 URLs GET: todas 200 y
   con la misma respuesta que antes.
-- `GET /teams/allInfoTeam` hace ahora 7 consultas SELECT con la caché fría, sea cual sea el número de equipos (antes
-  76 por temporada y 151 para `season=0`). El JSON es idéntico.
+- Se retiran `GET /drivers/allInfoDriver`, `GET /teams/allInfoTeam` y `GET /races/allFinished`.
+  Los cálculos de estadísticas y las consultas compartidas siguen disponibles para sus otros consumidores.
 - **Cifras que cambian para el público.** En la vista «todas las temporadas» (`season=0`) de pilotos y equipos, la mejor
   posición pasa a ser la mínima de las positivas (antes salía la peor), la media se pondera por carreras terminadas
   (antes era la de una sola temporada) y las últimas 5 carreras se unen por fecha. En Fantasy, la variación de precio y
@@ -169,13 +169,13 @@ Sustituye `$B` por la URL del backend.
 | Prueba | Esperado |
 |---|---|
 | `curl -s -o /dev/null -w "%{http_code}" $B/seasons/all` | 200 |
-| `curl -s -o /dev/null -w "%{http_code}" "$B/drivers/allInfoDriver?season=3"` | 200 |
+| `curl -s -o /dev/null -w "%{http_code}" "$B/drivers/all?season=3"` | 200 |
 | `curl -s "$B/drivers/teamHistory?driverName=Robe"` | lista de 4 entradas: T1 Ferrari, T2 Alpine, T3 Kick Sauber, T3 Ferrari |
 | `curl -s -o /dev/null -w "%{http_code}" "$B/intro/introImage-v4.avif"` | 200 |
-| `curl -s -o /dev/null -w "%{http_code}" -X DELETE "$B/results/delete?raceId=1"` | **403** (sin token) |
-| `curl -s -o /dev/null -w "%{http_code}" -X POST "$B/cache/update"` | **403** |
-| `curl -s -o /dev/null -w "%{http_code}" "$B/account/id?id=1"` | **403** |
-| `curl -s -o /dev/null -w "%{http_code}" -X POST "$B/account/changePassword?username=x&password=y"` | **403** |
+| `curl -s -o /dev/null -w "%{http_code}" -X DELETE "$B/results/delete?raceId=1"` | **401** (sin token) |
+| `curl -s -o /dev/null -w "%{http_code}" -X POST "$B/cache/update"` | **401** |
+| `curl -s -o /dev/null -w "%{http_code}" -X POST "$B/account/changePassword?username=x&password=y"` | **401** |
+| `curl -s -o /dev/null -w "%{http_code}" "$B/account/id?id=1"` | **401** (las cuentas no son públicas) |
 | Login con una clave equivocada | **401** |
 
 Desde la web: iniciar sesión como administrador, guardar unos resultados y una sanción, recuperar una contraseña

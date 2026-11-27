@@ -15,9 +15,6 @@ public interface FantasyElectionRepository extends JpaRepository<FantasyElection
     @Query(value = "SELECT fe FROM FantasyElection fe WHERE fe.account.id = :accountId AND fe.race.id = :raceId")
     Optional<FantasyElection> findByUserIdAndRaceId(int accountId, int raceId);
 
-    @Query(value = "SELECT fe FROM FantasyElection fe WHERE fe.race.id = :raceId")
-    List<FantasyElection> findByRaceId(int raceId);
-
     @EntityGraph(attributePaths = { "account", "race", "driverOne.season", "driverOne.team.season",
             "driverTwo.season", "driverTwo.team.season", "driverThree.season", "driverThree.team.season",
             "teamOne.season", "teamTwo.season" })

@@ -54,7 +54,7 @@ class FantasyServiceJpaTest {
         service = new FantasyService(accounts, races, results, elections, driverPrices, teamPrices,
                 driverPoints, teamPoints, new FantasyElectionImpl(Mappers.getMapper(FantasyElectionMapper.class)),
                 new FantasyPriceImpl(Mappers.getMapper(FantasyPriceMapper.class)),
-                new AccountImpl(Mappers.getMapper(AccountMapper.class)), new RaceImpl(Mappers.getMapper(RaceMapper.class)),
+                new AccountImpl(Mappers.getMapper(AccountMapper.class)),
                 new DriverImpl(Mappers.getMapper(DriverMapper.class)), new TeamImpl(Mappers.getMapper(TeamMapper.class)),
                 Clock.systemUTC());
     }

@@ -107,7 +107,7 @@ class JwtHttpSecurityTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"DELETE,/results/delete", "POST,/cache/update", "GET,/account/id",
+    @CsvSource({"DELETE,/results/delete", "POST,/cache/update", "GET,/account/security-probe",
             "POST,/fantasy/saveDriverTeamPoints", "POST,/fantasy/saveDriverTeamPrices", "PUT,/results/save"})
     void adminMatrix(String method, String path) throws Exception {
         mvc.perform(route(method, path)).andExpect(status().isUnauthorized());
@@ -230,7 +230,7 @@ class JwtHttpSecurityTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"DELETE,/results/delete", "POST,/cache/update", "GET,/account/id",
+    @CsvSource({"DELETE,/results/delete", "POST,/cache/update", "GET,/account/security-probe",
             "POST,/fantasy/saveDriverTeamPoints", "POST,/fantasy/saveFantasyElection"})
     void recoveryCannotAuthenticateElsewhere(String method, String path) throws Exception {
         mvc.perform(route(method, path).content("{}")
@@ -405,10 +405,16 @@ class JwtHttpSecurityTest {
         }).andExpect(header().stringValues("Access-Control-Allow-Origin", origin));
     }
 
+    @org.springframework.web.bind.annotation.RestController
+    static class AccountSecurityProbe {
+        @org.springframework.web.bind.annotation.GetMapping("/account/security-probe")
+        String probe() { return "ok"; }
+    }
+
     @Configuration
     @EnableWebMvc
     @EnableWebSecurity
-    @Import({SecurityConfigurer.class, JwtRequestFilter.class, JwtConfig.class, CorsConfig.class, AccountService.class, AccountController.class})
+    @Import({SecurityConfigurer.class, JwtRequestFilter.class, JwtConfig.class, CorsConfig.class, AccountService.class, AccountController.class, AccountSecurityProbe.class})
     static class Config {
         @Bean AccountRepository repository() { return mock(AccountRepository.class); }
         @Bean AccountImpl mapper() { return new AccountImpl(Mappers.getMapper(AccountMapper.class)); }

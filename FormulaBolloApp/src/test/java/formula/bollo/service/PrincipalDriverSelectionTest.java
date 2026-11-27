@@ -30,7 +30,7 @@ class PrincipalDriverSelectionTest {
     final DriverImpl mapper = new DriverImpl(Mappers.getMapper(DriverMapper.class));
     final ResultService points = new ResultService(results, sprints, mock(ResultImpl.class), mapper);
     final DriverService service = new DriverService(results, championships, penalties, sprints,
-            mapper, null, mock(ResultImpl.class), null, null, points);
+            mapper, mock(ResultImpl.class), points);
 
     @ParameterizedTest
     @CsvSource({"5,8", "4,4", "0,0", "1,0"})

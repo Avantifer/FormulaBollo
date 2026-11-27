@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 
-import formula.bollo.controller.TeamController;
 import formula.bollo.entity.*;
 import formula.bollo.impl.*;
 import formula.bollo.mapper.*;
@@ -53,7 +52,6 @@ class TeamInfoBatchQueriesTest {
     @Autowired ChampionshipRepository championships;
 
     TeamService service;
-    TeamController controller;
     final JsonMapper json = JsonMapper.builder().findAndAddModules().build();
 
     @BeforeEach
@@ -61,13 +59,11 @@ class TeamInfoBatchQueriesTest {
         TeamImpl teamMapper = new TeamImpl(Mappers.getMapper(TeamMapper.class));
         DriverImpl driverMapper = new DriverImpl(Mappers.getMapper(DriverMapper.class));
         ResultImpl resultMapper = new ResultImpl(Mappers.getMapper(ResultMapper.class));
-        RaceImpl raceMapper = new RaceImpl(Mappers.getMapper(RaceMapper.class));
         DriverService driverService = new DriverService(results, championships, penalties, sprints,
-                driverMapper, teamMapper, resultMapper, null, raceMapper,
+                driverMapper, resultMapper,
                 new ResultService(results, sprints, resultMapper, driverMapper));
         service = new TeamService(results, sprints, drivers, constructors, teams, teamMapper,
-                driverMapper, resultMapper, raceMapper, driverService);
-        controller = new TeamController(teams, drivers, teamMapper, service);
+                driverMapper, resultMapper, driverService);
     }
 
     @Test
@@ -107,7 +103,7 @@ class TeamInfoBatchQueriesTest {
 
     @ParameterizedTest
     @ValueSource(ints = { 0, 1, 2, 3 })
-    void controllerJsonMatchesOldSingletonPathForEverySeason(int season) {
+    void serviceJsonMatchesOldSingletonPathForEverySeason(int season) {
         for (int number = 1; number <= 3; number++)
             seedSeason(number, 5);
         em.flush();
@@ -118,24 +114,26 @@ class TeamInfoBatchQueriesTest {
         String expectedJson = json.writeValueAsString(expected);
         em.clear();
 
-        assertThat(json.writeValueAsString(controller.getAllInfoTeam(season))).isEqualTo(expectedJson);
+        List<Team> actualTeams = season == 0 ? teams.findAll() : teams.findBySeason(season);
+        assertThat(json.writeValueAsString(service.sumDuplicates(service.getAllInfoTeams(actualTeams))))
+                .isEqualTo(expectedJson);
     }
 
     @ParameterizedTest
     @ValueSource(ints = { 1, 5 })
-    void controllerExecutesEightSelectsRegardlessOfTeamCount(int teamCount) {
+    void serviceExecutesEightSelectsRegardlessOfTeamCount(int teamCount) {
         seedSeason(1, teamCount);
         em.flush();
         em.clear();
         Statistics statistics = em.getEntityManagerFactory().unwrap(SessionFactory.class).getStatistics();
         statistics.clear();
 
-        List<TeamInfoDTO> response = controller.getAllInfoTeam(1);
+        List<TeamInfoDTO> response = service.sumDuplicates(service.getAllInfoTeams(teams.findBySeason(1)));
         json.writeValueAsString(response);
 
         assertThat(response).hasSize(teamCount);
         assertThat(statistics.getPrepareStatementCount()).isEqualTo(8);
-        System.out.println("allInfoTeam: " + teamCount + " teams, " + statistics.getPrepareStatementCount() + " SELECTs");
+        System.out.println("getAllInfoTeams: " + teamCount + " teams, " + statistics.getPrepareStatementCount() + " SELECTs");
     }
 
     @Test

@@ -29,8 +29,4 @@ public class DriverImpl {
     public List<DriverTeamHistoryDTO> convertDriversToTeamHistoryDTO(List<Driver> drivers) {
         return driverMapper.convertDriversToTeamHistoryDTO(drivers);
     }
-
-    public Driver driverDTOToDriver(DriverDTO driver) {
-        return driverMapper.driverDTOToDriver(driver);
-    }
 }

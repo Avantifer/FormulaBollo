@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import formula.bollo.entity.Result;
-import formula.bollo.model.RecordDTO;
 import jakarta.transaction.Transactional;
 
 @Repository
@@ -38,9 +37,6 @@ public interface ResultRepository extends JpaRepository<Result, Long> {
     @Query("SELECT r FROM Result r WHERE r.driver.id IN :driverIds")
     List<Result> findByDriverIds(List<Long> driverIds);
 
-    @Query("SELECT r FROM Result r WHERE r.driver.team.id IN :teamIds")
-    List<Result> findByTeamIds(List<Long> teamIds);
-
     /** Resultados con carrera y posición ya cargadas: las estadísticas del piloto se calculan en memoria. */
     @Query("SELECT r FROM Result r JOIN FETCH r.race LEFT JOIN FETCH r.position WHERE r.driver.id IN :driverIds")
     List<Result> findWithRaceAndPositionByDriverIds(List<Long> driverIds);
@@ -66,98 +62,4 @@ public interface ResultRepository extends JpaRepository<Result, Long> {
             LIMIT 15
             """)
     List<Result> last5ResultsByTeamIds(List<Long> teamIds);
-
-    @Query("""
-            SELECT new formula.bollo.model.RecordDTO(
-                'Mayor número de poles en una temporada',
-                COUNT(r),
-                r.driver,
-                r.driver.team,
-                r.driver.season
-            )
-            FROM Result r
-            WHERE r.pole = 1
-            GROUP BY r.driver, r.driver.season.id
-            ORDER BY COUNT(r) DESC
-            LIMIT 1
-            """)
-    List<RecordDTO> recordPoleDriver();
-
-    @Query("""
-            SELECT new formula.bollo.model.RecordDTO(
-                'Mayor número de podios en una temporada',
-                COUNT(r),
-                r.driver,
-                r.driver.team,
-                r.driver.season
-            )
-            FROM Result r
-            WHERE r.position.positionNumber IS NOT NULL AND r.position.positionNumber <= 3
-            GROUP BY r.driver, r.driver.season.id
-            ORDER BY COUNT(r) DESC
-            LIMIT 1
-            """)
-    List<RecordDTO> recordPodiumsDriver();
-
-    @Query("""
-            SELECT new formula.bollo.model.RecordDTO(
-                'Mayor número de vueltas rápidas en una temporada',
-                COUNT(r),
-                r.driver,
-                r.driver.team,
-                r.driver.season
-            )
-            FROM Result r
-            WHERE r.fastlap = 1
-            GROUP BY r.driver, r.driver.season.id
-            ORDER BY COUNT(r) DESC
-            LIMIT 1
-            """)
-    List<RecordDTO> recordFastlapDriver();
-
-    @Query("""
-            SELECT new formula.bollo.model.RecordDTO(
-                'Mayor número de victorias en una temporada',
-                COUNT(r),
-                r.driver,
-                r.driver.team,
-                r.driver.season
-            )
-            FROM Result r
-            WHERE  r.position.positionNumber IS NOT NULL AND r.position.positionNumber = 1
-            GROUP BY r.driver, r.driver.season.id
-            ORDER BY COUNT(r) DESC
-            LIMIT 1
-            """)
-    List<RecordDTO> recordVictoriesDriver();
-
-    @Query("""
-            SELECT new formula.bollo.model.RecordDTO(
-                'Mayor porcentaje de victorias en una temporada',
-                ROUND(100.0 * COUNT(CASE WHEN r.position.positionNumber = 1 THEN 1 END) / COUNT(r), 2),
-                r.driver,
-                r.driver.team,
-                r.driver.season
-            )
-            FROM Result r
-            WHERE r.position.positionNumber IS NOT NULL
-            GROUP BY r.driver, r.driver.season
-            ORDER BY ROUND(100.0 * COUNT(CASE WHEN r.position.positionNumber = 1 THEN 1 END) / COUNT(r), 2) DESC
-            """)
-    List<RecordDTO> recordPorcentageVictoriesDriver();
-
-    @Query("""
-            SELECT new formula.bollo.model.RecordDTO(
-                'Mayor número de carreras terminadas en una temporada',
-                COUNT(r),
-                r.driver,
-                r.driver.team,
-                r.driver.season
-            )
-            FROM Result r
-            WHERE r.position.positionNumber IS NOT NULL
-            GROUP BY r.driver, r.driver.season
-            ORDER BY COUNT(r) DESC
-            """)
-    List<RecordDTO> recordRacesFinishedDriver();
 }

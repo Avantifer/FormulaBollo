@@ -48,7 +48,7 @@ import formula.bollo.impl.FantasyPriceImpl;
 import formula.bollo.impl.ResultImpl;
 import formula.bollo.mapper.DriverMapper;
 import formula.bollo.model.DriverDTO;
-import formula.bollo.model.FantasyPointsAccountDTO;
+import formula.bollo.model.FantasyClasificationDTO;
 import formula.bollo.repository.DriverRepository;
 import formula.bollo.repository.FantasyPointsDriverRepository;
 import formula.bollo.repository.FantasyPointsTeamRepository;
@@ -149,25 +149,25 @@ class ControllerTransactionsTest {
     }
 
     @Test
-    void fantasySeasonCacheStillCachesWithTheTransactionAdvisorEnabled() {
+    void fantasyClassificationCacheStillCachesWithTheTransactionAdvisorEnabled() {
         var advice = Arrays.stream(((Advised) fantasyController).getAdvisors())
                 .map(advisor -> advisor.getAdvice()).toList();
         assertThat(advice).anyMatch(CacheInterceptor.class::isInstance)
                 .anyMatch(TransactionInterceptor.class::isInstance);
         System.out.println("FantasyController advisor order: "
                 + advice.stream().map(item -> item.getClass().getSimpleName()).toList());
-        List<FantasyPointsAccountDTO> expected = List.of(new FantasyPointsAccountDTO());
-        when(fantasyService.sumAllFantasyPoints(2)).thenAnswer(invocation -> {
+        FantasyClasificationDTO expected = new FantasyClasificationDTO();
+        when(fantasyService.getFantasyClasification(2)).thenAnswer(invocation -> {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isTrue();
             assertThat(TransactionSynchronizationManager.isCurrentTransactionReadOnly()).isTrue();
             return expected;
         });
 
-        assertThat(fantasyController.getFantasyPointsSeason(2)).isSameAs(expected);
-        assertThat(fantasyController.getFantasyPointsSeason(2)).isSameAs(expected);
+        assertThat(fantasyController.getFantasyClasification(2)).isSameAs(expected);
+        assertThat(fantasyController.getFantasyClasification(2)).isSameAs(expected);
 
-        verify(fantasyService, times(1)).sumAllFantasyPoints(2);
-        assertThat(cacheManager.getCache(Constants.CACHE_STATS).get("fantasyPointsSeason:2").get())
+        verify(fantasyService, times(1)).getFantasyClasification(2);
+        assertThat(cacheManager.getCache(Constants.CACHE_STATS).get("fantasyClasification:2").get())
                 .isSameAs(expected);
         assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
     }

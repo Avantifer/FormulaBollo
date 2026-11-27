@@ -67,8 +67,6 @@ class TeamServiceTest {
     @Mock
     private ResultImpl resultImpl;
     @Mock
-    private RaceImpl raceImpl;
-    @Mock
     private DriverService driverService;
 
     @Test
@@ -162,12 +160,11 @@ class TeamServiceTest {
             TeamImpl teamMapper = new TeamImpl(Mappers.getMapper(TeamMapper.class));
             DriverImpl driverMapper = new DriverImpl(Mappers.getMapper(DriverMapper.class));
             ResultImpl resultMapper = new ResultImpl(Mappers.getMapper(ResultMapper.class));
-            RaceImpl raceMapper = new RaceImpl(Mappers.getMapper(RaceMapper.class));
             DriverService driverCalculator = new DriverService(resultsRepository, championships, penalties,
-                    sprintsRepository, driverMapper, teamMapper, resultMapper, null, raceMapper,
+                    sprintsRepository, driverMapper, resultMapper,
                     new ResultService(resultsRepository, sprintsRepository, resultMapper, driverMapper));
             service = new TeamService(resultsRepository, sprintsRepository, driversRepository, constructors,
-                    teamsRepository, teamMapper, driverMapper, resultMapper, raceMapper, driverCalculator);
+                    teamsRepository, teamMapper, driverMapper, resultMapper, driverCalculator);
             for (int seasonNumber = 1; seasonNumber <= 3; seasonNumber++) {
                 Season season = new Season((long) seasonNumber, "Season " + seasonNumber, seasonNumber, 2026);
                 for (int kind = 0; kind < 5; kind++) {
@@ -375,24 +372,5 @@ class TeamServiceTest {
     private static ResultTeamDTO raceGroup(long id, int year, int month) {
         return new ResultTeamDTO(new RaceDTO(id, "GP", "", "", LocalDateTime.of(year, month, 1, 12, 0), null, 1),
                 List.of(), 0, 0, 0);
-    }
-
-    @Test
-    void getAllPointsEvolutionTeam_ShouldReturnEvolution() {
-        Season season = new Season(1L, "Temp", 1, 2024);
-        Team team = new Team(1L, "Ferrari", "", "", season);
-        Race race = new Race(1L, "GP", "", "", LocalDateTime.now(), season, 0);
-        Driver driver = new Driver(1L, "Carlos", 55, "", season, team);
-        Result result = new Result(1L, race, driver, new Position(1L, 1, 25), 1, 0);
-        Sprint sprint = new Sprint(1L, race, driver, new SprintPosition(1L, 1, 8));
-
-        when(resultRepository.findByTeamIds(anyList())).thenReturn(List.of(result));
-        when(sprintRepository.findByTeamIds(anyList())).thenReturn(List.of(sprint));
-        when(raceImpl.raceToRaceDTO(race)).thenReturn(new RaceDTO(1L, "GP", "", "", race.getDateStart(), null, 0));
-        when(teamImpl.teamToTeamDTO(team)).thenReturn(new TeamDTO(1L, "Ferrari", "", "", null));
-
-        List<TeamPointsEvolutionDTO> evolutions = teamService.getAllPointsEvolutionTeam(Set.of(1));
-
-        assertEquals(1, evolutions.size());
     }
 }

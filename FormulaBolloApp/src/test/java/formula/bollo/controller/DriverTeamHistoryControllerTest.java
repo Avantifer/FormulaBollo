@@ -24,7 +24,7 @@ class DriverTeamHistoryControllerTest {
     final DriverRepository repository = mock(DriverRepository.class);
     final DriverImpl mapper = new DriverImpl(Mappers.getMapper(DriverMapper.class));
     final ResultRepository results = mock(ResultRepository.class);
-    final DriverService service = new DriverService(results, null, null, null, mapper, null, null, null, null, null);
+    final DriverService service = new DriverService(results, null, null, null, mapper, null, null);
     final DriverController controller = new DriverController(repository, mapper, service);
 
     @Test

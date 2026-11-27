@@ -32,7 +32,6 @@ import formula.bollo.impl.DriverImpl;
 import formula.bollo.impl.ResultImpl;
 import formula.bollo.impl.AccountImpl;
 import formula.bollo.impl.TeamImpl;
-import formula.bollo.impl.RaceImpl;
 import formula.bollo.impl.FantasyElectionImpl;
 import formula.bollo.impl.FantasyPointsImpl;
 import formula.bollo.impl.FantasyPriceImpl;
@@ -116,7 +115,7 @@ class StatsCacheTest {
             FantasyPriceImpl priceMapper = mock(FantasyPriceImpl.class);
             FantasyService service = new FantasyService(mock(AccountRepository.class), races, mock(ResultRepository.class),
                     mock(FantasyElectionRepository.class), driverPrices, teamPrices, driverPoints, teamPoints,
-                    mock(FantasyElectionImpl.class), priceMapper, mock(AccountImpl.class), mock(RaceImpl.class),
+                    mock(FantasyElectionImpl.class), priceMapper, mock(AccountImpl.class),
                     mock(DriverImpl.class), mock(TeamImpl.class), Clock.systemUTC());
             return new FantasyController(driverPoints, driverPrices, teamPrices, teamPoints, priceMapper,
                     mock(FantasyPointsImpl.class), service);

@@ -4,7 +4,6 @@ import org.springframework.cache.annotation.Cacheable;
 
 import java.security.Principal;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
@@ -18,13 +17,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import formula.bollo.entity.FantasyPointsDriver;
-import formula.bollo.entity.FantasyPointsTeam;
 import formula.bollo.impl.FantasyPointsImpl;
 import formula.bollo.impl.FantasyPriceImpl;
 import formula.bollo.model.FantasyElectionDTO;
 import formula.bollo.model.FantasyClasificationDTO;
-import formula.bollo.model.FantasyPointsAccountDTO;
 import formula.bollo.model.FantasyPointsDriverDTO;
 import formula.bollo.model.FantasyPointsTeamDTO;
 import formula.bollo.model.FantasyPriceDriverDTO;
@@ -102,31 +98,6 @@ public class FantasyController {
         return this.fantasyService.saveFantasyElection(fantasyElectionDTO, principal.getName());
     }
 
-    @Operation(summary = "Get fantasy points of a driver", tags = Constants.TAG_FANTASY)
-    @Transactional(readOnly = true)
-    @GetMapping(path = "/driverPointsSpecificRace", produces = MediaType.APPLICATION_JSON_VALUE)
-    public FantasyPointsDriverDTO getDriverPointsSpecificRace(@RequestParam Integer driverId,
-            @RequestParam Integer raceId) {
-        log.info("Coger los puntos del fantasy del piloto " + driverId + " y la carrera " + raceId);
-        Optional<FantasyPointsDriver> fantasyPointsDriver = this.fantasyPointsDriverRepository
-                .findByDriverIdAndRaceId(driverId, raceId);
-        return fantasyPointsDriver.isPresent()
-                ? this.fantasyPointsImpl.fantasyPointsDriverToFantasyPointsDriverDTO(fantasyPointsDriver.get())
-                : null;
-    }
-
-    @Operation(summary = "Get fantasy points of a team", tags = Constants.TAG_FANTASY)
-    @Transactional(readOnly = true)
-    @GetMapping(path = "/teamsPointsSpecificRace", produces = MediaType.APPLICATION_JSON_VALUE)
-    public FantasyPointsTeamDTO teamsPointsSpecificRace(@RequestParam Integer teamId, @RequestParam Integer raceId) {
-        log.info("Coger los puntos del fantasy del equipo " + teamId + " y la carrera " + raceId);
-        Optional<FantasyPointsTeam> fantasyPointsTeam = this.fantasyPointsTeamRepository.findByTeamIdAndRaceId(teamId,
-                raceId);
-        return fantasyPointsTeam.isPresent()
-                ? this.fantasyPointsImpl.fantasyPointsTeamToFantasyPointsTeamDTO(fantasyPointsTeam.get())
-                : null;
-    }
-
     @Operation(summary = "Get all drivers' prices", tags = Constants.TAG_FANTASY)
     @Transactional(readOnly = true)
     @GetMapping(path = "/allDriverPrices", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -155,15 +126,6 @@ public class FantasyController {
         return this.fantasyService.getFantasyElection(raceId, principal.getName());
     }
 
-    @Operation(summary = "Get all fantasy points of season")
-    @Transactional(readOnly = true)
-    @GetMapping(path = "/getFantasyPointsSeason", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Cacheable(cacheNames = Constants.CACHE_STATS, sync = true, key = "'fantasyPointsSeason:' + #numberSeason")
-    public List<FantasyPointsAccountDTO> getFantasyPointsSeason(@RequestParam Integer numberSeason) {
-        log.info("Coger los puntos del fantasy de la temporada " + numberSeason);
-        return this.fantasyService.sumAllFantasyPoints(numberSeason);
-    }
-
     @Operation(summary = Constants.FANTASY_CLASIFICATION_SUMMARY, tags = Constants.TAG_FANTASY)
     @Transactional(readOnly = true)
     @GetMapping(path = "/clasification", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -171,14 +133,6 @@ public class FantasyController {
     public FantasyClasificationDTO getFantasyClasification(@RequestParam Integer numberSeason) {
         log.info("Coger la clasificacion completa del fantasy de la temporada " + numberSeason);
         return this.fantasyService.getFantasyClasification(numberSeason);
-    }
-
-    @Operation(summary = "Get all fantasy points of reace", tags = Constants.TAG_FANTASY)
-    @Transactional(readOnly = true)
-    @GetMapping(path = "/getFantasyPointsRace", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<FantasyPointsAccountDTO> getFantasyPointsRace(@RequestParam Integer raceId) {
-        log.info("Coger los puntos del fantasy de la carrera " + raceId);
-        return this.fantasyService.getFantasyPointsRace(raceId);
     }
 
     @Operation(summary = "Get driver's prices", tags = Constants.TAG_FANTASY)

@@ -39,10 +39,4 @@ export class TeamApiService {
     return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<TeamInfo>(`${environment.apiUrl}${this.endpoint}/infoTeamByName`, { params }));
   }
 
-  getAllInfoTeam(seasonNumber?: number): Observable<TeamInfo[]> {
-    const cacheKey: string = `allInfoTeam-${seasonNumber}`;
-
-    const params = this.baseApiService.createParams({ season: seasonNumber });
-    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<TeamInfo[]>(`${environment.apiUrl}${this.endpoint}/allInfoTeam`, { params }));
-  }
 }

@@ -8,7 +8,6 @@ import java.time.Clock;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -40,8 +39,6 @@ import formula.bollo.impl.DriverImpl;
 import formula.bollo.impl.TeamImpl;
 import formula.bollo.impl.FantasyElectionImpl;
 import formula.bollo.impl.FantasyPriceImpl;
-import formula.bollo.impl.RaceImpl;
-import formula.bollo.model.AccountDTO;
 import formula.bollo.model.DriverDTO;
 import formula.bollo.model.FantasyElectionDTO;
 import formula.bollo.model.FantasyClasificationDTO;
@@ -50,10 +47,8 @@ import formula.bollo.model.FantasyClasificationEntryDTO;
 import formula.bollo.model.FantasyClasificationDriverPickDTO;
 import formula.bollo.model.FantasyClasificationTeamPickDTO;
 import formula.bollo.model.FantasyInfoDTO;
-import formula.bollo.model.FantasyPointsAccountDTO;
 import formula.bollo.model.FantasyPriceDriverDTO;
 import formula.bollo.model.FantasyPriceTeamDTO;
-import formula.bollo.model.RaceDTO;
 import formula.bollo.model.TeamDTO;
 import formula.bollo.repository.FantasyElectionRepository;
 import formula.bollo.repository.AccountRepository;
@@ -87,7 +82,6 @@ public class FantasyService {
     private FantasyElectionImpl fantasyElectionImpl;
     private FantasyPriceImpl fantasyPriceImpl;
     private AccountImpl accountImpl;
-    private RaceImpl raceImpl;
     private final DriverImpl driverImpl;
     private final TeamImpl teamImpl;
 
@@ -103,7 +97,6 @@ public class FantasyService {
             FantasyElectionImpl fantasyElectionImpl,
             FantasyPriceImpl fantasyPriceImpl,
             AccountImpl accountImpl,
-            RaceImpl raceImpl,
             DriverImpl driverImpl,
             TeamImpl teamImpl,
             Clock clock) {
@@ -118,7 +111,6 @@ public class FantasyService {
         this.fantasyElectionImpl = fantasyElectionImpl;
         this.fantasyPriceImpl = fantasyPriceImpl;
         this.accountImpl = accountImpl;
-        this.raceImpl = raceImpl;
         this.driverImpl = driverImpl;
         this.teamImpl = teamImpl;
         this.clock = clock;
@@ -383,7 +375,7 @@ public class FantasyService {
      * @param resultsSize The total number of results in the race.
      * @return The calculated points for the fantasy race.
      */
-    public int calculatePoints(Result result, int resultsSize) {
+    private int calculatePoints(Result result, int resultsSize) {
         return calculatePoints(result, resultsSize, pricesByDriver(result.getRace()));
     }
 
@@ -519,7 +511,7 @@ public class FantasyService {
      * @return The calculated new price for the driver. If there is an issue with
      *         calculation, returns BigDecimal.ZERO.
      */
-    public int calculateDriverPrice(Result result) {
+    private int calculateDriverPrice(Result result) {
         return calculateDriverPrice(result, pricesByDriver(result.getRace()), pointsByDriver(result.getRace()));
     }
 
@@ -785,112 +777,6 @@ public class FantasyService {
     }
 
     private record FantasyPickKey(Long raceId, Long pickId) { }
-
-    /**
-     * Exposes race rankings and elections only after the race has finished.
-     */
-    public List<FantasyPointsAccountDTO> getFantasyPointsRace(int raceId) {
-        Optional<Race> race = this.raceRepository.findById((long) raceId);
-        if (race.isEmpty() || race.get().getFinished() != 1) {
-            return Collections.emptyList();
-        }
-        return this.getFantasyPoints(raceId);
-    }
-
-    /**
-     * Calculates fantasy points for users based on their fantasy elections in the
-     * specified race.
-     *
-     * @param raceId The ID of the race for which fantasy points are to be
-     *               retrieved.
-     * @return List of FantasyPointsAccountDTO objects containing user information
-     *         and total fantasy points.
-     */
-    public List<FantasyPointsAccountDTO> getFantasyPoints(int raceId) {
-        List<FantasyPointsAccountDTO> fantasyPointsAccountDTOs = new ArrayList<>();
-        List<FantasyElection> fantasyElections = this.fantasyElectionRepository.findByRaceId(raceId);
-        List<FantasyPointsDriver> fantasyPointsDrivers = this.fantasyPointsDriverRepository.findByRaceId(raceId);
-        List<FantasyPointsTeam> fantasyPointsTeams = this.fantasyPointsTeamRepository.findByRaceId(raceId);
-
-        for (FantasyElection fantasyElection : fantasyElections) {
-            FantasyPointsAccountDTO fantasyPointsAccountDTO = new FantasyPointsAccountDTO();
-            AccountDTO accountDTO = this.accountImpl.accountToAccountDTO(fantasyElection.getAccount());
-            FantasyElectionDTO fantasyElectionDTO = this.fantasyElectionImpl
-                    .fantasyElectionToFantasyElectionDTO(fantasyElection);
-            int points = 0;
-
-            List<FantasyPointsDriver> driversFound = fantasyPointsDrivers.stream()
-                    .filter((FantasyPointsDriver driver) -> driver.getDriver().getId()
-                            .equals(fantasyElection.getDriverOne().getId()) ||
-                            driver.getDriver().getId().equals(fantasyElection.getDriverTwo().getId()) ||
-                            driver.getDriver().getId().equals(fantasyElection.getDriverThree().getId()))
-                    .toList();
-
-            List<FantasyPointsTeam> teamsFound = fantasyPointsTeams.stream()
-                    .filter((FantasyPointsTeam team) -> team.getTeam().getId()
-                            .equals(fantasyElection.getTeamOne().getId()) ||
-                            team.getTeam().getId().equals(fantasyElection.getTeamTwo().getId()))
-                    .toList();
-
-            for (FantasyPointsDriver driver : driversFound) {
-                points += driver.getPoints();
-            }
-
-            for (FantasyPointsTeam team : teamsFound) {
-                points += team.getPoints();
-            }
-
-            fantasyPointsAccountDTO.setAccount(accountDTO);
-            fantasyPointsAccountDTO.setFantasyElection(fantasyElectionDTO);
-            fantasyPointsAccountDTO.setTotalPoints(points);
-            fantasyPointsAccountDTOs.add(fantasyPointsAccountDTO);
-        }
-
-        fantasyPointsAccountDTOs = fantasyPointsAccountDTOs.stream()
-                .sorted(Comparator.comparingInt(FantasyPointsAccountDTO::getTotalPoints).reversed())
-                .collect(Collectors.toList());
-
-        return fantasyPointsAccountDTOs;
-    }
-
-    /**
-     * Retrieves the sum of fantasy points for all users across all previous races
-     * in the current season.
-     *
-     * @return List of FantasyPointsAccountDTO objects with total points aggregated
-     *         for each user.
-     */
-    public List<FantasyPointsAccountDTO> sumAllFantasyPoints(int seasonNumber) {
-        List<FantasyPointsAccountDTO> fantasyPointsAccountDTOs = new ArrayList<>();
-        List<RaceDTO> raceDTOsNotFinishedAndNextOne = this.raceImpl
-                .convertRacesToRacesDTO(this.raceRepository.findAllFinished(seasonNumber));
-
-        for (RaceDTO race : raceDTOsNotFinishedAndNextOne) {
-            fantasyPointsAccountDTOs.addAll(this.getFantasyPoints(Integer.parseInt(race.getId().toString())));
-        }
-
-        Map<Long, FantasyPointsAccountDTO> accountPointsMap = new HashMap<>();
-
-        for (FantasyPointsAccountDTO fantasyPointsAccountDTO : fantasyPointsAccountDTOs) {
-            Long userId = fantasyPointsAccountDTO.getAccount().getId();
-
-            if (accountPointsMap.containsKey(userId)) {
-                FantasyPointsAccountDTO existingUserDTO = accountPointsMap.get(userId);
-                existingUserDTO
-                        .setTotalPoints(existingUserDTO.getTotalPoints() + fantasyPointsAccountDTO.getTotalPoints());
-                existingUserDTO.setFantasyElection(fantasyPointsAccountDTO.getFantasyElection());
-            } else {
-                accountPointsMap.put(userId, fantasyPointsAccountDTO);
-            }
-        }
-
-        fantasyPointsAccountDTOs = new ArrayList<>(accountPointsMap.values())
-                .stream()
-                .sorted(Comparator.comparingInt(FantasyPointsAccountDTO::getTotalPoints).reversed())
-                .collect(Collectors.toList());
-
-        return fantasyPointsAccountDTOs;
-    }
 
     /**
      * Get the Fantasy Election of a user and race.

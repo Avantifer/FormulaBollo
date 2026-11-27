@@ -19,7 +19,6 @@ import formula.bollo.entity.*;
 import formula.bollo.impl.RaceImpl;
 import formula.bollo.mapper.RaceMapper;
 import formula.bollo.model.RaceDTO;
-import formula.bollo.model.RecordDTO;
 import jakarta.persistence.EntityManager;
 
 @DataJpaTest(properties = {
@@ -135,13 +134,11 @@ class RepositoryQueriesTest {
     @Test
     void resultFiltersFetchesAndDeletionUseThePersistedRows() {
         List<Long> driverIds = List.of(driver.getId());
-        List<Long> teamIds = List.of(team.getId());
         assertThat(results.findBySeason(2)).containsExactlyInAnyOrder(latestResult, earlierResult, retiredResult);
         assertThat(results.findBySeasonAndDrivers(2, driverIds)).hasSize(3);
         assertThat(results.findBySeasonAndDrivers(1, driverIds)).isEmpty();
         assertThat(results.findByRaceId(id(latest.getId()))).containsExactly(latestResult);
         assertThat(results.findByDriverIds(driverIds)).hasSize(3);
-        assertThat(results.findByTeamIds(teamIds)).hasSize(3);
         em.flush();
         em.clear();
         assertThat(results.findWithRaceAndPositionByDriverIds(driverIds)).hasSize(3).allSatisfy(result -> {
@@ -160,22 +157,6 @@ class RepositoryQueriesTest {
     }
 
     @Test
-    void resultRecordQueriesReturnRealCountsAndPercentages() {
-        assertRecord(results.recordPoleDriver(), 1);
-        assertRecord(results.recordPodiumsDriver(), 2);
-        assertRecord(results.recordFastlapDriver(), 1);
-        assertRecord(results.recordVictoriesDriver(), 1);
-        assertRecord(results.recordPorcentageVictoriesDriver(), 50);
-        assertRecord(results.recordRacesFinishedDriver(), 2);
-    }
-
-    private void assertRecord(List<RecordDTO> records, double value) {
-        assertThat(records).isNotEmpty();
-        assertThat(records.getFirst().getDriver().getId()).isEqualTo(driver.getId());
-        assertThat(records.getFirst().getValue().doubleValue()).isEqualTo(value);
-    }
-
-    @Test
     void penaltyQueriesFilterAndCountTheMatchingDrivers() {
         assertThat(penalties.findByDriverIds(List.of(driver.getId()))).isEqualTo(1);
         assertThat(penalties.countByDriver(List.of(driver.getId()))).singleElement().satisfies(row -> {
@@ -188,8 +169,6 @@ class RepositoryQueriesTest {
                 .containsExactly(penalty);
         assertThat(penalties.findByDriverAndRaceAndSeverity(id(driver.getId()), id(latest.getId()), id(severity.getId()), 1))
                 .isEmpty();
-        assertThat(penalties.recordPenaltiesDriver()).hasSize(2)
-                .allSatisfy(record -> assertThat(record.getValue().longValue()).isEqualTo(1));
         assertThat(penalties.findByDriverAndRaceAndSeverity(id(driver.getId()), id(latest.getId()), id(severity.getId())))
                 .containsExactly(penalty);
     }
@@ -198,7 +177,6 @@ class RepositoryQueriesTest {
     void fantasyElectionQueriesSelectOnlyTheRequestedAccountAndRace() {
         assertThat(elections.findByUserIdAndRaceId(id(account.getId()), id(latest.getId()))).contains(election);
         assertThat(elections.findByUserIdAndRaceId(id(account.getId()), id(next.getId()))).isEmpty();
-        assertThat(elections.findByRaceId(id(latest.getId()))).containsExactly(election);
     }
 
     @Test
@@ -215,7 +193,6 @@ class RepositoryQueriesTest {
                 .hasSize(2);
         assertThat(driverPoints.findByDriverIdsAndRaceIds(List.of(driver.getId()), List.of(earlier.getId())))
                 .extracting(FantasyPointsDriver::getPoints).containsExactly(12); // solo las carreras pedidas
-        assertThat(driverPoints.findByDriverIdAndRaceId(id(driver.getId()), id(latest.getId()))).contains(latestDriver);
         assertThat(teamPoints.findByRaceId(id(latest.getId()))).containsExactly(latestTeam)
                 .extracting(FantasyPointsTeam::getPoints).containsExactly(45);
         assertThat(teamPoints.findByRaceId(id(next.getId()))).isEmpty();
@@ -224,7 +201,6 @@ class RepositoryQueriesTest {
                 .hasSize(2);
         assertThat(teamPoints.findByTeamIdsAndRaceIds(List.of(team.getId()), List.of(earlier.getId())))
                 .extracting(FantasyPointsTeam::getPoints).containsExactly(20); // solo las carreras pedidas
-        assertThat(teamPoints.findByTeamIdAndRaceId(id(team.getId()), id(latest.getId()))).contains(latestTeam);
     }
 
     @Test
@@ -236,7 +212,6 @@ class RepositoryQueriesTest {
         assertThat(driverPrices.findByRaceId(id(latest.getId()))).containsExactly(latestDriver)
                 .extracting(FantasyPriceDriver::getPrice).containsExactly(150);
         assertThat(driverPrices.findByRaceId(id(next.getId()))).isEmpty();
-        assertThat(driverPrices.findTwoLastPrices(id(driver.getId()))).containsExactly(earlierDriver, latestDriver);
         assertThat(driverPrices.findByDriverId(id(driver.getId()))).containsExactlyInAnyOrder(latestDriver, earlierDriver);
         assertThat(teamPrices.findByRaceId(id(latest.getId()))).containsExactly(latestTeam)
                 .extracting(FantasyPriceTeam::getPrice).containsExactly(250);

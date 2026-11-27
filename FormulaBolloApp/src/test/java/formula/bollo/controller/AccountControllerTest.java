@@ -36,7 +36,7 @@ class AccountControllerTest {
     @Test
     void changePasswordWithoutPasswordIsRejected() {
         AccountService service = new AccountService(accountRepository, accountImpl, null, null);
-        AccountController controller = new AccountController(accountRepository, accountImpl, service);
+        AccountController controller = new AccountController(service);
         ResponseEntity<String> response = controller.changePassword(new AccountController.PasswordChangeRequest(null), () -> "ana");
 
         assertEquals(400, response.getStatusCode().value());
@@ -47,7 +47,7 @@ class AccountControllerTest {
     @Test
     void changePasswordWithBlankPasswordIsRejected() {
         AccountService service = new AccountService(accountRepository, accountImpl, null, null);
-        AccountController controller = new AccountController(accountRepository, accountImpl, service);
+        AccountController controller = new AccountController(service);
         ResponseEntity<String> response = controller.changePassword(new AccountController.PasswordChangeRequest("        "), () -> "ana");
 
         assertEquals(400, response.getStatusCode().value());

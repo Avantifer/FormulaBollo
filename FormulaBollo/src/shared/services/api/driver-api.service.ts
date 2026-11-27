@@ -45,11 +45,4 @@ export class DriverApiService {
     return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<Driver[]>(`${environment.apiUrl}${this.endpoint}/byTeamName`, { params }));
   }
 
-  getAllInfoDrivers(seasonNumber?: number): Observable<DriverInfo[]> {
-    const cacheKey: string = `allInfoDrivers-${seasonNumber}`;
-
-    const params = this.baseApiService.createParams({ season: seasonNumber });
-    return this.cacheService.getOrLoad(cacheKey, () => this.httpClient.get<DriverInfo[]>(`${environment.apiUrl}${this.endpoint}/allInfoDriver`, { params }));
-  }
-
 }

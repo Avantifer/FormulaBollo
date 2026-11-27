@@ -24,8 +24,4 @@ public class TeamImpl {
     public TeamDTO teamToTeamDTO(Team team) {
         return this.teamMapper.teamToTeamDTO(team);
     }
-
-    public Team teamDTOToTeam(TeamDTO team) {
-        return this.teamMapper.teamDTOToTeam(team);
-    }
 }
