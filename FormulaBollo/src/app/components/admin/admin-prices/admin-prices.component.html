@@ -1,0 +1,35 @@
+<section class="bg-panel border border-rule rounded-panel p-4 min-w-0" [attr.aria-busy]="loading() || saving()">
+  <h2 class="font-display uppercase tracking-wide text-ink text-display-md mb-6">Precios Fantasy</h2>
+  <p id="prices-race-label" class="text-sm font-medium text-ink-soft mb-2">Circuito</p>
+  <select-races [season]="actualSeason" [refreshOnPublish]="false" labelId="prices-race-label"
+    (raceChanged)="onRaceChange($event)" />
+  <p class="text-sm text-ink-soft my-4">Precios en unidades monetarias, de 1.000.000 a 30.000.000. Las sugerencias se guardan al pulsar Guardar precios.</p>
+  @if (loading()) { <p role="status" class="text-ink-soft">Cargando precios…</p> }
+  @for (group of groups(); track group.key) {
+    <h3 class="font-display uppercase text-ink text-xl mt-6 mb-2">{{ group.label }}</h3>
+    @for (row of group.rows; track row.id) {
+      <div class="price-row border-t border-rule py-3">
+        <div class="price-label">
+          <label class="font-medium text-ink" [for]="group.key + '-' + row.id">{{ row.name }}</label>
+          <span class="text-sm text-ink-soft" [id]="group.key + '-hint-' + row.id">
+            {{ readable(row.price) }}
+            @if (row.storedPrice === null && row.suggestedPrice !== null) { · Sugerido, sin guardar }
+          </span>
+        </div>
+        <input pInputText type="number" inputmode="numeric" min="1000000" max="30000000" step="1"
+          [id]="group.key + '-' + row.id" [ngModel]="row.price" (ngModelChange)="edit(row, $event)"
+          [disabled]="saving()"
+          (blur)="touch(row)" [attr.aria-invalid]="row.touched && !valid(row)"
+          [attr.aria-describedby]="group.key + '-hint-' + row.id + ' ' + group.key + '-error-' + row.id"
+          [required]="row.touched" />
+        <div [id]="group.key + '-error-' + row.id" class="price-error text-sm text-accent-text" aria-live="polite">
+          @if (row.touched && !valid(row)) { Precio requerido: un entero entre 1.000.000 y 30.000.000. }
+        </div>
+      </div>
+    }
+  }
+  <p class="my-4 text-sm" [class.text-accent-text]="failed()" [class.text-ink]="!failed()"
+    [attr.role]="failed() ? 'alert' : 'status'">{{ feedback() }}</p>
+  <p-button label="Guardar precios" icon="pi pi-save" [loading]="saving()"
+    [disabled]="loading() || saving() || !groups().length" (onClick)="savePrices()" />
+</section>

@@ -219,7 +219,8 @@ class FantasyServiceTest {
 
         ResponseEntity<String> response = fantasyService.saveDriverTeamPrices(0);
 
-        assertEquals("Hubo un problema con los precios. Contacte con el administrador", response.getBody());
+        assertEquals(422, response.getStatusCode().value());
+        org.assertj.core.api.Assertions.assertThat(response.getBody()).contains("resultados", "puntos", "Francia");
     }
 
     @Test
@@ -510,9 +511,10 @@ class FantasyServiceTest {
         Race race = new Race(1L, "Francia", "", "", LocalDateTime.now(), season, 0);
 
         Result result = new Result(1L, race, driver, position, 1, 1);
-        List<FantasyPointsDriver> fantasyPointsDrivers = fantasyService.createDriversPoints(Arrays.asList(result));
-
-        assertEquals(0, fantasyPointsDrivers.size());
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> fantasyService.createDriversPoints(List.of(result)));
+        assertEquals(422, error.getStatusCode().value());
+        org.assertj.core.api.Assertions.assertThat(error.getReason()).contains("Avantifer", "Francia");
     }
 
     @Test
@@ -558,7 +560,7 @@ class FantasyServiceTest {
     void calculatePointsUsesRealPriceBonusBoundaries(int price, int expectedPoints) {
         Driver driver = new Driver();
         driver.setId(1L);
-        Race race = new Race(3L, "GP", "", "", LocalDateTime.of(2026, 6, 2, 18, 0), null, 0);
+        Race race = new Race(3L, "GP", "", "", LocalDateTime.of(2026, 6, 2, 18, 0), new Season(3L, "Current", 3, 2026), 0);
         Result result = new Result(1L, race, driver, new Position(1L, 1, 25), 0, 0);
         when(fantasyPriceDriverRepository.findByRaceId(3))
                 .thenReturn(List.of(new FantasyPriceDriver(1L, driver, race, price)));
@@ -576,9 +578,10 @@ class FantasyServiceTest {
         Race race = new Race(1L, "Francia", "", "", LocalDateTime.now(), season, 0);
 
         Result result = new Result(1L, race, driver, position, 1, 1);
-        List<FantasyPriceDriver> fantasyPointsDrivers = fantasyService.createDriversPrices(Arrays.asList(result), race);
-
-        assertEquals(0, fantasyPointsDrivers.size());
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> fantasyService.createDriversPrices(List.of(result), race));
+        assertEquals(422, error.getStatusCode().value());
+        org.assertj.core.api.Assertions.assertThat(error.getReason()).contains("Avantifer", "Francia");
     }
 
     @Test
@@ -594,7 +597,10 @@ class FantasyServiceTest {
 
         when(fantasyPriceDriverRepository.findByRaceId(anyInt())).thenReturn(Arrays.asList(fantasyPriceDriver));
 
-        assertEquals(List.of(), fantasyService.createDriversPrices(List.of(result), race));
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> fantasyService.createDriversPrices(List.of(result), race));
+        assertEquals(422, error.getStatusCode().value());
+        org.assertj.core.api.Assertions.assertThat(error.getReason()).contains("puntos", "Francia");
     }
 
     @ParameterizedTest

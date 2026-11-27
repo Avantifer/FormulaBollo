@@ -67,6 +67,7 @@ public class SecurityConfigurer {
                         .requestMatchers(HttpMethod.POST, "/account/changePassword", "/fantasy/saveFantasyElection")
                         .authenticated()
                         .requestMatchers(HttpMethod.GET, "/fantasy/fantasyElection").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/fantasy/adminPrices").hasRole("ADMIN")
                         // Solo administradores: puntos y precios de Fantasy, versión de la caché, y todo PUT/DELETE.
                         .requestMatchers(HttpMethod.POST, "/fantasy/saveDriverTeamPoints",
                                 "/fantasy/saveDriverTeamPrices", "/cache/update")

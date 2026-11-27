@@ -5,6 +5,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.cache.annotation.CacheEvict;
 
 import java.time.Clock;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -15,6 +16,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+import java.util.function.Function;
+import java.util.HashSet;
+import java.util.Set;
+import formula.bollo.model.AdminPricesDTO;
 
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -127,16 +132,129 @@ public class FantasyService {
         }
     }
 
-    private Map<Long, FantasyPriceDriver> pricesByDriver(Race race) {
+    private Map<Long, FantasyPriceDriver> pricesByDriver(Race race, List<Driver> drivers) {
+        return pricesByDriver(race, drivers, fantasyPriceDriverRepository.findByRaceId(race.getId().intValue()));
+    }
+
+    private Map<Long, FantasyPriceDriver> pricesByDriver(Race race, List<Driver> drivers, List<FantasyPriceDriver> stored) {
         Map<Long, FantasyPriceDriver> prices = new HashMap<>();
-        for (FantasyPriceDriver price : fantasyPriceDriverRepository.findByRaceId(race.getId().intValue())) {
+        for (FantasyPriceDriver price : stored) {
             if (price == null || price.getDriver() == null || price.getDriver().getId() == null
                     || price.getRace() == null || price.getRace().getId() == null) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Precios incompletos para Fantasy");
             }
             prices.putIfAbsent(price.getDriver().getId(), price);
         }
+        Map<String, Integer> historical = effectiveHistory(race,
+                fantasyPriceDriverRepository.findHistory(race.getSeason().getNumber()),
+                FantasyPriceDriver::getRace, p -> p.getDriver().getId(),
+                p -> p.getDriver().getName(), FantasyPriceDriver::getPrice);
+        for (Driver driver : drivers) {
+            Integer price = historical.get("id:" + driver.getId());
+            if (price == null) price = historical.get("name:" + driver.getName());
+            if (price != null) prices.putIfAbsent(driver.getId(), new FantasyPriceDriver(null, driver, race, price));
+        }
         return prices;
+    }
+
+    /** Resolve once in calendar order, keeping same-season identity ahead of earlier-season names. */
+    private static <T> Map<String, Integer> effectiveHistory(Race race, List<T> history,
+            Function<T, Race> event, Function<T, Long> id, Function<T, String> name,
+            Function<T, Integer> price) {
+        int season = race.getSeason().getNumber();
+        Map<String, Integer> effective = new HashMap<>();
+        history.stream().filter(row -> event.apply(row).getSeason().getNumber() < season
+                || (event.apply(row).getSeason().getNumber() == season
+                    && CALENDAR_ORDER.compare(event.apply(row), race) <= 0))
+                .sorted(Comparator.comparing((T row) -> event.apply(row).getSeason().getNumber())
+                        .thenComparing(event, CALENDAR_ORDER))
+                .forEach(row -> effective.put(event.apply(row).getSeason().getNumber() == season
+                        ? "id:" + id.apply(row) : "name:" + name.apply(row), price.apply(row)));
+        return effective;
+    }
+
+    private void requireDriverPrices(Race race, List<Driver> drivers, Map<Long, FantasyPriceDriver> prices) {
+        List<Driver> missing = drivers.stream().filter(driver -> !prices.containsKey(driver.getId())).distinct().toList();
+        if (missing.isEmpty()) return;
+        log.error("Missing Fantasy prices race={} driverIds={}", race.getId(), missing.stream().map(Driver::getId).toList());
+        throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                "Faltan precios para " + missing.stream().map(Driver::getName).collect(Collectors.joining(", "))
+                        + " en la carrera " + race.getName());
+    }
+
+    private Race adminRace(int raceId) {
+        Race race = raceRepository.findWithSeasonById(raceId).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No se ha encontrado la carrera"));
+        if (race.getSeason().getNumber() != Constants.ACTUAL_SEASON)
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Solo se pueden gestionar precios de la temporada actual");
+        return race;
+    }
+
+    @Transactional(readOnly = true)
+    public AdminPricesDTO getAdminPrices(int raceId) {
+        Race race = adminRace(raceId);
+        int season = race.getSeason().getNumber();
+        List<Driver> drivers = fantasyPriceDriverRepository.findSeasonDrivers(season);
+        List<FantasyPriceDriver> driverStored = fantasyPriceDriverRepository.findByRaceId(raceId);
+        Map<Long, FantasyPriceDriver> effective = pricesByDriver(race, drivers, driverStored);
+        Map<Long, Integer> stored = driverStored.stream()
+                .collect(Collectors.toMap(p -> p.getDriver().getId(), FantasyPriceDriver::getPrice));
+        List<FantasyPriceTeam> teamHistory = fantasyPriceTeamRepository.findHistory(season);
+        Map<String, Integer> teamEffective = effectiveHistory(race, teamHistory, FantasyPriceTeam::getRace,
+                p -> p.getTeam().getId(), p -> p.getTeam().getName(), FantasyPriceTeam::getPrice);
+        Map<Long, Integer> teamStored = fantasyPriceTeamRepository.findByRaceId(raceId).stream()
+                .collect(Collectors.toMap(p -> p.getTeam().getId(), FantasyPriceTeam::getPrice));
+        return new AdminPricesDTO(drivers.stream().map(d -> new AdminPricesDTO.Entry(d.getId(), d.getName(),
+                stored.get(d.getId()), effective.containsKey(d.getId()) ? effective.get(d.getId()).getPrice() : null)).toList(),
+                fantasyPriceTeamRepository.findSeasonTeams(season).stream().map(t -> new AdminPricesDTO.Entry(
+                        t.getId(), t.getName(), teamStored.get(t.getId()),
+                        teamEffective.getOrDefault("id:" + t.getId(), teamEffective.get("name:" + t.getName())))).toList());
+    }
+
+    @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
+    @Transactional
+    public ResponseEntity<String> saveAdminPrices(int raceId, AdminPricesDTO.Update update) {
+        Race race = adminRace(raceId);
+        List<AdminPricesDTO.Price> drivers = update == null || update.drivers() == null ? List.of() : update.drivers();
+        List<AdminPricesDTO.Price> teams = update == null || update.teams() == null ? List.of() : update.teams();
+        if (drivers.isEmpty() && teams.isEmpty())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debes indicar algún precio");
+        Map<Long, Driver> seasonDrivers = fantasyPriceDriverRepository.findSeasonDrivers(race.getSeason().getNumber())
+                .stream().collect(Collectors.toMap(Driver::getId, Function.identity()));
+        Map<Long, Team> seasonTeams = fantasyPriceTeamRepository.findSeasonTeams(race.getSeason().getNumber())
+                .stream().collect(Collectors.toMap(Team::getId, Function.identity()));
+        validateAdminPrices(drivers, seasonDrivers.keySet());
+        validateAdminPrices(teams, seasonTeams.keySet());
+        Map<Long, FantasyPriceDriver> storedDrivers = fantasyPriceDriverRepository.findByRaceId(raceId).stream()
+                .collect(Collectors.toMap(p -> p.getDriver().getId(), Function.identity()));
+        Map<Long, FantasyPriceTeam> storedTeams = fantasyPriceTeamRepository.findByRaceId(raceId).stream()
+                .collect(Collectors.toMap(p -> p.getTeam().getId(), Function.identity()));
+        try {
+            fantasyPriceDriverRepository.saveAllAndFlush(drivers.stream().map(p -> {
+                FantasyPriceDriver row = storedDrivers.getOrDefault(p.id(), new FantasyPriceDriver(null, seasonDrivers.get(p.id()), race, p.price().intValueExact()));
+                row.setPrice(p.price().intValueExact());
+                return row;
+            }).toList());
+            fantasyPriceTeamRepository.saveAllAndFlush(teams.stream().map(p -> {
+                FantasyPriceTeam row = storedTeams.getOrDefault(p.id(), new FantasyPriceTeam(null, seasonTeams.get(p.id()), race, p.price().intValueExact()));
+                row.setPrice(p.price().intValueExact());
+                return row;
+            }).toList());
+        } catch (DataIntegrityViolationException | ConcurrencyFailureException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Otro guardado simultáneo ha modificado los precios. Vuelve a intentarlo");
+        }
+        return new ResponseEntity<>("Precios guardados para " + race.getName(), Constants.HEADERS_TEXT_PLAIN, HttpStatus.OK);
+    }
+
+    private void validateAdminPrices(List<AdminPricesDTO.Price> prices, Set<Long> allowed) {
+        Set<Long> seen = new HashSet<>();
+        for (AdminPricesDTO.Price price : prices) {
+            if (price == null || price.id() == null || !allowed.contains(price.id()) || !seen.add(price.id())
+                    || price.price() == null || price.price().compareTo(BigDecimal.valueOf(1_000_000)) < 0
+                    || price.price().compareTo(BigDecimal.valueOf(30_000_000)) > 0
+                    || price.price().stripTrailingZeros().scale() > 0)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Precios inválidos: usa ids de esta temporada sin repetir y precios enteros entre 1.000.000 y 30.000.000");
+        }
     }
 
     private Map<Long, FantasyPointsDriver> pointsByDriver(Race race) {
@@ -194,7 +312,7 @@ public class FantasyService {
         if (fantasyPointsDriver.isEmpty()) {
             log.error("Hubo un problema con los puntos");
             return new ResponseEntity<>("Hubo un problema con los puntos. Contacte con el administrador",
-                    Constants.HEADERS_TEXT_PLAIN, HttpStatusCode.valueOf(500));
+                    Constants.HEADERS_TEXT_PLAIN, HttpStatusCode.valueOf(422));
         }
 
         List<FantasyPointsTeam> fantasyPointsTeams = this.createTeamsPoints(fantasyPointsDriver);
@@ -244,12 +362,25 @@ public class FantasyService {
         List<FantasyPriceDriver> fantasyPricesDriver = this.createDriversPrices(results, nextRace.get());
         if (fantasyPricesDriver.isEmpty()) {
             log.error("Hubo un problema con los precios");
-            return new ResponseEntity<>("Hubo un problema con los precios. Contacte con el administrador",
-                    Constants.HEADERS_TEXT_PLAIN, HttpStatusCode.valueOf(500));
+            return new ResponseEntity<>("Debes guardar resultados y puntos antes de calcular precios para la carrera " + race.getName(),
+                    Constants.HEADERS_TEXT_PLAIN, HttpStatusCode.valueOf(422));
         }
 
         List<FantasyPriceTeam> fantasyTeamPrevious = this.fantasyPriceTeamRepository.findByRaceId(nextRaceId);
-        List<FantasyPriceTeam> fantasyPricesTeam = this.createTeamsPrices(fantasyPricesDriver, nextRace.get());
+        Set<Long> resultDrivers = results.stream().map(result -> result.getDriver().getId()).collect(Collectors.toSet());
+        List<FantasyPriceTeam> fantasyPricesTeam = this.createTeamsPrices(fantasyPricesDriver.stream()
+                .filter(price -> resultDrivers.contains(price.getDriver().getId())).toList(), nextRace.get());
+        Set<Long> pricedTeams = fantasyPricesTeam.stream().map(p -> p.getTeam().getId()).collect(Collectors.toSet());
+        Map<String, Integer> effectiveTeams = effectiveHistory(race,
+                fantasyPriceTeamRepository.findHistory(race.getSeason().getNumber()), FantasyPriceTeam::getRace,
+                p -> p.getTeam().getId(), p -> p.getTeam().getName(), FantasyPriceTeam::getPrice);
+        fantasyPricesTeam = new ArrayList<>(fantasyPricesTeam);
+        for (Team team : fantasyPriceTeamRepository.findSeasonTeams(race.getSeason().getNumber())) {
+            if (pricedTeams.contains(team.getId())) continue;
+            Integer price = effectiveTeams.getOrDefault("id:" + team.getId(), effectiveTeams.get("name:" + team.getName()));
+            if (price == null) continue;
+            fantasyPricesTeam.add(new FantasyPriceTeam(null, team, nextRace.get(), price));
+        }
 
         try {
             fantasyPriceDriverRepository.deleteAll(fantasyDriversPrevious);
@@ -363,22 +494,18 @@ public class FantasyService {
         List<FantasyPointsDriver> fantasyPoints = new ArrayList<>();
         if (results.isEmpty())
             return fantasyPoints;
-        Map<Long, FantasyPriceDriver> prices = pricesByDriver(results.getFirst().getRace());
+        Race race = results.getFirst().getRace();
+        Map<Long, FantasyPriceDriver> prices = pricesByDriver(race, results.stream().map(Result::getDriver).toList());
+        requireDriverPrices(race, results.stream().filter(r -> r.getPosition() != null).map(Result::getDriver).toList(), prices);
         int sizeResults = results.stream().filter(result -> result.getPosition() != null).toList().size();
-        boolean pointsProblem = false;
 
         for (Result result : results) {
             FantasyPointsDriver fantasyPoint = new FantasyPointsDriver();
             fantasyPoint.setDriver(result.getDriver());
             fantasyPoint.setRace(result.getRace());
             fantasyPoint.setPoints(this.calculatePoints(result, sizeResults, prices));
-            if (fantasyPoint.getPoints() == -1)
-                pointsProblem = true;
             fantasyPoints.add(fantasyPoint);
         }
-
-        if (pointsProblem)
-            return new ArrayList<>();
 
         return fantasyPoints;
     }
@@ -390,10 +517,6 @@ public class FantasyService {
      * @param resultsSize The total number of results in the race.
      * @return The calculated points for the fantasy race.
      */
-    private int calculatePoints(Result result, int resultsSize) {
-        return calculatePoints(result, resultsSize, pricesByDriver(result.getRace()));
-    }
-
     private int calculatePoints(Result result, int resultsSize, Map<Long, FantasyPriceDriver> prices) {
         int points = 0;
 
@@ -418,9 +541,6 @@ public class FantasyService {
         }
 
         FantasyPriceDriver fantasyPrice = prices.get(result.getDriver().getId());
-
-        if (fantasyPrice == null)
-            return -1;
 
         int priceDriver = fantasyPrice.getPrice();
 
@@ -495,25 +615,29 @@ public class FantasyService {
         List<FantasyPriceDriver> fantasydriverPrices = new ArrayList<>();
         if (results.isEmpty())
             return fantasydriverPrices;
-        Map<Long, FantasyPriceDriver> prices = pricesByDriver(results.getFirst().getRace());
+        Race race = results.getFirst().getRace();
+        List<Driver> drivers = new ArrayList<>(fantasyPriceDriverRepository.findSeasonDrivers(race.getSeason().getNumber()));
+        // Also supports callers calculating a supplied subset of results.
+        for (Result result : results) if (drivers.stream().noneMatch(d -> d.getId().equals(result.getDriver().getId()))) drivers.add(result.getDriver());
+        Map<Long, FantasyPriceDriver> prices = pricesByDriver(race, drivers);
+        requireDriverPrices(race, results.stream().map(Result::getDriver).toList(), prices);
         Map<Long, FantasyPointsDriver> points = pointsByDriver(results.getFirst().getRace());
+        if (results.stream().anyMatch(result -> !points.containsKey(result.getDriver().getId())))
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "Debes guardar los puntos antes de calcular precios para la carrera " + race.getName());
 
-        boolean pricesProblem = false;
         for (Result result : results) {
             FantasyPriceDriver fantasyPriceDriver = new FantasyPriceDriver();
             fantasyPriceDriver.setDriver(result.getDriver());
             fantasyPriceDriver.setRace(nextRace);
             fantasyPriceDriver.setPrice(this.calculateDriverPrice(result, prices, points));
 
-            if (fantasyPriceDriver.getPrice() == -1)
-                pricesProblem = true;
-
             fantasydriverPrices.add(fantasyPriceDriver);
         }
 
-        if (pricesProblem)
-            return new ArrayList<>();
-
+        Set<Long> resultDrivers = results.stream().map(r -> r.getDriver().getId()).collect(Collectors.toSet());
+        for (Driver driver : drivers) if (!resultDrivers.contains(driver.getId()) && prices.containsKey(driver.getId()))
+            fantasydriverPrices.add(new FantasyPriceDriver(null, driver, nextRace, prices.get(driver.getId()).getPrice()));
         return fantasydriverPrices;
     }
 
@@ -523,19 +647,11 @@ public class FantasyService {
      * 
      * @param result The race result containing information about the driver and the
      *               race.
-     * @return The calculated new price for the driver. If there is an issue with
-     *         calculation, returns BigDecimal.ZERO.
+     * @return The calculated new price for the driver after validating prices and points.
      */
-    private int calculateDriverPrice(Result result) {
-        return calculateDriverPrice(result, pricesByDriver(result.getRace()), pointsByDriver(result.getRace()));
-    }
-
     private int calculateDriverPrice(Result result, Map<Long, FantasyPriceDriver> prices,
             Map<Long, FantasyPointsDriver> pointsByDriver) {
         FantasyPriceDriver fantasyPrice = prices.get(result.getDriver().getId());
-
-        if (fantasyPrice == null)
-            return -1;
 
         int price = fantasyPrice.getPrice();
 
@@ -545,8 +661,6 @@ public class FantasyService {
         int minPrice = 1000000;
 
         // Calcular el nuevo precio
-        if (fantasyPoint == null)
-            return -1;
         double points = fantasyPoint.getPoints();
 
         if (price >= 20000000 && points < 7) {

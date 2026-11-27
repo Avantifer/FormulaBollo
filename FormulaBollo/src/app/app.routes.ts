@@ -85,6 +85,11 @@ export const routes: Routes = [
         loadComponent: () => import('./components/admin/admin-penalties/admin-penalties.component').then(m => m.AdminPenaltiesComponent),
       },
       {
+        path: 'prices',
+        title: 'Precios Fantasy',
+        loadComponent: () => import('./components/admin/admin-prices/admin-prices.component').then(m => m.AdminPricesComponent),
+      },
+      {
         path: "sprints",
         loadComponent: () => import('./components/admin/admin-results/admin-results.component').then(m => m.AdminResultsComponent),
       }

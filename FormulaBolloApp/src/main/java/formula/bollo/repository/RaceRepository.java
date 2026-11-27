@@ -11,6 +11,8 @@ import formula.bollo.entity.Race;
 
 @Repository
 public interface RaceRepository extends JpaRepository<Race, Long> {
+    @Query("SELECT r FROM Race r JOIN FETCH r.season WHERE r.id = :id")
+    Optional<Race> findWithSeasonById(long id);
 
     @Query("""
             SELECT r FROM Race r JOIN FETCH r.season

@@ -26,14 +26,14 @@ describe('AdminComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  for (const [route, label] of [['results', 'Resultados'], ['penalties', 'Penalizaciones'], ['sprints', 'Sprints']]) {
+  for (const [route, label] of [['results', 'Resultados'], ['penalties', 'Penalizaciones'], ['sprints', 'Sprints'], ['prices', 'Precios Fantasy']]) {
     it(`marks only the ${route} menu item as selected`, async () => {
       spyOnProperty(TestBed.inject(Router), 'url', 'get').and.returnValue(`/admin/${route}`);
       fixture.detectChanges();
       await fixture.whenStable();
 
       const links: HTMLAnchorElement[] = Array.from(fixture.nativeElement.querySelectorAll('p-menu a'));
-      expect(links.length).toBe(3);
+      expect(links.length).toBe(4);
       expect(links.filter(link => link.classList.contains('menu-item-selected')).length).toBe(1);
       links.forEach(link => {
         expect(link.classList.contains('menu-item-selected'))

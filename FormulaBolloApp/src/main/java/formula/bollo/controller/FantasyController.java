@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import formula.bollo.model.AdminPricesDTO;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -76,6 +78,17 @@ public class FantasyController {
     public ResponseEntity<String> saveDriverTeamPoints(@RequestParam Integer raceId) {
         log.info("Guardo los puntos de los equipos y pilotos fantasy y la carrera " + raceId);
         return this.fantasyService.saveDriverTeamPoints(raceId);
+    }
+
+    @GetMapping(path = "/adminPrices", produces = MediaType.APPLICATION_JSON_VALUE)
+    public AdminPricesDTO getAdminPrices(@RequestParam Integer raceId) {
+        return fantasyService.getAdminPrices(raceId);
+    }
+
+    @PutMapping(path = "/adminPrices", produces = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> saveAdminPrices(@RequestParam Integer raceId,
+            @RequestBody AdminPricesDTO.Update prices) {
+        return fantasyService.saveAdminPrices(raceId, prices);
     }
 
     @Operation(summary = "Save driver's and team's prices", tags = Constants.TAG_FANTASY)

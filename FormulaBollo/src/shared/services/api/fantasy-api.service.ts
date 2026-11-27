@@ -11,6 +11,7 @@ import { FantasyPointsTeam } from "../../models/fantasyPointsTeam";
 import { FantasyPricesDriver } from "../../models/fantasyPricesDriver";
 import { FantasyPricesTeam } from "../../models/fantasyPricesTeam";
 import { FantasyElection } from "../../models/fantasyElection";
+import { AdminPrices, AdminPricesUpdate } from '../../models/admin-prices';
 
 @Injectable({
   providedIn: "root",
@@ -22,6 +23,19 @@ export class FantasyApiService {
   private readonly auth: AuthJWTService = inject(AuthJWTService);
 
   private readonly endpoint: string = "/fantasy";
+
+  getAdminPrices(raceId: number): Observable<AdminPrices> {
+    const params = this.baseApiService.createParams({ raceId });
+    const headers = new HttpHeaders({ Authorization: `Bearer ${localStorage.getItem('auth')}` });
+    return this.httpClient.get<AdminPrices>(`${environment.apiUrl}${this.endpoint}/adminPrices`, { params, headers });
+  }
+
+  saveAdminPrices(raceId: number, prices: AdminPricesUpdate): Observable<string> {
+    const params = this.baseApiService.createParams({ raceId });
+    const headers = new HttpHeaders({ Authorization: `Bearer ${localStorage.getItem('auth')}` });
+    return this.httpClient.put(`${environment.apiUrl}${this.endpoint}/adminPrices`, prices,
+      { params, headers, responseType: 'text' });
+  }
 
   getAllPricesDriver(raceId: number): Observable<FantasyPricesDriver[]> {
     const cacheKey: string = `fantasyAllPricesDriver-${raceId}`;

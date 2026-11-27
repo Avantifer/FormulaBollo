@@ -175,6 +175,10 @@ Sustituye `$B` por la URL del backend.
 
 | Prueba | Esperado |
 |---|---|
+| `GET /fantasy/adminPrices?raceId=<actual>` sin token / con usuario normal | 401 / 403; ambos verbos exigen ADMIN |
+| `GET /fantasy/adminPrices?raceId=<actual>` con ADMIN | 200; todos los pilotos y equipos, `storedPrice` y `suggestedPrice` en unidades monetarias, o null |
+| En `/admin/prices`, guardar precios entre 1.000.000 y 30.000.000 con ADMIN | PUT 200 con mensaje; conserva los no enviados, publica versión de caché y refresca estadísticas; el formulario no se recarga |
+| PUT de precios vacío, duplicado, ajeno a la temporada o fuera de límites | 400 sin escribir; carrera desconocida 404 y temporada no actual 409 |
 | `curl -s -o /dev/null -w "%{http_code}" $B/seasons/all` | 200 |
 | `curl -s -o /dev/null -w "%{http_code}" "$B/drivers/all?season=3"` | 200 |
 | `curl -s "$B/drivers/teamHistory?driverName=Robe"` | lista de 4 entradas: T1 Ferrari, T2 Alpine, T3 Kick Sauber, T3 Ferrari |
