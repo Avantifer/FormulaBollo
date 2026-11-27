@@ -55,6 +55,7 @@ class StatisticsServiceJpaTest {
     StatisticsService service;
     DriverService driverService;
     TeamService teamService;
+    ResultService resultService;
     final JsonMapper json = JsonMapper.builder().findAndAddModules().build();
 
     @BeforeEach
@@ -62,12 +63,173 @@ class StatisticsServiceJpaTest {
         DriverImpl driverMapper = new DriverImpl(Mappers.getMapper(DriverMapper.class));
         TeamImpl teamMapper = new TeamImpl(Mappers.getMapper(TeamMapper.class));
         ResultImpl resultMapper = new ResultImpl(Mappers.getMapper(ResultMapper.class));
+        resultService = new ResultService(results, sprints, resultMapper, driverMapper);
         driverService = new DriverService(results, championships, penalties, sprints, driverMapper, resultMapper,
-                new ResultService(results, sprints, resultMapper, driverMapper));
+                resultService);
         teamService = new TeamService(results, sprints, drivers, constructors, teams, teamMapper,
                 driverMapper, resultMapper, driverService);
         service = new StatisticsService(drivers, teams, races, results, sprints, penalties,
                 driverService, teamService);
+    }
+
+    @ParameterizedTest(name = "DNF fast lap: {0}")
+    @ValueSource(strings = {"classification", "specific classification", "driver profile", "bulk driver profiles",
+            "team ranking", "team profile", "bulk team profiles", "team history", "bulk team history",
+            "race results by team", "driver evolution", "team evolution", "statistics", "records", "agreement"})
+    void dnfFastLapCountsInEveryPublishedPointsOutput(String output) {
+        Season season = season(1);
+        Team alpha = team("Alpha", season);
+        Team beta = team("Beta", season);
+        Driver ana = driver("Ana", alpha);
+        Driver bea = driver("Bea", alpha);
+        Driver cid = driver("Cid", beta);
+        Position first = position(1, 25);
+        Position second = position(2, 18);
+        Position third = position(3, 15);
+        Race opening = race(season, 1, 1);
+        Race last = race(season, 2, 1);
+        result(ana, opening, first, 0, 1);
+        result(bea, opening, second, 0, 0);
+        result(cid, opening, third, 0, 0);
+        result(ana, last, null, 1, 0);
+        result(bea, last, first, 0, 1);
+        result(cid, last, second, 0, 0);
+        flushAndClear();
+
+        // One shared, valid season: Ana 25+1, Bea 18+25, Cid 15+18; Alpha 69.
+        switch (output) {
+            case "classification" -> assertThat(resultService.getTotalResultsPerDriver(1, null))
+                    .filteredOn(row -> row.getDriver().getName().equals("Ana")).singleElement()
+                    .extracting(DriverPointsDTO::getTotalPoints).isEqualTo(26);
+            case "specific classification" -> assertThat(resultService.getTotalResultsSpecificPerDriver(1, List.of(ana.getId())))
+                    .singleElement().extracting(DriverPointsDTO::getTotalPoints).isEqualTo(26);
+            case "driver profile" -> assertThat(driverService.getAllInfoDriver(List.of(ana)).getTotalPoints()).isEqualTo(26);
+            case "bulk driver profiles" -> assertThat(driverService.getAllInfoDrivers(List.of(ana)))
+                    .singleElement().extracting(DriverInfoDTO::getTotalPoints).isEqualTo(26);
+            case "team ranking" -> {
+                TeamWithDriversDTO ranking = teamService.getTeamWithDriversDTO(List.of(ana, bea)).getFirst();
+                org.junit.jupiter.api.Assertions.assertAll(
+                        () -> assertThat(ranking.getTotalPoints()).isEqualTo(69),
+                        () -> assertThat(ranking.getDriver1().getTotalPoints()).isEqualTo(26),
+                        () -> assertThat(ranking.getDriver2().getTotalPoints()).isEqualTo(43));
+            }
+            case "team profile" -> assertThat(teamService.getAllInfoTeam(List.of(alpha)).getTotalPoints()).isEqualTo(69);
+            case "bulk team profiles" -> assertThat(teamService.getAllInfoTeams(List.of(alpha)))
+                    .singleElement().extracting(TeamInfoDTO::getTotalPoints).isEqualTo(69);
+            case "team history", "bulk team history" -> {
+                TeamInfoDTO info = output.equals("team history") ? teamService.getAllInfoTeam(List.of(alpha))
+                        : teamService.getAllInfoTeams(List.of(alpha)).getFirst();
+                assertThat(info.getLast5Results()).extracting(ResultTeamDTO::getTotalPoints).containsExactly(26, 43);
+                assertThat(info.getLast5Results().getFirst().getHasFastLap()).isEqualTo(1);
+            }
+            case "race results by team" -> {
+                ResultImpl mapper = new ResultImpl(Mappers.getMapper(ResultMapper.class));
+                var raceTeams = resultService.orderResultsByPointsByTeams(
+                        mapper.convertResultsToResultsDTO(results.findByRaceId(last.getId().intValue())));
+                assertThat(raceTeams).filteredOn(row -> row.getResults().getFirst().getDriver().getTeam().getName().equals("Alpha"))
+                        .singleElement().satisfies(row -> {
+                            assertThat(row.getTotalPoints()).isEqualTo(26);
+                            assertThat(row.getHasFastLap()).isEqualTo(1);
+                            assertThat(row.getResults()).filteredOn(r -> r.getPosition() == null)
+                                    .singleElement().extracting(ResultDTO::getFastlap).isEqualTo(1);
+                        });
+            }
+            case "driver evolution" -> assertThat(service.getOverview(1).getDriverEvolution().getSeries())
+                    .filteredOn(row -> row.getDriver().getName().equals("Ana")).singleElement()
+                    .satisfies(row -> assertThat(row.getCumulative()).containsExactly(25, 26));
+            case "team evolution" -> assertThat(service.getOverview(1).getTeamEvolution().getSeries())
+                    .filteredOn(row -> row.getTeam().getName().equals("Alpha")).singleElement()
+                    .satisfies(row -> assertThat(row.getCumulative()).containsExactly(43, 69));
+            case "statistics" -> {
+                StatisticsOverviewDTO overview = service.getOverview(1);
+                org.junit.jupiter.api.Assertions.assertAll(
+                        () -> assertThat(driver(overview, "Ana").getTotalPoints()).isEqualTo(26),
+                        () -> assertThat(driver(overview, "Ana").getPointsBySeason()).containsEntry(1, 26),
+                        () -> assertThat(team(overview, "Alpha").getTotalPoints()).isEqualTo(69),
+                        () -> assertThat(team(overview, "Alpha").getPointsBySeason()).containsEntry(1, 69),
+                        () -> assertThat(service.getHeadToHead(1, "Ana", "Bea").getPointsA()).isEqualTo(26));
+            }
+            case "records" -> {
+                StatisticsRecordsDTO records = service.getRecords();
+                org.junit.jupiter.api.Assertions.assertAll(
+                        () -> assertThat(board(records.getDriverRecords(), "points").getRanking())
+                                .filteredOn(row -> row.getDriver().getName().equals("Ana")).singleElement()
+                                .extracting(row -> row.getValue().intValue()).isEqualTo(26),
+                        () -> assertThat(board(records.getTeamRecords(), "teamPoints").getValue().intValue()).isEqualTo(69));
+            }
+            case "agreement" -> {
+                ResultImpl mapper = new ResultImpl(Mappers.getMapper(ResultMapper.class));
+                int raceTotal = List.of(opening, last).stream().mapToInt(r -> resultService.orderResultsByPointsByTeams(
+                        mapper.convertResultsToResultsDTO(results.findByRaceId(r.getId().intValue()))).stream()
+                        .filter(row -> row.getResults().getFirst().getDriver().getTeam().getId().equals(alpha.getId()))
+                        .mapToInt(ResultTeamDTO::getTotalPoints).sum()).sum();
+                StatisticsOverviewDTO overview = service.getOverview(1);
+                var profiles = teamService.getAllInfoTeams(List.of(alpha)).getFirst();
+                Map<String, Integer> published = new java.util.LinkedHashMap<>();
+                published.put("race results by team", raceTotal);
+                published.put("classification", resultService.getTotalResultsSpecificPerDriver(1, List.of(ana.getId(), bea.getId()))
+                        .stream().mapToInt(DriverPointsDTO::getTotalPoints).sum());
+                published.put("driver profiles", driverService.getAllInfoDrivers(List.of(ana, bea)).stream()
+                        .mapToInt(DriverInfoDTO::getTotalPoints).sum());
+                published.put("team ranking", teamService.getTeamWithDriversDTO(List.of(ana, bea)).getFirst().getTotalPoints());
+                published.put("team profile", profiles.getTotalPoints());
+                published.put("team history", profiles.getLast5Results().stream().mapToInt(ResultTeamDTO::getTotalPoints).sum());
+                published.put("statistics", team(overview, "Alpha").getTotalPoints());
+                published.put("driver evolution", overview.getDriverEvolution().getSeries().stream()
+                        .filter(row -> row.getDriver().getTeam().getId().equals(alpha.getId()))
+                        .mapToInt(row -> row.getCumulative().getLast()).sum());
+                published.put("team evolution", overview.getTeamEvolution().getSeries().stream()
+                        .filter(row -> row.getTeam().getId().equals(alpha.getId())).findFirst().orElseThrow().getCumulative().getLast());
+                org.junit.jupiter.api.Assertions.assertAll(published.entrySet().stream().map(entry ->
+                        () -> assertThat(entry.getValue()).as(entry.getKey()).isEqualTo(69)));
+            }
+            default -> throw new AssertionError(output);
+        }
+    }
+
+    @Test
+    void teamRaceHistoryAlsoIncludesFastLapOfAFinisher() {
+        Season season = season(1);
+        Team team = team("Team", season);
+        Race race = race(season, 1, 1);
+        result(driver("Ana", team), race, position(1, 25), 1, 1);
+        result(driver("Bea", team), race, position(2, 18), 0, 0);
+        flushAndClear();
+        assertThat(teamService.getAllInfoTeam(List.of(team)).getLast5Results())
+                .singleElement().extracting(ResultTeamDTO::getTotalPoints).isEqualTo(44);
+    }
+
+    @Test
+    void positionChangeArrowsSubtractTheDnfFastLapForDriversAndTeams() {
+        Season season = season(1);
+        Team alpha = team("Alpha", season);
+        Team beta = team("Beta", season);
+        Driver ana = driver("Ana", alpha);
+        Driver bea = driver("Bea", beta);
+        Race last = race(season, 1, 1);
+        result(ana, last, null, 1, 0);
+        result(bea, last, position(15, 0), 0, 0);
+        flushAndClear();
+        DriverImpl mapper = new DriverImpl(Mappers.getMapper(DriverMapper.class));
+        TeamImpl teamMapper = new TeamImpl(Mappers.getMapper(TeamMapper.class));
+        // Both have 26 now; before the DNF bonus Ana/Alpha had 25 and Bea/Beta 26.
+        DriverPointsDTO a = new DriverPointsDTO(mapper.driverToDriverDTO(ana), 26);
+        DriverPointsDTO b = new DriverPointsDTO(mapper.driverToDriverDTO(bea), 26);
+        resultService.getOverallPositionChanges(List.of(a, b), last.getId().intValue());
+        TeamWithDriversDTO ta = new TeamWithDriversDTO(teamMapper.teamToTeamDTO(alpha), a, null, 26,
+                formula.bollo.enums.PositionChange.SAME, 0);
+        TeamWithDriversDTO tb = new TeamWithDriversDTO(teamMapper.teamToTeamDTO(beta), b, null, 26,
+                formula.bollo.enums.PositionChange.SAME, 0);
+        teamService.getOverallTeamPositionChanges(List.of(ta, tb), last.getId().intValue());
+        org.junit.jupiter.api.Assertions.assertAll(
+                () -> assertThat(a.getPositionChange()).isEqualTo(formula.bollo.enums.PositionChange.ADVANCED),
+                () -> assertThat(a.getPositionChangeAmount()).isEqualTo(1),
+                () -> assertThat(b.getPositionChange()).isEqualTo(formula.bollo.enums.PositionChange.DROPPED),
+                () -> assertThat(b.getPositionChangeAmount()).isEqualTo(1),
+                () -> assertThat(ta.getPositionChange()).isEqualTo(a.getPositionChange()),
+                () -> assertThat(ta.getPositionChangeAmount()).isEqualTo(1),
+                () -> assertThat(tb.getPositionChange()).isEqualTo(b.getPositionChange()),
+                () -> assertThat(tb.getPositionChangeAmount()).isEqualTo(1));
     }
 
     @Test
@@ -242,7 +404,7 @@ class StatisticsServiceJpaTest {
     }
 
     @Test
-    void evolutionIncludesSprintsAndOnlyFinishedRacesAndAllDriversOrderedByPointsWithNameTies() {
+    void evolutionIncludesSprintsAndCountedRacesAndAllDriversOrderedByPointsWithNameTies() {
         Season season = season(1);
         Team alpha = team("Alpha", season);
         Team beta = team("Beta", season);
@@ -275,7 +437,7 @@ class StatisticsServiceJpaTest {
                         "Driver 5", "Driver 6", "Driver 7", "Driver 8", "Driver 9");
         assertThat(overview.getDriverEvolution().getSeries().getFirst().getCumulative()).containsExactly(33, 58);
         assertThat(overview.getDriverEvolution().getSeries()).filteredOn(series -> series.getDriver().getName().equals("Driver 9"))
-                .singleElement().satisfies(series -> assertThat(series.getCumulative()).containsExactly(25, 25));
+                .singleElement().satisfies(series -> assertThat(series.getCumulative()).containsExactly(25, 26));
         assertThat(overview.getDriverEvolution().getSeries()).allSatisfy(series ->
                 assertThat(series.getCumulative().getLast()).isEqualTo(driver(overview, series.getDriver().getName()).getTotalPoints()));
         assertThat(overview.getTeamEvolution().getSeries()).hasSize(2).allSatisfy(series ->
@@ -409,8 +571,8 @@ class StatisticsServiceJpaTest {
         assertThat(dto.getAheadB()).isEqualTo(2);
         assertThat(dto.getComparable()).isEqualTo(4);
         assertThat(dto.getBothDnf()).isEqualTo(1);
-        assertThat(dto.getPointsA()).isEqualTo(96);
-        assertThat(dto.getPointsB()).isEqualTo(88);
+        assertThat(dto.getPointsA()).isEqualTo(97);
+        assertThat(dto.getPointsB()).isEqualTo(89);
         assertThat(dto.getRaces()).extracting(row -> row.getRace().getId())
                 .containsExactly(first.getId(), later.getId(), sameDate.getId(), bFinishes.getId(),
                         bothDnf.getId(), tied.getId());

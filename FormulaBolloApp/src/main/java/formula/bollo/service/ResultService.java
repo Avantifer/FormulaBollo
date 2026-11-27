@@ -37,6 +37,7 @@ import formula.bollo.repository.ResultRepository;
 import formula.bollo.repository.SprintRepository;
 import formula.bollo.utils.Constants;
 import formula.bollo.utils.ResultBatchValidator;
+import formula.bollo.utils.ResultPoints;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -85,13 +86,12 @@ public class ResultService {
     }
 
     /**
-     * Suma los puntos de unos resultados y sprints (vuelta rápida solo si terminó la carrera),
+     * Suma los puntos de unos resultados y sprints (vuelta rápida incluso sin terminar la carrera),
      * sin calcular la clasificación ni los cambios de posición.
      */
     public int sumPoints(List<Result> results, List<Sprint> sprints) {
         int racePoints = results.stream()
-                .filter(result -> result.getPosition() != null)
-                .mapToInt(result -> result.getPosition().getPoints() + result.getFastlap())
+                .mapToInt(ResultPoints::calculate)
                 .sum();
         int sprintPoints = sprints.stream()
                 .filter(sprint -> sprint.getPosition() != null)
@@ -244,13 +244,7 @@ public class ResultService {
     private void setTotalResultPointsByDriver(List<Result> results, Map<DriverDTO, Integer> totalPointsByDriver) {
         results.stream().forEach((Result result) -> {
             DriverDTO driverDTO = driverImpl.driverToDriverDTO(result.getDriver());
-            int points = 0;
-            int fastlap = result.getFastlap();
-
-            if (result.getPosition() != null) {
-                points = result.getPosition().getPoints();
-                points += fastlap;
-            }
+            int points = ResultPoints.calculate(result);
 
             addPointsToDriver(driverDTO, points, totalPointsByDriver);
         });
@@ -299,7 +293,7 @@ public class ResultService {
         Map<Long, ResultTeamDTO> teamPointsMap = new HashMap<>();
 
         for (ResultDTO result : resultDTOs) {
-            int points = (result.getPosition() != null ? result.getPosition().getPoints() : 0) + result.getFastlap();
+            int points = ResultPoints.calculate(result);
             TeamDTO team = result.getDriver().getTeam();
 
             ResultTeamDTO teamEntry = teamPointsMap.computeIfAbsent(team.getId(),
@@ -344,9 +338,7 @@ public class ResultService {
             return new ResponseEntity<>("No hay resultados", Constants.HEADERS_TEXT_PLAIN, HttpStatusCode.valueOf(400));
         }
 
-        if (!ResultBatchValidator.isValid(resultDTOs, ResultDTO::getRace, ResultDTO::getDriver)
-                || resultDTOs.stream().anyMatch(result -> result.getPosition() != null
-                        && result.getPosition().getId() == null)) {
+        if (!ResultBatchValidator.isValidResults(resultDTOs)) {
             return ResponseEntity.badRequest().body("El lote de resultados no es valido");
         }
 
@@ -403,7 +395,7 @@ public class ResultService {
             String driverName = result.getDriver().getName();
             Long seasonId = result.getDriver().getSeason().getId();
             String key = driverName + "_" + seasonId;
-            int points = (result.getPosition() != null ? result.getPosition().getPoints() : 0) + result.getFastlap();
+            int points = ResultPoints.calculate(result);
             pointsToReduce.merge(key, points, Integer::sum);
         });
 

@@ -55,9 +55,7 @@ public class SprintService {
     @Transactional
     @CacheEvict(cacheNames = Constants.CACHE_STATS, allEntries = true)
     public ResponseEntity<String> saveSprints(List<SprintDTO> sprintDTOs) {
-        if (!ResultBatchValidator.isValid(sprintDTOs, SprintDTO::getRace, SprintDTO::getDriver)
-                || sprintDTOs.stream().anyMatch(sprint -> sprint.getPosition() != null
-                        && sprint.getPosition().getId() == null)) {
+        if (!ResultBatchValidator.isValidSprints(sprintDTOs)) {
             return ResponseEntity.badRequest().body("El lote de sprints no es valido");
         }
         List<Sprint> sprintsToSave = this.sprintImpl.convertSprintsDTOToSprints(sprintDTOs);

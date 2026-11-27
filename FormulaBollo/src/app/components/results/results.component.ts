@@ -167,8 +167,9 @@ export class ResultsComponent {
     tablist.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next].focus();
   }
 
-  protected getRacePoints(result: Result): number | 'DNF' {
-    return result.position === null ? 'DNF' : result.position.points + (result.fastlap ?? 0);
+  protected getRacePoints(result: Result): number | 'DNF' | 'DNF +1' {
+    if (result.position === null) return result.fastlap === 1 ? 'DNF +1' : 'DNF';
+    return result.position.points + (result.fastlap ?? 0);
   }
 
   protected isVacantDriver(driver: Driver): boolean {

@@ -81,6 +81,7 @@ a:focus-visible, button:focus-visible {
 .driver-number { margin-left: 2px; }
 .severity-icon { display: inline-block; width: 16px; height: 16px; vertical-align: middle; }
 .team-label { overflow-wrap: anywhere; }
+.race-points { min-width: 0; overflow-wrap: anywhere; }
 .result-chip { max-width: 100%; font-size: 12px; line-height: 18px; color: color-mix(in srgb, var(--sector-up), var(--on-pit) 35%); }
 .result-chip i { font-size: 12px; }
 .team-result { grid-template-columns: 36px minmax(100px, 0.8fr) repeat(2, minmax(0, 1.2fr)) minmax(140px, 17%) 54px; }
@@ -188,7 +189,7 @@ a:focus-visible, button:focus-visible {
   }
   .team-driver .driver-name { max-width: 100%; }
   .team-driver .driver-number { margin-left: 0; }
-  .team-driver .driver-points { align-self: start; margin-top: 6px; line-height: 16px; white-space: nowrap; }
+  .team-driver .driver-points { align-self: start; margin-top: 6px; line-height: 16px; max-width: 4em; white-space: normal; }
   .result-row.team-result > .marks, .result-row.team-result:has(.result-chip) > .marks {
     grid-column: 1 / -1;
     grid-row: 3;

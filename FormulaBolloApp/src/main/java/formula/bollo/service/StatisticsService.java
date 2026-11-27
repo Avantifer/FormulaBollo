@@ -27,6 +27,7 @@ import formula.bollo.repository.RaceRepository;
 import formula.bollo.repository.ResultRepository;
 import formula.bollo.repository.SprintRepository;
 import formula.bollo.repository.TeamRepository;
+import formula.bollo.utils.ResultPoints;
 
 @Service
 public class StatisticsService {
@@ -471,7 +472,7 @@ public class StatisticsService {
         for (Result row : rows) {
             surviving.put(new DriverRace(row.getDriver().getName(), row.getRace().getId()), row);
             String name = teams ? row.getDriver().getTeam().getName() : row.getDriver().getName();
-            int scored = row.getPosition() == null ? 0 : row.getPosition().getPoints() + row.getFastlap();
+            int scored = ResultPoints.calculate(row);
             points.computeIfAbsent(name, key -> new HashMap<>()).merge(row.getRace().getId(), scored, Integer::sum);
         }
         for (Sprint sprint : sprints) {
