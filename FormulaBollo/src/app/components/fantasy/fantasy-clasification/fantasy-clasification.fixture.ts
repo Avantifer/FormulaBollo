@@ -8,7 +8,7 @@ export function fantasyEntry(userId: number, raceId: number, points: number): Fa
 }
 
 export function fantasyFixture(): FantasyClasificationDTO {
-  const team = { id: 1, name: 'Ferrari', carImage: 'car.png', logoImage: 'logo.png', season: fantasySeason };
+const team = { id: 1, name: 'Ferrari', carImage: 'car.png', logoImage: 'logo-fb.svg', season: fantasySeason };
   const entry = fantasyEntry(1, 25, 51);
   entry.drivers = [{ driverId: 1, points: 0 }, { driverId: 2, points: 18 }, { driverId: 3, points: 8 }];
   entry.teams = [{ teamId: 1, points: 14 }, { teamId: 2, points: 11 }];

@@ -33,10 +33,6 @@ export class WebSocketService {
     share()
   );
 
-  sendMessage(message: number): void {
-    this.socket$?.next(message);
-  }
-
   getMessages(): Observable<number> {
     return this.messages$;
   }

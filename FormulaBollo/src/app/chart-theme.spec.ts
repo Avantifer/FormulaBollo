@@ -2,7 +2,6 @@ import Chart from 'chart.js/auto';
 import {
   chartGridColor,
   chartLabelColor,
-  getBarChartOptions,
   getBarMobileChartOptions,
   getLineChartOptions,
   getPieChartOptions,
@@ -71,7 +70,6 @@ describe('Chart theme', () => {
       });
 
       for (const factory of [
-        getBarChartOptions,
         getBarMobileChartOptions,
         getPieChartOptions,
         getLineChartOptions,

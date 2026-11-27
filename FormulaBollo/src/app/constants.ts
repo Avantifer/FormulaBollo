@@ -5,7 +5,6 @@ export const ERROR_RACE_FETCH: string = "No se ha podido recoger la carrera corr
 export const ERROR_DRIVER_FETCH: string = "No se puedo obtener los puntos de los pilotos correctamente";
 export const ERROR_CONFIGURATION_FETCH: string = "No se pudo obtener las configuraciones correctamente";
 export const ERROR_PENALTY_FETCH: string = "No se han podido recoger las penalización";
-export const ERROR_POINT_FETCH: string = "Al parecer hubo problemas al recoger los puntos";
 export const ERROR_PRICE_FETCH: string = "Al parecer hubo problemas al recoger los precios";
 export const ERROR_PENALTIES_FETCH: string = "No se ha podido recoger las penalizaciones correctamente";
 export const ERROR_DRIVER_INFO_FETCH: string = "No se ha podido recoger la información del piloto correctamente";
@@ -14,7 +13,6 @@ export const ERROR_FANTASY_POINTS: string = "No se ha podido recoger los puntos 
 export const ERROR_FANTASY_ELECTION_NOT_FOUND: string = "No se ha podido recoger tu equipo correctamente. Contacta con el administrador";
 export const ERROR_DRIVER_NAME_NOT_FOUND: string = "No hay ningún piloto con ese nombre";
 export const ERROR_TEAM_NAME_NOT_FOUND: string = "No hay ningún equipo con ese nombre";
-export const ERROR_RECORDS_NOT_FOUND: string = "No hay records de los pilotos";
 export const ERROR_CACHE: string = "Error al obtener la versión de la caché: ";
 export const ERROR_LOGIN_CREDENTIALS: string = "Credenciales incorrectas.";
 export const ERROR_RECOVER_PASSWORD: string = "Correo incorrecto.";
@@ -61,44 +59,6 @@ export function chartLabelColor(isDarkMode: boolean): string {
 export function chartGridColor(isDarkMode: boolean): string {
   return isDarkMode ? CHART_GRID_COLORS.dark : CHART_GRID_COLORS.light;
 }
-
-export function getBarChartOptions(isDarkMode: boolean): any {
-  return {
-    locale: 'es-ES',
-    maintainAspectRatio: false,
-    aspectRatio: 0.8,
-    plugins: {
-      datalabels: {
-        display: false
-      },
-      legend: {
-        display: false
-      },
-    },
-    scales: {
-      x: {
-        grid: {
-          display: false
-        },
-        ticks: {
-          color: chartLabelColor(isDarkMode),
-          font: {
-            size: 12,
-            weight: '500'
-          },
-        }
-      },
-      y: {
-        grid: {
-          color: chartGridColor(isDarkMode)
-        },
-        ticks: {
-          color: chartLabelColor(isDarkMode),
-        }
-      },
-    }
-  }
-};
 
 export function getBarMobileChartOptions(isDarkMode: boolean): any {
   return {

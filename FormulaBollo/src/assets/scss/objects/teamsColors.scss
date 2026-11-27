@@ -122,54 +122,17 @@ $teamTextColors: (
   color: colors.$colorRB;
 }
 
-.bg-Fantasy-Red_Bull {
-  background: colors.$colorRedBull;
-}
 
-.bg-Fantasy-AlphaTauri {
-  background: colors.$colorAlphaTauri;
-}
 
-.bg-Fantasy-Ferrari {
-  background: colors.$colorFerrari;
-}
 
-.bg-Fantasy-Mercedes {
-  background: colors.$colorMercedes;
-}
 
-.bg-Fantasy-Aston_Martin {
-  background: colors.$colorAston;
-}
 
-.bg-Fantasy-Williams {
-  background: colors.$colorWilliams;
-}
 
-.bg-Fantasy-Haas {
-  background: colors.$colorHaas;
-}
 
-.bg-Fantasy-McLaren {
-  background: colors.$colorMcLaren;
-}
 
-.bg-Fantasy-Alfa_Romeo,
-.bg-Fantasy-Alfa_Romeo_Racing {
-  background: colors.$colorAlfa;
-}
 
-.bg-Fantasy-Alpine {
-  background: colors.$colorAlpine;
-}
 
-.bg-Fantasy-Kick_Sauber {
-  background: colors.$colorKickSauber;
-}
 
-.bg-Fantasy-RB {
-  background: colors.$colorRB;
-}
 
 // Sin capa y con !important: PrimeNG fija border-color en su capa CSS,
 // que gana a las utilidades de Tailwind; estos bordes conservan la prioridad de equipo.
@@ -222,78 +185,17 @@ $teamTextColors: (
   border-color: colors.$colorRB !important;
 }
 
-.progress-Red_Bull {
-  .p-progressbar-value {
-    background-color: colors.$colorRedBull;
-  }
-}
 
-.progress-AlphaTauri {
-  .p-progressbar-value {
-    background-color: colors.$colorAlphaTauri;
-  }
-}
 
-.progress-Ferrari {
-  .p-progressbar-value {
-    background-color: colors.$colorFerrari;
-  }
-}
 
-.progress-Mercedes {
-  .p-progressbar-value {
-    background-color: colors.$colorMercedes;
-  }
-}
 
-.progress-Aston_Martin {
-  .p-progressbar-value {
-    background-color: colors.$colorAston;
-  }
-}
 
-.progress-Williams {
-  .p-progressbar-value {
-    background-color: colors.$colorWilliams;
-  }
-}
 
-.progress-Haas {
-  .p-progressbar-value {
-    background-color: colors.$colorHaas;
-  }
-}
 
-.progress-McLaren {
-  .p-progressbar-value {
-    background-color: colors.$colorMcLaren;
-  }
-}
 
-.progress-Alfa_Romeo,
-.progress-Alfa_Romeo_Racing {
-  .p-progressbar-value {
-    background-color: colors.$colorAlfa;
-  }
-}
 
-.progress-Alpine {
-  .p-progressbar-value {
-    background-color: colors.$colorAlpine;
-  }
-}
 
-.progress-Kick_Sauber {
-  .p-progressbar-value {
-    background-color: colors.$colorKickSauber;
-  }
-}
 
-.progress-RB {
-  .p-progressbar-value {
-    background-color: colors.$colorRB;
-  }
-}
 
 
 
