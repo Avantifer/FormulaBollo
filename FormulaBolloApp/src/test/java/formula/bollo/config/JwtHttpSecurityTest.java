@@ -68,6 +68,7 @@ class JwtHttpSecurityTest {
     @Autowired EmailService email;
     @Autowired ResultService results;
     @Autowired FantasyService fantasy;
+    @Autowired RaceCloseService raceClose;
     MockMvc mvc;
     Account user;
     Account admin;
@@ -75,7 +76,7 @@ class JwtHttpSecurityTest {
 
     @BeforeEach
     void setup() {
-        reset(repository, email, results, fantasy);
+        reset(repository, email, results, fantasy, raceClose);
         user = new Account(1L, "ana", encoder.encode("old"), 0, "ana@example.com");
         admin = new Account(2L, "admin", encoder.encode("old"), 1, "admin@example.com");
         // La misma entidad mutable permite leer el hash guardado después del cambio real.
@@ -89,6 +90,7 @@ class JwtHttpSecurityTest {
         when(fantasy.saveDriverTeamPoints(anyInt())).thenReturn(ResponseEntity.ok("ok"));
         when(fantasy.saveDriverTeamPrices(anyInt())).thenReturn(ResponseEntity.ok("ok"));
         when(fantasy.saveFantasyElection(any(), anyString())).thenReturn(ResponseEntity.ok("ok"));
+        when(raceClose.closeRace(any())).thenReturn(ResponseEntity.ok("ok"));
         mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
     }
 
@@ -98,7 +100,7 @@ class JwtHttpSecurityTest {
     MockHttpServletRequestBuilder route(String method, String path) {
         return request(HttpMethod.valueOf(method), path).servletPath(path)
                 .param("raceId", "1").param("id", "1")
-                .contentType("application/json").content("[]");
+                .contentType("application/json").content(path.equals("/races/close") ? "{}" : "[]");
     }
 
     MockHttpServletRequestBuilder change(String token) {
@@ -108,13 +110,23 @@ class JwtHttpSecurityTest {
 
     @ParameterizedTest
     @CsvSource({"DELETE,/results/delete", "POST,/cache/update", "GET,/account/security-probe",
-            "POST,/fantasy/saveDriverTeamPoints", "POST,/fantasy/saveDriverTeamPrices", "PUT,/results/save"})
+            "POST,/fantasy/saveDriverTeamPoints", "POST,/fantasy/saveDriverTeamPrices", "PUT,/results/save", "PUT,/races/close"})
     void adminMatrix(String method, String path) throws Exception {
         mvc.perform(route(method, path)).andExpect(status().isUnauthorized());
         mvc.perform(route(method, path).header("Authorization", "Bearer " + session(user)))
                 .andExpect(status().isForbidden());
         mvc.perform(route(method, path).header("Authorization", "Bearer " + session(admin)))
                 .andExpect(status().isOk());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"anonymous", "user", "recovery"})
+    void raceCloseRejectsEveryNonAdminIdentity(String identity) throws Exception {
+        var request = route("PUT", "/races/close").content("{\"race\":{\"id\":1},\"results\":[]}");
+        if (identity.equals("user")) request.header("Authorization", "Bearer " + session(user));
+        if (identity.equals("recovery")) request.header("Authorization", "Bearer " + recovery(admin));
+        mvc.perform(request).andExpect(status().is(identity.equals("user") ? 403 : 401));
+        verifyNoInteractions(results, fantasy, raceClose);
     }
 
     @ParameterizedTest
@@ -242,7 +254,7 @@ class JwtHttpSecurityTest {
 
     @ParameterizedTest
     @CsvSource({"DELETE,/results/delete", "POST,/cache/update", "GET,/account/security-probe",
-            "POST,/fantasy/saveDriverTeamPoints", "POST,/fantasy/saveFantasyElection"})
+            "POST,/fantasy/saveDriverTeamPoints", "POST,/fantasy/saveFantasyElection", "PUT,/races/close"})
     void recoveryCannotAuthenticateElsewhere(String method, String path) throws Exception {
         mvc.perform(route(method, path).content("{}")
                 .header("Authorization", "Bearer " + recovery(admin))).andExpect(status().isUnauthorized());
@@ -443,6 +455,10 @@ class JwtHttpSecurityTest {
         }
         @Bean ResultController resultController(ResultService service) {
             return new ResultController(mock(ResultRepository.class), mock(ResultImpl.class), service);
+        }
+        @Bean RaceCloseService raceClose() { return mock(RaceCloseService.class); }
+        @Bean RaceCloseController raceCloseController(RaceCloseService service) {
+            return new RaceCloseController(service);
         }
         @Bean CacheController cacheController() {
             return new CacheController(mock(CacheService.class), mock(CacheNotifier.class));

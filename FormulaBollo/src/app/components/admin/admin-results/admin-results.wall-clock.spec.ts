@@ -60,19 +60,17 @@ describe('Admin results Madrid wall-clock HTTP contract', () => {
           expect(fixture.nativeElement.querySelector('input[type="datetime-local"]')).toBeNull();
           component.saveResults();
           const rowsRequest = http.expectOne(request => request.method === 'PUT'
-            && request.url.endsWith(sprint ? '/sprints/save' : '/results/save'));
-          const rows = JSON.parse(String(rowsRequest.request.serializeBody()));
+            && request.url.endsWith(sprint ? '/sprints/save' : '/races/close'));
+          const body = JSON.parse(String(rowsRequest.request.serializeBody()));
+          const rows = sprint ? body : body.results;
           expect(rows[0].race.dateStart).withContext(`rows wire JSON cycle ${cycle}`).toBe(start);
-          rowsRequest.flush('Saved');
           let wireRace = rows[0].race;
           if (!sprint) {
-            const raceRequest = http.expectOne(request => request.url.endsWith('/races/save'));
-            wireRace = JSON.parse(String(raceRequest.request.serializeBody()));
+            wireRace = body.race;
             expect(wireRace.dateStart).withContext(`race wire JSON cycle ${cycle}`).toBe(start);
-            raceRequest.flush('Saved');
-            http.expectOne(request => request.url.endsWith('/saveDriverTeamPoints')).flush('Saved');
-            http.expectOne(request => request.url.endsWith('/saveDriverTeamPrices')).flush('Saved');
           }
+          rowsRequest.flush('Saved');
+          http.expectNone(request => request.method === 'POST' || request.method === 'PUT');
           // Model today's server dropping the suffix, then reloading its zoneless response.
           // Keep assertions above independent: accepting Z must not make this test pass.
           loadedRace = { ...wireRace, dateStart: wireRace.dateStart.replace(/Z$/, '') } as Race;
@@ -105,20 +103,18 @@ describe('Admin results Madrid wall-clock HTTP contract', () => {
       function save(expected: string, raceId: number): void {
         component.saveResults();
         const rowsRequest = http.expectOne(request => request.method === 'PUT'
-          && request.url.endsWith(sprint ? '/sprints/save' : '/results/save'));
-        const rows = JSON.parse(String(rowsRequest.request.serializeBody()));
+          && request.url.endsWith(sprint ? '/sprints/save' : '/races/close'));
+        const body = JSON.parse(String(rowsRequest.request.serializeBody()));
+        const rows = sprint ? body : body.results;
         expect(rows[0].race.dateStart).toBe(expected);
         expect(rows[0].race.id).toBe(raceId);
-        rowsRequest.flush('Saved');
         if (!sprint) {
-          const raceRequest = http.expectOne(request => request.url.endsWith('/races/save'));
-          const wireRace = JSON.parse(String(raceRequest.request.serializeBody()));
+          const wireRace = body.race;
           expect(wireRace.dateStart).toBe(expected);
           expect(wireRace.id).toBe(raceId);
-          raceRequest.flush('Saved');
-          http.expectOne(request => request.url.endsWith('/saveDriverTeamPoints')).flush('Saved');
-          http.expectOne(request => request.url.endsWith('/saveDriverTeamPrices')).flush('Saved');
         }
+        rowsRequest.flush('Saved');
+        http.expectNone(request => request.method === 'POST' || request.method === 'PUT');
       }
 
       await load(race);

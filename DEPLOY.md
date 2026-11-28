@@ -184,6 +184,7 @@ Sustituye `$B` por la URL del backend.
 | `curl -s "$B/drivers/teamHistory?driverName=Robe"` | lista de 4 entradas: T1 Ferrari, T2 Alpine, T3 Kick Sauber, T3 Ferrari |
 | `curl -s -o /dev/null -w "%{http_code}" "$B/intro/introImage-v4.avif"` | 200 |
 | `curl -s -o /dev/null -w "%{http_code}" -X DELETE "$B/results/delete?raceId=1"` | **401** (sin token) |
+| `curl -s -o /dev/null -w "%{http_code}" -X PUT "$B/races/close" -H 'Content-Type: application/json' -d '{"race":null,"results":[]}'` | **401** sin token; con ADMIN y un lote válido, **200** y cierre completo (resultados, carrera, puntos y precios); un fallo conserva los datos y la versión de caché |
 | `curl -s -o /dev/null -w "%{http_code}" -X POST "$B/cache/update"` | **401** |
 | `curl -s -o /dev/null -w "%{http_code}" -X POST "$B/account/changePassword?username=x&password=y"` | **401** |
 | `curl -s -o /dev/null -w "%{http_code}" "$B/account/id?id=1"` | **401** (las cuentas no son públicas) |
