@@ -21,7 +21,7 @@ public class CacheVersionWebConfig implements WebMvcConfigurer {
         registry.addInterceptor(cacheVersionInterceptor).addPathPatterns(
                 Constants.ENDPOINT_RESULT + "/save", Constants.ENDPOINT_RESULT + "/delete",
                 Constants.ENDPOINT_SPRINT + "/save", Constants.ENDPOINT_SPRINT + "/delete",
-                Constants.ENDPOINT_RACE + "/save",
+                Constants.ENDPOINT_RACE + "/save", Constants.ENDPOINT_RACE + "/close",
                 Constants.ENDPOINT_PENALTY + "/save",
                 Constants.ENDPOINT_FANTASY + "/saveDriverTeamPoints",
                 Constants.ENDPOINT_FANTASY + "/saveDriverTeamPrices",

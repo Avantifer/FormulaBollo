@@ -13,7 +13,7 @@ import { Driver } from '../../../../shared/models/driver';
 import { ButtonModule } from 'primeng/button';
 import { ResultApiService } from '../../../../shared/services/api/result-api.service';
 import { Result } from '../../../../shared/models/result';
-import { catchError, concatMap, defer, EMPTY, finalize, lastValueFrom, map, Observable, of, retry, Subject, switchMap, takeUntil, tap } from 'rxjs';
+import { catchError, defer, EMPTY, finalize, lastValueFrom, map, Observable, retry, Subject, switchMap, takeUntil, tap } from 'rxjs';
 import { MessageInfoService } from '../../../../shared/services/toastInfo.service';
 import { ERROR_DRIVER_FETCH, ERROR_RESULT_FETCH } from '../../../constants';
 import { DividerModule } from 'primeng/divider';
@@ -24,7 +24,6 @@ import { SprintApiService } from '../../../../shared/services/api/sprint-api.ser
 import { Sprint } from '../../../../shared/models/sprint';
 import { RaceApiService } from '../../../../shared/services/api/race-api.service';
 import { DialogModule } from 'primeng/dialog';
-import { FantasyApiService } from '../../../../shared/services/api/fantasy-api.service';
 
 @Component({
   selector: 'app-admin-results',
@@ -51,7 +50,6 @@ export class AdminResultsComponent {
   private readonly router: Router = inject(Router);
   private readonly sprintApiService: SprintApiService = inject(SprintApiService);
   private readonly raceApiService: RaceApiService = inject(RaceApiService);
-  private readonly fantasyApiService: FantasyApiService = inject(FantasyApiService);
   
   actualSeason: Season = environment.seasonActual;
   private pickerDate: Date | undefined;
@@ -190,25 +188,17 @@ export class AdminResultsComponent {
     if (this.isSprint ? this.sprints().length : this.results().length) this.updateResultsToSave(race);
     else this.createResultsToSave(race);
 
-    // Each request uses this submission's snapshot even if another race is selected meanwhile.
+    // The request uses this submission's snapshot even if another race is selected meanwhile.
     const results = this.resultsToSave;
     const sprints = this.sprintsToSave;
-    const steps: (() => Observable<string>)[] = this.isSprint
-      ? [() => this.sprintApiService.saveSprints(sprints)]
-      : [
-        () => this.resultApiService.saveResults(results),
-        () => this.raceApiService.saveRace({ ...race, finished: 1 }),
-        () => this.fantasyApiService.saveDriverTeamPoints(race.id),
-        () => this.fantasyApiService.saveDriverTeamPrices(race.id),
-      ];
+    const save = this.isSprint
+      ? () => this.sprintApiService.saveSprints(sprints)
+      : () => this.raceApiService.closeRace({ ...race, finished: 1 }, results);
 
     this.isSaving.set(true);
-    // No next request is subscribed until the preceding one has returned successfully.
-    const sequence$ = steps.reduce((previous, step) => previous.pipe(
-      concatMap(() => defer(step).pipe(tap(response => this.messageInfoService.showSuccess(response)))),
-    ), of(''));
-    sequence$.pipe(
+    defer(save).pipe(
       takeUntil(this.destroy$),
+      tap(response => this.messageInfoService.showSuccess(response)),
       catchError(error => {
         this.messageInfoService.showError(error, error);
         console.error(error);

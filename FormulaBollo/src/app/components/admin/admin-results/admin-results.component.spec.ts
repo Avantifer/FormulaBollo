@@ -16,12 +16,15 @@ import { SprintApiService } from '../../../../shared/services/api/sprint-api.ser
 import { MessageInfoService } from '../../../../shared/services/toastInfo.service';
 import { AdminResultsComponent } from './admin-results.component';
 
+// Test-only service shape keeps this red suite compilable before the new API method exists.
+type ClosingRaceApi = RaceApiService & { closeRace(race: Race, results: Result[]): Observable<string> };
+
 describe('AdminResultsComponent', () => {
   let component: AdminResultsComponent;
   let fixture: ComponentFixture<AdminResultsComponent>;
   let resultApi: jasmine.SpyObj<ResultApiService>;
   let sprintApi: jasmine.SpyObj<SprintApiService>;
-  let raceApi: jasmine.SpyObj<RaceApiService>;
+  let raceApi: jasmine.SpyObj<ClosingRaceApi>;
   let fantasyApi: jasmine.SpyObj<FantasyApiService>;
   let messages: jasmine.SpyObj<MessageInfoService>;
   let drivers: Driver[];
@@ -37,7 +40,7 @@ describe('AdminResultsComponent', () => {
       ['getAllResultsPerRacePilots', 'saveResults']);
     sprintApi = jasmine.createSpyObj<SprintApiService>('SprintApiService',
       ['getAllSprintPerRace', 'saveSprints']);
-    raceApi = jasmine.createSpyObj<RaceApiService>('RaceApiService', ['getAllRaces', 'saveRace']);
+    raceApi = jasmine.createSpyObj<ClosingRaceApi>('RaceApiService', ['getAllRaces', 'saveRace', 'closeRace']);
     fantasyApi = jasmine.createSpyObj<FantasyApiService>('FantasyApiService',
       ['saveDriverTeamPoints', 'saveDriverTeamPrices']);
     messages = jasmine.createSpyObj<MessageInfoService>('MessageInfoService',
@@ -49,6 +52,7 @@ describe('AdminResultsComponent', () => {
     // Keep the real race selector idle until the test explicitly selects a race.
     raceApi.getAllRaces.and.returnValue(NEVER);
     raceApi.saveRace.and.returnValue(of('Carrera guardada'));
+    raceApi.closeRace.and.returnValue(of('Carrera cerrada'));
     fantasyApi.saveDriverTeamPoints.and.returnValue(of('Puntos guardados'));
     fantasyApi.saveDriverTeamPrices.and.returnValue(of('Precios guardados'));
 
@@ -121,7 +125,7 @@ describe('AdminResultsComponent', () => {
 
   function savedRows(sprint: boolean): (Result | Sprint)[] {
     return (sprint ? sprintApi.saveSprints.calls.mostRecent()?.args[0]
-      : resultApi.saveResults.calls.mostRecent()?.args[0]) ?? [];
+      : raceApi.closeRace.calls.mostRecent()?.args[1]) ?? [];
   }
 
   it('should create', () => expect(component).toBeTruthy());
@@ -162,32 +166,31 @@ describe('AdminResultsComponent', () => {
     });
   }
 
-  it('marks the race finished only after results have been saved successfully', async () => {
+  it('closes a race with a single snapshot request and one success message after completion', async () => {
     selectNewRace();
-    const savingResults = new Subject<string>();
-    const savingRace = new Subject<string>();
-    resultApi.saveResults.and.returnValue(savingResults);
-    raceApi.saveRace.and.returnValue(savingRace);
+    const closing = new Subject<string>();
+    raceApi.closeRace.and.returnValue(closing);
     component.saveResults();
-    expect(resultApi.saveResults).toHaveBeenCalledTimes(1);
+    expect(raceApi.closeRace).toHaveBeenCalledTimes(1);
+    expect(raceApi.closeRace.calls.mostRecent()?.args[0].finished).toBe(1);
+    expect(resultApi.saveResults).not.toHaveBeenCalled();
     expect(raceApi.saveRace).not.toHaveBeenCalled();
     expect(fantasyApi.saveDriverTeamPoints).not.toHaveBeenCalled();
-    complete(savingResults, 'Resultados guardados');
+    expect(fantasyApi.saveDriverTeamPrices).not.toHaveBeenCalled();
+    expect(messages.showSuccess).not.toHaveBeenCalled();
+    expect(race.finished).toBe(0);
+    complete(closing, 'Carrera cerrada');
     await settle();
-    expect(raceApi.saveRace).toHaveBeenCalledTimes(1);
-    expect(raceApi.saveRace.calls.mostRecent().args[0].finished).toBe(1);
-    expect(fantasyApi.saveDriverTeamPoints).not.toHaveBeenCalled();
-    complete(savingRace, 'Carrera guardada');
-    await settle();
-    expect(fantasyApi.saveDriverTeamPoints).toHaveBeenCalledOnceWith(11);
-    expect(fantasyApi.saveDriverTeamPrices).toHaveBeenCalledOnceWith(11);
+    expect(messages.showSuccess).toHaveBeenCalledOnceWith('Carrera cerrada');
+    expect((savedRows(false) as Result[]).map(row => [row.driver.id, row.position?.points ?? null, row.fastlap, row.pole]))
+      .toEqual([[1, 0, 1, 1], [2, null, 0, 0], [3, null, 0, 0], [4, null, 0, 0]]);
   });
 
   it('stops on a results save error without finishing or mutating the cached race', async () => {
     selectNewRace();
     const originalDate = race.dateStart;
     const error = new Error('No se guardaron los resultados');
-    resultApi.saveResults.and.returnValue(throwError(() => error));
+    raceApi.closeRace.and.returnValue(throwError(() => error));
     component.saveResults();
     await settle();
     expect(raceApi.saveRace).not.toHaveBeenCalled();
@@ -199,24 +202,29 @@ describe('AdminResultsComponent', () => {
     expect(race.dateStart).toBe(originalDate);
   });
 
-  it('stops the sequence and unlocks saving when finishing the race fails', async () => {
+  it('unlocks saving and keeps the form when the server cannot finish the race', async () => {
     selectNewRace();
     const error = new Error('No se pudo terminar la carrera');
-    raceApi.saveRace.and.returnValue(throwError(() => error));
+    raceApi.closeRace.and.returnValue(throwError(() => error));
     component.saveResults();
     await settle();
-    expect(resultApi.saveResults).toHaveBeenCalledTimes(1);
+    expect(raceApi.closeRace).toHaveBeenCalledTimes(1);
+    expect(resultApi.saveResults).not.toHaveBeenCalled();
     expect(fantasyApi.saveDriverTeamPoints).not.toHaveBeenCalled();
     expect(fantasyApi.saveDriverTeamPrices).not.toHaveBeenCalled();
     expect(messages.showError).toHaveBeenCalledWith(error, error);
     expect(saveButton().disabled).toBeFalse();
     expect(race.finished).toBe(0);
+    expect(component.driversSelected[0]).toBe(drivers[0]);
+    expect(component.fastlapDriver()).toBe(drivers[0]);
+    expect(component.poleDriver()).toBe(drivers[0]);
+    expect(component.raceSelected?.id).toBe(11);
   });
 
   it('stops after a Fantasy points error and never calculates prices', async () => {
     selectNewRace();
     const error = new Error('No se guardaron los puntos');
-    fantasyApi.saveDriverTeamPoints.and.returnValue(throwError(() => error));
+    raceApi.closeRace.and.returnValue(throwError(() => error));
     component.saveResults();
     await settle();
     expect(fantasyApi.saveDriverTeamPrices).not.toHaveBeenCalled();
@@ -228,7 +236,7 @@ describe('AdminResultsComponent', () => {
   it('reports a Fantasy prices error and releases the save button', async () => {
     selectNewRace();
     const error = new Error('No se guardaron los precios');
-    fantasyApi.saveDriverTeamPrices.and.returnValue(throwError(() => error));
+    raceApi.closeRace.and.returnValue(throwError(() => error));
     component.saveResults();
     await settle();
     expect(messages.showError).toHaveBeenCalledWith(error, error);
@@ -241,6 +249,7 @@ describe('AdminResultsComponent', () => {
     component.saveResults();
     await settle();
     expect(sprintApi.saveSprints).toHaveBeenCalledTimes(1);
+    expect(raceApi.closeRace).not.toHaveBeenCalled();
     expect(raceApi.saveRace).not.toHaveBeenCalled();
     expect(fantasyApi.saveDriverTeamPoints).not.toHaveBeenCalled();
     expect(fantasyApi.saveDriverTeamPrices).not.toHaveBeenCalled();
@@ -264,8 +273,8 @@ describe('AdminResultsComponent', () => {
       selectNewRace(sprint);
       const pending = new Subject<string>();
       if (sprint) sprintApi.saveSprints.and.returnValue(pending);
-      else resultApi.saveResults.and.returnValue(pending);
-      const save = sprint ? sprintApi.saveSprints : resultApi.saveResults;
+      else raceApi.closeRace.and.returnValue(pending);
+      const save = sprint ? sprintApi.saveSprints : raceApi.closeRace;
       component.saveResults();
       await settle();
       expect(saveButton().disabled).toBeTrue();
@@ -277,7 +286,7 @@ describe('AdminResultsComponent', () => {
       expect(messages.showError).toHaveBeenCalledWith(error, error);
       expect(saveButton().disabled).toBeFalse();
       if (sprint) sprintApi.saveSprints.and.returnValue(of('Sprint guardado'));
-      else resultApi.saveResults.and.returnValue(of('Resultados guardados'));
+      else raceApi.closeRace.and.returnValue(of('Carrera cerrada'));
       component.saveResults();
       await settle();
       expect(save).toHaveBeenCalledTimes(2);
@@ -326,12 +335,14 @@ describe('AdminResultsComponent', () => {
       expect(saveButton().disabled).toBeTrue();
       component.saveResults();
       expect(resultApi.saveResults).not.toHaveBeenCalled();
+      expect(raceApi.closeRace).not.toHaveBeenCalled();
       expect(sprintApi.saveSprints).not.toHaveBeenCalled();
       pending.error(new Error('Error cargando'));
       await settle();
       component.saveResults();
       expect(saveButton().disabled).toBeTrue();
       expect(resultApi.saveResults).not.toHaveBeenCalled();
+      expect(raceApi.closeRace).not.toHaveBeenCalled();
       expect(sprintApi.saveSprints).not.toHaveBeenCalled();
       expect(messages.showError).toHaveBeenCalled();
       if (sprint) sprintApi.getAllSprintPerRace.and.returnValue(of([]));
@@ -341,7 +352,7 @@ describe('AdminResultsComponent', () => {
       expect(saveButton().disabled).toBeFalse();
       component.saveResults();
       await settle();
-      expect(sprint ? sprintApi.saveSprints : resultApi.saveResults).toHaveBeenCalledTimes(1);
+      expect(sprint ? sprintApi.saveSprints : raceApi.closeRace).toHaveBeenCalledTimes(1);
     });
 
     it(`preserves every loaded ${label} row without depending on child selector emissions`, async () => {
@@ -349,7 +360,7 @@ describe('AdminResultsComponent', () => {
       // Saving before rendering the child selectors exercises the parent-owned model.
       component.saveResults();
       await settle();
-      expect(sprint ? sprintApi.saveSprints : resultApi.saveResults).toHaveBeenCalledTimes(1);
+      expect(sprint ? sprintApi.saveSprints : raceApi.closeRace).toHaveBeenCalledTimes(1);
       expect(savedRows(sprint).map(row => [row.driver.id, row.position?.positionNumber ?? null])).toEqual([
         [1, 1], [2, null], [3, 3], [4, null],
       ]);
@@ -382,30 +393,30 @@ describe('AdminResultsComponent', () => {
       component.saveResults();
       await settle();
       const payload = savedRows(sprint);
-      expect(JSON.parse(JSON.stringify(payload))[0].race.dateStart).toBe('2026-06-02T14:30:00');
-      expect(payload[0].race).not.toBe(race);
+      expect(JSON.parse(JSON.stringify(payload))[0]?.race.dateStart).toBe('2026-06-02T14:30:00');
+      expect(payload[0]?.race).not.toBe(race);
       expect(race.dateStart).toBe(originalDate);
       expect(race.dateStart as unknown).toBe('2026-05-01T10:00:00');
       expect(race.finished).toBe(0);
       if (!sprint) {
-        const savedRace = raceApi.saveRace.calls.mostRecent().args[0];
-        expect(JSON.parse(JSON.stringify(savedRace)).dateStart).toBe('2026-06-02T14:30:00');
+        const savedRace = raceApi.closeRace.calls.mostRecent()?.args[0];
+        expect(JSON.parse(JSON.stringify(savedRace ?? {})).dateStart).toBe('2026-06-02T14:30:00');
         expect(savedRace).not.toBe(race);
       }
     });
   }
 
-  it('keeps saving locked through the final Fantasy step and unlocks on completion', async () => {
+  it('keeps saving locked until close completes and unlocks on completion', async () => {
     selectNewRace();
     const pendingPrices = new Subject<string>();
-    fantasyApi.saveDriverTeamPrices.and.returnValue(pendingPrices);
+    raceApi.closeRace.and.returnValue(pendingPrices);
     component.saveResults();
     await settle();
-    expect(fantasyApi.saveDriverTeamPrices).toHaveBeenCalledTimes(1);
+    expect(raceApi.closeRace).toHaveBeenCalledTimes(1);
     expect(saveButton().disabled).toBeTrue();
     component.saveResults();
-    expect(resultApi.saveResults).toHaveBeenCalledTimes(1);
-    complete(pendingPrices, 'Precios guardados');
+    expect(raceApi.closeRace).toHaveBeenCalledTimes(1);
+    complete(pendingPrices, 'Carrera cerrada');
     await settle();
     expect(saveButton().disabled).toBeFalse();
   });
@@ -413,17 +424,18 @@ describe('AdminResultsComponent', () => {
   it('uses the original save snapshot when the selected race changes during submission', async () => {
     selectNewRace();
     const pendingResults = new Subject<string>();
-    resultApi.saveResults.and.returnValue(pendingResults);
+    raceApi.closeRace.and.returnValue(pendingResults);
     component.raceDate = new Date(2026, 5, 2, 14, 30);
     component.saveResults();
     component.onRaceChange({ ...race, id: 22, name: 'Carrera B' });
     component.raceDate = new Date(2026, 6, 3, 15, 0);
-    complete(pendingResults, 'Resultados guardados');
+    complete(pendingResults, 'Carrera cerrada');
     await settle();
-    expect(raceApi.saveRace.calls.mostRecent().args[0].id).toBe(11);
-    expect(JSON.parse(JSON.stringify(raceApi.saveRace.calls.mostRecent().args[0])).dateStart)
+    expect(raceApi.closeRace.calls.mostRecent()?.args[0].id).toBe(11);
+    expect(JSON.parse(JSON.stringify(raceApi.closeRace.calls.mostRecent()?.args[0] ?? {})).dateStart)
       .toBe('2026-06-02T14:30:00');
-    expect(fantasyApi.saveDriverTeamPoints).toHaveBeenCalledOnceWith(11);
-    expect(fantasyApi.saveDriverTeamPrices).toHaveBeenCalledOnceWith(11);
+    expect(savedRows(false).every(row => row.race.id === 11)).toBeTrue();
+    expect(fantasyApi.saveDriverTeamPoints).not.toHaveBeenCalled();
+    expect(fantasyApi.saveDriverTeamPrices).not.toHaveBeenCalled();
   });
 });

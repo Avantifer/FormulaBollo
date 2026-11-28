@@ -2,6 +2,7 @@ import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { BaseApiService } from "../baseApiService.service";
 import { Race } from "../../models/race";
+import { Result } from "../../models/result";
 import { environment } from "../../../enviroments/enviroment";
 import { Observable } from "rxjs";
 import { CacheService } from "../cache.service";
@@ -46,5 +47,16 @@ export class RaceApiService {
       Accept: "text/plain",
     });
     return this.httpClient.put<string>(`${environment.apiUrl}${this.endpoint}/save`, race, { headers, responseType: "text" as "json" });
+  }
+
+  closeRace(race: Race, results: Result[]): Observable<string> {
+    this.cacheService.clearCache();
+
+    const headers = new HttpHeaders({
+      "Content-Type": "application/json",
+      'Authorization': `Bearer ${localStorage.getItem('auth')}`,
+      Accept: "text/plain",
+    });
+    return this.httpClient.put<string>(`${environment.apiUrl}${this.endpoint}/close`, { race, results }, { headers, responseType: "text" as "json" });
   }
 }
